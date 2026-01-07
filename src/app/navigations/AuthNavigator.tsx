@@ -1,0 +1,20 @@
+import { createStackNavigator } from "@react-navigation/stack";
+import { LoginScreen, RegisterScreen } from "@/features/auth/screens";
+
+import type { AuthStackParamList } from "./types";
+
+const Stack = createStackNavigator<AuthStackParamList>();
+
+/**
+ * Note for future: If you somehow animate the navigation between Auth and Main, 
+ * you need to make them use the same stack navigator for smoother transitions.
+ */
+
+export default function AuthNavigator() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+    </Stack.Navigator>
+  );
+}

@@ -14,6 +14,7 @@ The API client is already configured in `app/providers/ApiProvider.tsx`. It auto
 - Handles unauthorized errors (auto-logout)
 - Transforms responses to a consistent format
 - Provides global error handling
+- Use ONE BASE_URL for ALL request (If you want to fetch to a custom url, use axios directly instead)
 
 ### Basic Usage
 
