@@ -237,8 +237,6 @@ Detailed documentation is available in the `docs/` directory:
 
 ## 📝 License
 
-[Include your license information here]
-
 ## 👥 Team
 
 NeoNHS Development Team
