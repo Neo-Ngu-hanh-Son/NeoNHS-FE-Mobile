@@ -1,6 +1,6 @@
 # Helper Documentation
 
-This folder contains consolidated documentation for the MyNHS project.
+This folder contains consolidated documentation for the NeoNHS project.
 
 ## Documentation Files
 
@@ -12,14 +12,17 @@ This folder contains consolidated documentation for the MyNHS project.
 ## Quick Links
 
 ### For API Integration
+
 → See [API_CLIENT.md](./API_CLIENT.md)
 
 ### For Authentication
+
 → See [AUTH_SYSTEM.md](./AUTH_SYSTEM.md)
 
 ### For Project Structure
+
 → See [FOLDER_STRUCTURE.md](./FOLDER_STRUCTURE.md)
 
 ### For Environment Setup
-→ See [ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md)
 
+→ See [ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md)

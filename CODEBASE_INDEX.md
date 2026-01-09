@@ -1,8 +1,8 @@
-# MyNHS Codebase Index
+# NeoNHS Codebase Index
 
 ## Project Overview
 
-**MyNHS** is a React Native mobile application built with Expo, TypeScript, and Ant Design React Native. The app follows a feature-based architecture with navigation-based routing.
+**NeoNHS** is a React Native mobile application built with Expo, TypeScript, and Ant Design React Native. The app follows a feature-based architecture with navigation-based routing.
 
 - **Framework**: React Native (0.81.5) with Expo (~54.0.31)
 - **Language**: TypeScript
@@ -13,13 +13,12 @@
 - **State Management**: React Context API
 - **Logging**: tslog
 
-
 ---
 
 ## Directory Structure
 
 ```
-MyNHS/
+NeoNHS/
 ├── app/                    # Application core
 │   ├── App.tsx            # Root application component
 │   ├── navigations/       # Navigation configuration
@@ -115,6 +114,7 @@ MyNHS/
 ### ✅ Fully Implemented
 
 1. **Project Infrastructure**
+
    - ✅ Expo setup with TypeScript
    - ✅ Navigation system (Root, Auth, Main, Tabs)
    - ✅ Type-safe navigation with proper types
@@ -122,6 +122,7 @@ MyNHS/
    - ✅ Safe area handling
 
 2. **API Layer**
+
    - ✅ Axios-based API client with interceptors
    - ✅ Request/response transformation
    - ✅ Error handling and error types
@@ -130,6 +131,7 @@ MyNHS/
    - ✅ useApi hook for React components
 
 3. **Authentication System**
+
    - ✅ Auth context and provider
    - ✅ Auth state management (reducer-based)
    - ✅ Token storage (AsyncStorage)
@@ -138,6 +140,7 @@ MyNHS/
    - ✅ Navigation integration (auto-switch Auth/Main)
 
 4. **Utilities**
+
    - ✅ Logger (tslog integration)
    - ✅ Storage utility (AsyncStorage wrapper)
    - ✅ Constants configuration
@@ -152,23 +155,27 @@ MyNHS/
 ### ⚠️ Partially Implemented / Placeholders
 
 1. **Screens**
+
    - ⚠️ LoginScreen - Placeholder (needs form implementation)
    - ⚠️ RegisterScreen - Placeholder (needs form implementation)
    - ⚠️ HomeScreen - Basic structure (needs actual content)
    - ⚠️ ProfileScreen - Placeholder (needs user profile UI)
 
 2. **Components**
+
    - ⚠️ Buttons/ - Empty directory
    - ⚠️ Loader/ - Empty directory
    - ⚠️ Text/ - Empty directory
    - ⚠️ Navigator/ - Empty directory
 
 3. **Theme & Styling**
+
    - ⚠️ colors.ts - Empty file
    - ⚠️ No theme provider setup
    - ⚠️ No consistent styling system
 
 4. **Utilities**
+
    - ⚠️ date.ts - Empty file
    - ⚠️ types/common.ts - Empty file
    - ⚠️ types/navigation.ts - Empty file
@@ -183,11 +190,13 @@ MyNHS/
 ## Key Files & Their Status
 
 ### Core Application
+
 - ✅ `app/App.tsx` - Root component with providers
 - ✅ `app/providers/Providers.tsx` - Provider composition
 - ✅ `app/navigations/RootNavigator.tsx` - Auth-aware navigation
 
 ### Authentication
+
 - ✅ `features/auth/context/AuthContext.tsx` - Auth state management
 - ✅ `features/auth/services/authService.ts` - Auth API calls
 - ✅ `features/auth/types.ts` - Auth type definitions
@@ -195,12 +204,14 @@ MyNHS/
 - ⚠️ `features/auth/screens/RegisterScreen.tsx` - Needs form implementation
 
 ### API & Services
+
 - ✅ `services/api/client.ts` - Axios client with interceptors
 - ✅ `services/api/endpoints.ts` - Endpoint definitions
 - ✅ `services/api/types.ts` - API types
 - ✅ `hooks/useApi.ts` - React hook for API calls
 
 ### Utilities
+
 - ✅ `utils/logger.ts` - tslog logger
 - ✅ `utils/storage.ts` - AsyncStorage wrapper
 - ✅ `utils/constants.ts` - App constants
@@ -211,26 +222,31 @@ MyNHS/
 ## Technology Stack
 
 ### Core
+
 - **React**: 19.1.0
 - **React Native**: 0.81.5
 - **Expo**: ~54.0.31
 - **TypeScript**: ~5.9.2
 
 ### Navigation
+
 - **@react-navigation/native**: ^7.1.26
 - **@react-navigation/stack**: ^7.6.13
 - **@react-navigation/bottom-tabs**: ^7.9.0
 
 ### UI Components
+
 - **@ant-design/react-native**: ^5.4.3
 - **@ant-design/icons-react-native**: ^2.3.2
 - **@expo/vector-icons**: ^15.0.3
 
 ### HTTP & Storage
+
 - **axios**: ^1.13.2
 - **@react-native-async-storage/async-storage**: 2.2.0
 
 ### Utilities
+
 - **tslog**: ^2.11.1
 - **react-native-safe-area-context**: ~5.6.0
 - **react-native-gesture-handler**: ~2.28.0
@@ -241,7 +257,9 @@ MyNHS/
 ## Architecture Patterns
 
 ### Feature-Based Structure
+
 Each feature module contains:
+
 - `screens/` - Feature screens
 - `components/` - Feature-specific components
 - `hooks/` - Feature-specific hooks
@@ -249,11 +267,13 @@ Each feature module contains:
 - `types.ts` - Feature type definitions
 
 ### State Management
+
 - **Auth State**: React Context + useReducer
 - **API State**: Custom hooks (useApi)
 - **Local State**: React useState/useReducer
 
 ### Navigation Hierarchy
+
 ```
 RootNavigator
 ├── Auth (when not authenticated)
@@ -274,12 +294,14 @@ RootNavigator
 ### 🔴 High Priority
 
 1. **Implement Login & Register Screens**
+
    - Create form components with validation
    - Integrate with auth context
    - Add error handling and loading states
    - Add navigation between login/register
 
 2. **Create Shared UI Components**
+
    - Button component (with variants)
    - Input/TextInput component
    - Loader/Spinner component
@@ -287,6 +309,7 @@ RootNavigator
    - Card component
 
 3. **Theme System**
+
    - Define color palette in `theme/colors.ts`
    - Create theme provider
    - Add typography system
@@ -300,18 +323,21 @@ RootNavigator
 ### 🟡 Medium Priority
 
 5. **Profile Screen Implementation**
+
    - Display user information
    - Add edit profile functionality
    - Add logout button
    - Add avatar upload
 
 6. **Home Screen Content**
+
    - Remove test API call
    - Add actual home screen content
    - Add dashboard widgets/cards
    - Add navigation to other features
 
 7. **Error Handling**
+
    - Create error boundary component
    - Add global error handler
    - Improve error messages in UI
@@ -325,21 +351,25 @@ RootNavigator
 ### 🟢 Low Priority
 
 9. **Date Utilities**
+
    - Implement date formatting functions
    - Add relative time helpers
    - Add date validation
 
 10. **Common Types**
+
     - Add shared type definitions
     - Add utility types
     - Add API response types
 
 11. **Feature-Specific Components**
+
     - Auth form components
     - Home dashboard components
     - Profile components
 
 12. **Testing**
+
     - Add unit tests for utilities
     - Add integration tests for API
     - Add component tests
@@ -354,6 +384,7 @@ RootNavigator
 ## Development Workflow
 
 ### Current Setup
+
 1. ✅ Environment variables configured (.env.example)
 2. ✅ API client ready for backend integration
 3. ✅ Auth system ready for backend integration
@@ -363,17 +394,20 @@ RootNavigator
 ### Recommended Development Order
 
 1. **UI Foundation** (Week 1)
+
    - Create theme system
    - Build shared components
    - Set up form validation
 
 2. **Authentication UI** (Week 1-2)
+
    - Implement login screen
    - Implement register screen
    - Add form validation
    - Test auth flow
 
 3. **Core Features** (Week 2-3)
+
    - Implement home screen
    - Implement profile screen
    - Add navigation between screens
@@ -389,12 +423,14 @@ RootNavigator
 ## File Organization Best Practices
 
 ### Current Structure ✅
+
 - Feature-based organization
 - Clear separation of concerns
 - Type-safe navigation
 - Centralized API layer
 
 ### Recommendations
+
 - Keep feature modules self-contained
 - Use barrel exports (index.ts) for clean imports
 - Maintain consistent naming conventions
@@ -405,6 +441,7 @@ RootNavigator
 ## Environment Setup
 
 ### Required Environment Variables
+
 - `EXPO_PUBLIC_API_URL` - API base URL
 - `EXPO_PUBLIC_ENV` - Environment (development/staging/production)
 
@@ -423,6 +460,6 @@ See `ENV_SETUP.md` for detailed setup instructions.
 
 ---
 
-*Last indexed: Updated after auth context implementation*
-*Project: MyNHS v1.0.0*
-*Status: Foundation Complete - Ready for UI Implementation*
+_Last indexed: Updated after auth context implementation_
+_Project: NeoNHS v1.0.0_
+_Status: Foundation Complete - Ready for UI Implementation_

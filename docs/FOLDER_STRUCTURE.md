@@ -7,7 +7,7 @@ The project follows a feature-based architecture with clear separation of concer
 ## Root Structure
 
 ```
-MyNHS/
+NeoNHS/
 ├── app/                    # Application core
 │   ├── navigations/       # Navigation configuration
 │   └── providers/         # Context providers
@@ -52,19 +52,25 @@ MyNHS/
 ## Directory Descriptions
 
 ### `app/`
+
 Application core files including navigation setup and providers.
 
 ### `app/navigations/`
+
 Navigation configuration files for React Navigation.
 
 ### `app/providers/`
+
 React Context providers (Auth, API, Ant Design).
 
 ### `components/`
+
 Shared UI components used across multiple features.
 
 ### `features/`
+
 Feature modules following a consistent structure:
+
 - `components/` - Feature-specific components
 - `hooks/` - Feature-specific hooks
 - `screens/` - Feature screens
@@ -72,24 +78,31 @@ Feature modules following a consistent structure:
 - `context/` - Feature context (if needed)
 
 ### `services/api/`
+
 API client configuration, endpoints, and types.
 
 ### `hooks/`
+
 Shared React hooks used across the application.
 
 ### `utils/`
+
 Utility functions (logger, storage, constants, date helpers).
 
 ### `types/`
+
 Shared TypeScript type definitions.
 
 ### `theme/`
+
 Theme configuration (colors, typography, spacing).
 
 ### `assets/`
+
 Static assets (images, fonts, icons).
 
 ### `helper/`
+
 Documentation and guides for developers.
 
 ## Feature Module Structure
@@ -114,4 +127,3 @@ feature-name/
 3. **Barrel Exports**: Use `index.ts` files for clean imports
 4. **Consistent Naming**: Follow the same structure across features
 5. **Type Safety**: Define types in `types.ts` files
-

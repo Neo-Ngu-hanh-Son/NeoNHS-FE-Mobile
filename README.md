@@ -1,10 +1,10 @@
-# MyNHS - React Native Mobile Application
+# NeoNHS - React Native Mobile Application
 
 A modern, feature-based mobile application built with React Native and Expo, designed for NHS (National Health Service) functionality.
 
-## 📱 What is MyNHS?
+## 📱 What is NeoNHS?
 
-MyNHS is a cross-platform mobile application that provides a secure authentication system and modular architecture for NHS-related services. The app is built with scalability and maintainability in mind, following best practices in React Native development.
+NeoNHS is a cross-platform mobile application that provides a secure authentication system and modular architecture for NHS-related services. The app is built with scalability and maintainability in mind, following best practices in React Native development.
 
 ## ✨ Key Features
 
@@ -65,7 +65,7 @@ MyNHS is a cross-platform mobile application that provides a secure authenticati
 ## 📁 Project Structure
 
 ```
-MyNHS/
+NeoNHS/
 ├── src/
 │   ├── app/                    # Application core
 │   │   ├── App.tsx            # Root component
