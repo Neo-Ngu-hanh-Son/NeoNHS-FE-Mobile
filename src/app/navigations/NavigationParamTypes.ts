@@ -8,6 +8,8 @@ import type { NavigatorScreenParams } from "@react-navigation/native";
 export type AuthStackParamList = {
     Login: undefined;
     Register: undefined;
+    ForgotPassword: undefined;
+    ForgotPasswordOtp: undefined;
 };
 
 /**
@@ -19,16 +21,16 @@ export type TabsStackParamList = {
     Profile: undefined;
 };
 
+
 /**
  * Main Stack Navigation Parameters
- * Contains screens accessible after authentication
- * Includes both direct stack screens and nested tab navigator
+ * Contains the primary app flow including the bottom tabs (Put your other main app screens here if they are not in the tabs navigator)
  */
 export type MainStackParamList = {
     Tabs: NavigatorScreenParams<TabsStackParamList>;
-    Home: undefined;
-    Profile: undefined;
+    SomeOtherScreen: undefined; // Example additional screen
 };
+
 
 /**
  * Root Stack Navigation Parameters
@@ -37,12 +39,4 @@ export type MainStackParamList = {
 export type RootStackParamList = {
     Auth: NavigatorScreenParams<AuthStackParamList>;
     Main: NavigatorScreenParams<MainStackParamList>;
-};
-
-// Re-export for convenience
-export type {
-    AuthStackParamList as AuthStackParams,
-    TabsStackParamList as TabsStackParams,
-    MainStackParamList as MainStackParams,
-    RootStackParamList as RootStackParams,
 };

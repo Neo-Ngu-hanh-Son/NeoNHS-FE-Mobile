@@ -12,4 +12,3 @@ export type {
     AuthContextValue,
 } from "./types";
 export { authService } from "./services/authService";
-

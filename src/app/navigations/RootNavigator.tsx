@@ -2,7 +2,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import AuthNavigator from "./AuthNavigator";
 import MainNavigator from "./MainNavigator";
-import type { RootStackParamList } from "./types";
+import type { RootStackParamList } from "./NavigationParamTypes";
 import { useAuth } from "@/features/auth";
 import LoadingOverlay from "@/components/Loader/LoadingOverlay";
 
@@ -19,11 +19,8 @@ export default function RootNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {isAuthenticated ? (
-          <Stack.Screen name="Main" component={MainNavigator} />
-        ) : (
-          <Stack.Screen name="Auth" component={AuthNavigator} />
-        )}
+        <Stack.Screen name="Main" component={MainNavigator} />
+        <Stack.Screen name="Auth" component={AuthNavigator} />
       </Stack.Navigator>
     </NavigationContainer>
   );

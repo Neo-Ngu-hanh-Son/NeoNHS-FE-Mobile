@@ -1,8 +1,9 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import ProfileScreen from "@/features/profile/screens/ProfileScreen";
 import HomeScreen from "@/features/home/screens/HomeScreen";
-import type { TabsStackParamList } from "./types";
+import type { TabsStackParamList } from "./NavigationParamTypes";
 import { Ionicons } from "@expo/vector-icons";
+import { theme } from "@/theme/colors";
 
 const Tab = createBottomTabNavigator<TabsStackParamList>();
 
@@ -11,12 +12,12 @@ export default function TabsNavigator() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#1890ff",
-        tabBarInactiveTintColor: "#8c8c8c",
+        tabBarActiveTintColor: theme.brand_primary,
+        tabBarInactiveTintColor: theme.neutral,
       }}
     >
-      <Tab.Screen 
-        name="Home" 
+      <Tab.Screen
+        name="Home"
         component={HomeScreen}
         options={{
           title: "Home",
@@ -25,8 +26,8 @@ export default function TabsNavigator() {
           ),
         }}
       />
-      <Tab.Screen 
-        name="Profile" 
+      <Tab.Screen
+        name="Profile"
         component={ProfileScreen}
         options={{
           title: "Profile",

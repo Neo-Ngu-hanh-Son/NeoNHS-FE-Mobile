@@ -7,7 +7,7 @@ export const theme = {
   brand_primary_tap: "#25633D",    // pressed state
 
   /* Backgrounds */
-  fill_base: "#F4F7F2",            // app background (soft off‑white with green hint)
+  fill_base: "#FFFFFF",            // app background (soft off‑white with green hint)
   fill_body: "#FFFFFF",            // card / surface background
   fill_disabled: "#E0E5DD",        // disabled background
 
@@ -27,7 +27,7 @@ export const theme = {
   primary_button_text_color: "#FFFFFF",
 
   ghost_button_color: "#2F7C4C",        // outline/ghost button text & border
-  ghost_button_fill_tap: "#E3F2E8",     // ghost pressed background (light green wash)
+  ghost_button_fill_tap: "#98ceaa",     // ghost pressed background (light green wash)
 
   warning_button_fill: "#D1A243",       // warm amber (sunlit leaf)
   warning_button_fill_tap: "#B68733",
@@ -42,5 +42,6 @@ export const theme = {
 
   /* Misc */
   link_button_color: "#2C6E87",         // river blue for links
+  neutral: "#8c8c8c",              // very light neutral (misty background)
 };
 
