@@ -8,6 +8,7 @@ This folder contains consolidated documentation for the NeoNHS project.
 - **[AUTH_SYSTEM.md](./AUTH_SYSTEM.md)** - Authentication system usage and architecture
 - **[FOLDER_STRUCTURE.md](./FOLDER_STRUCTURE.md)** - Project folder structure overview
 - **[ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md)** - Environment variables configuration
+- **[NAVIGATION_GUIDE.md](./NAVIGATION_GUIDE.md)** - How to implement navigation for new screens
 
 ## Quick Links
 
@@ -26,3 +27,7 @@ This folder contains consolidated documentation for the NeoNHS project.
 ### For Environment Setup
 
 → See [ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md)
+
+### For Navigation
+
+→ See [NAVIGATION_GUIDE.md](./NAVIGATION_GUIDE.md)
