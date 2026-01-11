@@ -3,7 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { logger } from "@/utils/logger";
 import { CompositeScreenProps, Link } from "@react-navigation/native";
 import { useForm } from "@ant-design/react-native/lib/form/Form";
-import { StyleSheet } from "react-native";
+import { Alert, StyleSheet } from "react-native";
 import { theme } from "@/theme/colors";
 import { IconButton } from "@/components/Buttons/IconButton";
 import AuthLayout from "../components/AuthLayout";
@@ -32,7 +32,10 @@ export default function LoginScreen({ navigation, route }: LoginScreenProps) {
         params: { screen: "Home" },
       });
     } catch (error) {
-      logger.error(error);
+      Alert.alert(
+        "Login Error",
+        (error as Error).message || "An error occurred during login. Please try again."
+      );
     }
   };
 

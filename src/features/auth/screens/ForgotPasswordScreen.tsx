@@ -30,8 +30,8 @@ export default function ForgotPasswordScreen({ navigation, route }: ForgotPasswo
     } catch (error) {
       logger.error("[ForgotPasswordScreen] Error sending password reset:", error);
       Alert.alert(
-        "Error",
-        "An error occurred while sending the password reset email. Please try again."
+        "An error occurred",
+        (error as Error).message || "An error occurred while sending the password reset email."
       );
     } finally {
       setLoading(false);

@@ -32,8 +32,10 @@ export default function RegisterScreen({ navigation, route }: RegisterScreenProp
         params: { screen: "Home" },
       });
     } catch (error) {
-      logger.error(error);
-      Alert.alert("Registration Error", "An error occurred during registration. Please try again.");
+      Alert.alert(
+        "Registration Error",
+        (error as Error).message || "An error occurred during registration. Please try again."
+      );
     }
   };
 

@@ -46,10 +46,7 @@ export default function ForgotPasswordOtpScreen({
         throw new Error(resp.message || "Failed to reset password");
       }
     } catch (error) {
-      Alert.alert(
-        "Error",
-        "An error occurred while resetting your password: " + (error as Error).message
-      );
+      Alert.alert("An error occurred", (error as Error).message);
     } finally {
       setLoading(false);
     }
