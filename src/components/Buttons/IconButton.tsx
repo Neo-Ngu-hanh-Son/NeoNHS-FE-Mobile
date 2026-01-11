@@ -17,6 +17,28 @@ type IconButtonProps = {
 };
 
 export function IconButton(props: IconButtonProps) {
+  if (props.children) {
+    return (
+      <Button
+        loading={props.loading ? true : false}
+        type="ghost"
+        style={{
+          ...styles.buttonStyle,
+          ...props.buttonStyle,
+          borderWidth: props.borderless ? 0 : 1,
+        }}
+        activeStyle={styles.pressed}
+        onPress={props.onPress}
+      >
+        <View style={[styles.innerContainer, props.children ? { gap: 12 } : {}]}>
+          {!props.loading && (
+            <Ionicons name={props.icon} size={props.iconSize || 24} color={props.color} />
+          )}
+          <Text style={styles.text}>{props.children}</Text>
+        </View>
+      </Button>
+    );
+  }
   return (
     <Button
       loading={props.loading ? true : false}
@@ -29,7 +51,6 @@ export function IconButton(props: IconButtonProps) {
         {!props.loading && (
           <Ionicons name={props.icon} size={props.iconSize || 24} color={props.color} />
         )}
-        <Text style={styles.text}>{props.children}</Text>
       </View>
     </Button>
   );
