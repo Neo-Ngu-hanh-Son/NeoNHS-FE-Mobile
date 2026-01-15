@@ -13,10 +13,11 @@ NeoNHS/
 │   └── providers/         # Context providers
 │
 ├── components/            # Shared UI components
-│   ├── Buttons/
-│   ├── Loader/
-│   ├── Navigator/
-│   └── Text/
+│   ├── Buttons/          # Button components
+│   ├── Loader/           # Loading indicators
+│   ├── Navigator/        # Navigation helpers
+│   ├── Text/             # Text components
+│   └── ui/               # Reusable UI primitives (button, input, card, etc.)
 │
 ├── features/              # Feature modules
 │   ├── auth/             # Authentication feature
@@ -37,6 +38,8 @@ NeoNHS/
 │
 ├── hooks/                # Shared React hooks
 │
+├── lib/                  # Library utilities (theme, utils)
+│
 ├── utils/                # Utility functions
 │
 ├── types/                # TypeScript type definitions
@@ -44,9 +47,10 @@ NeoNHS/
 ├── theme/                # Theming configuration
 │
 ├── assets/               # Static assets
-│   └── fonts/
+│   ├── fonts/
+│   └── images/
 │
-└── helper/               # Documentation and guides
+└── docs/                 # Documentation and guides
 ```
 
 ## Directory Descriptions
@@ -61,11 +65,22 @@ Navigation configuration files for React Navigation.
 
 ### `app/providers/`
 
-React Context providers (Auth, API, Ant Design).
+React Context providers (Auth, API, SafeAreaProvider).
 
 ### `components/`
 
 Shared UI components used across multiple features.
+
+### `components/ui/`
+
+Reusable UI primitives built with NativeWind/Tailwind styling:
+- `button.tsx` - Button component
+- `input.tsx` - Text input component
+- `card.tsx` - Card container component
+- `checkbox.tsx` - Checkbox component
+- `select.tsx` - Select/dropdown component
+- `text.tsx` - Text component
+- And more...
 
 ### `features/`
 
@@ -85,6 +100,10 @@ API client configuration, endpoints, and types.
 
 Shared React hooks used across the application.
 
+### `lib/`
+
+Library utilities including theme configuration and common utility functions.
+
 ### `utils/`
 
 Utility functions (logger, storage, constants, date helpers).
@@ -101,7 +120,7 @@ Theme configuration (colors, typography, spacing).
 
 Static assets (images, fonts, icons).
 
-### `helper/`
+### `docs/`
 
 Documentation and guides for developers.
 
@@ -117,7 +136,7 @@ feature-name/
 ├── services/       # Feature API services
 ├── context/        # Feature context (optional)
 ├── types.ts        # Feature type definitions
-└── index.ts        # Module exports (Search GPT for barrel exports)
+└── index.ts        # Module exports (barrel exports)
 ```
 
 ## Best Practices

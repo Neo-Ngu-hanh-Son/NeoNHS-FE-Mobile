@@ -56,10 +56,12 @@ normally like the basic usage section):
 
 ```typescript
 import { useApi } from "@/hooks";
-import { userService } from "@/services/api/userService";
+import { apiClient, endpoints } from "@/services/api";
 
 function ProfileScreen() {
-  const { data: user, loading, error, execute } = useApi(userService.getProfile);
+  const { data: user, loading, error, execute, reset } = useApi(
+    () => apiClient.get<User>(endpoints.users.getProfile())
+  );
 
   useEffect(() => {
     execute();
@@ -69,26 +71,37 @@ function ProfileScreen() {
   if (error) return <Text>Error: {error.message}</Text>;
   if (!user) return null;
 
-  return <Text>Welcome, {user.name}!</Text>;
+  return <Text>Welcome, {user.fullName}!</Text>;
 }
 ```
 
+The `useApi` hook returns:
+- `data` - The response data
+- `loading` - Loading state boolean
+- `error` - Error object if request failed
+- `execute` - Function to trigger the API call
+- `reset` - Function to reset the state
+
 ## Creating Service Functions
 
-Create service files for each feature area:
+Create service files for each feature area. For example, see `features/auth/services/authService.ts`:
 
 ```typescript
-// services/api/userService.ts
-import { apiClient } from "./client";
-import { endpoints } from "./endpoints";
+// features/your-feature/services/yourService.ts
+import { apiClient } from "@/services/api";
+import { endpoints } from "@/services/api";
 
-export const userService = {
-  getProfile: () => apiClient.get<User>(endpoints.users.getProfile()),
+export const yourService = {
+  getItems: () => apiClient.get<Item[]>(endpoints.yourEndpoint.getItems()),
 
-  updateProfile: (data: Partial<User>) =>
-    apiClient.put<User>(endpoints.users.updateProfile(), data),
+  getItemById: (id: string) => 
+    apiClient.get<Item>(endpoints.yourEndpoint.getItemById(id)),
 
-  getUserById: (id: string) => apiClient.get<User>(endpoints.users.getUserById(id)),
+  createItem: (data: CreateItemData) =>
+    apiClient.post<Item>(endpoints.yourEndpoint.create(), data),
+
+  updateItem: (id: string, data: Partial<Item>) =>
+    apiClient.put<Item>(endpoints.yourEndpoint.update(id), data),
 };
 ```
 

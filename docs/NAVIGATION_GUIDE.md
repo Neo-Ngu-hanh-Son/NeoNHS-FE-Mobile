@@ -55,8 +55,8 @@ Bottom tab navigator for main app screens (Home, Profile, etc.).
 Create your screen component in the appropriate feature folder:
 
 ```typescript
-// src/features/your-feature/screens/YourScreen.tsx
-import { View, Text } from "@ant-design/react-native";
+// features/your-feature/screens/YourScreen.tsx
+import { View, Text } from "react-native";
 import { StackScreenProps } from "@react-navigation/stack";
 import { CompositeScreenProps } from "@react-navigation/native";
 import { YourStackParamList, RootStackParamList } from "@/app/navigations/NavigationParamTypes";
@@ -80,7 +80,7 @@ export default function YourScreen({ navigation, route }: YourScreenProps) {
 Add your screen to the appropriate param list in `NavigationParamTypes.ts`:
 
 ```typescript
-// src/app/navigations/NavigationParamTypes.ts
+// app/navigations/NavigationParamTypes.ts
 
 // For a new tab screen:
 export type TabsStackParamList = {
@@ -246,6 +246,9 @@ export default function YourScreen() {
 - Automatic type checking for route params
 - Cleaner code
 - Matches React Navigation's recommended pattern
+
+**Note:** Use hooks when:
+- You need to access the navigation props in components, not screen
 
 ## Navigation Methods
 
@@ -425,7 +428,7 @@ This allows you to:
 ### Type Definitions Location
 
 All navigation types are defined in:
-- `src/app/navigations/NavigationParamTypes.ts`
+- `app/navigations/NavigationParamTypes.ts`
 
 Keep this file updated when adding new screens or parameters.
 

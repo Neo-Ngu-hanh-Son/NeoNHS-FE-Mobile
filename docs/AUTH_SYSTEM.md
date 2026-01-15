@@ -37,7 +37,7 @@ function MyComponent() {
     return (
         <View>
             {isAuthenticated ? (
-                <Text>Welcome, {user?.name}!</Text>
+                <Text>Welcome, {user?.fullName}!</Text>
             ) : (
                 <Text>Please login</Text>
             )}
@@ -125,7 +125,7 @@ function ProfileScreen() {
 
     return (
         <View>
-            <Text>Welcome, {user?.name}</Text>
+            <Text>Welcome, {user?.fullName}</Text>
             <Button onPress={handleLogout}>Logout</Button>
         </View>
     );
@@ -138,7 +138,7 @@ function ProfileScreen() {
 const { updateUser } = useAuth();
 
 // Update user data in context and storage
-updateUser({ name: "New Name" });
+updateUser({ fullName: "New Name" });
 ```
 
 ### Refresh Token
@@ -172,9 +172,9 @@ The auth context provides:
 ## Type Definitions
 
 See `features/auth/types.ts` for:
-- `User` - User data structure
-- `LoginCredentials` - Login form data
-- `RegisterData` - Registration form data
+- `User` - User data structure (`userId`, `fullName`, `email`, `phoneNumber`, `avatarUrl`, `roles`, etc.)
+- `LoginCredentials` - Login form data (`email`, `password`)
+- `RegisterData` - Registration form data (`email`, `password`, `name`)
 - `AuthState` - Auth state structure
 - `AuthContextValue` - Context value type
 
