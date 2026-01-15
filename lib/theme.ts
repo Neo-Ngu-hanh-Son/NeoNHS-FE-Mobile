@@ -2,56 +2,98 @@ import { DarkTheme, DefaultTheme, type Theme } from '@react-navigation/native';
  
 export const THEME = {
   light: {
-    background: 'hsl(0 0% 100%)',
-    foreground: 'hsl(0 0% 3.9%)',
-    card: 'hsl(0 0% 100%)',
-    cardForeground: 'hsl(0 0% 3.9%)',
-    popover: 'hsl(0 0% 100%)',
-    popoverForeground: 'hsl(0 0% 3.9%)',
-    primary: 'hsl(0 0% 9%)',
-    primaryForeground: 'hsl(0 0% 98%)',
-    secondary: 'hsl(0 0% 96.1%)',
+    // Backgrounds
+    background: 'hsl(0 0% 100%)',           // Pure white
+    card: 'hsl(0 0% 100%)',                 // Pure white
+    popover: 'hsl(0 0% 100%)',              // Pure white
+    sidebar: 'hsl(0 0% 98%)',               // Slight off-white
+    
+    // Text colors
+    foreground: 'hsl(0 0% 9%)',             // Near black for high contrast
+    cardForeground: 'hsl(0 0% 9%)',
+    popoverForeground: 'hsl(0 0% 9%)',
+    sidebarForeground: 'hsl(0 0% 9%)',
+    
+    // Primary - Green theme
+    primary: 'hsl(142 71% 35%)',            // Rich green
+    primaryForeground: 'hsl(0 0% 100%)',    // White text on primary
+    sidebarPrimary: 'hsl(142 71% 35%)',
+    sidebarPrimaryForeground: 'hsl(0 0% 100%)',
+    
+    // Secondary & Muted
+    secondary: 'hsl(0 0% 96%)',             // Light gray
     secondaryForeground: 'hsl(0 0% 9%)',
-    muted: 'hsl(0 0% 96.1%)',
-    mutedForeground: 'hsl(0 0% 45.1%)',
-    accent: 'hsl(0 0% 96.1%)',
+    muted: 'hsl(0 0% 96%)',
+    mutedForeground: 'hsl(0 0% 45%)',       // Medium gray - visible
+    accent: 'hsl(0 0% 96%)',
     accentForeground: 'hsl(0 0% 9%)',
-    destructive: 'hsl(0 84.2% 60.2%)',
-    border: 'hsl(0 0% 89.8%)',
-    input: 'hsl(0 0% 89.8%)',
-    ring: 'hsl(0 0% 63%)',
-    radius: '0.625rem',
-    chart1: 'hsl(12 76% 61%)',
-    chart2: 'hsl(173 58% 39%)',
-    chart3: 'hsl(197 37% 24%)',
-    chart4: 'hsl(43 74% 66%)',
-    chart5: 'hsl(27 87% 67%)',
-  },
-  dark: {
-    background: 'hsl(0 0% 3.9%)',
-    foreground: 'hsl(0 0% 98%)',
-    card: 'hsl(0 0% 3.9%)',
-    cardForeground: 'hsl(0 0% 98%)',
-    popover: 'hsl(0 0% 3.9%)',
-    popoverForeground: 'hsl(0 0% 98%)',
-    primary: 'hsl(0 0% 98%)',
-    primaryForeground: 'hsl(0 0% 9%)',
-    secondary: 'hsl(0 0% 14.9%)',
-    secondaryForeground: 'hsl(0 0% 98%)',
-    muted: 'hsl(0 0% 14.9%)',
-    mutedForeground: 'hsl(0 0% 63.9%)',
-    accent: 'hsl(0 0% 14.9%)',
-    accentForeground: 'hsl(0 0% 98%)',
-    destructive: 'hsl(0 70.9% 59.4%)',
-    border: 'hsl(0 0% 14.9%)',
-    input: 'hsl(0 0% 14.9%)',
-    ring: 'hsl(300 0% 45%)',
-    radius: '0.625rem',
-    chart1: 'hsl(220 70% 50%)',
+    sidebarAccent: 'hsl(0 0% 96%)',
+    sidebarAccentForeground: 'hsl(0 0% 9%)',
+    
+    // Borders & Inputs - More visible
+    border: 'hsl(0 0% 85%)',                // Darker border - visible!
+    input: 'hsl(0 0% 85%)',
+    sidebarBorder: 'hsl(0 0% 85%)',
+    
+    // Others
+    destructive: 'hsl(0 84% 60%)',          // Red for errors
+    ring: 'hsl(142 71% 45%)',               // Focus ring - green
+    sidebarRing: 'hsl(142 71% 45%)',
+    radius: '0.65rem',
+    
+    // Charts
+    chart1: 'hsl(142 76% 36%)',
     chart2: 'hsl(160 60% 45%)',
     chart3: 'hsl(30 80% 55%)',
     chart4: 'hsl(280 65% 60%)',
     chart5: 'hsl(340 75% 55%)',
+  },
+  dark: {
+    // Backgrounds - PITCH DARK
+    background: 'hsl(0 0% 4%)',             // Near black
+    card: 'hsl(0 0% 9%)',                   // Slightly lighter for cards
+    popover: 'hsl(0 0% 9%)',
+    sidebar: 'hsl(0 0% 7%)',
+    
+    // Text colors - High contrast
+    foreground: 'hsl(0 0% 98%)',            // Near white
+    cardForeground: 'hsl(0 0% 98%)',
+    popoverForeground: 'hsl(0 0% 98%)',
+    sidebarForeground: 'hsl(0 0% 98%)',
+    
+    // Primary - Brighter green for dark mode
+    primary: 'hsl(142 71% 45%)',            // Brighter green
+    primaryForeground: 'hsl(0 0% 100%)',
+    sidebarPrimary: 'hsl(142 71% 50%)',
+    sidebarPrimaryForeground: 'hsl(0 0% 100%)',
+    
+    // Secondary & Muted
+    secondary: 'hsl(0 0% 15%)',             // Dark gray
+    secondaryForeground: 'hsl(0 0% 98%)',
+    muted: 'hsl(0 0% 15%)',
+    mutedForeground: 'hsl(0 0% 60%)',       // Visible muted text
+    accent: 'hsl(0 0% 15%)',
+    accentForeground: 'hsl(0 0% 98%)',
+    sidebarAccent: 'hsl(0 0% 15%)',
+    sidebarAccentForeground: 'hsl(0 0% 98%)',
+    
+    // Borders & Inputs - More visible
+    border: 'hsl(0 0% 20%)',                // Visible border
+    input: 'hsl(0 0% 20%)',
+    sidebarBorder: 'hsl(0 0% 20%)',
+    
+    // Others
+    destructive: 'hsl(0 62% 55%)',          // Red for errors
+    ring: 'hsl(142 71% 45%)',
+    sidebarRing: 'hsl(142 71% 45%)',
+    radius: '0.65rem',
+    
+    // Charts
+    chart1: 'hsl(142 70% 50%)',
+    chart2: 'hsl(160 60% 50%)',
+    chart3: 'hsl(30 80% 60%)',
+    chart4: 'hsl(280 65% 65%)',
+    chart5: 'hsl(340 75% 60%)',
   },
 };
  
