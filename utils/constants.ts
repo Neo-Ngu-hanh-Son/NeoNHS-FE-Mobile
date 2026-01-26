@@ -7,7 +7,7 @@
  */
 export const API_CONFIG = {
     BASE_URL: process.env.EXPO_PUBLIC_API_URL || "https://api.example.com",
-    TIMEOUT: 30000, // 30 seconds
+    TIMEOUT: 60000,
     VERSION: "v1",
 } as const;
 

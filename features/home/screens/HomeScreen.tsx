@@ -31,8 +31,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       requiresAuth: false,
     });
     logger.info('[HomeScreen] Test fetch:', res);
-  }
-
+  };
 
   const handleLogout = async () => {
     try {
@@ -64,7 +63,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             Welcome Home
           </Text>
           <Text className="mt-1 text-base" style={{ color: theme.mutedForeground }}>
-            {user?.fullName || user?.email || 'Guest'}
+            {user?.fullname || user?.email || 'Guest'}
           </Text>
         </View>
 
@@ -118,7 +117,9 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           </View>
         </View>
 
-        <Button onPress={testFetch}><Text>Test Fetch</Text></Button>
+        <Button onPress={testFetch}>
+          <Text>Test Fetch</Text>
+        </Button>
 
         {/* User Info Card */}
         {user && (
@@ -135,7 +136,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                 Name
               </Text>
               <Text className="text-base font-medium" style={{ color: theme.foreground }}>
-                {user.fullName || 'Not set'}
+                {user.fullname || 'Not set'}
               </Text>
             </View>
 

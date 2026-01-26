@@ -4,12 +4,12 @@
     "slug": "neonhs",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/orchis.png",
     "scheme": "neonhs",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/splash.png",
+      "image": "./assets/images/NeoNHSLogo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },

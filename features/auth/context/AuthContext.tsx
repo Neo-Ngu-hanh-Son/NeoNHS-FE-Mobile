@@ -1,66 +1,73 @@
-import React, { createContext, useContext, useCallback, useReducer, useEffect, ReactNode } from "react";
-import type { AuthContextValue, AuthState, LoginCredentials, RegisterData, User } from "../types";
-import { authService } from "../services/authService";
-import { storage } from "@/utils/storage";
-import type { ApiError } from "@/services/api/types";
-import { logger } from "@/utils/logger";
+import React, {
+  createContext,
+  useContext,
+  useCallback,
+  useReducer,
+  useEffect,
+  ReactNode,
+} from 'react';
+import type { AuthContextValue, AuthState, LoginCredentials, RegisterData, User } from '../types';
+import { authService } from '../services/authService';
+import { storage } from '@/utils/storage';
+import type { ApiError } from '@/services/api/types';
+import { logger } from '@/utils/logger';
 
 const initialState: AuthState = {
-    user: null,
-    token: null,
-    refreshToken: null,
-    isAuthenticated: false,
-    isLoading: true,
-    isInitialized: false,
+  user: null,
+  token: null,
+  refreshToken: null,
+  isAuthenticated: false,
+  isLoading: true,
+  isInitialized: false,
 };
 
 // Action types will be used in the reducer to update the state
 type AuthAction =
-    | { type: "SET_LOADING"; payload: boolean }
-    | { type: "SET_INITIALIZED"; payload: boolean }
-    | { type: "LOGIN_SUCCESS"; payload: { user: User; token: string; refreshToken?: string } }
-    | { type: "LOGOUT" }
-    | { type: "UPDATE_USER"; payload: Partial<User> }
-    | { type: "SET_TOKEN"; payload: { token: string; refreshToken?: string } };
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_INITIALIZED'; payload: boolean }
+  | { type: 'LOGIN_SUCCESS'; payload: { user: User; token: string; refreshToken?: string } }
+  | { type: 'LOGOUT' }
+  | { type: 'UPDATE_USER'; payload: Partial<User> }
+  | { type: 'SET_TOKEN'; payload: { token: string; refreshToken?: string } };
 
 function authReducer(state: AuthState, action: AuthAction): AuthState {
-    switch (action.type) {
-        case "SET_LOADING":
-            return { ...state, isLoading: action.payload };
-        case "SET_INITIALIZED":
-            return { ...state, isInitialized: action.payload };
-        case "LOGIN_SUCCESS":
-            return {
-                ...state,
-                user: action.payload.user,
-                token: action.payload.token,
-                refreshToken: action.payload.refreshToken || null,
-                isAuthenticated: true,
-                isLoading: false,
-            };
-        case "LOGOUT":
-            return {
-                ...state,
-                user: null,
-                token: null,
-                refreshToken: null,
-                isAuthenticated: false,
-                isLoading: false,
-            };
-        case "UPDATE_USER":
-            return {
-                ...state,
-                user: state.user ? { ...state.user, ...action.payload } : null,
-            };
-        case "SET_TOKEN":
-            return {
-                ...state,
-                token: action.payload.token,
-                refreshToken: action.payload.refreshToken || state.refreshToken,
-            };
-        default:
-            return state;
-    }
+  switch (action.type) {
+    case 'SET_LOADING':
+      return { ...state, isLoading: action.payload };
+    case 'SET_INITIALIZED':
+      return { ...state, isInitialized: action.payload };
+    case 'LOGIN_SUCCESS':
+      return {
+        ...state,
+        user: action.payload.user,
+        token: action.payload.token,
+        refreshToken: action.payload.refreshToken || null,
+        isAuthenticated: true,
+        isLoading: false,
+      };
+    case 'LOGOUT':
+      return {
+        ...state,
+        user: null,
+        token: null,
+        refreshToken: null,
+        isAuthenticated: false,
+        isLoading: false,
+      };
+    case 'UPDATE_USER':
+      return {
+        ...state,
+        user: state.user ? { ...state.user, ...action.payload } : null,
+      };
+    case 'SET_TOKEN':
+      return {
+        ...state,
+        token: action.payload.token,
+        refreshToken: action.payload.refreshToken || state.refreshToken,
+      };
+    default:
+      return state;
+  }
 }
 
 // Create context
@@ -71,181 +78,214 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
  * Provides authentication state and methods to children
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [state, dispatch] = useReducer(authReducer, initialState);
+  const [state, dispatch] = useReducer(authReducer, initialState);
 
-    /**
-     * Initialize auth state from storage
-     */
-    const initializeAuth = useCallback(async () => {
-        try {
-            dispatch({ type: "SET_LOADING", payload: true });
+  /**
+   * Initialize auth state from storage
+   */
+  const initializeAuth = useCallback(async () => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
 
-            const [token, refreshToken, userData] = await Promise.all([
-                storage.getAuthToken(),
-                storage.getRefreshToken(),
-                storage.getUserData<User>(),
-            ]);
+      const [token, refreshToken, userData] = await Promise.all([
+        storage.getAuthToken(),
+        storage.getRefreshToken(),
+        storage.getUserData<User>(),
+      ]);
 
-            if (token && userData) {
-                dispatch({
-                    type: "LOGIN_SUCCESS",
-                    payload: {
-                        user: userData,
-                        token,
-                        refreshToken: refreshToken || undefined,
-                    },
-                });
-            } else {
-                dispatch({ type: "LOGOUT" });
-            }
-        } catch (error) {
-            logger.error("Failed to initialize auth:", error);
-            dispatch({ type: "LOGOUT" });
-        } finally {
-            dispatch({ type: "SET_LOADING", payload: false });
-            dispatch({ type: "SET_INITIALIZED", payload: true });
-        }
-    }, []);
+      if (token && userData) {
+        dispatch({
+          type: 'LOGIN_SUCCESS',
+          payload: {
+            user: userData,
+            token,
+            refreshToken: refreshToken || undefined,
+          },
+        });
+      } else {
+        dispatch({ type: 'LOGOUT' });
+      }
+    } catch (error) {
+      logger.error('Failed to initialize auth:', error);
+      dispatch({ type: 'LOGOUT' });
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+      dispatch({ type: 'SET_INITIALIZED', payload: true });
+    }
+  }, []);
 
-    const login = useCallback(async (credentials: LoginCredentials) => {
-        try {
-            dispatch({ type: "SET_LOADING", payload: true });
+  const login = useCallback(async (credentials: LoginCredentials) => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
 
-            const response = await authService.login(credentials);
+      const response = await authService.login(credentials);
 
-            if (response.data) {
-                const { user, token, refreshToken } = response.data;
+      if (response.data) {
+        const { accessToken, userInfo } = response.data;
+        const refreshToken = null; // TODO: Adjust if refreshToken is provided
 
-                logger.info("[AuthContext] Login successful:", response.data);
+        logger.info('[AuthContext] Login successful:', response.data);
 
-                await Promise.all([
-                    storage.setAuthToken(token),
-                    refreshToken ? storage.setRefreshToken(refreshToken) : Promise.resolve(),
-                    storage.setUserData(user),
-                ]);
+        await Promise.all([
+          storage.setAuthToken(accessToken),
+          refreshToken ? storage.setRefreshToken(refreshToken) : Promise.resolve(),
+          storage.setUserData(userInfo),
+        ]);
 
-                dispatch({
-                    type: "LOGIN_SUCCESS",
-                    payload: { user, token, refreshToken },
-                });
-            } else {
-                throw new Error("Login failed: No data received");
-            }
-        } catch (error) {
-            dispatch({ type: "SET_LOADING", payload: false });
-            const apiError = error as ApiError;
-            throw new Error(apiError.message || "Login failed");
-        }
-    }, []);
+        dispatch({
+          type: 'LOGIN_SUCCESS',
+          payload: { user: userInfo, token: accessToken, refreshToken: refreshToken || undefined },
+        });
+      } else {
+        throw new Error('Login failed: No data received');
+      }
+    } catch (error) {
+      dispatch({ type: 'SET_LOADING', payload: false });
+      const apiError = error as ApiError;
+      throw new Error(apiError.message || 'Login failed');
+    }
+  }, []);
 
+  const loginWithGoogle = async (idToken: string) => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
 
-    const register = useCallback(async (data: RegisterData) => {
-        try {
-            dispatch({ type: "SET_LOADING", payload: true });
+      const response = await authService.loginWithGoogle(idToken);
 
-            const response = await authService.register(data);
+      if (response.data) {
+        const { accessToken, userInfo } = response.data;
+        const refreshToken = null; // TODO: Adjust if refreshToken is provided
 
-            if (response.data) {
-                const { user, token, refreshToken } = response.data;
+        logger.info('[AuthContext] Google login successful:', response.data);
 
-                await Promise.all([
-                    storage.setAuthToken(token),
-                    refreshToken ? storage.setRefreshToken(refreshToken) : Promise.resolve(),
-                    storage.setUserData(user),
-                ]);
+        await Promise.all([
+          storage.setAuthToken(accessToken),
+          refreshToken ? storage.setRefreshToken(refreshToken) : Promise.resolve(),
+          storage.setUserData(userInfo),
+        ]);
 
-                dispatch({
-                    type: "LOGIN_SUCCESS",
-                    payload: { user, token, refreshToken },
-                });
-            } else {
-                throw new Error("Registration failed: No data received");
-            }
-        } catch (error) {
-            dispatch({ type: "SET_LOADING", payload: false });
-            const apiError = error as ApiError;
-            throw new Error(apiError.message || "Registration failed");
-        }
-    }, []);
+        dispatch({
+          type: 'LOGIN_SUCCESS',
+          payload: { user: userInfo, token: accessToken, refreshToken: refreshToken || undefined },
+        });
+      } else {
+        throw new Error('Google login failed: No data received');
+      }
+    } catch (error) {
+      dispatch({ type: 'SET_LOADING', payload: false });
+      const apiError = error as ApiError;
+      throw new Error(apiError.message || 'Google login failed');
+    }
+  };
 
-    const logout = useCallback(async () => {
-        try {
-            try {
-                await authService.logout();
-            } catch (error) {
-                logger.warn("Logout API call failed:", error);
-            }
+  const register = useCallback(async (data: RegisterData) => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
 
-            await storage.clearAuthData();
+      const response = await authService.register(data);
 
-            dispatch({ type: "LOGOUT" });
-        } catch (error) {
-            logger.error("Logout error:", error);
-            dispatch({ type: "LOGOUT" });
-        }
-    }, []);
+      if (response.data) {
+        const { accessToken, userInfo } = response.data;
+        const refreshToken = null; // TODO: Adjust if refreshToken is provided
 
-    /**
-     * Refresh authentication token
-     */
-    const refreshAuth = useCallback(async () => {
-        try {
-            const refreshToken = await storage.getRefreshToken();
-            if (!refreshToken) {
-                throw new Error("No refresh token available");
-            }
+        await Promise.all([
+          storage.setAuthToken(accessToken),
+          refreshToken ? storage.setRefreshToken(refreshToken) : Promise.resolve(),
+          storage.setUserData(userInfo),
+        ]);
 
-            const response = await authService.refreshToken(refreshToken);
+        dispatch({
+          type: 'LOGIN_SUCCESS',
+          payload: { user: userInfo, token: accessToken, refreshToken: refreshToken || undefined },
+        });
+      } else {
+        throw new Error('Registration failed: No data received');
+      }
+    } catch (error) {
+      dispatch({ type: 'SET_LOADING', payload: false });
+      const apiError = error as ApiError;
+      throw new Error(apiError.message || 'Registration failed');
+    }
+  }, []);
 
-            if (response.data) {
-                const { token: newToken, refreshToken: newRefreshToken } = response.data;
+  const logout = useCallback(async () => {
+    try {
+      try {
+        authService.logout(); // No need to await, it will handle the logout asynchronously
+      } catch (error) {
+        logger.warn('Logout API call failed:', error);
+      }
 
-                await Promise.all([
-                    storage.setAuthToken(newToken),
-                    newRefreshToken ? storage.setRefreshToken(newRefreshToken) : Promise.resolve(),
-                ]);
+      await storage.clearAuthData();
 
-                dispatch({
-                    type: "SET_TOKEN",
-                    payload: { token: newToken, refreshToken: newRefreshToken },
-                });
-            }
-        } catch (error) {
-            logger.error("Token refresh failed:", error);
-            await logout();
-        }
-    }, [logout]);
+      dispatch({ type: 'LOGOUT' });
+    } catch (error) {
+      logger.error('Logout error:', error);
+      dispatch({ type: 'LOGOUT' });
+    }
+  }, []);
 
+  const refreshAuth = useCallback(async () => {
+    try {
+      const refreshToken = await storage.getRefreshToken();
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
 
-    const updateUser = useCallback((userData: Partial<User>) => {
-        dispatch({ type: "UPDATE_USER", payload: userData });
-        // Also update storage
-        if (state.user) {
-            storage.setUserData({ ...state.user, ...userData });
-        }
-    }, [state.user]);
+      const response = await authService.refreshToken(refreshToken);
 
-    // Initialize auth on mount
-    useEffect(() => {
-        initializeAuth();
-    }, [initializeAuth]);
+      if (response.data) {
+        const { token: newToken, refreshToken: newRefreshToken } = response.data;
 
-    const value: AuthContextValue = {
-        ...state,
-        login,
-        register,
-        logout,
-        refreshAuth,
-        updateUser,
-    };
+        await Promise.all([
+          storage.setAuthToken(newToken),
+          newRefreshToken ? storage.setRefreshToken(newRefreshToken) : Promise.resolve(),
+        ]);
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+        dispatch({
+          type: 'SET_TOKEN',
+          payload: { token: newToken, refreshToken: newRefreshToken },
+        });
+      }
+    } catch (error) {
+      logger.error('Token refresh failed:', error);
+      await logout();
+    }
+  }, [logout]);
+
+  const updateUser = useCallback(
+    (userData: Partial<User>) => {
+      dispatch({ type: 'UPDATE_USER', payload: userData });
+      // Also update storage
+      if (state.user) {
+        storage.setUserData({ ...state.user, ...userData });
+      }
+    },
+    [state.user]
+  );
+
+  // Initialize auth on mount
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+
+  const value: AuthContextValue = {
+    ...state,
+    login,
+    register,
+    logout,
+    refreshAuth,
+    updateUser,
+    loginWithGoogle,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextValue {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error("useAuth must be used within an AuthProvider");
-    }
-    return context;
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 }
