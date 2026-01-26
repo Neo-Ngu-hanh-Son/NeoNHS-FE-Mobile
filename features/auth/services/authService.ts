@@ -19,13 +19,20 @@ export const authService = {
         await new Promise(resolve => setTimeout(resolve, 3000));
         return {
             data: {
-                token: "dummy-token",
-                refreshToken: "dummy-refresh-token",
-                user: {
-                    userId: "dummy-id",
-                    fullName: "Dummy User",
-                    email: credentials.email ? credentials.email : "dummy-email@example.com",
-                    roles: ["user"],
+                accessToken: "dummy-token",
+                tokenType: "Bearer",
+                userInfo: {
+                    id: "dummy-uuid-1234-5678",
+                    fullname: "Dummy User",
+                    email: credentials.email || "dummy-email@example.com",
+                    phoneNumber: null,
+                    avatarUrl: null,
+                    role: "GUEST",
+                    isActive: true,
+                    isVerified: false,
+                    isBanned: false,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
                 },
             },
             status: 200,
@@ -46,13 +53,20 @@ export const authService = {
         await new Promise(resolve => setTimeout(resolve, 3000));
         return {
             data: {
-                token: "dummy-token",
-                refreshToken: "dummy-refresh-token",
-                user: {
-                    userId: "dummy-id",
-                    fullName: data.name ? data.name : "Dummy User",
-                    email: data.email ? data.email : "dummy-email@example.com",
-                    roles: ["user"],
+                accessToken: "dummy-token",
+                tokenType: "Bearer",
+                userInfo: {
+                    id: "dummy-uuid-1234-5678",
+                    fullname: data.name,
+                    email: data.email,
+                    phoneNumber: null,
+                    avatarUrl: null,
+                    role: "GUEST",
+                    isActive: true,
+                    isVerified: false,
+                    isBanned: false,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
                 },
             },
             status: 200,
@@ -69,7 +83,7 @@ export const authService = {
      * Logout user
      */
     async logout(): Promise<ApiResponse<void>> {
-        return apiClient.post<void>(endpoints.auth.logout());
+        return apiClient.post<void>(endpoints.auth.logout(), {}, { requiresAuth: false });
     },
 
     /**
@@ -117,5 +131,13 @@ export const authService = {
         //     { requiresAuth: false }
         // );
     },
+
+    async loginWithGoogle(idToken: string): Promise<ApiResponse<AuthResponse>> {
+        return apiClient.post<AuthResponse>(
+            endpoints.auth.loginWithGoogle(idToken),
+            { idToken },
+            { requiresAuth: false }
+        );
+    }
 };
 

@@ -1,15 +1,27 @@
-export interface User {
-    userId: string;
-    fullName: string;
-    email?: string;
-    phoneNumber?: string;
-    avatarUrl?: string;
-    roles: string[];
-    isActive?: boolean;
-    isVerified?: boolean;
-    isBanned?: boolean;
-    [key: string]: any; // For additional custom fields
+export type UserRole = 'ADMIN' | 'VENDOR' | 'GUEST' | 'TOURIST' | string;
+
+/**
+ * User information response from API
+ * Maps to backend UserInfoResponse
+ */
+export interface UserInfo {
+    id: string; // UUID
+    fullname: string;
+    email: string;
+    phoneNumber: string | null;
+    avatarUrl: string | null;
+    role: UserRole;
+    isActive: boolean;
+    isVerified: boolean;
+    isBanned: boolean;
+    createdAt: string; // ISO timestamp (LocalDateTime)
+    updatedAt: string; // ISO timestamp (LocalDateTime)
 }
+
+/**
+ * User type for app state (alias for UserInfo)
+ */
+export type User = UserInfo;
 
 /**
  * Login credentials
@@ -30,11 +42,12 @@ export interface RegisterData {
 
 /**
  * Authentication response from API
+ * Maps to backend AuthResponse
  */
 export interface AuthResponse {
-    token: string;
-    refreshToken?: string;
-    user: User;
+    accessToken: string;
+    tokenType: string; // defaults to "Bearer"
+    userInfo: UserInfo;
 }
 
 /**
@@ -58,4 +71,5 @@ export interface AuthContextValue extends AuthState {
     logout: () => Promise<void>;
     refreshAuth: () => Promise<void>;
     updateUser: (user: Partial<User>) => void;
+    loginWithGoogle: (idToken: string) => Promise<void>;
 }
