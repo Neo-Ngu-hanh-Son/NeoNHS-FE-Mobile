@@ -1,4 +1,3 @@
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import LoginScreen from '@/features/auth/screens/LoginScreen';
 import { useAuth } from '@/features/auth/context/AuthContext';
