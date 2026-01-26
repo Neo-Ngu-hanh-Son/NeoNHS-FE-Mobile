@@ -173,7 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             try {
                 await authService.logout();
             } catch (error) {
-                // logger.warn("Logout API call failed:", error);
+                logger.warn("Logout API call failed:", error);
             }
 
             await storage.clearAuthData();
