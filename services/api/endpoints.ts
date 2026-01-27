@@ -10,6 +10,7 @@ export const authEndpoints = {
     forgotPassword: () => `auth/forgot-password`,
     resetPassword: () => `auth/reset-password`,
     verifyEmail: () => `auth/verify-email`,
+    loginWithGoogle: (tokenId: string) => `auth/google-login?idToken=${encodeURIComponent(tokenId)}`,
 } as const;
 
 /**

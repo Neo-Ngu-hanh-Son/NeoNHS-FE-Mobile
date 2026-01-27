@@ -65,7 +65,7 @@ class ApiClient {
                     if (token) {
                         config.headers.Authorization = `Bearer ${token}`;
                     } else {
-                        logger.error("Authentication token not found in store for this request");
+                        logger.error("[ApiClient] Authentication token not found in store for this request");
                     }
                 }
 
@@ -95,34 +95,41 @@ class ApiClient {
 
     /**
      * Transform Axios response to ApiResponse format
+     * 
+     * Backend format: { status, success, message, data, timestamp }
      */
     private transformResponse<T>(response: AxiosResponse<T>): ApiResponse<T> {
-        // If response.data already has our ApiResponse structure, use it
-        // If you are wondering why we are doing this, it is because the API is returning a response in the following format:
-        // {
-        //     "data": {
-        //         "message": "success",
-        //         "status": 200
-        //     }
-        // }
-        // We want to transform this response to our ApiResponse format.
-        // The ApiResponse format is defined in the types.ts file.
-        if (
-            response.data &&
-            typeof response.data === "object" &&
-            "data" in response.data &&
-            "message" in response.data &&
-            "status" in response.data
-        ) {
-            return {
-                ...(response.data as unknown as ApiResponse<T>),
-                status: response.status,
-            };
+        const responseData = response.data as Record<string, unknown>;
+
+        // Check if response is an object
+        if (responseData && typeof responseData === "object") {
+            // Case 1: Standard wrapper format from backend
+            // Backend returns: { status, success, message, data, timestamp }
+            if ("data" in responseData && "success" in responseData) {
+                return {
+                    data: responseData.data as T,
+                    success: responseData.success as boolean,
+                    message: responseData.message as string | undefined,
+                    timestamp: responseData.timestamp as string | undefined,
+                    status: response.status, // Use HTTP status, not backend status
+                };
+            }
+
+            // Case 2: Wrapper with just data field (legacy/other endpoints)
+            // Backend returns: { data: {...} } or { data: {...}, message: "..." }
+            if ("data" in responseData) {
+                return {
+                    data: responseData.data as T,
+                    message: responseData.message as string | undefined,
+                    status: response.status,
+                };
+            }
         }
 
-        // Otherwise, wrap the data
+        // Case 3: Raw data without wrapper
+        // Backend returns the data directly: { accessToken: "...", userInfo: {...} }
         return {
-            data: response.data,
+            data: responseData as T,
             status: response.status,
         };
     }
@@ -139,7 +146,7 @@ class ApiClient {
 
             // Network error (no response received)
             if (!axiosError.response) {
-                if (axiosError.code === "ECONNABORTED" || axiosError.message.includes("timeout")) {
+                if (axiosError.code === "ECONNABORTED" || axiosError.message?.includes("timeout")) {
                     apiError = {
                         message: "Request timeout. Please try again.",
                         status: 0,
@@ -147,7 +154,7 @@ class ApiClient {
                     };
                 } else {
                     apiError = {
-                        message: axiosError.message,
+                        message: axiosError.message || "Network error. Please check your connection.",
                         status: 0,
                         code: ApiErrorCode.NETWORK_ERROR,
                     };
@@ -157,15 +164,47 @@ class ApiClient {
                 const response = axiosError.response;
                 const responseData = response.data;
 
+                // Extract error message from various possible response formats
+                let errorMessage = "An error occurred";
+                let errorDetails: Record<string, string[]> | undefined;
+                let errorCode: string | undefined;
+
+                if (responseData) {
+                    if (typeof responseData === "string") {
+                        // Server returned plain text error
+                        errorMessage = responseData;
+                    } else if (typeof responseData === "object") {
+                        // Server returned JSON error object
+                        // Try common error message fields in order of preference
+                        errorMessage = 
+                            responseData.message ||
+                            responseData.error ||
+                            responseData.detail ||
+                            responseData.errorMessage ||
+                            (responseData.errors && typeof responseData.errors === "string" 
+                                ? responseData.errors 
+                                : null) ||
+                            response.statusText ||
+                            "An error occurred";
+                        
+                        // Extract validation errors if present
+                        if (responseData.errors && typeof responseData.errors === "object") {
+                            errorDetails = responseData.errors;
+                        }
+                        
+                        // Extract error code if present
+                        errorCode = responseData.code || responseData.errorCode;
+                    }
+                } else {
+                    // No response data, use status text
+                    errorMessage = response.statusText || "An error occurred";
+                }
+
                 apiError = {
-                    message:
-                        responseData.message ||
-                        responseData.error ||
-                        response.statusText ||
-                        "An error occurred",
+                    message: errorMessage,
                     status: response.status,
-                    errors: responseData.errors,
-                    code: this.getErrorCode(response.status, responseData.code),
+                    errors: errorDetails,
+                    code: this.getErrorCode(response.status, errorCode),
                 };
             }
         } else if (error instanceof Error) {

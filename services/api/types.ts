@@ -5,11 +5,20 @@
 
 /**
  * Standard API Response wrapper
+ *
+ * @param status HTTP status code (e.g., 200, 201, 400, 404, 500)
+ * @param success Indicates whether the request was successful
+ * @param message Human-readable message describing the result
+ * @param data Response payload data (null for error responses)
+ * @param timestamp Timestamp when the response was generated
  */
+
 export interface ApiResponse<T = unknown> {
+    status: number;
+    success?: boolean;
     data: T;
     message?: string;
-    status: number;
+    timestamp?: string;
 }
 
 /**

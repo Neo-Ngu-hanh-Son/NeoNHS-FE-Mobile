@@ -39,7 +39,7 @@ export default function ProfileScreen() {
             <Ionicons name="person" size={48} color={theme.primaryForeground} />
           </View>
           <Text className="text-xl font-semibold mt-4" style={{ color: theme.foreground }}>
-            {user?.fullName || "Guest User"}
+            {user?.fullname || "Guest User"}
           </Text>
           <Text className="text-base" style={{ color: theme.mutedForeground }}>
             {user?.email || "No email"}

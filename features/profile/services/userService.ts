@@ -11,7 +11,7 @@ import { logger } from "@/utils/logger";
  * Data for updating user account
  */
 export interface UpdateAccountData {
-    fullName?: string;
+    fullname?: string;
     email?: string;
     phoneNumber?: string;
     avatarUrl?: string;
@@ -27,12 +27,17 @@ export const userService = {
         
         return {
             data: {
-                userId: "dummy-id",
-                fullName: data.fullName || "Updated User",
+                id: "dummy-uuid-1234-5678",
+                fullname: data.fullname || "Updated User",
                 email: data.email || "updated@example.com",
-                phoneNumber: data.phoneNumber || "",
-                avatarUrl: data.avatarUrl || "",
-                roles: ["user"],
+                phoneNumber: data.phoneNumber || null,
+                avatarUrl: data.avatarUrl || null,
+                role: "GUEST",
+                isActive: true,
+                isVerified: false,
+                isBanned: false,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
             },
             status: 200,
             message: "Account updated successfully",

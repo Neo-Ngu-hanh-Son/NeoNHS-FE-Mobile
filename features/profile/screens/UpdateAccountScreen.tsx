@@ -26,7 +26,7 @@ export default function UpdateAccountScreen() {
     const { isDarkColorScheme } = useTheme();
     const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
-    const [fullName, setFullName] = useState(user?.fullName || "");
+    const [fullName, setFullName] = useState(user?.fullname || "");
     const [email, setEmail] = useState(user?.email || "");
     const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || "");
     const [isLoading, setIsLoading] = useState(false);
@@ -59,7 +59,7 @@ export default function UpdateAccountScreen() {
         setIsLoading(true);
         try {
             const updateData: UpdateAccountData = {
-                fullName: fullName.trim(),
+                fullname: fullName.trim(),
                 email: email.trim(),
                 phoneNumber: phoneNumber.trim() || undefined,
             };
@@ -233,7 +233,7 @@ export default function UpdateAccountScreen() {
                         <View style={styles.infoRow}>
                             <Ionicons name="finger-print-outline" size={18} color={theme.mutedForeground} />
                             <Text className="text-sm ml-2" style={{ color: theme.mutedForeground }}>
-                                User ID: {user?.userId || "N/A"}
+                                User ID: {user?.id || "N/A"}
                             </Text>
                         </View>
                         {user?.isVerified !== undefined && (

@@ -1,90 +1,106 @@
-import { useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
-import { CompositeScreenProps } from "@react-navigation/native";
-import { StackScreenProps } from "@react-navigation/stack";
+import { useState } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
+import { CompositeScreenProps } from '@react-navigation/native';
+import { StackScreenProps } from '@react-navigation/stack';
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Text } from "@/components/ui/text";
-import { Separator } from "@/components/ui/separator";
-import { IconButton } from "@/components/Buttons/IconButton";
-import { useTheme } from "@/app/providers/ThemeProvider";
-import { THEME } from "@/lib/theme";
-import { AuthStackParamList, RootStackParamList } from "@/app/navigations/NavigationParamTypes";
-import { useAuth } from "../context/AuthContext";
-import AuthLayout from "../components/AuthLayout";
-import AppLink from "@/components/Navigator/AppLink";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Text } from '@/components/ui/text';
+import { Separator } from '@/components/ui/separator';
+import { IconButton } from '@/components/Buttons/IconButton';
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { THEME } from '@/lib/theme';
+import { AuthStackParamList, RootStackParamList } from '@/app/navigations/NavigationParamTypes';
+import { useAuth } from '../context/AuthContext';
+import AuthLayout from '../components/AuthLayout';
+import AppLink from '@/components/Navigator/AppLink';
+import LoginForm from '../components/LoginForm';
+import { GoogleSignin, isErrorWithCode, statusCodes } from '@react-native-google-signin/google-signin';
+import { logger } from '@/utils/logger';
 
 type LoginScreenProps = CompositeScreenProps<
-  StackScreenProps<AuthStackParamList, "Login">,
+  StackScreenProps<AuthStackParamList, 'Login'>,
   StackScreenProps<RootStackParamList>
 >;
 
 export default function LoginScreen({ navigation }: LoginScreenProps) {
-  const { login, isLoading } = useAuth();
+  const { login, loginWithGoogle, isLoading } = useAuth();
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
-  
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
 
-  const validateEmail = (value: string) => {
-    if (!value.trim()) {
-      return "Email is required";
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-      return "Please enter a valid email address";
-    }
-    return "";
-  };
-
-  const validatePassword = (value: string) => {
-    if (!value) {
-      return "Password is required";
-    }
-    if (value.length < 6) {
-      return "Password must be at least 6 characters";
-    }
-    return "";
-  };
-
-  const handleLogin = async () => {
-    const emailErr = validateEmail(email);
-    const passwordErr = validatePassword(password);
-
-    setEmailError(emailErr);
-    setPasswordError(passwordErr);
-
-    if (emailErr || passwordErr) return;
-
+  const handleLogin = async (email: string, password: string) => {
     try {
       await login({ email: email.trim(), password });
-      navigation.replace("Main", {
-        screen: "Tabs",
-        params: { screen: "Home" },
+      navigation.replace('Main', {
+        screen: 'Tabs',
+        params: { screen: 'Home' },
       });
     } catch (error) {
       Alert.alert(
-        "Login Failed",
-        (error as Error).message || "Unable to sign in. Please try again."
+        'Login Failed',
+        (error as Error).message || 'Unable to sign in. Please try again.'
       );
     }
   };
 
-  const handleGoogleLogin = () => {
-    Alert.alert("Coming Soon", "Google sign-in will be available soon.");
+  const handleGoogleLogin = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+
+      // Sign out first to force account chooser to appear
+      await GoogleSignin.signOut();
+
+      const userInfo = await GoogleSignin.signIn();
+
+      const idToken = userInfo.data?.idToken;
+
+      if (!idToken) {
+        throw new Error('Google ID token is null');
+      }
+
+      await loginWithGoogle(idToken);
+      navigation.replace('Main', {
+        screen: 'Tabs',
+        params: { screen: 'Home' },
+      });
+    } catch (error) {
+      // logger.error('[LoginScreen] Google login failed:', error);
+      if (isErrorWithCode(error)) {
+        switch (error.code) {
+          case statusCodes.IN_PROGRESS:
+            Alert.alert(
+              'Google Login Failed',
+              'Google login is already in progress. Please wait for it to complete.',
+            );
+            break;
+          case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
+            Alert.alert(
+              'Google Login Failed',
+              'Google login is not available on this device. Please update your Google Play Services.',
+            );
+            break;
+          default:
+            Alert.alert(
+              'Google Login Failed',
+              (error as Error).message || 'Unable to sign in with Google. Please try again.',
+            );
+        }
+      } else {
+        Alert.alert(
+          'Google Login Failed',
+          (error as Error).message || 'Unable to sign in with Google. Please try again.',
+        );
+      }
+    }
   };
 
   return (
     <AuthLayout
       isLoading={isLoading}
       imageSource={{
-        uri: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
-      }}
-    >
+        uri: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
+      }}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -94,69 +110,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           </Text>
         </View>
 
-        {/* Form */}
-        <View style={styles.form}>
-          {/* Email Input */}
-          <View style={styles.inputGroup}>
-            <Label style={styles.label}>Email</Label>
-            <Input
-              placeholder="Enter your email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoComplete="email"
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                if (emailError) setEmailError("");
-              }}
-              className={emailError ? "border-destructive" : ""}
-            />
-            {emailError ? (
-              <Text style={[styles.errorText, { color: theme.destructive }]}>{emailError}</Text>
-            ) : null}
-          </View>
-
-          {/* Password Input */}
-          <View style={styles.inputGroup}>
-            <Label style={styles.label}>Password</Label>
-            <Input
-              placeholder="Enter your password"
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoComplete="password"
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                if (passwordError) setPasswordError("");
-              }}
-              className={passwordError ? "border-destructive" : ""}
-            />
-            {passwordError ? (
-              <Text style={[styles.errorText, { color: theme.destructive }]}>{passwordError}</Text>
-            ) : null}
-          </View>
-
-          {/* Forgot Password Link */}
-          <View style={styles.forgotPasswordRow}>
-            <AppLink screen="ForgotPassword" params={{}}>
-              Forgot password?
-            </AppLink>
-          </View>
-
-          {/* Sign In Button */}
-          <Button
-            onPress={handleLogin}
-            disabled={isLoading}
-            size="lg"
-            className="mt-2"
-          >
-            <Text className="text-primary-foreground font-semibold text-base">
-              Sign In
-            </Text>
-          </Button>
-        </View>
+        <LoginForm onSubmit={handleLogin} isLoading={isLoading} />
 
         {/* Divider */}
         <View style={styles.dividerContainer}>
@@ -174,8 +128,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             onPress={handleGoogleLogin}
             iconSize={22}
             color={theme.foreground}
-            buttonStyle={[styles.googleButton, { borderColor: theme.border }]}
-          >
+            buttonStyle={[styles.googleButton, { borderColor: theme.border }]}>
             Google
           </IconButton>
         </View>
@@ -183,7 +136,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         {/* Register Link */}
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: theme.mutedForeground }]}>
-            Don't have an account?{" "}
+            Don't have an account?{' '}
           </Text>
           <AppLink screen="Register" params={{}}>
             Sign Up
@@ -197,7 +150,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: "100%",
+    width: '100%',
     paddingHorizontal: 24,
     paddingTop: 32,
     paddingBottom: 24,
@@ -207,7 +160,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: "700",
+    fontWeight: '700',
     marginBottom: 8,
   },
   subtitle: {
@@ -222,19 +175,19 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: '500',
   },
   errorText: {
     fontSize: 12,
     marginTop: 4,
   },
   forgotPasswordRow: {
-    alignItems: "flex-end",
+    alignItems: 'flex-end',
     marginTop: -4,
   },
   dividerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 16,
     marginVertical: 28,
   },
@@ -242,15 +195,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   socialContainer: {
-    alignItems: "center",
+    alignItems: 'center',
   },
   googleButton: {
     minWidth: 200,
   },
   footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginTop: 32,
   },
   footerText: {
