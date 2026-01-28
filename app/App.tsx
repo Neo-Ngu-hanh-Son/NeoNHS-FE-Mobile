@@ -10,16 +10,23 @@ import {
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
 
+import { useTheme } from './providers/ThemeProvider';
+
 // This is the default configuration
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
   strict: false,
 });
 
+function ThemedStatusBar() {
+  const { isDarkColorScheme } = useTheme();
+  return <StatusBar style={isDarkColorScheme ? 'light' : 'dark'} />;
+}
+
 export default function App() {
   return (
     <Providers>
-      <StatusBar style="auto" />
+      <ThemedStatusBar />
       <RootNavigator />
       <PortalHost />
     </Providers>
