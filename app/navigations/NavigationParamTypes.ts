@@ -19,6 +19,9 @@ export type AuthStackParamList = {
  */
 export type TabsStackParamList = {
     Home: undefined;
+    Discover: undefined;
+    Map: undefined;
+    Bookings: undefined;
     Profile: undefined;
 };
 

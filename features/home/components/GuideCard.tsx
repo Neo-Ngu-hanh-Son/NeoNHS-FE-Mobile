@@ -1,6 +1,5 @@
-import { View, Image, TouchableOpacity, Dimensions } from "react-native";
+import { View, Image, TouchableOpacity, Dimensions, StyleSheet } from "react-native";
 import { Text } from "@/components/ui/text";
-import { Card } from "@/components/ui/card";
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { THEME } from "@/lib/theme";
 
@@ -27,23 +26,58 @@ export default function GuideCard({
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.8}
-      style={{ width: CARD_WIDTH }}
+      style={[
+        styles.container,
+        {
+          width: CARD_WIDTH,
+          backgroundColor: theme.card,
+          // Subtle shadow for elevation effect
+          shadowColor: isDarkColorScheme ? "#000" : "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: isDarkColorScheme ? 0.3 : 0.08,
+          shadowRadius: 8,
+          elevation: 3,
+        },
+      ]}
     >
-      <Card className="p-0 gap-0 overflow-hidden">
-        <Image
-          source={{ uri: imageUrl }}
-          className="w-full h-24"
-          style={{ backgroundColor: theme.muted }}
-        />
-        <View className="p-2.5">
-          <Text className="text-sm font-semibold mb-0.5" numberOfLines={1}>
-            {title}
-          </Text>
-          <Text variant="muted" className="text-xs" numberOfLines={1}>
-            {description}
-          </Text>
-        </View>
-      </Card>
+      {/* Image */}
+      <Image
+        source={{ uri: imageUrl }}
+        style={[styles.image, { backgroundColor: theme.muted }]}
+        resizeMode="cover"
+      />
+
+      {/* Content */}
+      <View style={styles.content}>
+        <Text
+          className="text-base font-bold leading-5"
+          style={{ color: theme.foreground }}
+          numberOfLines={2}
+        >
+          {title}
+        </Text>
+        <Text
+          className="text-sm leading-5 mt-1"
+          style={{ color: theme.mutedForeground }}
+          numberOfLines={2}
+        >
+          {description}
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  image: {
+    width: "100%",
+    height: 120,
+  },
+  content: {
+    padding: 12,
+  },
+});

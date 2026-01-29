@@ -87,33 +87,11 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         params: { screen: 'Home' },
       });
     } catch (error) {
-      // logger.error('[LoginScreen] Google login failed:', error);
-      if (isErrorWithCode(error)) {
-        switch (error.code) {
-          case statusCodes.IN_PROGRESS:
-            Alert.alert(
-              'Google Login Failed',
-              'Google login is already in progress. Please wait for it to complete.',
-            );
-            break;
-          case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
-            Alert.alert(
-              'Google Login Failed',
-              'Google login is not available on this device. Please update your Google Play Services.',
-            );
-            break;
-          default:
-            Alert.alert(
-              'Google Login Failed',
-              (error as Error).message || 'Unable to sign in with Google. Please try again.',
-            );
-        }
-      } else {
-        Alert.alert(
-          'Google Login Failed',
-          (error as Error).message || 'Unable to sign in with Google. Please try again.',
-        );
-      }
+      logger.error('[LoginScreen] Google login failed:', error);
+      Alert.alert(
+        'Google Login Failed',
+        'Unable to sign in with Google. Please try again.',
+      );
     }
   };
 

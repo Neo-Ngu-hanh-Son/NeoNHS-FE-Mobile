@@ -1,16 +1,26 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import ProfileScreen from "@/features/profile/screens/ProfileScreen";
-import HomeScreenNew from "@/features/home/screens/HomeScreenNew";
-import type { TabsStackParamList } from "./NavigationParamTypes";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import HomeScreenNew from "@/features/home/screens/HomeScreenNew";
+import { DiscoverScreen } from "@/features/discover/screens";
+import { MapScreen } from "@/features/map/screens";
+import { BookingsScreen } from "@/features/bookings/screens";
+import ProfileScreen from "@/features/profile/screens/ProfileScreen";
+
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { THEME } from "@/lib/theme";
+import type { TabsStackParamList } from "./NavigationParamTypes";
 
 const Tab = createBottomTabNavigator<TabsStackParamList>();
 
 export default function TabsNavigator() {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const insets = useSafeAreaInsets();
+
+  // Calculate tab bar height with safe area bottom inset
+  const tabBarHeight = 60 + insets.bottom;
 
   return (
     <Tab.Navigator
@@ -21,6 +31,13 @@ export default function TabsNavigator() {
         tabBarStyle: {
           backgroundColor: theme.card,
           borderTopColor: theme.border,
+          paddingTop: 8,
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
+          height: tabBarHeight,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: "500",
         },
         animation: "shift"
       }}
@@ -30,8 +47,54 @@ export default function TabsNavigator() {
         component={HomeScreenNew}
         options={{
           title: "Home",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" color={color} size={size} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "home" : "home-outline"}
+              color={color}
+              size={size}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Discover"
+        component={DiscoverScreen}
+        options={{
+          title: "Discover",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "compass" : "compass-outline"}
+              color={color}
+              size={size}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Map"
+        component={MapScreen}
+        options={{
+          title: "Map",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "map" : "map-outline"}
+              color={color}
+              size={size}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Bookings"
+        component={BookingsScreen}
+        options={{
+          title: "Bookings",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "briefcase" : "briefcase-outline"}
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
@@ -40,8 +103,12 @@ export default function TabsNavigator() {
         component={ProfileScreen}
         options={{
           title: "Profile",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" color={color} size={size} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "person" : "person-outline"}
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
