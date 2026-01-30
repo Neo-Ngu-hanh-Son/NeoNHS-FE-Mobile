@@ -1,111 +1,195 @@
-# NeoNHS Codebase Index
+# NeoNHS Mobile Codebase Index
 
 ## Project Overview
 
-**NeoNHS** is a React Native mobile application built with Expo, TypeScript, and Ant Design React Native. The app follows a feature-based architecture with navigation-based routing.
+**NeoNHS** is a React Native mobile application built with Expo, TypeScript, and NativeWind (TailwindCSS for RN). The app follows a feature-based architecture with navigation-based routing.
 
-- **Framework**: React Native (0.81.5) with Expo (~54.0.31)
-- **Language**: TypeScript
-- **UI Library**: Ant Design React Native (^5.4.3)
-- **Navigation**: React Navigation (Stack & Bottom Tabs)
+- **Framework**: React Native (0.81.5) with Expo (~54.0.29)
+- **Language**: TypeScript (~5.9.2)
+- **UI Library**: NativeWind + RN Primitives + Lucide Icons
+- **Navigation**: React Navigation (Stack & Bottom Tabs v7)
 - **Architecture**: Feature-based modular structure
 - **HTTP Client**: Axios with interceptors
 - **State Management**: React Context API
-- **Logging**: tslog
+- **Authentication**: Google Sign-In + Custom Auth
+- **Logging**: react-native-logs
 
 ---
 
 ## Directory Structure
 
 ```
-NeoNHS/
-├── app/                    # Application core
-│   ├── App.tsx            # Root application component
-│   ├── navigations/       # Navigation configuration
-│   │   ├── RootNavigator.tsx  # Root navigator (Auth/Main switch)
-│   │   ├── AuthNavigator.tsx  # Authentication flow navigator
-│   │   ├── MainNavigator.tsx  # Main app navigator
-│   │   ├── TabsNavigator.tsx # Bottom tab navigator
-│   │   └── types.ts       # Navigation type definitions
-│   └── providers/         # Context providers
-│       ├── Providers.tsx      # Main provider wrapper
-│       ├── AntDesignProvider.tsx # Ant Design provider
-│       └── ApiProvider.tsx    # API client configuration
+NeoNHS-Mobile/
+├── app/                          # Application core
+│   ├── App.tsx                   # Root application component ✅
+│   ├── navigations/              # Navigation configuration
+│   │   ├── RootNavigator.tsx     # Root navigator (Auth/Main switch) ✅
+│   │   ├── AuthNavigator.tsx     # Authentication flow navigator ✅
+│   │   ├── MainNavigator.tsx     # Main app navigator ✅
+│   │   ├── TabsNavigator.tsx     # Bottom tab navigator ✅
+│   │   └── NavigationParamTypes.ts # Navigation type definitions ✅
+│   └── providers/                # Context providers
+│       ├── Providers.tsx         # Main provider wrapper ✅
+│       ├── ThemeProvider.tsx     # Dark/Light theme provider ✅
+│       ├── ApiProvider.tsx       # API client configuration ✅
+│       └── GoogleLoginProvider.tsx # Google Sign-In provider ⚠️
 │
-├── components/            # Shared UI components
-│   ├── Buttons/          # Button components (empty)
-│   ├── Loader/           # Loading components (empty)
-│   ├── Navigator/         # Navigator components (empty)
-│   └── Text/             # Text components (empty)
+├── components/                   # Shared UI components
+│   ├── Buttons/                  # Button components
+│   │   └── (empty)
+│   ├── Loader/                   # Loading components
+│   │   └── (empty)
+│   ├── Navigator/                # Navigator components
+│   │   └── (empty)
+│   ├── TestComponent.tsx         # Test component
+│   └── ui/                       # Reusable UI primitives ✅
+│       ├── button.tsx            # Button variants ✅
+│       ├── card.tsx              # Card component ✅
+│       ├── checkbox.tsx          # Checkbox component ✅
+│       ├── icon.tsx              # Icon wrapper ✅
+│       ├── input.tsx             # Input component ✅
+│       ├── label.tsx             # Label component ✅
+│       ├── radio-group.tsx       # Radio group ✅
+│       ├── select.tsx            # Select dropdown ✅
+│       ├── separator.tsx         # Separator component ✅
+│       ├── switch.tsx            # Switch toggle ✅
+│       ├── text.tsx              # Text typography ✅
+│       ├── textarea.tsx          # Textarea component ✅
+│       └── native-only-animated-view.tsx # Animation helper ✅
 │
-├── features/              # Feature modules
-│   ├── auth/             # Authentication feature
-│   │   ├── components/   # Auth-specific components (empty)
-│   │   ├── context/      # Auth context and provider
-│   │   │   └── AuthContext.tsx
-│   │   ├── hooks/       # Auth-specific hooks (empty)
-│   │   ├── screens/     # Auth screens
-│   │   │   ├── LoginScreen.tsx (placeholder)
-│   │   │   ├── RegisterScreen.tsx (placeholder)
-│   │   │   └── index.ts
-│   │   ├── services/    # Auth API services
-│   │   │   └── authService.ts
-│   │   ├── types.ts     # Auth type definitions
-│   │   ├── index.ts     # Module exports
-│   │   └── README.md    # Auth documentation
-│   ├── home/            # Home feature
-│   │   ├── components/  # Home-specific components (empty)
-│   │   ├── hooks/       # Home-specific hooks (empty)
-│   │   └── screens/     # Home screens
-│   │       ├── HomeScreen.tsx (basic implementation)
-│   │       └── index.ts
-│   └── profile/         # Profile feature
-│       └── screens/     # Profile screens
-│           ├── ProfileScreen.tsx (placeholder)
-│           └── index.ts
+├── features/                     # Feature modules
+│   ├── auth/                     # Authentication feature ✅
+│   │   ├── components/           # Auth-specific components
+│   │   │   ├── AuthLayout.tsx    # Auth screen layout ✅
+│   │   │   ├── LoginForm.tsx     # Login form component ✅
+│   │   │   └── RegisterForm.tsx  # Register form component ✅
+│   │   ├── context/              # Auth context and provider
+│   │   │   └── AuthContext.tsx   # Auth state management ✅
+│   │   ├── hooks/                # Auth-specific hooks (empty)
+│   │   ├── screens/              # Auth screens
+│   │   │   ├── LoginScreen.tsx   # Login screen ✅
+│   │   │   ├── RegisterScreen.tsx # Register screen ✅
+│   │   │   ├── ForgotPasswordScreen.tsx # Forgot password ✅
+│   │   │   ├── ForgotPasswordOtpScreen.tsx # OTP verification ✅
+│   │   │   └── index.ts          # Screen exports ✅
+│   │   ├── services/             # Auth API services
+│   │   │   └── authService.ts    # Auth API calls ✅
+│   │   ├── types.ts              # Auth type definitions ✅
+│   │   └── index.ts              # Module exports ✅
+│   ├── home/                     # Home feature
+│   │   ├── components/           # (empty)
+│   │   └── screens/              # Home screens
+│   │       └── HomeScreen.tsx    # Home screen ⚠️
+│   └── profile/                  # Profile feature
+│       └── screens/              # Profile screens
+│           └── ProfileScreen.tsx # Profile screen ⚠️
 │
-├── services/             # API and external services
-│   └── api/             # API client and configuration
-│       ├── client.ts     # Axios-based API client ✅
-│       ├── endpoints.ts  # API endpoints ✅
-│       ├── types.ts      # API type definitions ✅
-│       ├── index.ts      # Module exports ✅
-│       ├── examples.ts   # Usage examples ✅
-│       ├── README.md     # API documentation ✅
-│       └── SETUP.md      # Setup guide ✅
+├── services/                     # API and external services
+│   └── api/                      # API client and configuration
+│       ├── client.ts             # Axios-based API client ✅
+│       ├── endpoints.ts          # API endpoints ✅
+│       ├── types.ts              # API type definitions ✅
+│       ├── examples.ts           # Usage examples ✅
+│       └── index.ts              # Module exports ✅
 │
-├── hooks/                # Shared React hooks
-│   ├── useApi.ts        # API hook with loading/error states ✅
-│   └── index.ts         # Hooks exports ✅
+├── hooks/                        # Shared React hooks
+│   ├── useApi.ts                 # API hook with loading/error states ✅
+│   └── index.ts                  # Hooks exports ✅
 │
-├── utils/                # Utility functions
-│   ├── constants.ts     # App constants ✅
-│   ├── date.ts          # Date utilities (empty)
-│   ├── logger.ts        # Logging utility ✅
-│   └── storage.ts       # AsyncStorage wrapper ✅
+├── utils/                        # Utility functions
+│   ├── constants.ts              # App constants ✅
+│   ├── date.ts                   # Date utilities (empty)
+│   ├── logger.ts                 # Logging utility ✅
+│   └── storage.ts                # AsyncStorage wrapper ✅
 │
-├── types/                # TypeScript type definitions
-│   ├── common.ts        # Common types (empty)
-│   └── navigation.ts    # Navigation types (empty)
+├── lib/                          # Library utilities
+│   └── (styling utilities)
 │
-├── theme/                # Theming configuration
-│   └── colors.ts        # Color definitions (empty)
+├── types/                        # TypeScript type definitions
+│   └── (type definitions)
 │
-├── assets/               # Static assets
-│   ├── fonts/           # Custom fonts
-│   ├── icon.png         # App icon
-│   ├── adaptive-icon.png # Android adaptive icon
-│   ├── splash-icon.png  # Splash screen icon
-│   └── favicon.png      # Web favicon
+├── docs/                         # Documentation
+│   ├── README.md                 # Docs overview ✅
+│   ├── API_CLIENT.md             # API client documentation ✅
+│   ├── AUTH_SYSTEM.md            # Auth system documentation ✅
+│   ├── ENVIRONMENT_SETUP.md      # Environment setup guide ✅
+│   ├── FOLDER_STRUCTURE.md       # Project structure guide ✅
+│   └── NAVIGATION_GUIDE.md       # Navigation documentation ✅
 │
-├── index.ts              # Application entry point
-├── app.json              # Expo configuration
-├── package.json          # Dependencies and scripts
-├── tsconfig.json         # TypeScript configuration
-├── .env.example          # Environment variables template ✅
-├── ENV_SETUP.md          # Environment setup guide ✅
-└── CODEBASE_INDEX.md     # This file
+├── assets/                       # Static assets
+│   └── images/                   # App images & icons
+│
+├── __tests__/                    # Test files
+├── __mocks__/                    # Test mocks
+├── coverage/                     # Test coverage reports
+│
+├── android/                      # Android native project
+│
+├── index.tsx                     # Application entry point ✅
+├── app.json                      # Expo configuration ✅
+├── package.json                  # Dependencies and scripts ✅
+├── tsconfig.json                 # TypeScript configuration ✅
+├── tailwind.config.js            # TailwindCSS configuration ✅
+├── global.css                    # Global styles ✅
+├── babel.config.js               # Babel configuration ✅
+├── metro.config.js               # Metro bundler config ✅
+├── components.json               # UI components config ✅
+├── .env.example                  # Environment variables template ✅
+├── .env                          # Environment variables (local)
+└── CODEBASE_INDEX.md             # This file
 ```
+
+---
+
+## Technology Stack
+
+### Core
+| Package | Version | Purpose |
+|---------|---------|---------|
+| React | 19.1.0 | UI framework |
+| React Native | 0.81.5 | Mobile framework |
+| Expo | ~54.0.29 | Development platform |
+| TypeScript | ~5.9.2 | Type safety |
+
+### Navigation
+| Package | Version | Purpose |
+|---------|---------|---------|
+| @react-navigation/native | ^7.0.0 | Navigation core |
+| @react-navigation/stack | ^7.6.14 | Stack navigator |
+| @react-navigation/bottom-tabs | ^7.9.1 | Tab navigator |
+| react-native-screens | ~4.16.0 | Native screens |
+| react-native-gesture-handler | ^2.30.0 | Gesture support |
+
+### UI & Styling
+| Package | Version | Purpose |
+|---------|---------|---------|
+| NativeWind | ^4.2.1 | TailwindCSS for RN |
+| TailwindCSS | ^3.4.14 | Utility-first CSS |
+| lucide-react-native | ^0.545.0 | Icon library |
+| @rn-primitives/* | ^1.2.0 | UI primitives |
+| react-native-reanimated | ^4.2.1 | Animations |
+| react-native-svg | 15.12.1 | SVG support |
+
+### Authentication
+| Package | Version | Purpose |
+|---------|---------|---------|
+| @react-native-google-signin/google-signin | ^16.1.1 | Google Sign-In |
+| expo-auth-session | ~7.0.10 | OAuth support |
+| expo-crypto | ~15.0.8 | Crypto utilities |
+| expo-web-browser | ~15.0.10 | Web browser |
+
+### HTTP & Storage
+| Package | Version | Purpose |
+|---------|---------|---------|
+| axios | ^1.13.2 | HTTP client |
+| @react-native-async-storage/async-storage | 2.2.0 | Local storage |
+
+### Development
+| Package | Version | Purpose |
+|---------|---------|---------|
+| Jest | ~29.7.0 | Testing framework |
+| jest-expo | ~54.0.16 | Expo Jest preset |
+| Prettier | ^3.6.2 | Code formatting |
 
 ---
 
@@ -114,15 +198,25 @@ NeoNHS/
 ### ✅ Fully Implemented
 
 1. **Project Infrastructure**
-
-   - ✅ Expo setup with TypeScript
+   - ✅ Expo setup with TypeScript & new architecture
+   - ✅ NativeWind (TailwindCSS) styling system
    - ✅ Navigation system (Root, Auth, Main, Tabs)
    - ✅ Type-safe navigation with proper types
-   - ✅ Path aliases (`@/*`)
    - ✅ Safe area handling
+   - ✅ Dark/Light theme support
 
-2. **API Layer**
+2. **UI Component Library** (`components/ui/`)
+   - ✅ Button (multiple variants)
+   - ✅ Card
+   - ✅ Input & Textarea
+   - ✅ Checkbox & Radio Group
+   - ✅ Select dropdown
+   - ✅ Switch toggle
+   - ✅ Text typography
+   - ✅ Label & Separator
+   - ✅ Icon wrapper
 
+3. **API Layer**
    - ✅ Axios-based API client with interceptors
    - ✅ Request/response transformation
    - ✅ Error handling and error types
@@ -130,161 +224,129 @@ NeoNHS/
    - ✅ Centralized endpoints
    - ✅ useApi hook for React components
 
-3. **Authentication System**
-
+4. **Authentication System**
    - ✅ Auth context and provider
    - ✅ Auth state management (reducer-based)
    - ✅ Token storage (AsyncStorage)
    - ✅ Auto-logout on 401 errors
    - ✅ Auth service (login, register, logout, refresh)
    - ✅ Navigation integration (auto-switch Auth/Main)
+   - ✅ Login screen with form
+   - ✅ Register screen with form
+   - ✅ Forgot password flow (email + OTP)
 
-4. **Utilities**
+5. **Provider Setup**
+   - ✅ Providers wrapper composition
+   - ✅ Theme provider (Dark/Light mode)
+   - ✅ Auth provider
+   - ✅ API provider (token injection)
+   - ⚠️ Google Login provider (placeholder)
 
-   - ✅ Logger (tslog integration)
+6. **Utilities**
+   - ✅ Logger (react-native-logs)
    - ✅ Storage utility (AsyncStorage wrapper)
    - ✅ Constants configuration
    - ✅ Environment variable setup
 
-5. **Provider Setup**
-   - ✅ Providers wrapper
-   - ✅ Ant Design provider
-   - ✅ Auth provider
-   - ✅ API provider (token injection)
+7. **Documentation**
+   - ✅ API Client documentation
+   - ✅ Auth System documentation
+   - ✅ Environment Setup guide
+   - ✅ Folder Structure guide
+   - ✅ Navigation guide
 
 ### ⚠️ Partially Implemented / Placeholders
 
 1. **Screens**
-
-   - ⚠️ LoginScreen - Placeholder (needs form implementation)
-   - ⚠️ RegisterScreen - Placeholder (needs form implementation)
    - ⚠️ HomeScreen - Basic structure (needs actual content)
    - ⚠️ ProfileScreen - Placeholder (needs user profile UI)
 
-2. **Components**
+2. **Features**
+   - ⚠️ Google Sign-In - Provider exists but not fully integrated
+   - ⚠️ Feature-specific hooks - Empty directories
 
-   - ⚠️ Buttons/ - Empty directory
-   - ⚠️ Loader/ - Empty directory
-   - ⚠️ Text/ - Empty directory
-   - ⚠️ Navigator/ - Empty directory
-
-3. **Theme & Styling**
-
-   - ⚠️ colors.ts - Empty file
-   - ⚠️ No theme provider setup
-   - ⚠️ No consistent styling system
-
-4. **Utilities**
-
+3. **Utilities**
    - ⚠️ date.ts - Empty file
-   - ⚠️ types/common.ts - Empty file
-   - ⚠️ types/navigation.ts - Empty file
-
-5. **Feature Components**
-   - ⚠️ auth/components/ - Empty
-   - ⚠️ home/components/ - Empty
-   - ⚠️ Feature-specific hooks - Empty
 
 ---
 
-## Key Files & Their Status
-
-### Core Application
-
-- ✅ `app/App.tsx` - Root component with providers
-- ✅ `app/providers/Providers.tsx` - Provider composition
-- ✅ `app/navigations/RootNavigator.tsx` - Auth-aware navigation
-
-### Authentication
-
-- ✅ `features/auth/context/AuthContext.tsx` - Auth state management
-- ✅ `features/auth/services/authService.ts` - Auth API calls
-- ✅ `features/auth/types.ts` - Auth type definitions
-- ⚠️ `features/auth/screens/LoginScreen.tsx` - Needs form implementation
-- ⚠️ `features/auth/screens/RegisterScreen.tsx` - Needs form implementation
-
-### API & Services
-
-- ✅ `services/api/client.ts` - Axios client with interceptors
-- ✅ `services/api/endpoints.ts` - Endpoint definitions
-- ✅ `services/api/types.ts` - API types
-- ✅ `hooks/useApi.ts` - React hook for API calls
-
-### Utilities
-
-- ✅ `utils/logger.ts` - tslog logger
-- ✅ `utils/storage.ts` - AsyncStorage wrapper
-- ✅ `utils/constants.ts` - App constants
-- ⚠️ `utils/date.ts` - Empty
-
----
-
-## Technology Stack
-
-### Core
-
-- **React**: 19.1.0
-- **React Native**: 0.81.5
-- **Expo**: ~54.0.31
-- **TypeScript**: ~5.9.2
-
-### Navigation
-
-- **@react-navigation/native**: ^7.1.26
-- **@react-navigation/stack**: ^7.6.13
-- **@react-navigation/bottom-tabs**: ^7.9.0
-
-### UI Components
-
-- **@ant-design/react-native**: ^5.4.3
-- **@ant-design/icons-react-native**: ^2.3.2
-- **@expo/vector-icons**: ^15.0.3
-
-### HTTP & Storage
-
-- **axios**: ^1.13.2
-- **@react-native-async-storage/async-storage**: 2.2.0
-
-### Utilities
-
-- **tslog**: ^2.11.1
-- **react-native-safe-area-context**: ~5.6.0
-- **react-native-gesture-handler**: ~2.28.0
-- **react-native-reanimated**: ~4.1.1
-
----
-
-## Architecture Patterns
-
-### Feature-Based Structure
-
-Each feature module contains:
-
-- `screens/` - Feature screens
-- `components/` - Feature-specific components
-- `hooks/` - Feature-specific hooks
-- `services/` - Feature API services
-- `types.ts` - Feature type definitions
-
-### State Management
-
-- **Auth State**: React Context + useReducer
-- **API State**: Custom hooks (useApi)
-- **Local State**: React useState/useReducer
-
-### Navigation Hierarchy
+## Navigation Structure
 
 ```
 RootNavigator
 ├── Auth (when not authenticated)
-│   └── AuthNavigator
+│   └── AuthNavigator (Stack)
 │       ├── Login
-│       └── Register
+│       ├── Register
+│       ├── ForgotPassword
+│       └── ForgotPasswordOtp
 └── Main (when authenticated)
-    └── MainNavigator
-        └── TabsNavigator
+    └── MainNavigator (Stack)
+        └── TabsNavigator (Bottom Tabs)
             ├── Home
             └── Profile
+```
+
+---
+
+## Key Files Reference
+
+### Entry Points
+- `index.tsx` - App registration
+- `app/App.tsx` - Root component with providers
+
+### Navigation
+- `app/navigations/RootNavigator.tsx` - Auth-aware root
+- `app/navigations/AuthNavigator.tsx` - Auth flow
+- `app/navigations/MainNavigator.tsx` - Main app
+- `app/navigations/TabsNavigator.tsx` - Bottom tabs
+- `app/navigations/NavigationParamTypes.ts` - Type definitions
+
+### Authentication
+- `features/auth/context/AuthContext.tsx` - Auth state
+- `features/auth/services/authService.ts` - API calls
+- `features/auth/types.ts` - Type definitions
+- `features/auth/screens/*.tsx` - Auth screens
+- `features/auth/components/*.tsx` - Auth components
+
+### API
+- `services/api/client.ts` - Axios client
+- `services/api/endpoints.ts` - Endpoint definitions
+- `services/api/types.ts` - API types
+- `hooks/useApi.ts` - React hook
+
+### Providers
+- `app/providers/Providers.tsx` - Composition
+- `app/providers/ThemeProvider.tsx` - Theme
+- `app/providers/ApiProvider.tsx` - API
+- `app/providers/GoogleLoginProvider.tsx` - Google Sign-In
+
+### Styling
+- `global.css` - Global styles
+- `tailwind.config.js` - Tailwind config
+- `components/ui/*.tsx` - UI components
+
+---
+
+## Scripts
+
+```bash
+npm start        # Start Expo dev server
+npm run dev      # Start Expo with cache clear
+npm run android  # Run on Android
+npm run ios      # Run on iOS
+npm run test     # Run tests in watch mode
+npm run clean    # Clean .expo and node_modules
+```
+
+---
+
+## Environment Variables
+
+Required in `.env`:
+```
+EXPO_PUBLIC_API_URL=<your-api-url>
+EXPO_PUBLIC_ENV=development|staging|production
 ```
 
 ---
@@ -292,174 +354,48 @@ RootNavigator
 ## Next Steps & Recommendations
 
 ### 🔴 High Priority
+1. **Complete Google Sign-In Integration**
+   - Configure Google OAuth credentials
+   - Complete GoogleLoginProvider implementation
+   - Add Google Sign-In button to login screen
 
-1. **Implement Login & Register Screens**
+2. **Implement Home Screen**
+   - Design dashboard layout
+   - Add feature navigation
+   - Display user-relevant content
 
-   - Create form components with validation
-   - Integrate with auth context
-   - Add error handling and loading states
-   - Add navigation between login/register
-
-2. **Create Shared UI Components**
-
-   - Button component (with variants)
-   - Input/TextInput component
-   - Loader/Spinner component
-   - Error message component
-   - Card component
-
-3. **Theme System**
-
-   - Define color palette in `theme/colors.ts`
-   - Create theme provider
-   - Add typography system
-   - Add spacing system
-
-4. **Form Validation**
-   - Add form validation library (e.g., react-hook-form + yup)
-   - Create reusable form components
-   - Add validation to login/register forms
-
-### 🟡 Medium Priority
-
-5. **Profile Screen Implementation**
-
+3. **Implement Profile Screen**
    - Display user information
    - Add edit profile functionality
    - Add logout button
-   - Add avatar upload
+   - Add settings
 
-6. **Home Screen Content**
+### 🟡 Medium Priority
+4. **Add More Features**
+   - Events feature
+   - Chat feature
+   - Map/Location feature
+   - Notifications
 
-   - Remove test API call
-   - Add actual home screen content
-   - Add dashboard widgets/cards
-   - Add navigation to other features
-
-7. **Error Handling**
-
-   - Create error boundary component
-   - Add global error handler
-   - Improve error messages in UI
-   - Add retry mechanisms
-
-8. **Loading States**
-   - Create loading component
-   - Add skeleton loaders
-   - Improve loading UX across screens
+5. **Enhance UI/UX**
+   - Add loading skeletons
+   - Improve error messages
+   - Add pull-to-refresh
+   - Add offline support
 
 ### 🟢 Low Priority
+6. **Testing**
+   - Add unit tests for utilities
+   - Add component tests
+   - Add integration tests
 
-9. **Date Utilities**
-
-   - Implement date formatting functions
-   - Add relative time helpers
-   - Add date validation
-
-10. **Common Types**
-
-    - Add shared type definitions
-    - Add utility types
-    - Add API response types
-
-11. **Feature-Specific Components**
-
-    - Auth form components
-    - Home dashboard components
-    - Profile components
-
-12. **Testing**
-
-    - Add unit tests for utilities
-    - Add integration tests for API
-    - Add component tests
-
-13. **Documentation**
-    - Add JSDoc comments
-    - Create component documentation
-    - Add API documentation
+7. **Performance**
+   - Optimize bundle size
+   - Add caching strategies
+   - Profile and optimize renders
 
 ---
 
-## Development Workflow
-
-### Current Setup
-
-1. ✅ Environment variables configured (.env.example)
-2. ✅ API client ready for backend integration
-3. ✅ Auth system ready for backend integration
-4. ✅ Navigation structure complete
-5. ✅ Logging system in place
-
-### Recommended Development Order
-
-1. **UI Foundation** (Week 1)
-
-   - Create theme system
-   - Build shared components
-   - Set up form validation
-
-2. **Authentication UI** (Week 1-2)
-
-   - Implement login screen
-   - Implement register screen
-   - Add form validation
-   - Test auth flow
-
-3. **Core Features** (Week 2-3)
-
-   - Implement home screen
-   - Implement profile screen
-   - Add navigation between screens
-
-4. **Polish & Enhancement** (Week 3-4)
-   - Add error handling
-   - Improve loading states
-   - Add animations
-   - Optimize performance
-
----
-
-## File Organization Best Practices
-
-### Current Structure ✅
-
-- Feature-based organization
-- Clear separation of concerns
-- Type-safe navigation
-- Centralized API layer
-
-### Recommendations
-
-- Keep feature modules self-contained
-- Use barrel exports (index.ts) for clean imports
-- Maintain consistent naming conventions
-- Document complex logic
-
----
-
-## Environment Setup
-
-### Required Environment Variables
-
-- `EXPO_PUBLIC_API_URL` - API base URL
-- `EXPO_PUBLIC_ENV` - Environment (development/staging/production)
-
-See `ENV_SETUP.md` for detailed setup instructions.
-
----
-
-## Known Issues & Limitations
-
-1. **Screens are placeholders** - Need actual UI implementation
-2. **No form validation** - Need validation library
-3. **No theme system** - Need color/typography definitions
-4. **Limited error handling** - Need better error boundaries
-5. **No loading states** - Need loading components
-6. **Empty utility files** - Need date/common type utilities
-
----
-
-_Last indexed: Updated after auth context implementation_
+_Last indexed: 2026-01-28_
 _Project: NeoNHS v1.0.0_
-_Status: Foundation Complete - Ready for UI Implementation_
+_Status: Foundation Complete - Auth UI Implemented - Ready for Feature Development_

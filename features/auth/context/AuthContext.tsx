@@ -26,6 +26,7 @@ type AuthAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_INITIALIZED'; payload: boolean }
   | { type: 'LOGIN_SUCCESS'; payload: { user: User; token: string; refreshToken?: string } }
+  | { type: 'REGISTER_SUCCESS'; payload: { } }
   | { type: 'LOGOUT' }
   | { type: 'UPDATE_USER'; payload: Partial<User> }
   | { type: 'SET_TOKEN'; payload: { token: string; refreshToken?: string } };
@@ -43,6 +44,12 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         token: action.payload.token,
         refreshToken: action.payload.refreshToken || null,
         isAuthenticated: true,
+        isLoading: false,
+      };
+    case 'REGISTER_SUCCESS':
+      return {
+        ...state,
+        isAuthenticated: false,
         isLoading: false,
       };
     case 'LOGOUT':
@@ -195,8 +202,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ]);
 
         dispatch({
-          type: 'LOGIN_SUCCESS',
-          payload: { user: userInfo, token: accessToken, refreshToken: refreshToken || undefined },
+          type: 'REGISTER_SUCCESS',
+          payload: {},
         });
       } else {
         throw new Error('Registration failed: No data received');

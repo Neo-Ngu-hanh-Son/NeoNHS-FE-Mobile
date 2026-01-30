@@ -4,7 +4,7 @@
     "slug": "neonhs",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/orchis.png",
+    "icon": "./assets/images/NeoNHSLogo.png",
     "scheme": "neonhs",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -13,7 +13,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -23,7 +25,7 @@
       "versionName": "1.0.0",
       "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/NeoNHSLogo.png",
         "backgroundColor": "#ffffff"
       }
     },

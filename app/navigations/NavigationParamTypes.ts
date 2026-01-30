@@ -10,6 +10,7 @@ export type AuthStackParamList = {
     Register: undefined;
     ForgotPassword: undefined;
     ForgotPasswordOtp: undefined;
+    VerifyEmail: { email?: string; fromRegister?: boolean };
 };
 
 /**
@@ -18,6 +19,9 @@ export type AuthStackParamList = {
  */
 export type TabsStackParamList = {
     Home: undefined;
+    Discover: undefined;
+    Map: undefined;
+    Bookings: undefined;
     Profile: undefined;
 };
 
