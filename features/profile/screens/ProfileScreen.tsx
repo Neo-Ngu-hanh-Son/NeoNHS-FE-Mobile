@@ -1,13 +1,12 @@
-import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from "react-native";
+import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Alert, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation, CommonActions } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Card } from "@/components/ui/card";
 import { useAuth } from "@/features/auth/context/AuthContext";
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { THEME } from "@/lib/theme";
@@ -23,351 +22,162 @@ export default function ProfileScreen() {
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
   const handleLogin = () => {
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: "Auth", params: { screen: "Login" } }],
-      })
-    );
-  };
-
-  const handleRegister = () => {
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: "Auth", params: { screen: "Register" } }],
-      })
-    );
+    navigation.dispatch(CommonActions.reset({
+      index: 0,
+      routes: [{ name: "Auth", params: { screen: "Login" } }],
+    }));
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      "Sign Out",
-      "Are you sure you want to sign out?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Sign Out",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await logout();
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{ name: "Auth", params: { screen: "Login" } }],
-                })
-              );
-            } catch (error) {
-              logger.error("[ProfileScreen] Logout failed:", error);
-              Alert.alert("Error", "Failed to sign out. Please try again.");
-            }
-          },
+    Alert.alert("Sign Out", "Are you sure?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await logout();
+            handleLogin();
+          } catch (error) {
+            logger.error("Logout failed", error);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleEditProfile = () => {
-    // TODO: Navigate to edit profile screen
+    navigation.navigate("UpdateAccount");
   };
 
-  // ============================================
-  // Guest View (Not Logged In)
-  // ============================================
+  const ActionCard = ({ title, desc, onPress, rightIcon }: any) => (
+    <TouchableOpacity 
+      style={[styles.actionCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <View style={styles.actionCardHeader}>
+        <Text style={[styles.cardTitle, { color: theme.foreground }]}>{title}</Text>
+        {rightIcon || <Text className="text-xs font-medium text-primary">See all</Text>}
+      </View>
+      <Text style={[styles.cardDesc, { color: theme.mutedForeground }]} numberOfLines={2}>
+        {desc}
+      </Text>
+    </TouchableOpacity>
+  );
+
   if (!isAuthenticated || !user) {
     return (
-      <SafeAreaView
-        style={[styles.container, { backgroundColor: theme.background }]}
-        edges={["top"]}
-      >
-        <View style={styles.content}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Text className="text-2xl font-bold" style={{ color: theme.foreground }}>
-              Profile
-            </Text>
-          </View>
-
-          {/* Guest Welcome Card */}
-          <View
-            style={[styles.guestCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-          >
-            <View style={[styles.guestAvatar, { backgroundColor: theme.muted }]}>
-              <Ionicons name="person-outline" size={48} color={theme.mutedForeground} />
-            </View>
-
-            <Text className="text-xl font-semibold mt-4" style={{ color: theme.foreground }}>
-              Welcome, Guest!
-            </Text>
-            <Text
-              className="text-base text-center mt-2 px-4"
-              style={{ color: theme.mutedForeground }}
-            >
-              Sign in to access your profile, save favorites, and get personalized recommendations.
-            </Text>
-
-            {/* Login Button */}
-            <Button className="w-full mt-6" onPress={handleLogin}>
-              <Ionicons name="log-in-outline" size={20} color={theme.primaryForeground} />
-              <Text className="ml-2 font-semibold" style={{ color: theme.primaryForeground }}>
-                Sign In
-              </Text>
-            </Button>
-
-            {/* Register Link */}
-            <View className="flex-row items-center mt-4">
-              <Text className="text-sm" style={{ color: theme.mutedForeground }}>
-                Don't have an account?
-              </Text>
-              <Button variant="link" className="p-0 ml-1 h-auto" onPress={handleRegister}>
-                <Text className="text-primary text-sm font-semibold">Sign Up</Text>
-              </Button>
-            </View>
-          </View>
-
-          {/* Settings Card (Available for guests too) */}
-          <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text className="text-lg font-semibold mb-4" style={{ color: theme.foreground }}>
-              Settings
-            </Text>
-
-            {/* Dark Mode Toggle */}
-            <View style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Ionicons
-                  name={isDarkColorScheme ? "moon" : "sunny-outline"}
-                  size={22}
-                  color={theme.primary}
-                />
-                <Text className="text-base ml-3" style={{ color: theme.foreground }}>
-                  Dark Mode
-                </Text>
-              </View>
-              <Switch checked={isDarkColorScheme} onCheckedChange={toggleColorScheme} />
-            </View>
-
-            {/* Language */}
-            <TouchableOpacity style={[styles.settingRow, { borderTopColor: theme.border }]}>
-              <View style={styles.settingInfo}>
-                <Ionicons name="language-outline" size={22} color={theme.primary} />
-                <Text className="text-base ml-3" style={{ color: theme.foreground }}>
-                  Language
-                </Text>
-              </View>
-              <View style={styles.settingValue}>
-                <Text className="text-sm mr-2" style={{ color: theme.mutedForeground }}>
-                  English
-                </Text>
-                <Ionicons name="chevron-forward" size={20} color={theme.mutedForeground} />
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          {/* About Card */}
-          <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text className="text-lg font-semibold mb-4" style={{ color: theme.foreground }}>
-              About
-            </Text>
-
-            <View style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Ionicons name="information-circle-outline" size={22} color={theme.primary} />
-                <Text className="text-base ml-3" style={{ color: theme.foreground }}>
-                  App Version
-                </Text>
-              </View>
-              <Text className="text-sm" style={{ color: theme.mutedForeground }}>
-                1.0.0
-              </Text>
-            </View>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={["top"]}>
+        <View style={styles.contentGuest}>
+          <Text className="text-2xl font-bold mb-6" style={{ color: theme.foreground }}>Profile</Text>
+          <View style={[styles.guestCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+             <Ionicons name="person-outline" size={48} color={theme.mutedForeground} />
+             <Text className="text-xl font-semibold mt-4" style={{ color: theme.foreground }}>Welcome, Guest!</Text>
+             <Button className="w-full mt-6" onPress={handleLogin}><Text style={{color: '#fff'}}>Sign In</Text></Button>
           </View>
         </View>
       </SafeAreaView>
     );
   }
 
-  // ============================================
-  // Authenticated View (Logged In)
-  // ============================================
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.background }]}
-      edges={["top"]}
-    >
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.content}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Text className="text-2xl font-bold" style={{ color: theme.foreground }}>
-              Profile
-            </Text>
-          </View>
+    <View style={[styles.container, { backgroundColor: isDarkColorScheme ? theme.background : THEME.light.primary }]}>
+      <StatusBar barStyle="light-content" />
+      
+      {/* Header Area */}
+      <SafeAreaView edges={["top"]} style={[styles.blueHeader, { backgroundColor: isDarkColorScheme ? theme.background : THEME.light.primary }]}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <MaterialIcons name="chevron-left" size={28} color="white" />
+          <Text className="text-lg font-medium text-white">Back</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
 
-          {/* Avatar Section */}
-          <View
-            style={[styles.avatarSection, { backgroundColor: theme.card, borderColor: theme.border }]}
-          >
-            {user.avatarUrl ? (
-              <Image source={{ uri: user.avatarUrl }} style={styles.avatarImage} />
-            ) : (
-              <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
-                <Ionicons name="person" size={48} color={theme.primaryForeground} />
-              </View>
-            )}
-            <Text className="text-xl font-semibold mt-4" style={{ color: theme.foreground }}>
-              {user.fullname || "User"}
-            </Text>
-            <Text className="text-base" style={{ color: theme.mutedForeground }}>
-              {user.email}
-            </Text>
-            <TouchableOpacity
-              style={[styles.editProfileButton, { borderColor: theme.primary }]}
-              onPress={handleEditProfile}
-            >
-              <Ionicons name="pencil-outline" size={16} color={theme.primary} />
-              <Text className="text-sm font-medium ml-2" style={{ color: theme.primary }}>
-                Edit Profile
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Account Card */}
-          <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text className="text-lg font-semibold mb-4" style={{ color: theme.foreground }}>
-              Account
-            </Text>
-
-            {/* My Favorites */}
-            <TouchableOpacity style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Ionicons name="heart-outline" size={22} color={theme.primary} />
-                <Text className="text-base ml-3" style={{ color: theme.foreground }}>
-                  My Favorites
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={theme.mutedForeground} />
-            </TouchableOpacity>
-
-            {/* My Bookings */}
-            <TouchableOpacity style={[styles.settingRow, { borderTopColor: theme.border }]}>
-              <View style={styles.settingInfo}>
-                <Ionicons name="calendar-outline" size={22} color={theme.primary} />
-                <Text className="text-base ml-3" style={{ color: theme.foreground }}>
-                  My Bookings
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={theme.mutedForeground} />
-            </TouchableOpacity>
-
-            {/* Visit History */}
-            <TouchableOpacity style={[styles.settingRow, { borderTopColor: theme.border }]}>
-              <View style={styles.settingInfo}>
-                <Ionicons name="time-outline" size={22} color={theme.primary} />
-                <Text className="text-base ml-3" style={{ color: theme.foreground }}>
-                  Visit History
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={theme.mutedForeground} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Settings Card */}
-          <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text className="text-lg font-semibold mb-4" style={{ color: theme.foreground }}>
-              Settings
-            </Text>
-
-            {/* Dark Mode Toggle */}
-            <View style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Ionicons
-                  name={isDarkColorScheme ? "moon" : "sunny-outline"}
-                  size={22}
-                  color={theme.primary}
+      {/* Main Content Area (Ô trắng) */}
+      <View style={[styles.mainSheet, { backgroundColor: theme.background }]}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          
+          {/* Profile Card - Đã đưa vào trong ô trắng, không còn nổi */}
+          <View style={[styles.profileInfoCard, { backgroundColor: theme.card, borderColor: theme.border, marginBottom: 20 }]}>
+            <View style={styles.userInfoRow}>
+              <View style={styles.avatarBorder}>
+                <Image 
+                  source={{ uri: user.avatarUrl || "https://via.placeholder.com/150" }} 
+                  style={styles.avatarImage} 
                 />
-                <Text className="text-base ml-3" style={{ color: theme.foreground }}>
-                  Dark Mode
-                </Text>
               </View>
-              <Switch checked={isDarkColorScheme} onCheckedChange={toggleColorScheme} />
+              <View>
+                <Text style={[styles.userName, { color: theme.foreground }]}>{user.fullname || "User"}</Text>
+                <TouchableOpacity onPress={handleEditProfile}>
+                  <Text className="text-xs text-primary font-medium">Edit Profile</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
-            {/* Notifications */}
-            <TouchableOpacity style={[styles.settingRow, { borderTopColor: theme.border }]}>
-              <View style={styles.settingInfo}>
-                <Ionicons name="notifications-outline" size={22} color={theme.primary} />
-                <Text className="text-base ml-3" style={{ color: theme.foreground }}>
-                  Notifications
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={theme.mutedForeground} />
-            </TouchableOpacity>
-
-            {/* Language */}
-            <TouchableOpacity style={[styles.settingRow, { borderTopColor: theme.border }]}>
-              <View style={styles.settingInfo}>
-                <Ionicons name="language-outline" size={22} color={theme.primary} />
-                <Text className="text-base ml-3" style={{ color: theme.foreground }}>
-                  Language
-                </Text>
-              </View>
-              <View style={styles.settingValue}>
-                <Text className="text-sm mr-2" style={{ color: theme.mutedForeground }}>
-                  English
-                </Text>
-                <Ionicons name="chevron-forward" size={20} color={theme.mutedForeground} />
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          {/* About Card */}
-          <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text className="text-lg font-semibold mb-4" style={{ color: theme.foreground }}>
-              About
-            </Text>
-
-            <View style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Ionicons name="information-circle-outline" size={22} color={theme.primary} />
-                <Text className="text-base ml-3" style={{ color: theme.foreground }}>
-                  App Version
-                </Text>
-              </View>
-              <Text className="text-sm" style={{ color: theme.mutedForeground }}>
-                1.0.0
-              </Text>
+            {/* Points Badge */}
+            <View style={[styles.pointsBadge, { backgroundColor: THEME.light.primary }]}>
+               <View style={styles.starCircle}>
+                  <MaterialIcons name="stars" size={16} color="white" />
+               </View>
+               <View>
+                  <Text style={styles.pointsLabel}>Your Points</Text>
+                  <Text style={styles.pointsValue}>6000</Text>
+               </View>
             </View>
-
-            <TouchableOpacity style={[styles.settingRow, { borderTopColor: theme.border }]}>
-              <View style={styles.settingInfo}>
-                <Ionicons name="document-text-outline" size={22} color={theme.primary} />
-                <Text className="text-base ml-3" style={{ color: theme.foreground }}>
-                  Terms of Service
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={theme.mutedForeground} />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={[styles.settingRow, { borderTopColor: theme.border }]}>
-              <View style={styles.settingInfo}>
-                <Ionicons name="shield-checkmark-outline" size={22} color={theme.primary} />
-                <Text className="text-base ml-3" style={{ color: theme.foreground }}>
-                  Privacy Policy
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={theme.mutedForeground} />
-            </TouchableOpacity>
           </View>
 
-          {/* Logout Button */}
-          <Button variant="destructive" className="w-full mb-8" onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={20} color="#fff" />
-            <Text className="ml-2 font-semibold text-white">Sign Out</Text>
+          {/* Các mục chức năng */}
+          <ActionCard 
+            title="Your Order" 
+            desc="View your order and transaction history here" 
+            onPress={() => {}}
+          />
+          <ActionCard 
+            title="Payment Method" 
+            desc="Save your preferred payment method for smoother transactions" 
+            onPress={() => {}}
+          />
+          <ActionCard 
+            title="Coupon & Voucher" 
+            desc="Claim vouchers and discounts for reduced prices or free shipping" 
+            onPress={() => {}}
+          />
+          <ActionCard 
+            title="Support Center" 
+            desc="Find the best answer to your question" 
+            onPress={() => {}}
+          />
+
+          <View style={styles.settingsSection}>
+             <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>PREFERENCES</Text>
+             
+             <ActionCard 
+                title="Dark Mode" 
+                desc="Toggle between light and dark visual themes" 
+                rightIcon={<Switch checked={isDarkColorScheme} onCheckedChange={toggleColorScheme} />}
+              />
+
+              <View style={{ marginTop: 12 }}>
+                <ActionCard 
+                    title="Language" 
+                    desc="Choose your preferred language" 
+                    rightIcon={
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Text style={{ color: theme.mutedForeground, fontSize: 12, marginRight: 4 }}>English</Text>
+                            <Ionicons name="chevron-forward" size={16} color={theme.mutedForeground} />
+                        </View>
+                    }
+                    onPress={() => {}}
+                />
+              </View>
+          </View>
+
+          <Button variant="destructive" className="mt-6 mb-10" onPress={handleLogout}>
+            <Text style={{color: '#fff', fontWeight: 'bold'}}>Sign Out</Text>
           </Button>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </View>
+    </View>
   );
 }
 
@@ -375,82 +185,120 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
+  blueHeader: {
+    height: 80, 
     paddingHorizontal: 20,
-    paddingTop: 16,
+    justifyContent: 'center',
   },
-  header: {
-    marginBottom: 24,
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  // Guest Card Styles
-  guestCard: {
-    alignItems: "center",
-    paddingVertical: 32,
-    paddingHorizontal: 20,
-    borderRadius: 16,
-    marginBottom: 16,
+  mainSheet: {
+    flex: 1,
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    overflow: 'hidden', // Đảm bảo nội dung không tràn khỏi bo góc
+  },
+  profileInfoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 24,
     borderWidth: 1,
+    // Đổ bóng nhẹ nhàng cho thẻ nằm trong
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
-  guestAvatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    alignItems: "center",
-    justifyContent: "center",
+  userInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
-  // Avatar Section Styles
-  avatarSection: {
-    alignItems: "center",
-    paddingVertical: 32,
-    borderRadius: 16,
-    marginBottom: 16,
-    borderWidth: 1,
+  userName: {
+    fontSize: 18,
+    fontWeight: '700',
   },
-  avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    alignItems: "center",
-    justifyContent: "center",
+  avatarBorder: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 2,
+    borderColor: 'rgba(29, 161, 242, 0.2)',
+    overflow: 'hidden',
   },
   avatarImage: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: '100%',
+    height: '100%',
   },
-  editProfileButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 16,
+  pointsBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 6,
+  },
+  starCircle: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    padding: 4,
+    borderRadius: 20,
+  },
+  pointsLabel: {
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.9)',
+    fontWeight: '500',
+  },
+  pointsValue: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  scrollContent: {
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingTop: 24, // Thêm khoảng cách ở đỉnh để đẹp hơn
+    gap: 12,
+  },
+  actionCard: {
+    padding: 16,
     borderRadius: 20,
     borderWidth: 1,
   },
-  // Card Styles
-  card: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+  actionCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  cardDesc: {
+    fontSize: 12,
+    marginTop: 4,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    marginBottom: 12,
+    marginTop: 10,
+    paddingLeft: 4,
+  },
+  settingsSection: {
+    marginTop: 10,
+  },
+  contentGuest: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  guestCard: {
+    alignItems: 'center',
+    padding: 30,
+    borderRadius: 20,
     borderWidth: 1,
-  },
-  settingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 14,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  settingInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  settingValue: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
+  }
 });

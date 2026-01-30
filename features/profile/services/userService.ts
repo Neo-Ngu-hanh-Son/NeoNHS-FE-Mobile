@@ -25,7 +25,7 @@ export const userService = {
     },
 
     async updateProfile(data: UpdateProfileRequest): Promise<ApiResponse<UserProfile>> {
-        return apiClient.post<UserProfile>(endpoints.users.updateProfile(), data);
+        return apiClient.put<UserProfile>(endpoints.users.updateProfile(), data);
     },
 
     async uploadAvatar(fileUri: string) {

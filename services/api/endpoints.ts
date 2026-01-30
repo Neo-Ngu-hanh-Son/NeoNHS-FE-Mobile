@@ -20,7 +20,7 @@ export const authEndpoints = {
  */
 export const userEndpoints = {
     getProfile: () => `users/profile`,
-    updateProfile: () => `users/profile`,
+    updateProfile: () => `users/update-profile`,
     changePassword: () => `users/change-password`,
     getUserById: (id: string | number) => `users/${id}`,
     getUsers: () => `users`,

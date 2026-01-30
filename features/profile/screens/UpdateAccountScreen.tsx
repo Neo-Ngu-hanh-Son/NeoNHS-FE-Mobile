@@ -85,7 +85,6 @@ export default function UpdateAccountScreen() {
                 const uploadedUrl = await uploadImageToCloudinary(fileObj);
                 if (uploadedUrl) {
                     setAvatarUrl(uploadedUrl);
-                    Alert.alert("Success", "Avatar uploaded successfully");
                 } else {
                     Alert.alert("Error", "Failed to upload image to Cloudinary");
                 }
@@ -103,21 +102,25 @@ export default function UpdateAccountScreen() {
         try {
             const updateData = {
                 fullname: fullName.trim(),
-                phoneNumber: phoneNumber.trim() || undefined,
+                phoneNumber: phoneNumber ? phoneNumber.trim() : "", 
                 email: email.trim(),
-                avatarUrl: avatarUrl || undefined,
+                avatarUrl: avatarUrl ? avatarUrl : "", 
             };
-
+            
+            console.log("Sending data to server:", updateData);
+    
             const response = await userService.updateProfile(updateData);
+            
             if (response.success) {
                 updateUser(response.data);
-                Alert.alert("Thành công", "Thông tin đã được cập nhật", [
+                Alert.alert("Success", "User profile updated successfully", [
                     { text: "OK", onPress: () => navigation.goBack() }
                 ]);
             }
         } catch (error) {
+            console.log("Full Error Object:", JSON.stringify(error, null, 2));
             const apiError = error as ApiError;
-            Alert.alert("Lỗi hệ thống", apiError.message);
+            Alert.alert("System error", apiError.message || "Server return 500");
         } finally {
             setIsLoading(false);
         }
@@ -200,10 +203,6 @@ export default function UpdateAccountScreen() {
                                 <View style={styles.inputGroup}>
                                     <Text style={[styles.label, { color: theme.foreground }]}>Phone Number</Text>
                                     <View style={styles.phoneInputRow}>
-                                        <View style={[styles.countryBadge, { borderColor: theme.border, backgroundColor: theme.muted }]}>
-                                            <Text style={{ color: theme.foreground, fontSize: 13 }}>ID (+62)</Text>
-                                            <Ionicons name="chevron-down" size={14} color={theme.mutedForeground} />
-                                        </View>
                                         <Input
                                             value={phoneNumber}
                                             onChangeText={setPhoneNumber}
