@@ -28,6 +28,21 @@ interface LoginResponse {
     };
 }
 
+export interface UserProfile {
+    avatarUrl: string;
+    id: string;
+    email: string;
+    fullname: string;
+    phoneNumber?: string;
+}
+
+export interface UpdateProfileRequest {
+    fullname?: string;
+    phoneNumber?: string;
+    email: string;
+    avatarUrl?: string;
+}
+
 const authService = {
     /**
      * Login user

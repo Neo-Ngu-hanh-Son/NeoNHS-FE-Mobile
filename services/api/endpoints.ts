@@ -39,8 +39,8 @@ export const homeEndpoints = {
  */
 export const profileEndpoints = {
     getProfile: () => `profile`,
-    updateProfile: () => `profile`,
-    uploadAvatar: () => `profile/avatar`,
+    updateProfile: () => `update-profile`,
+    // uploadAvatar: () => `profile/avatar`,
 } as const;
 
 /**
