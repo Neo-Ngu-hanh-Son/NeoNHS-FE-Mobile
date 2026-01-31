@@ -51,18 +51,11 @@ export const authService = {
     },
 
     async forgotPassword(email: string): Promise<ApiResponse<void>> {
-        logger.warn("[authService] Using dummy data for forgotPassword with timeout of 1 second");
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        return {
-            data: undefined,
-            status: 200,
-            message: "Password reset email sent",
-        };
-        // return apiClient.post<void>(
-        //     endpoints.auth.forgotPassword(),
-        //     { email },
-        //     { requiresAuth: false }
-        // );
+        return apiClient.post<void>(
+            endpoints.auth.forgotPassword(),
+            { email },
+            { requiresAuth: false }
+        );
     },
 
     async resetPassword(otp: string, newPassword: string): Promise<ApiResponse<void>> {
@@ -109,7 +102,7 @@ export const authService = {
     async verifyEmail(email: string, otp: string): Promise<ApiResponse<string>> {
         return apiClient.post<string>(
             endpoints.auth.verify(),
-            {email, otp},
+            { email, otp },
             { requiresAuth: false }
         );
     }
