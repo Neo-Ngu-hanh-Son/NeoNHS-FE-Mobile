@@ -15,28 +15,18 @@ import AppLink from "@/components/Navigator/AppLink";
 
 type ForgotPasswordOtpScreenProps = StackScreenProps<AuthStackParamList, "ForgotPasswordOtp">;
 
-export default function ForgotPasswordOtpScreen({ navigation }: ForgotPasswordOtpScreenProps) {
+export default function ForgotPasswordOtpScreen({ navigation, route }: ForgotPasswordOtpScreenProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
-  const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  
-  const [otpError, setOtpError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { email } = route.params;
 
-  const validateOtp = (value: string) => {
-    if (!value.trim()) {
-      return "OTP code is required";
-    }
-    if (value.trim().length < 4) {
-      return "Please enter a valid OTP code";
-    }
-    return "";
-  };
+
 
   const validatePassword = (value: string) => {
     if (!value) {
@@ -59,20 +49,17 @@ export default function ForgotPasswordOtpScreen({ navigation }: ForgotPasswordOt
   };
 
   const handleResetPassword = async () => {
-    const otpErr = validateOtp(otp);
     const passwordErr = validatePassword(newPassword);
     const confirmErr = validateConfirmPassword(confirmPassword);
 
-    setOtpError(otpErr);
     setPasswordError(passwordErr);
     setConfirmPasswordError(confirmErr);
 
-    if (otpErr || passwordErr || confirmErr) return;
+    if (passwordErr || confirmErr) return;
 
     setIsLoading(true);
     try {
-      const response = await authService.resetPassword(otp.trim(), newPassword);
-      
+      const response = await authService.resetPassword(email, newPassword, confirmPassword);
       if (response.status === 200) {
         Alert.alert(
           "Password Reset Successful",
@@ -110,25 +97,7 @@ export default function ForgotPasswordOtpScreen({ navigation }: ForgotPasswordOt
 
         {/* Form */}
         <View style={styles.form}>
-          {/* OTP Input */}
-          <View style={styles.inputGroup}>
-            <Label style={styles.label}>Verification Code</Label>
-            <Input
-              placeholder="Enter the code"
-              keyboardType="number-pad"
-              autoCapitalize="none"
-              autoCorrect={false}
-              value={otp}
-              onChangeText={(text) => {
-                setOtp(text);
-                if (otpError) setOtpError("");
-              }}
-              className={otpError ? "border-destructive" : ""}
-            />
-            {otpError ? (
-              <Text style={[styles.errorText, { color: theme.destructive }]}>{otpError}</Text>
-            ) : null}
-          </View>
+
 
           {/* New Password Input */}
           <View style={styles.inputGroup}>
