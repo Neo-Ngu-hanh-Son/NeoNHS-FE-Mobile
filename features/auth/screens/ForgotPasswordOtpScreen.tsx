@@ -24,7 +24,7 @@ export default function ForgotPasswordOtpScreen({ navigation, route }: ForgotPas
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const email = route.params?.email || "";
+  const { email } = route.params;
 
 
 

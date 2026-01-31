@@ -9,8 +9,8 @@ export type AuthStackParamList = {
     Login: undefined;
     Register: undefined;
     ForgotPassword: undefined;
-    EnterOtp: undefined;
-    ForgotPasswordOtp: { otp: string } | undefined;
+    EnterOtp: { email: string };
+    ForgotPasswordOtp: { email: string };
     VerifyEmail: { email?: string; fromRegister?: boolean };
 };
 

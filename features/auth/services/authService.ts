@@ -98,7 +98,7 @@ export const authService = {
     async verifyEmail(email: string, otp: string): Promise<ApiResponse<string>> {
         return apiClient.post<string>(
             endpoints.auth.verify(),
-            {email, otp},
+            { email, otp },
             { requiresAuth: false }
         );
     }
