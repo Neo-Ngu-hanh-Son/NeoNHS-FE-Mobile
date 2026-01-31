@@ -4,6 +4,7 @@ import {
   RegisterScreen,
   ForgotPasswordScreen,
   ForgotPasswordOtpScreen,
+  EnterOtpScreen,
 } from "@/features/auth/screens";
 
 import type { AuthStackParamList } from "./NavigationParamTypes";
@@ -21,6 +22,7 @@ export default function AuthNavigator() {
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+      <Stack.Screen name="EnterOtp" component={EnterOtpScreen} />
       <Stack.Screen name="ForgotPasswordOtp" component={ForgotPasswordOtpScreen} />
     </Stack.Navigator>
   );
