@@ -58,24 +58,20 @@ export const authService = {
         );
     },
 
-    async resetPassword(otp: string, newPassword: string): Promise<ApiResponse<void>> {
-        logger.warn("[authService] Using dummy data for resetPassword with timeout of 1 second");
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        // return {
-        //     data: undefined,
-        //     status: 200,
-        //     message: "Password has been reset successfully",
-        // };
-        return {
-            data: undefined,
-            status: 401,
-            message: "Invalid OTP provided",
-        }
-        // return apiClient.post<void>(
-        //     endpoints.auth.resetPassword(),
-        //     { otp, newPassword },
-        //     { requiresAuth: false }
-        // );
+    async resetPassword(email: string, newPassword: string, confirmPassword: string): Promise<ApiResponse<void>> {
+        return apiClient.post<void>(
+            endpoints.auth.resetPassword(),
+            { email, newPassword, confirmPassword },
+            { requiresAuth: false }
+        );
+    },
+
+    async verifyOtp(email: string, otp: string): Promise<ApiResponse<void>> {
+        return apiClient.post<void>(
+            'auth/verify',
+            { email, otp },
+            { requiresAuth: false }
+        );
     },
 
     async loginWithGoogle(idToken: string): Promise<ApiResponse<AuthResponse>> {
