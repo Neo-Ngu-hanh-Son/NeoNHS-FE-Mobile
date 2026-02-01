@@ -1,11 +1,11 @@
-import React from "react";
-import { StatusBar } from "expo-status-bar";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { View, Image, StyleSheet, ViewStyle, StyleProp, Dimensions } from "react-native";
-import LoadingOverlay from "@/components/Loader/LoadingOverlay";
-import { ImageSourcePropType } from "react-native";
-import { useTheme } from "@/app/providers/ThemeProvider";
-import { THEME } from "@/lib/theme";
+import React from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { View, Image, StyleSheet, ViewStyle, StyleProp, Dimensions } from 'react-native';
+import LoadingOverlay from '@/components/Loader/LoadingOverlay';
+import { ImageSourcePropType } from 'react-native';
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { THEME } from '@/lib/theme';
 
 type AuthLayoutProps = {
   isLoading?: boolean;
@@ -14,7 +14,7 @@ type AuthLayoutProps = {
   imageSource?: ImageSourcePropType;
 };
 
-const deviceHeight = Dimensions.get("window").height;
+const deviceHeight = Dimensions.get('window').height;
 
 export default function AuthLayout({
   isLoading = false,
@@ -27,7 +27,11 @@ export default function AuthLayout({
 
   return (
     <>
-      <StatusBar style={isDarkColorScheme ? "light" : "dark"} backgroundColor="transparent" translucent />
+      <StatusBar
+        style={isDarkColorScheme ? 'light' : 'dark'}
+        backgroundColor="transparent"
+        translucent
+      />
       <KeyboardAwareScrollView
         style={[styles.container, { backgroundColor: theme.background }, style]}
         keyboardShouldPersistTaps="handled"
@@ -36,25 +40,25 @@ export default function AuthLayout({
         enableResetScrollToCoords={false}
         enableOnAndroid={true}
         showsVerticalScrollIndicator={false}
-        bounces={false}
-      >
-        <LoadingOverlay visible={isLoading} message="Please wait..." />
+        bounces={false}>
+        {/* <LoadingOverlay visible={true} message="Please wait..." /> */}
 
         <View style={styles.imageContainer}>
           <Image
-            source={imageSource || require("@/assets/images/Mountain.png")}
+            source={imageSource || require('@/assets/images/Mountain.png')}
             style={styles.image}
             resizeMode="cover"
           />
         </View>
 
-        <View style={[
-          styles.bottomContentWrapper, 
-          { 
-            backgroundColor: theme.card,
-            shadowColor: isDarkColorScheme ? "#000" : "#000",
-          }
-        ]}>
+        <View
+          style={[
+            styles.bottomContentWrapper,
+            {
+              backgroundColor: theme.card,
+              shadowColor: isDarkColorScheme ? '#000' : '#000',
+            },
+          ]}>
           {children}
         </View>
       </KeyboardAwareScrollView>
@@ -71,14 +75,14 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     height: deviceHeight * 0.3,
-    width: "100%",
+    width: '100%',
   },
   image: {
-    width: "100%",
-    height: "100%",
+    width: '100%',
+    height: '100%',
   },
   bottomContentWrapper: {
-    alignItems: "center",
+    alignItems: 'center',
     marginTop: -50,
     flex: 1,
     borderTopLeftRadius: 24,
@@ -90,10 +94,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 5,
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   formContainer: {
-    width: "100%",
+    width: '100%',
     flex: 1,
   },
 });

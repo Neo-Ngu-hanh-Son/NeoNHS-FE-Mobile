@@ -11,6 +11,7 @@ import { authService } from '../services/authService';
 import { storage } from '@/utils/storage';
 import type { ApiError } from '@/services/api/types';
 import { logger } from '@/utils/logger';
+import LoadingOverlay from '@/components/Loader/LoadingOverlay';
 
 const initialState: AuthState = {
   user: null,
@@ -26,7 +27,7 @@ type AuthAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_INITIALIZED'; payload: boolean }
   | { type: 'LOGIN_SUCCESS'; payload: { user: User; token: string; refreshToken?: string } }
-  | { type: 'REGISTER_SUCCESS'; payload: { } }
+  | { type: 'REGISTER_SUCCESS'; payload: {} }
   | { type: 'LOGOUT' }
   | { type: 'UPDATE_USER'; payload: Partial<User> }
   | { type: 'SET_TOKEN'; payload: { token: string; refreshToken?: string } };
@@ -286,7 +287,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loginWithGoogle,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      <LoadingOverlay visible={state.isLoading} message="Please wait..." />
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth(): AuthContextValue {

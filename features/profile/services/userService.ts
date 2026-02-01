@@ -24,14 +24,14 @@ export const userService = {
         return apiClient.get<UserProfile>(endpoints.users.getProfile());
     },
 
-    async updateProfile(data: UpdateProfileRequest): Promise<ApiResponse<UserProfile>> {
-        return apiClient.put<UserProfile>(endpoints.users.updateProfile(), data);
+    async updateProfile(id: string | number, data: UpdateProfileRequest): Promise<ApiResponse<UserProfile>> {
+        return apiClient.put<UserProfile>(endpoints.users.updateProfile(id), data);
     },
 
     async uploadAvatar(fileUri: string) {
         const filename = fileUri.split('/').pop();
         const type = `image/${filename?.split('.').pop()}`;
-        
+
         const fileToUpload = {
             uri: fileUri,
             type: type,

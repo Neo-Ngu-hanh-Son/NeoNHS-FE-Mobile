@@ -20,7 +20,7 @@ export const authEndpoints = {
  */
 export const userEndpoints = {
     getProfile: () => `users/profile`,
-    updateProfile: () => `users/update-profile`,
+    updateProfile: (id: string | number) => `users/update-profile/${id}`,
     changePassword: () => `users/change-password`,
     getUserById: (id: string | number) => `users/${id}`,
     getUsers: () => `users`,
@@ -41,7 +41,7 @@ export const homeEndpoints = {
  */
 export const profileEndpoints = {
     getProfile: () => `profile`,
-    updateProfile: () => `update-profile`,
+    updateProfile: (id: string | number) => `update-profile/${id}`,
     // uploadAvatar: () => `profile/avatar`,
 } as const;
 

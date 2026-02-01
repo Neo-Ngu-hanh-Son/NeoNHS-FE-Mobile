@@ -5,12 +5,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Providers } from './providers/Providers';
 import '../global.css';
 import { PortalHost } from '@rn-primitives/portal';
-import {
-  configureReanimatedLogger,
-  ReanimatedLogLevel,
-} from 'react-native-reanimated';
+import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 
 import { useTheme } from './providers/ThemeProvider';
+import LoadingOverlay from '@/components/Loader/LoadingOverlay';
 
 // This is the default configuration
 configureReanimatedLogger({
