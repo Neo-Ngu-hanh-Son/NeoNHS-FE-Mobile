@@ -1,146 +1,89 @@
-import { View, StyleSheet, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useState } from "react";
-import { Ionicons } from "@expo/vector-icons";
-import { StackScreenProps } from "@react-navigation/stack";
-import { WebView } from "react-native-webview";
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useCallback } from 'react';
+import { StackScreenProps } from '@react-navigation/stack';
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { THEME } from '@/lib/theme';
+import { TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
+import { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
+import MapView from 'react-native-map-clustering';
+import CustomMarker, { MapPoint } from '../components/Marker/CustomMarker';
+import { PointDetailModal } from '../components/PointDetailModal';
+import { ALL_ROUTES, MAP_POINTS, MAP_CENTER } from '../data/mapRoutes';
+import { logger } from '@/utils/logger';
 
-import { Text } from "@/components/ui/text";
-import { Button } from "@/components/ui/button";
-import { useTheme } from "@/app/providers/ThemeProvider";
-import { THEME } from "@/lib/theme";
-import { TabsStackParamList } from "@/app/navigations/NavigationParamTypes";
-
-type MapScreenProps = StackScreenProps<TabsStackParamList, "Map">;
-
-// Demo URLs for WebView testing
-const DEMO_URLS = [
-  {
-    id: "openstreetmap",
-    name: "OpenStreetMap",
-    url: "https://www.openstreetmap.org/#map=15/16.0047/108.2628",
-  },
-  {
-    id: "pannellum",
-    name: "Pannellum",
-    url: "https://pannellum.org",
-  },
-  {
-    id: "virtualtour",
-    name: "Virtual Tour",
-    url: "https://photo-sphere-viewer.js.org/plugins/virtual-tour.html#virtualtourplugin",
-  },
-];
+type MapScreenProps = StackScreenProps<TabsStackParamList, 'Map'>;
 
 export default function MapScreen({ navigation }: MapScreenProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeUrl, setActiveUrl] = useState(DEMO_URLS[0]);
+  const handleMarkerPress = useCallback((point: MapPoint) => {
+    setSelectedPoint(point);
+    setModalVisible(true);
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setModalVisible(false);
+  }, []);
+
+  const handleNavigate = useCallback((point: MapPoint) => {
+    // TODO: Implement navigation to the point
+    logger.info('Navigate to:', point.title);
+    setModalVisible(false);
+  }, []);
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.background }]}
-      edges={["top"]}
-    >
-      {/* Header */}
-      <View style={styles.header}>
-        <Text className="text-2xl font-bold" style={{ color: theme.foreground }}>
-          Map
-        </Text>
-        <Text className="text-sm mt-1" style={{ color: theme.mutedForeground }}>
-          WebView Performance Demo
-        </Text>
-      </View>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
+      <View className="w-full flex-1" style={{ borderColor: theme.border, borderWidth: 1 }}>
+        <MapView
+          style={{ flex: 1 }}
+          provider={PROVIDER_GOOGLE}
+          initialRegion={MAP_CENTER}
+          clusteringEnabled={true}
+          clusterColor={theme.primary}
+          onClusterPress={() => {
+            logger.info('Cluster pressed!');
+          }}
+          mapType="hybrid">
+          {ALL_ROUTES.map((route) => (
+            <Polyline
+              key={route.id}
+              coordinates={route.coordinates}
+              strokeColor={route.color}
+              strokeWidth={4}
+              lineDashPattern={[0]}
+            />
+          ))}
 
-      {/* URL Selector */}
-      <View style={styles.urlSelector}>
-        {DEMO_URLS.map((item) => (
-          <Button
-            key={item.id}
-            variant={activeUrl.id === item.id ? "default" : "outline"}
-            size="sm"
-            className="flex-1"
-            onPress={() => {
-              setIsLoading(true);
-              setActiveUrl(item);
-            }}
-          >
-            <Text
-              className="text-xs font-medium"
-              style={{
-                color: activeUrl.id === item.id ? theme.primaryForeground : theme.foreground,
+          {/* Note: Only simple markers are able to be clustered */}
+          {Array.from({ length: 40 }).map((_, i) => (
+            <Marker
+              key={i}
+              coordinate={{
+                latitude: 16.002819 + Math.random() * 0.005,
+                longitude: 108.26247 + Math.random() * 0.005,
               }}
-            >
-              {item.name}
-            </Text>
-          </Button>
-        ))}
+              title={`Random Point ${i + 1}`}
+              description="This is a randomly generated point for clustering demo."
+            />
+          ))}
+
+          {MAP_POINTS.map((point) => (
+            <CustomMarker key={point.id} point={point} onPress={handleMarkerPress} />
+          ))}
+        </MapView>
       </View>
 
-      {/* WebView Container */}
-      <View style={[styles.webviewContainer, { borderColor: theme.border }]}>
-        <WebView
-          source={{ uri: activeUrl.url }}
-          style={styles.webview}
-          onLoadStart={() => setIsLoading(true)}
-          onLoadEnd={() => setIsLoading(false)}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          startInLoadingState={true}
-          scalesPageToFit={true}
-          geolocationEnabled={true}
-          renderLoading={() => (
-            <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
-              <ActivityIndicator size="large" color={theme.primary} />
-              <Text className="mt-3" style={{ color: theme.mutedForeground }}>
-                Loading map...
-              </Text>
-            </View>
-          )}
-        />
-
-        {/* Loading Overlay */}
-        {isLoading && (
-          <View style={[styles.loadingOverlay, { backgroundColor: theme.background + "CC" }]}>
-            <ActivityIndicator size="large" color={theme.primary} />
-            <Text className="mt-3" style={{ color: theme.foreground }}>
-              Loading {activeUrl.name}...
-            </Text>
-          </View>
-        )}
-      </View>
-
-      {/* Quick Actions */}
-      <View style={styles.quickActions}>
-        <View style={styles.actionsRow}>
-          <View style={[styles.actionCard, { backgroundColor: theme.card }]}>
-            <Ionicons name="navigate-outline" size={20} color={theme.primary} />
-            <Text className="text-xs mt-1" style={{ color: theme.foreground }}>
-              Directions
-            </Text>
-          </View>
-          <View style={[styles.actionCard, { backgroundColor: theme.card }]}>
-            <Ionicons name="search-outline" size={20} color={theme.primary} />
-            <Text className="text-xs mt-1" style={{ color: theme.foreground }}>
-              Search
-            </Text>
-          </View>
-          <View style={[styles.actionCard, { backgroundColor: theme.card }]}>
-            <Ionicons name="bookmark-outline" size={20} color={theme.primary} />
-            <Text className="text-xs mt-1" style={{ color: theme.foreground }}>
-              Saved
-            </Text>
-          </View>
-          <View style={[styles.actionCard, { backgroundColor: theme.card }]}>
-            <Ionicons name="refresh-outline" size={20} color={theme.primary} />
-            <Text className="text-xs mt-1" style={{ color: theme.foreground }}>
-              Reload
-            </Text>
-          </View>
-        </View>
-      </View>
+      {/* Point Detail Bottom Modal */}
+      <PointDetailModal
+        point={selectedPoint}
+        visible={modalVisible}
+        onClose={handleCloseModal}
+        onNavigate={handleNavigate}
+      />
     </SafeAreaView>
   );
 }
@@ -153,52 +96,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  urlSelector: {
-    flexDirection: "row",
-    paddingHorizontal: 16,
-    gap: 8,
-    marginBottom: 12,
-  },
-  webviewContainer: {
-    flex: 1,
-    marginHorizontal: 16,
-    borderRadius: 12,
-    overflow: "hidden",
-    borderWidth: 1,
-  },
-  webview: {
-    flex: 1,
-  },
-  loadingContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  loadingOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   quickActions: {
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
   actionsRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 8,
   },
   actionCard: {
     flex: 1,
     padding: 12,
     borderRadius: 10,
-    alignItems: "center",
+    alignItems: 'center',
   },
 });
