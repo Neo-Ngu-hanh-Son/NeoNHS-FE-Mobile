@@ -2,10 +2,10 @@ import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { View, Image, StyleSheet, ViewStyle, StyleProp, Dimensions } from 'react-native';
-import LoadingOverlay from '@/components/Loader/LoadingOverlay';
 import { ImageSourcePropType } from 'react-native';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
+import LoadingOverlay from '@/components/Loader/LoadingOverlay';
 
 type AuthLayoutProps = {
   isLoading?: boolean;
@@ -41,8 +41,6 @@ export default function AuthLayout({
         enableOnAndroid={true}
         showsVerticalScrollIndicator={false}
         bounces={false}>
-        {/* <LoadingOverlay visible={true} message="Please wait..." /> */}
-
         <View style={styles.imageContainer}>
           <Image
             source={imageSource || require('@/assets/images/Mountain.png')}

@@ -12,8 +12,9 @@ import axios, {
 import type {
     ApiResponse,
     ApiError,
-    RequestConfig,  
+    RequestConfig,
     ApiClientConfig,
+    TokenRefreshResult,
 } from "./types";
 import {
     ApiErrorCode,
@@ -24,8 +25,15 @@ import { logger } from "@/utils/logger";
 class ApiClient {
     private axiosInstance: AxiosInstance;
     private getAuthToken?: () => string | null | Promise<string | null>;
+    private getRefreshToken?: () => string | null | Promise<string | null>;
+    private onTokenRefresh?: (refreshToken: string) => Promise<TokenRefreshResult | null | void>;
+    private onTokenRefreshed?: (result: TokenRefreshResult) => void | Promise<void>;
     private onUnauthorized?: () => void;
     private onError?: (error: ApiError) => void;
+
+    // Token refresh state management
+    private isRefreshing = false;
+    private refreshSubscribers: Array<(token: string) => void> = [];
 
     constructor(config?: Partial<ApiClientConfig>) {
         // Create axios instance with default config
@@ -40,6 +48,9 @@ class ApiClient {
 
         // Store callbacks
         this.getAuthToken = config?.getAuthToken;
+        this.getRefreshToken = config?.getRefreshToken;
+        this.onTokenRefresh = config?.onTokenRefresh;
+        this.onTokenRefreshed = config?.onTokenRefreshed;
         this.onUnauthorized = config?.onUnauthorized;
         this.onError = config?.onError;
 
@@ -59,21 +70,33 @@ class ApiClient {
 
                 // Add authentication token if required
                 const requiresAuth = (config as RequestConfig).requiresAuth !== false;
-                
-                if (requiresAuth && this.getAuthToken) {
+                logger.debug("[ApiClient] Request requires auth:", requiresAuth, ", token: " + (this.getAuthToken ? "available" : "not available"));
+
+                const isRetryAttemptFromRefreshToken =
+                    (config as any)._retry === true;
+
+                if (requiresAuth && this.getAuthToken && !isRetryAttemptFromRefreshToken) {
                     const token = await this.getAuthToken();
+                    logger.debug("[ApiClient] Adding authentication token to request");
                     if (token) {
                         config.headers.Authorization = `Bearer ${token}`;
                     } else {
                         logger.error("[ApiClient] Authentication token not found in store for this request");
                     }
+                } else {
+                    logger.debug("[ApiClient] Skipping adding authentication token to request (Because of requiresAuth=false or isRetryAttemptFromRefreshToken=true)");
                 }
 
                 // Remove custom requiresAuth property before sending
                 if ((config as RequestConfig).requiresAuth !== undefined) {
                     delete (config as RequestConfig).requiresAuth;
                 }
+                // Remove the custom retry flag if present
+                if ((config as any)._retry !== undefined) {
+                    delete (config as any)._retry;
+                }
 
+                logger.debug("[ApiClient] Request headers: ", config.headers);
                 return config;
             },
             (error) => {
@@ -81,16 +104,108 @@ class ApiClient {
             }
         );
 
-        // Response interceptor - Handle errors only
-        // Note: We don't transform here because interceptors must return AxiosResponse
+        // Response interceptor - Handle errors and token refresh
         this.axiosInstance.interceptors.response.use(
             (response) => {
+                logger.debug("[ApiClient] Response received:", response.status, response.config.url, response.data);
                 return response;
             },
-            (error: AxiosError) => {
+            async (error: AxiosError) => {
+                const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+                logger.info("[ApiClient] Response error intercepted:", error.message);
+                if (
+                    error.response?.status === 403 &&
+                    originalRequest &&
+                    !originalRequest._retry &&
+                    this.onTokenRefresh &&
+                    this.getRefreshToken
+                ) {
+                    // Check if the original request required auth (default is true)
+                    // Skip refresh for requests that don't require auth (like login, register)
+                    const wasAuthRequired = originalRequest.headers?.Authorization !== undefined;
+                    logger.info("[ApiClient] 403 Forbidden received for request. Auth required:", wasAuthRequired);
+                    if (wasAuthRequired) {
+                        try {
+                            const newToken = await this.handleTokenRefresh();
+                            if (newToken) {
+                                logger.info("[ApiClient] Retrying original request with new token");
+
+                                // Create a fresh config for retry to avoid reference issues
+                                const retryConfig: AxiosRequestConfig & { _retry: boolean } = {
+                                    ...originalRequest,
+                                    headers: {
+                                        ...originalRequest.headers,
+                                        Authorization: `Bearer ${newToken}`,
+                                    },
+                                    _retry: true,
+                                };
+
+                                // Retry the original request with explicit request method
+                                return this.axiosInstance.request(retryConfig);
+                            }
+                        } catch (refreshError) {
+                            logger.error("[ApiClient] Token refresh failed:", refreshError);
+                            // Token refresh failed, call onUnauthorized
+                            this.onUnauthorized?.();
+                            return Promise.reject(this.handleError(error));
+                        }
+                    }
+                }
+
                 return Promise.reject(this.handleError(error));
             }
         );
+    }
+
+    /**
+     * Handle token refresh with request queuing
+     * Ensures only one refresh request is made at a time
+     */
+    private async handleTokenRefresh(): Promise<string | null> {
+        // If already refreshing, wait for the result
+        if (this.isRefreshing) {
+            return new Promise<string>((resolve) => {
+                this.refreshSubscribers.push(resolve);
+            });
+        }
+
+        this.isRefreshing = true;
+
+        try {
+            const refreshToken = await this.getRefreshToken?.();
+
+            if (!refreshToken) {
+                logger.warn("[ApiClient] No refresh token available");
+                this.onUnauthorized?.();
+                return null;
+            }
+
+            const result = await this.onTokenRefresh!(refreshToken);
+
+            if (result) {
+                logger.debug("[ApiClient] Token refresh successful");
+
+                // Notify the auth context to update stored tokens
+                await this.onTokenRefreshed?.(result);
+
+                // Notify all waiting requests with the new token
+                this.refreshSubscribers.forEach((callback) => callback(result.accessToken));
+                this.refreshSubscribers = [];
+
+                return result.accessToken;
+            } else {
+                logger.warn("[ApiClient] Token refresh returned null");
+                this.onUnauthorized?.();
+                return null;
+            }
+        } catch (error) {
+            logger.error("[ApiClient] Token refresh error:", error);
+            // Clear waiting requests
+            this.refreshSubscribers = [];
+            throw error;
+        } finally {
+            this.isRefreshing = false;
+        }
     }
 
     /**
@@ -176,22 +291,22 @@ class ApiClient {
                     } else if (typeof responseData === "object") {
                         // Server returned JSON error object
                         // Try common error message fields in order of preference
-                        errorMessage = 
+                        errorMessage =
                             responseData.message ||
                             responseData.error ||
                             responseData.detail ||
                             responseData.errorMessage ||
-                            (responseData.errors && typeof responseData.errors === "string" 
-                                ? responseData.errors 
+                            (responseData.errors && typeof responseData.errors === "string"
+                                ? responseData.errors
                                 : null) ||
                             response.statusText ||
                             "An error occurred";
-                        
+
                         // Extract validation errors if present
                         if (responseData.errors && typeof responseData.errors === "object") {
                             errorDetails = responseData.errors;
                         }
-                        
+
                         // Extract error code if present
                         errorCode = responseData.code || responseData.errorCode;
                     }
@@ -223,10 +338,9 @@ class ApiClient {
             };
         }
 
-        // Handle unauthorized errors
-        if (apiError.status === 401 || apiError.code === ApiErrorCode.UNAUTHORIZED) {
-            this.onUnauthorized?.();
-        }
+        // Note: We don't call onUnauthorized here anymore because
+        // 401 errors are handled in the response interceptor with token refresh logic.
+        // onUnauthorized is called there only after refresh fails.
 
         // Call error callback
         this.onError?.(apiError);
@@ -267,8 +381,9 @@ class ApiClient {
         config?: RequestConfig,
     ): Promise<ApiResponse<T>> {
         const { transformData = true, ...restConfig } = config ?? {};
-
+        logger.debug("[ApiClient][GET-method] Sending GET request to:", endpoint, "with config:", restConfig);
         const response = await this.axiosInstance.get<T>(endpoint, restConfig as AxiosRequestConfig);
+        logger.debug("[ApiClient][GET-method] GET response data:", response.data);
         return transformData ? this.transformResponse(response) : response;
     }
 
@@ -348,6 +463,15 @@ class ApiClient {
         }
         if (config.getAuthToken) {
             this.getAuthToken = config.getAuthToken;
+        }
+        if (config.getRefreshToken) {
+            this.getRefreshToken = config.getRefreshToken;
+        }
+        if (config.onTokenRefresh) {
+            this.onTokenRefresh = config.onTokenRefresh;
+        }
+        if (config.onTokenRefreshed) {
+            this.onTokenRefreshed = config.onTokenRefreshed;
         }
         if (config.onUnauthorized) {
             this.onUnauthorized = config.onUnauthorized;

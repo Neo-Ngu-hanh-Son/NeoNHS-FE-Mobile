@@ -228,8 +228,8 @@ const styles = StyleSheet.create({
   },
   typeBadge: {
     position: 'absolute',
-    top: 12,
-    left: 12,
+    top: 0,
+    left: 0,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 10,

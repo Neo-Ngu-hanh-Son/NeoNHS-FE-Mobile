@@ -8,9 +8,10 @@ import { TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import MapView from 'react-native-map-clustering';
 import CustomMarker, { MapPoint } from '../components/Marker/CustomMarker';
-import { PointDetailModal } from '../components/PointDetailModal';
 import { ALL_ROUTES, MAP_POINTS, MAP_CENTER } from '../data/mapRoutes';
 import { logger } from '@/utils/logger';
+import PointDetailModal from '../components/PointDetailModal/PointDetailModal';
+import MarkerVisual from '../components/Marker/MarkerVisual';
 
 type MapScreenProps = StackScreenProps<TabsStackParamList, 'Map'>;
 
@@ -44,9 +45,6 @@ export default function MapScreen({ navigation }: MapScreenProps) {
           initialRegion={MAP_CENTER}
           clusteringEnabled={true}
           clusterColor={theme.primary}
-          onClusterPress={() => {
-            logger.info('Cluster pressed!');
-          }}
           mapType="hybrid">
           {ALL_ROUTES.map((route) => (
             <Polyline
@@ -58,7 +56,7 @@ export default function MapScreen({ navigation }: MapScreenProps) {
             />
           ))}
 
-          {/* Note: Only simple markers are able to be clustered */}
+          {/* Note: The <Marker> component must be here, if no, clustering will not work*/}
           {Array.from({ length: 40 }).map((_, i) => (
             <Marker
               key={i}
@@ -72,7 +70,17 @@ export default function MapScreen({ navigation }: MapScreenProps) {
           ))}
 
           {MAP_POINTS.map((point) => (
-            <CustomMarker key={point.id} point={point} onPress={handleMarkerPress} />
+            <Marker
+              coordinate={{
+                latitude: point.latitude,
+                longitude: point.longitude,
+              }}
+              key={point.id}
+              onPress={() => handleMarkerPress(point)}
+              title={point.title}
+              description={point.description}>
+              {point.type !== 'junction' && <MarkerVisual point={point} />}
+            </Marker>
           ))}
         </MapView>
       </View>
@@ -109,5 +117,34 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     alignItems: 'center',
+  },
+
+  markerContainer: {
+    alignItems: 'center',
+  },
+  markerBubble: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  markerIcon: {
+    fontSize: 16,
+  },
+  markerArrow: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderTopWidth: 8,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    marginTop: -2,
   },
 });

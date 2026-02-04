@@ -1,9 +1,10 @@
-import { AuthProvider } from "@/features/auth";
-import ApiProvider from "./ApiProvider";
-import { ThemeProvider } from "./ThemeProvider";
-import { ReactNode } from "react";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import GoogleLoginProvider from "./GoogleLoginProvider";
+import { AuthProvider } from '@/features/auth';
+import ApiProvider from './ApiProvider';
+import { ThemeProvider } from './ThemeProvider';
+import { ModalProvider } from './ModalProvider';
+import { ReactNode } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import GoogleLoginProvider from './GoogleLoginProvider';
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
@@ -11,9 +12,9 @@ export function Providers({ children }: { children: ReactNode }) {
       <ThemeProvider>
         <AuthProvider>
           <ApiProvider>
-            <SafeAreaProvider>
-              {children}
-            </SafeAreaProvider>
+            <ModalProvider>
+              <SafeAreaProvider>{children}</SafeAreaProvider>
+            </ModalProvider>
           </ApiProvider>
         </AuthProvider>
       </ThemeProvider>

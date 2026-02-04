@@ -49,7 +49,9 @@ export default function CustomMarker({ point, onPress }: CustomMarkerProps) {
         latitude: point.latitude,
         longitude: point.longitude,
       }}
-      onPress={() => onPress?.(point)}>
+      onPress={() => onPress?.(point)}
+      title={point.title}
+      description={point.description}>
       {/* Visuals */}
       <View style={styles.markerContainer}>
         <View style={[styles.markerBubble, { backgroundColor: markerColor }]}>
