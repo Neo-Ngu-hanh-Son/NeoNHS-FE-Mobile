@@ -62,7 +62,7 @@ class ApiClient {
      * Setup request and response interceptors
      */
     private setupInterceptors(): void {
-        // Request interceptor - Add auth token
+        // Request interceptor 
         this.axiosInstance.interceptors.request.use(
             async (config) => {
                 // Log the request config
@@ -72,8 +72,7 @@ class ApiClient {
                 const requiresAuth = (config as RequestConfig).requiresAuth !== false;
                 logger.debug("[ApiClient] Request requires auth:", requiresAuth, ", token: " + (this.getAuthToken ? "available" : "not available"));
 
-                const isRetryAttemptFromRefreshToken =
-                    (config as any)._retry === true;
+                const isRetryAttemptFromRefreshToken = (config as any)._retry === true;
 
                 if (requiresAuth && this.getAuthToken && !isRetryAttemptFromRefreshToken) {
                     const token = await this.getAuthToken();
@@ -84,7 +83,7 @@ class ApiClient {
                         logger.error("[ApiClient] Authentication token not found in store for this request");
                     }
                 } else {
-                    logger.debug("[ApiClient] Skipping adding authentication token to request (Because of requiresAuth=false or isRetryAttemptFromRefreshToken=true)");
+                    logger.debug("[ApiClient] Handling refresh token request or no auth required");
                 }
 
                 // Remove custom requiresAuth property before sending
@@ -104,57 +103,58 @@ class ApiClient {
             }
         );
 
-        // Response interceptor - Handle errors and token refresh
+        // Response interceptor - just log, no token refresh handling here
         this.axiosInstance.interceptors.response.use(
             (response) => {
-                logger.debug("[ApiClient] Response received:", response.status, response.config.url, response.data);
+                logger.debug("[ApiClient] Response received: ", response.data);
                 return response;
             },
             async (error: AxiosError) => {
-                const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
-                logger.info("[ApiClient] Response error intercepted:", error.message);
-                if (
-                    error.response?.status === 403 &&
-                    originalRequest &&
-                    !originalRequest._retry &&
-                    this.onTokenRefresh &&
-                    this.getRefreshToken
-                ) {
-                    // Check if the original request required auth (default is true)
-                    // Skip refresh for requests that don't require auth (like login, register)
-                    const wasAuthRequired = originalRequest.headers?.Authorization !== undefined;
-                    logger.info("[ApiClient] 403 Forbidden received for request. Auth required:", wasAuthRequired);
-                    if (wasAuthRequired) {
-                        try {
-                            const newToken = await this.handleTokenRefresh();
-                            if (newToken) {
-                                logger.info("[ApiClient] Retrying original request with new token");
-
-                                // Create a fresh config for retry to avoid reference issues
-                                const retryConfig: AxiosRequestConfig & { _retry: boolean } = {
-                                    ...originalRequest,
-                                    headers: {
-                                        ...originalRequest.headers,
-                                        Authorization: `Bearer ${newToken}`,
-                                    },
-                                    _retry: true,
-                                };
-
-                                // Retry the original request with explicit request method
-                                return this.axiosInstance.request(retryConfig);
-                            }
-                        } catch (refreshError) {
-                            logger.error("[ApiClient] Token refresh failed:", refreshError);
-                            // Token refresh failed, call onUnauthorized
-                            this.onUnauthorized?.();
-                            return Promise.reject(this.handleError(error));
-                        }
-                    }
-                }
-
-                return Promise.reject(this.handleError(error));
+                logger.info("[ApiClient] Response error intercepted:", error.message, "Status:", error.response?.status);
+                // Just pass through the error - token refresh is handled in executeWithRetry
+                return Promise.reject(error);
             }
         );
+    }
+
+    /**
+     * Execute a request with automatic token refresh retry on 403
+     * This is the centralized handler for all HTTP methods
+     */
+    private async executeWithRetry<T>(
+        requestFn: () => Promise<AxiosResponse<T>>,
+        retryFn: (newToken: string) => Promise<AxiosResponse<T>>,
+        requiresAuth: boolean = true,
+    ): Promise<AxiosResponse<T>> {
+        try {
+            return await requestFn();
+        } catch (error) {
+            // Check if it's a 403 error and we can attempt token refresh
+            if (
+                axios.isAxiosError(error) &&
+                error.response?.status === 403 &&
+                requiresAuth &&
+                this.onTokenRefresh &&
+                this.getRefreshToken
+            ) {
+                logger.info("[ApiClient] 403 Forbidden - attempting token refresh");
+
+                try {
+                    const newToken = await this.handleTokenRefresh();
+
+                    if (newToken) {
+                        logger.info("[ApiClient] Token refreshed, retrying request");
+                        return await retryFn(newToken);
+                    }
+                } catch (refreshError) {
+                    logger.error("[ApiClient] Token refresh failed:", refreshError);
+                    this.onUnauthorized?.();
+                }
+            }
+
+            // Re-throw the original error
+            throw error;
+        }
     }
 
     /**
@@ -380,11 +380,30 @@ class ApiClient {
         endpoint: string,
         config?: RequestConfig,
     ): Promise<ApiResponse<T>> {
-        const { transformData = true, ...restConfig } = config ?? {};
-        logger.debug("[ApiClient][GET-method] Sending GET request to:", endpoint, "with config:", restConfig);
-        const response = await this.axiosInstance.get<T>(endpoint, restConfig as AxiosRequestConfig);
-        logger.debug("[ApiClient][GET-method] GET response data:", response.data);
-        return transformData ? this.transformResponse(response) : response;
+        const { transformData = true, requiresAuth = true, ...restConfig } = config ?? {};
+        logger.debug("[ApiClient][GET] Sending request to:", endpoint);
+
+        try {
+            const response = await this.executeWithRetry<T>(
+                // Initial request
+                () => this.axiosInstance.get<T>(endpoint, restConfig as AxiosRequestConfig),
+                // Retry request with new token
+                (newToken) => this.axiosInstance.get<T>(endpoint, {
+                    ...restConfig,
+                    headers: {
+                        ...(restConfig.headers || {}),
+                        Authorization: `Bearer ${newToken}`,
+                    },
+                    _retry: true,
+                } as AxiosRequestConfig),
+                requiresAuth,
+            );
+
+            logger.debug("[ApiClient][GET] Response data:", response.data);
+            return transformData ? this.transformResponse(response) : response;
+        } catch (error) {
+            throw this.handleError(error);
+        }
     }
 
     /**
@@ -395,9 +414,30 @@ class ApiClient {
         data?: unknown,
         config?: RequestConfig,
     ): Promise<ApiResponse<T>> {
-        const { transformData = true, ...restConfig } = config ?? {};
-        const response = await this.axiosInstance.post<T>(endpoint, data, restConfig as AxiosRequestConfig);
-        return transformData ? this.transformResponse(response) : response;
+        const { transformData = true, requiresAuth = true, ...restConfig } = config ?? {};
+        logger.debug("[ApiClient][POST] Sending request to:", endpoint);
+
+        try {
+            const response = await this.executeWithRetry<T>(
+                // Initial request
+                () => this.axiosInstance.post<T>(endpoint, data, restConfig as AxiosRequestConfig),
+                // Retry request with new token
+                (newToken) => this.axiosInstance.post<T>(endpoint, data, {
+                    ...restConfig,
+                    headers: {
+                        ...(restConfig.headers || {}),
+                        Authorization: `Bearer ${newToken}`,
+                    },
+                    _retry: true,
+                } as AxiosRequestConfig),
+                requiresAuth,
+            );
+
+            logger.debug("[ApiClient][POST] Response data:", response.data);
+            return transformData ? this.transformResponse(response) : response;
+        } catch (error) {
+            throw this.handleError(error);
+        }
     }
 
     /**
@@ -408,9 +448,30 @@ class ApiClient {
         data?: unknown,
         config?: RequestConfig,
     ): Promise<ApiResponse<T>> {
-        const { transformData = true, ...restConfig } = config ?? {};
-        const response = await this.axiosInstance.put<T>(endpoint, data, restConfig as AxiosRequestConfig);
-        return transformData ? this.transformResponse(response) : response;
+        const { transformData = true, requiresAuth = true, ...restConfig } = config ?? {};
+        logger.debug("[ApiClient][PUT] Sending request to:", endpoint);
+
+        try {
+            const response = await this.executeWithRetry<T>(
+                // Initial request
+                () => this.axiosInstance.put<T>(endpoint, data, restConfig as AxiosRequestConfig),
+                // Retry request with new token
+                (newToken) => this.axiosInstance.put<T>(endpoint, data, {
+                    ...restConfig,
+                    headers: {
+                        ...(restConfig.headers || {}),
+                        Authorization: `Bearer ${newToken}`,
+                    },
+                    _retry: true,
+                } as AxiosRequestConfig),
+                requiresAuth,
+            );
+
+            logger.debug("[ApiClient][PUT] Response data:", response.data);
+            return transformData ? this.transformResponse(response) : response;
+        } catch (error) {
+            throw this.handleError(error);
+        }
     }
 
     /**
@@ -421,9 +482,30 @@ class ApiClient {
         data?: unknown,
         config?: RequestConfig,
     ): Promise<ApiResponse<T>> {
-        const { transformData = true, ...restConfig } = config ?? {};
-        const response = await this.axiosInstance.patch<T>(endpoint, data, restConfig as AxiosRequestConfig);
-        return transformData ? this.transformResponse(response) : response;
+        const { transformData = true, requiresAuth = true, ...restConfig } = config ?? {};
+        logger.debug("[ApiClient][PATCH] Sending request to:", endpoint);
+
+        try {
+            const response = await this.executeWithRetry<T>(
+                // Initial request
+                () => this.axiosInstance.patch<T>(endpoint, data, restConfig as AxiosRequestConfig),
+                // Retry request with new token
+                (newToken) => this.axiosInstance.patch<T>(endpoint, data, {
+                    ...restConfig,
+                    headers: {
+                        ...(restConfig.headers || {}),
+                        Authorization: `Bearer ${newToken}`,
+                    },
+                    _retry: true,
+                } as AxiosRequestConfig),
+                requiresAuth,
+            );
+
+            logger.debug("[ApiClient][PATCH] Response data:", response.data);
+            return transformData ? this.transformResponse(response) : response;
+        } catch (error) {
+            throw this.handleError(error);
+        }
     }
 
     /**
@@ -433,9 +515,30 @@ class ApiClient {
         endpoint: string,
         config?: RequestConfig,
     ): Promise<ApiResponse<T>> {
-        const { transformData = true, ...restConfig } = config ?? {};
-        const response = await this.axiosInstance.delete<T>(endpoint, restConfig as AxiosRequestConfig);
-        return transformData ? this.transformResponse(response) : response;
+        const { transformData = true, requiresAuth = true, ...restConfig } = config ?? {};
+        logger.debug("[ApiClient][DELETE] Sending request to:", endpoint);
+
+        try {
+            const response = await this.executeWithRetry<T>(
+                // Initial request
+                () => this.axiosInstance.delete<T>(endpoint, restConfig as AxiosRequestConfig),
+                // Retry request with new token
+                (newToken) => this.axiosInstance.delete<T>(endpoint, {
+                    ...restConfig,
+                    headers: {
+                        ...(restConfig.headers || {}),
+                        Authorization: `Bearer ${newToken}`,
+                    },
+                    _retry: true,
+                } as AxiosRequestConfig),
+                requiresAuth,
+            );
+
+            logger.debug("[ApiClient][DELETE] Response data:", response.data);
+            return transformData ? this.transformResponse(response) : response;
+        } catch (error) {
+            throw this.handleError(error);
+        }
     }
 
     /**

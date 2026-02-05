@@ -242,7 +242,7 @@ export default function HomeScreenNew({ navigation }: HomeScreenNewProps) {
                 requiresAuth: true,
                 transformData: false,
               });
-              logger.info('Protected API response:', res);
+              logger.info('[HomeScreen] Protected API response:', res.data);
               setTestData(res.data);
             }}>
             <Text>Click me</Text>
