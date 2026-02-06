@@ -5,12 +5,12 @@ import {
   ScrollView,
   Image,
   Alert,
-  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { useNavigation, CommonActions } from '@react-navigation/native';
-import type { StackNavigationProp } from '@react-navigation/stack';
+import { CommonActions, CompositeScreenProps } from '@react-navigation/native';
+import type { StackScreenProps } from '@react-navigation/stack';
+import { StatusBar } from 'expo-status-bar';
 
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
@@ -19,12 +19,15 @@ import { useAuth } from '@/features/auth/context/AuthContext';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { logger } from '@/utils/logger';
-import type { RootStackParamList } from '@/app/navigations/NavigationParamTypes';
+import type { MainStackParamList, RootStackParamList } from '@/app/navigations/NavigationParamTypes';
 
-type ProfileNavigationProp = StackNavigationProp<RootStackParamList>;
 
-export default function ProfileScreen() {
-  const navigation = useNavigation<ProfileNavigationProp>();
+type ProfileNavigationProp = CompositeScreenProps<
+  StackScreenProps<MainStackParamList, "UpdateAccount">,
+  StackScreenProps<RootStackParamList>
+>;
+
+export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
   const { user, isAuthenticated, logout } = useAuth();
   const { isDarkColorScheme, toggleColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
@@ -57,7 +60,7 @@ export default function ProfileScreen() {
   };
 
   const handleEditProfile = () => {
-    navigation.navigate('UpdateAccount');
+    navigation.navigate('Main', { screen: 'UpdateAccount' })
   };
 
   const ActionCard = ({ title, desc, onPress, rightIcon }: any) => (
@@ -105,7 +108,7 @@ export default function ProfileScreen() {
         styles.container,
         { backgroundColor: isDarkColorScheme ? theme.background : THEME.light.primary },
       ]}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar style="light" />
 
       {/* Header Area */}
       <SafeAreaView
@@ -164,22 +167,22 @@ export default function ProfileScreen() {
           <ActionCard
             title="Your Order"
             desc="View your order and transaction history here"
-            onPress={() => {}}
+            onPress={() => { }}
           />
           <ActionCard
             title="Payment Method"
             desc="Save your preferred payment method for smoother transactions"
-            onPress={() => {}}
+            onPress={() => { }}
           />
           <ActionCard
             title="Coupon & Voucher"
             desc="Claim vouchers and discounts for reduced prices or free shipping"
-            onPress={() => {}}
+            onPress={() => { }}
           />
           <ActionCard
             title="Support Center"
             desc="Find the best answer to your question"
-            onPress={() => {}}
+            onPress={() => { }}
           />
 
           <View style={styles.settingsSection}>
@@ -203,7 +206,7 @@ export default function ProfileScreen() {
                     <Ionicons name="chevron-forward" size={16} color={theme.mutedForeground} />
                   </View>
                 }
-                onPress={() => {}}
+                onPress={() => { }}
               />
             </View>
           </View>

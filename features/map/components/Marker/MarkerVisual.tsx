@@ -44,11 +44,14 @@ export default function MarkerVisual({ point }: CustomMarkerProps) {
   const markerColor = markerColors[point.type];
 
   return (
-    <View style={styles.markerContainer}>
+    <View style={styles.markerContainer} className='flex-col gap-2'>
       <View style={[styles.markerBubble, { backgroundColor: markerColor }]}>
         <Text style={styles.markerIcon}>{markerIcons[point.type]}</Text>
       </View>
       <View style={[styles.markerArrow, { borderTopColor: markerColor }]} />
+      <View className="bg-white p-2 rounded-md">
+        <Text className="text-xs text-center text-black text-pretty">Test some text here</Text>
+      </View>
     </View>
   );
 }

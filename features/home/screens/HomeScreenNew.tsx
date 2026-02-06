@@ -219,8 +219,6 @@ export default function HomeScreenNew({ navigation }: HomeScreenNewProps) {
     // TODO: Navigate to Discover tab
   };
 
-  const [testData, setTestData] = useState<any>(null);
-
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
       <ScrollView
@@ -235,20 +233,6 @@ export default function HomeScreenNew({ navigation }: HomeScreenNewProps) {
             colors={[theme.primary]}
           />
         }>
-        <View className="mt-4 flex-col items-center justify-center">
-          <Button
-            onPress={async () => {
-              const res = await apiClient.get('auth/test-protected', {
-                requiresAuth: true,
-                transformData: false,
-              });
-              logger.info('Protected API response:', res);
-              setTestData(res.data);
-            }}>
-            <Text>Click me</Text>
-          </Button>
-          <Text className="text-black">{JSON.stringify(testData)}</Text>
-        </View>
         {/* Header */}
         <HomeHeader
           onNotificationPress={handleNotificationPress}

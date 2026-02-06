@@ -43,8 +43,8 @@ export default function MapScreen({ navigation }: MapScreenProps) {
           style={{ flex: 1 }}
           provider={PROVIDER_GOOGLE}
           initialRegion={MAP_CENTER}
-          clusteringEnabled={true}
           clusterColor={theme.primary}
+          radius={10}
           mapType="hybrid">
           {ALL_ROUTES.map((route) => (
             <Polyline
@@ -79,7 +79,7 @@ export default function MapScreen({ navigation }: MapScreenProps) {
               onPress={() => handleMarkerPress(point)}
               title={point.title}
               description={point.description}>
-              {point.type !== 'junction' && <MarkerVisual point={point} />}
+              <MarkerVisual point={point} />
             </Marker>
           ))}
         </MapView>
