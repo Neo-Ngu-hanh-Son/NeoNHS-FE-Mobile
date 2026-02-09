@@ -146,7 +146,6 @@ function LoginComponent() {
 
         try {
             const response = await authService.login({ email, password });
-            
             if (response.success) {
                 // Store token
                 // Navigate to home

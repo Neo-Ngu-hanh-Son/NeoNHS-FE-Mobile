@@ -34,6 +34,7 @@ export type TabsStackParamList = {
 export type MainStackParamList = {
     Tabs: NavigatorScreenParams<TabsStackParamList>;
     UpdateAccount: undefined;
+    ChangePassword: undefined;
     TransactionHistory: undefined;
     TransactionDetails: { transactionId: string };
 };

@@ -185,6 +185,16 @@ export default function ProfileScreen() {
           />
 
           <View style={styles.settingsSection}>
+            <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>SECURITY</Text>
+            <ActionCard
+              title="Change Password"
+              desc="Update your account password for better security"
+              rightIcon={<Ionicons name="chevron-forward" size={16} color={theme.mutedForeground} />}
+              onPress={() => navigation.navigate('ChangePassword')}
+            />
+          </View>
+
+          <View style={styles.settingsSection}>
             <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>PREFERENCES</Text>
 
             <ActionCard
