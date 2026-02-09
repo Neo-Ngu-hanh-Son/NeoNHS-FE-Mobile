@@ -21,7 +21,9 @@ import { THEME } from '@/lib/theme';
 import { logger } from '@/utils/logger';
 import type { RootStackParamList } from '@/app/navigations/NavigationParamTypes';
 
-type ProfileNavigationProp = StackNavigationProp<RootStackParamList>;
+import type { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
+
+type ProfileNavigationProp = StackNavigationProp<RootStackParamList & MainStackParamList>;
 
 export default function ProfileScreen() {
   const navigation = useNavigation<ProfileNavigationProp>();
@@ -164,22 +166,22 @@ export default function ProfileScreen() {
           <ActionCard
             title="Your Order"
             desc="View your order and transaction history here"
-            onPress={() => {}}
+            onPress={() => navigation.navigate('TransactionHistory')}
           />
           <ActionCard
             title="Payment Method"
             desc="Save your preferred payment method for smoother transactions"
-            onPress={() => {}}
+            onPress={() => { }}
           />
           <ActionCard
             title="Coupon & Voucher"
             desc="Claim vouchers and discounts for reduced prices or free shipping"
-            onPress={() => {}}
+            onPress={() => { }}
           />
           <ActionCard
             title="Support Center"
             desc="Find the best answer to your question"
-            onPress={() => {}}
+            onPress={() => { }}
           />
 
           <View style={styles.settingsSection}>
@@ -203,7 +205,7 @@ export default function ProfileScreen() {
                     <Ionicons name="chevron-forward" size={16} color={theme.mutedForeground} />
                   </View>
                 }
-                onPress={() => {}}
+                onPress={() => { }}
               />
             </View>
           </View>
