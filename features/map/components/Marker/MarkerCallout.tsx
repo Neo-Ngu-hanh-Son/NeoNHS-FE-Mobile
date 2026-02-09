@@ -4,7 +4,8 @@ import { Callout } from 'react-native-maps';
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
-import { MapPoint } from './CustomMarker';
+import { MapPoint } from '../../types';
+
 interface MarkerCalloutProps {
   point: MapPoint;
   onPress?: (point: MapPoint) => void;
@@ -27,8 +28,8 @@ export default function MarkerCallout({ point, onPress }: MarkerCalloutProps) {
             />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.title, { color: theme.foreground }]}>{point.title}</Text>
-            <Text style={{ color: theme.muted, fontSize: 12 }}>Park • 0.5 km • Open now</Text>
+            <Text style={[styles.title, { color: theme.foreground }]}>{point.name}</Text>
+            <Text style={{ color: theme.muted, fontSize: 12 }}>{point.type}</Text>
           </View>
         </View>
 

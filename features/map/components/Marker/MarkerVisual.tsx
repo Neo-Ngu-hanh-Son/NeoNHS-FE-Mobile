@@ -1,88 +1,127 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Marker } from 'react-native-maps';
+import { MapPoint } from '../../types';
+import { markerStyles } from './MarkerStyles';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
-import { THEME } from '@/lib/theme';
+import { StrokeText } from '@charmy.tech/react-native-stroke-text';
 
-export interface MapPoint {
-  id: string;
-  latitude: number;
-  longitude: number;
-  title: string;
-  description?: string;
-  image?: string;
-  type: 'entrance' | 'stairs' | 'junction' | 'checkpoint' | 'landmark' | 'waypoint';
-}
-
-interface CustomMarkerProps {
+interface MarkerVisualProps {
   point: MapPoint;
-  onPress?: (point: MapPoint) => void;
+  showName?: boolean;
 }
 
-const markerColors: Record<MapPoint['type'], string> = {
-  entrance: '#22c55e', // green
-  stairs: '#3b82f6', // blue
-  junction: '#f59e0b', // amber
-  checkpoint: '#ef4444', // red
-  landmark: '#8b5cf6', // purple
-  waypoint: '#6b7280', // gray
-};
-
-const markerIcons: Record<MapPoint['type'], string> = {
-  entrance: '🚪',
-  stairs: '🪜',
-  junction: '🔀',
-  checkpoint: '📍',
-  landmark: '🏛️',
-  waypoint: '•',
-};
-
-export default function MarkerVisual({ point }: CustomMarkerProps) {
-  const { isDarkColorScheme } = useTheme();
-  const theme = isDarkColorScheme ? THEME.dark : THEME.light;
-  const markerColor = markerColors[point.type];
+export default function MarkerVisual({ point, showName }: MarkerVisualProps) {
+  const { getCurrentTheme } = useTheme();
+  const theme = getCurrentTheme();
+  const pointType = point.type !== null ? point.type : 'default';
+  const style = markerStyles[pointType];
 
   return (
-    <View style={styles.markerContainer} className='flex-col gap-2'>
-      <View style={[styles.markerBubble, { backgroundColor: markerColor }]}>
-        <Text style={styles.markerIcon}>{markerIcons[point.type]}</Text>
+    <View style={styles.container}>
+      <View style={styles.markerContainer}>
+        <View
+          style={[
+            styles.bubble,
+            {
+              backgroundColor: style.bg,
+              borderColor: style.border,
+            },
+          ]}>
+          <MaterialIcons name={style.icon} size={16} color="#fff" />
+        </View>
+        <View
+          style={[
+            styles.arrow,
+            {
+              borderTopColor: style.bg,
+            },
+          ]}
+        />
       </View>
-      <View style={[styles.markerArrow, { borderTopColor: markerColor }]} />
-      <View className="bg-white p-2 rounded-md">
-        <Text className="text-xs text-center text-black text-pretty">Test some text here</Text>
-      </View>
+      {showName && (
+        <View style={styles.labelContainer}>
+          {/*<Text style={styles.markerText}>{point.name}</Text>*/}
+          <StrokeText
+            text={point.name}
+            fontSize={13}
+            color="#FFFFFF"
+            strokeColor="#000000"
+            strokeWidth={2}
+            numberOfLines={1}
+            ellipsis={true}
+            width={LABEL_WIDTH}
+            align="center"
+          />
+        </View>
+      )}
     </View>
   );
 }
 
+const LABEL_WIDTH = 150;
+const LABEL_HEIGHT = 18;
+const LABEL_GAP = 6;
+
 const styles = StyleSheet.create({
+  container: {
+    position: 'relative',
+    alignItems: 'center',
+    width: LABEL_WIDTH,
+    paddingTop: LABEL_HEIGHT + LABEL_GAP,
+    justifyContent: 'flex-end',
+  },
+
   markerContainer: {
     alignItems: 'center',
   },
-  markerBubble: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 20,
+  labelContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: LABEL_WIDTH,
+    height: LABEL_HEIGHT,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  bubble: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+
+    alignItems: 'center',
+    justifyContent: 'center',
+
     borderWidth: 2,
-    borderColor: 'white',
+
     shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+
+    elevation: 4,
   },
-  markerIcon: {
-    fontSize: 16,
-  },
-  markerArrow: {
+
+  arrow: {
     width: 0,
     height: 0,
+
     borderLeftWidth: 6,
     borderRightWidth: 6,
     borderTopWidth: 8,
+
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
+
     marginTop: -2,
+  },
+
+  markerText: {
+    color: 'white',
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
 });

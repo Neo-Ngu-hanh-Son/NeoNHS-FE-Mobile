@@ -1,25 +1,74 @@
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
-import { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
-import MapView from 'react-native-map-clustering';
-import CustomMarker, { MapPoint } from '../components/Marker/CustomMarker';
-import { ALL_ROUTES, MAP_POINTS, MAP_CENTER } from '../data/mapRoutes';
 import { logger } from '@/utils/logger';
+import { MapPoint } from '../types';
 import PointDetailModal from '../components/PointDetailModal/PointDetailModal';
-import MarkerVisual from '../components/Marker/MarkerVisual';
+import NHSMap, { NHSMapRef } from '../components/Map/NHSMap';
+import getPointOfAttraction from '../services/mapServices';
+import { NHS_ATTRACTION_ID } from '@/services/api/endpoints/map.api';
+import { useModal } from '@/app/providers/ModalProvider';
+import { useUserLocation } from '../hooks/useUserLocation';
+import { LocationPermissionBanner } from '../components/UserLocation';
+import { mapData } from '../data';
 
 type MapScreenProps = StackScreenProps<TabsStackParamList, 'Map'>;
 
 export default function MapScreen({ navigation }: MapScreenProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+
+  // Map state
   const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [mapPoints, setMapPoints] = useState<MapPoint[]>(mapData.mapPoints);
+  const mapRef = useRef<NHSMapRef>(null);
+
+  // Modal helpers
+  const { alert } = useModal();
+
+  // User location tracking
+  const {
+    location: userLocation,
+    isTracking,
+    permissionStatus,
+    error: locationError,
+    isLoading: isLocationLoading,
+    startTracking,
+    stopTracking,
+    requestPermission,
+    getCurrentLocation,
+  } = useUserLocation({
+    autoStart: false, // Don't start automatically, let user opt-in
+    updateInterval: 3000,
+    distanceInterval: 5,
+  });
+
+  // Fetch map points on mount
+  useEffect(() => {
+    async function fetchPoints() {
+      try {
+        const res = await getPointOfAttraction(NHS_ATTRACTION_ID);
+        setMapPoints(res.data);
+      } catch (error) {
+        logger.error('Failed to fetch map points, using default map points:', error);
+      }
+    }
+    fetchPoints();
+  }, []);
+
+  // Cleanup location tracking on unmount
+  useEffect(() => {
+    return () => {
+      if (isTracking) {
+        stopTracking();
+      }
+    };
+  }, [isTracking, stopTracking]);
 
   const handleMarkerPress = useCallback((point: MapPoint) => {
     setSelectedPoint(point);
@@ -32,65 +81,77 @@ export default function MapScreen({ navigation }: MapScreenProps) {
 
   const handleNavigate = useCallback((point: MapPoint) => {
     // TODO: Implement navigation to the point
-    logger.info('Navigate to:', point.title);
+    logger.info('Navigate to:', point.name);
     setModalVisible(false);
   }, []);
 
+  /**
+   * Handle center on user button press
+   * Starts tracking if not already tracking, then centers map
+   */
+  const handleCenterOnUser = useCallback(async () => {
+    if (!isTracking) {
+      // If not tracking, get current location first and start tracking
+      const location = await getCurrentLocation();
+      if (location && mapRef.current) {
+        mapRef.current.animateToCoordinate({
+          latitude: location.latitude,
+          longitude: location.longitude,
+        });
+      }
+      // Start continuous tracking
+      logger.info('Starting location tracking from center on user');
+      startTracking();
+    } else if (userLocation && mapRef.current) {
+      // If already tracking, just center on current location
+      mapRef.current.animateToCoordinate({
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+      });
+    }
+  }, [isTracking, getCurrentLocation, startTracking, userLocation]);
+
+  /**
+   * Handle permission request from banner
+   */
+  const handleRequestPermission = useCallback(async () => {
+    const granted = await requestPermission();
+    if (granted) {
+      // Start tracking after permission granted
+      startTracking();
+    }
+  }, [requestPermission, startTracking]);
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
-      <View className="w-full flex-1" style={{ borderColor: theme.border, borderWidth: 1 }}>
-        <MapView
-          style={{ flex: 1 }}
-          provider={PROVIDER_GOOGLE}
-          initialRegion={MAP_CENTER}
-          clusterColor={theme.primary}
-          radius={10}
-          mapType="hybrid">
-          {ALL_ROUTES.map((route) => (
-            <Polyline
-              key={route.id}
-              coordinates={route.coordinates}
-              strokeColor={route.color}
-              strokeWidth={4}
-              lineDashPattern={[0]}
-            />
-          ))}
+      {/* Permission banner - shows when permission needed or error */}
+      <LocationPermissionBanner
+        permissionStatus={permissionStatus}
+        onRequestPermission={handleRequestPermission}
+        error={locationError}
+      />
 
-          {/* Note: The <Marker> component must be here, if no, clustering will not work*/}
-          {Array.from({ length: 40 }).map((_, i) => (
-            <Marker
-              key={i}
-              coordinate={{
-                latitude: 16.002819 + Math.random() * 0.005,
-                longitude: 108.26247 + Math.random() * 0.005,
-              }}
-              title={`Random Point ${i + 1}`}
-              description="This is a randomly generated point for clustering demo."
-            />
-          ))}
+      {/* Main map */}
+      <NHSMap
+        ref={mapRef}
+        onMarkerPress={handleMarkerPress}
+        selectedPointId={selectedPoint?.id ?? ''}
+        mapPoints={mapPoints}
+        userLocation={userLocation}
+        isTrackingLocation={isTracking}
+        isLocationLoading={isLocationLoading}
+        onCenterOnUser={handleCenterOnUser}
+      />
 
-          {MAP_POINTS.map((point) => (
-            <Marker
-              coordinate={{
-                latitude: point.latitude,
-                longitude: point.longitude,
-              }}
-              key={point.id}
-              onPress={() => handleMarkerPress(point)}
-              title={point.title}
-              description={point.description}>
-              <MarkerVisual point={point} />
-            </Marker>
-          ))}
-        </MapView>
-      </View>
-
-      {/* Point Detail Bottom Modal */}
+      {/* Point detail modal */}
       <PointDetailModal
         point={selectedPoint}
         visible={modalVisible}
         onClose={handleCloseModal}
         onNavigate={handleNavigate}
+        onViewDetails={() => {
+          logger.info('Not implemented yet');
+        }}
       />
     </SafeAreaView>
   );
@@ -99,52 +160,5 @@ export default function MapScreen({ navigation }: MapScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  quickActions: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  actionCard: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-
-  markerContainer: {
-    alignItems: 'center',
-  },
-  markerBubble: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: 'white',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  markerIcon: {
-    fontSize: 16,
-  },
-  markerArrow: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 6,
-    borderRightWidth: 6,
-    borderTopWidth: 8,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    marginTop: -2,
   },
 });

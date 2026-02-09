@@ -3,7 +3,6 @@ import {
   View,
   StyleSheet,
   Image,
-  Pressable,
   Modal,
   Animated,
   Dimensions,
@@ -13,8 +12,11 @@ import {
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
-import { MapPoint } from '../Marker/CustomMarker';
-import { Ionicons } from '@expo/vector-icons';
+import { MapPoint } from '../../types';
+import { IconButton } from '@/components/Buttons/IconButton';
+import PointDetailModalHeader from './PointDetailModalHeader';
+import PointDetailModalImage from './PointDetailModalImage';
+import PointDetailModalDescription from './PointDetailModalDescription';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const MODAL_HEIGHT = SCREEN_HEIGHT * 0.45;
@@ -24,40 +26,15 @@ interface PointDetailModalProps {
   visible: boolean;
   onClose: () => void;
   onNavigate?: (point: MapPoint) => void;
+  onViewDetails?: (point: MapPoint) => void;
 }
-
-const typeLabels: Record<MapPoint['type'], string> = {
-  entrance: 'Lối vào',
-  stairs: 'Cầu thang',
-  junction: 'Ngã rẽ',
-  checkpoint: 'Điểm check-in',
-  landmark: 'Địa danh',
-  waypoint: 'Điểm đường đi',
-};
-
-const typeColors: Record<MapPoint['type'], string> = {
-  entrance: '#22c55e',
-  stairs: '#3b82f6',
-  junction: '#f59e0b',
-  checkpoint: '#ef4444',
-  landmark: '#8b5cf6',
-  waypoint: '#6b7280',
-};
-
-const typeIcons: Record<MapPoint['type'], keyof typeof Ionicons.glyphMap> = {
-  entrance: 'enter-outline',
-  stairs: 'git-commit-outline',
-  junction: 'git-branch-outline',
-  checkpoint: 'flag-outline',
-  landmark: 'business-outline',
-  waypoint: 'location-outline',
-};
 
 export default function PointDetailModal({
   point,
   visible,
   onClose,
   onNavigate,
+  onViewDetails,
 }: PointDetailModalProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
@@ -82,10 +59,6 @@ export default function PointDetailModal({
 
   if (!point) return null;
 
-  const typeColor = typeColors[point.type];
-  const typeLabel = typeLabels[point.type];
-  const typeIcon = typeIcons[point.type];
-
   return (
     <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={onClose}>
@@ -104,67 +77,39 @@ export default function PointDetailModal({
                 <View style={[styles.handle, { backgroundColor: theme.border }]} />
               </View>
 
-              {/* Close button */}
-              <Pressable
-                style={[styles.closeButton, { backgroundColor: theme.muted + '30' }]}
-                onPress={onClose}>
-                <Ionicons name="close" size={20} color={theme.foreground} />
-              </Pressable>
+              <IconButton
+                icon={'close'}
+                borderless
+                onPress={onClose}
+                variant="ghost"
+                iconSize={20}
+                buttonStyle={styles.closeButton}
+              />
 
               <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
-                {/* Image */}
-                <View style={styles.imageContainer}>
-                  <Image
-                    source={
-                      point.image ? { uri: point.image } : require('@/assets/images/NeoNHSLogo.png')
-                    }
-                    style={styles.image}
-                    resizeMode="cover"
-                  />
-                  {/* Type badge */}
-                  <View style={[styles.typeBadge, { backgroundColor: typeColor }]}>
-                    <Ionicons name={typeIcon} size={14} color="white" />
-                    <Text style={styles.typeBadgeText}>{typeLabel}</Text>
+                <View style={styles.headerRow}>
+                  <View style={styles.headerColumn}>
+                    <PointDetailModalHeader point={point} />
+                  </View>
+                  <View style={styles.imageColumn}>
+                    <PointDetailModalImage point={point} />
                   </View>
                 </View>
 
-                {/* Title and info */}
-                <View style={styles.infoSection}>
-                  <Text style={[styles.title, { color: theme.foreground }]}>{point.title}</Text>
-
-                  {/* Coordinates */}
-                  <View style={styles.coordinatesRow}>
-                    <Ionicons name="navigate-outline" size={14} color={theme.muted} />
-                    <Text style={[styles.coordinates, { color: theme.muted }]}>
-                      {point.latitude.toFixed(6)}, {point.longitude.toFixed(6)}
-                    </Text>
-                  </View>
-
-                  {/* Description */}
-                  {point.description && (
-                    <Text style={[styles.description, { color: theme.foreground }]}>
-                      {point.description}
-                    </Text>
-                  )}
-                </View>
+                <PointDetailModalDescription point={point} />
 
                 {/* Action buttons */}
                 <View style={styles.actions}>
-                  <Pressable
-                    style={[styles.actionButton, { backgroundColor: theme.primary }]}
-                    onPress={() => onNavigate?.(point)}>
-                    <Ionicons name="navigate" size={18} color="white" />
-                    <Text style={styles.actionButtonText}>Chỉ đường</Text>
-                  </Pressable>
+                  <IconButton icon="navigate" onPress={() => onNavigate?.(point)} variant="default">
+                    <Text>Guide me there</Text>
+                  </IconButton>
 
-                  <Pressable
-                    style={[styles.secondaryButton, { borderColor: theme.border }]}
-                    onPress={onClose}>
-                    <Ionicons name="bookmark-outline" size={18} color={theme.foreground} />
-                    <Text style={[styles.secondaryButtonText, { color: theme.foreground }]}>
-                      Lưu
-                    </Text>
-                  </Pressable>
+                  <IconButton
+                    icon="bookmark-outline"
+                    variant="outline"
+                    onPress={() => onViewDetails?.(point)}>
+                    <Text>View Details</Text>
+                  </IconButton>
                 </View>
               </ScrollView>
             </Animated.View>
@@ -178,14 +123,12 @@ export default function PointDetailModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'flex-end',
   },
   modalContainer: {
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: SCREEN_HEIGHT * 0.6,
-    minHeight: MODAL_HEIGHT,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.1,
@@ -205,12 +148,17 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 12,
     right: 16,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    borderRadius: 9999,
+    zIndex: 10,
+    backgroundColor: THEME.light.muted + '30',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 10,
+    paddingLeft: 0,
+    paddingRight: 0,
+    paddingTop: 0,
+    paddingBottom: 0,
+    width: 32,
+    height: 32,
   },
   content: {
     paddingHorizontal: 20,
@@ -218,7 +166,8 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     height: 160,
-    borderRadius: 16,
+    width: 160,
+    borderRadius: 9999,
     overflow: 'hidden',
     marginBottom: 16,
   },
@@ -226,47 +175,25 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  typeBadge: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
-    gap: 4,
-  },
-  typeBadgeText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  infoSection: {
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  coordinatesRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 12,
-  },
-  coordinates: {
-    fontSize: 12,
-  },
-  description: {
-    fontSize: 14,
-    lineHeight: 22,
-  },
   actions: {
     flexDirection: 'row',
     gap: 12,
     marginBottom: 24,
+    justifyContent: 'space-around',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginVertical: 20,
+  },
+  headerColumn: {
+    flex: 7,
+  },
+  imageColumn: {
+    flex: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   actionButton: {
     flex: 1,
@@ -276,24 +203,5 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     gap: 8,
-  },
-  actionButtonText: {
-    color: 'white',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    gap: 8,
-  },
-  secondaryButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
   },
 });

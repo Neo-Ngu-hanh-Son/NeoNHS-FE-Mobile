@@ -1,11 +1,4 @@
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Image,
-  Alert,
-} from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { CommonActions, CompositeScreenProps } from '@react-navigation/native';
@@ -19,11 +12,14 @@ import { useAuth } from '@/features/auth/context/AuthContext';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { logger } from '@/utils/logger';
-import type { MainStackParamList, RootStackParamList } from '@/app/navigations/NavigationParamTypes';
-
+import type {
+  MainStackParamList,
+  RootStackParamList,
+  TabsStackParamList,
+} from '@/app/navigations/NavigationParamTypes';
 
 type ProfileNavigationProp = CompositeScreenProps<
-  StackScreenProps<MainStackParamList, "UpdateAccount">,
+  StackScreenProps<TabsStackParamList, 'Profile'>,
   StackScreenProps<RootStackParamList>
 >;
 
@@ -60,7 +56,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
   };
 
   const handleEditProfile = () => {
-    navigation.navigate('Main', { screen: 'UpdateAccount' })
+    navigation.navigate('Main', { screen: 'UpdateAccount' });
   };
 
   const ActionCard = ({ title, desc, onPress, rightIcon }: any) => (
@@ -167,22 +163,22 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
           <ActionCard
             title="Your Order"
             desc="View your order and transaction history here"
-            onPress={() => { }}
+            onPress={() => {}}
           />
           <ActionCard
             title="Payment Method"
             desc="Save your preferred payment method for smoother transactions"
-            onPress={() => { }}
+            onPress={() => {}}
           />
           <ActionCard
             title="Coupon & Voucher"
             desc="Claim vouchers and discounts for reduced prices or free shipping"
-            onPress={() => { }}
+            onPress={() => {}}
           />
           <ActionCard
             title="Support Center"
             desc="Find the best answer to your question"
-            onPress={() => { }}
+            onPress={() => {}}
           />
 
           <View style={styles.settingsSection}>
@@ -206,7 +202,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
                     <Ionicons name="chevron-forward" size={16} color={theme.mutedForeground} />
                   </View>
                 }
-                onPress={() => { }}
+                onPress={() => {}}
               />
             </View>
           </View>

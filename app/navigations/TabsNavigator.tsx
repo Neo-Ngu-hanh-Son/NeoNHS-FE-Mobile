@@ -1,16 +1,17 @@
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Ionicons } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import HomeScreenNew from "@/features/home/screens/HomeScreenNew";
-import { DiscoverScreen } from "@/features/discover/screens";
-import { MapScreen } from "@/features/map/screens";
-import { BookingsScreen } from "@/features/bookings/screens";
-import ProfileScreen from "@/features/profile/screens/ProfileScreen";
+import HomeScreenNew from '@/features/home/screens/HomeScreenNew';
+import { DiscoverScreen } from '@/features/discover/screens';
+import { MapScreen } from '@/features/map/screens';
+import { BookingsScreen } from '@/features/bookings/screens';
+import ProfileScreen from '@/features/profile/screens/ProfileScreen';
 
-import { useTheme } from "@/app/providers/ThemeProvider";
-import { THEME } from "@/lib/theme";
-import type { TabsStackParamList } from "./NavigationParamTypes";
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { THEME } from '@/lib/theme';
+import type { TabsStackParamList } from './NavigationParamTypes';
+import { TestWebviewMap } from '@/features/map/components/TestWebviewMap';
 
 const Tab = createBottomTabNavigator<TabsStackParamList>();
 
@@ -37,22 +38,17 @@ export default function TabsNavigator() {
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: "500",
+          fontWeight: '500',
         },
-        animation: "shift"
-      }}
-    >
+        animation: 'shift',
+      }}>
       <Tab.Screen
         name="Home"
         component={HomeScreenNew}
         options={{
-          title: "Home",
+          title: 'Home',
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "home" : "home-outline"}
-              color={color}
-              size={size}
-            />
+            <Ionicons name={focused ? 'home' : 'home-outline'} color={color} size={size} />
           ),
         }}
       />
@@ -60,13 +56,9 @@ export default function TabsNavigator() {
         name="Discover"
         component={DiscoverScreen}
         options={{
-          title: "Discover",
+          title: 'Discover',
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "compass" : "compass-outline"}
-              color={color}
-              size={size}
-            />
+            <Ionicons name={focused ? 'compass' : 'compass-outline'} color={color} size={size} />
           ),
         }}
       />
@@ -74,13 +66,9 @@ export default function TabsNavigator() {
         name="Map"
         component={MapScreen}
         options={{
-          title: "Map",
+          title: 'Map',
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "map" : "map-outline"}
-              color={color}
-              size={size}
-            />
+            <Ionicons name={focused ? 'map' : 'map-outline'} color={color} size={size} />
           ),
         }}
       />
@@ -88,10 +76,10 @@ export default function TabsNavigator() {
         name="Bookings"
         component={BookingsScreen}
         options={{
-          title: "Bookings",
+          title: 'Bookings',
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
-              name={focused ? "briefcase" : "briefcase-outline"}
+              name={focused ? 'briefcase' : 'briefcase-outline'}
               color={color}
               size={size}
             />
@@ -102,13 +90,9 @@ export default function TabsNavigator() {
         name="Profile"
         component={ProfileScreen}
         options={{
-          title: "Profile",
+          title: 'Profile',
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "person" : "person-outline"}
-              color={color}
-              size={size}
-            />
+            <Ionicons name={focused ? 'person' : 'person-outline'} color={color} size={size} />
           ),
         }}
       />

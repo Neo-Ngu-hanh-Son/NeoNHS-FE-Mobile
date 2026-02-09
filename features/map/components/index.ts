@@ -1,2 +1,15 @@
-export { default as CustomMarker } from './Marker/CustomMarker';
-export type { MapPoint } from './Marker/CustomMarker';
+// Marker components
+export { default as MarkerVisual } from './Marker/MarkerVisual';
+export { default as MarkerCallout } from './Marker/MarkerCallout';
+export { markerStyles, getMarkerStyle } from './Marker/MarkerStyles';
+export type { MarkerStyle } from './Marker/MarkerStyles';
+
+// Map components
+export { default as NHSMap } from './Map/NHSMap';
+export type { NHSMapRef } from './Map/NHSMap';
+
+// User location components
+export { UserLocationMarker, CenterOnUserButton, LocationPermissionBanner } from './UserLocation';
+
+// Point detail modal
+export { default as PointDetailModal } from './PointDetailModal/PointDetailModal';

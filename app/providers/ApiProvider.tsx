@@ -42,9 +42,9 @@ export default function ApiProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    logger.info('[ApiProvider] Configuring API client...');
+    // logger.info('[ApiProvider] Configuring API client...');
     logger.info(`[ApiProvider] Using API URL: ${API_URL}`);
-    logger.info('[ApiProvider] Current access token:', accessToken);
+    // logger.info('[ApiProvider] Current access token:', accessToken);
     apiClient.updateConfig({
       baseURL: API_URL,
       getAuthToken: () => accessToken || null,
@@ -52,7 +52,7 @@ export default function ApiProvider({ children }: { children: ReactNode }) {
       onTokenRefresh: handleTokenRefresh,
       onTokenRefreshed: refreshAuth,
       onUnauthorized: () => {
-        logger.warn('[ApiProvider] Unauthorized and token refresh failed, logging out');
+        // logger.warn('[ApiProvider] Unauthorized and token refresh failed, logging out');
         logout();
       },
       onError: (error) => {
