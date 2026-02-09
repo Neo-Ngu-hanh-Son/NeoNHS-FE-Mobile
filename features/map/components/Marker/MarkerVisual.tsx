@@ -15,64 +15,11 @@ export default function MarkerVisual({ point, showName, isSelected = false }: Ma
   const pointType = point.type !== null ? point.type : 'default';
   const style = markerStyles[pointType];
 
-  // Animation for selection
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const bounceAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (isSelected) {
-      // Animate to larger size with a bounce effect
-      Animated.parallel([
-        Animated.spring(scaleAnim, {
-          toValue: 1.3,
-          friction: 4,
-          tension: 100,
-          useNativeDriver: true,
-        }),
-        Animated.sequence([
-          Animated.timing(bounceAnim, {
-            toValue: -8,
-            duration: 150,
-            easing: Easing.out(Easing.ease),
-            useNativeDriver: true,
-          }),
-          Animated.timing(bounceAnim, {
-            toValue: 0,
-            duration: 150,
-            easing: Easing.bounce,
-            useNativeDriver: true,
-          }),
-        ]),
-      ]).start();
-    } else {
-      // Animate back to normal size
-      Animated.parallel([
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          friction: 4,
-          tension: 100,
-          useNativeDriver: true,
-        }),
-        Animated.timing(bounceAnim, {
-          toValue: 0,
-          duration: 100,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [isSelected, scaleAnim, bounceAnim]);
-
   return (
     <View style={styles.container}>
       <Animated.View
         style={[
           styles.markerContainer,
-          {
-            transform: [
-              { scale: scaleAnim },
-              { translateY: bounceAnim },
-            ],
-          },
         ]}>
         <View
           style={[

@@ -19,49 +19,25 @@ import { View, StyleSheet } from 'react-native';
 import { UserLocation } from '../../hooks/useUserLocation';
 import { UserLocationMarker, FollowUserButton } from '../UserLocation';
 
-/**
- * Props for NHSMap component
- */
 type NHSMapProps = {
-  /** Callback when a marker is pressed */
   onMarkerPress?: (point: MapPoint) => void;
-  /** ID of currently selected point */
   selectedPointId?: string | null;
-  /** Callback when map background is pressed */
   onMapPress?: () => void;
-  /** Array of map points to display as markers */
   mapPoints?: MapPoint[];
-  /** User's current location (optional) */
   userLocation?: UserLocation | null;
-  /** Whether location is loading */
   isLocationLoading?: boolean;
 };
 
-/**
- * Methods exposed via ref
- */
 export interface NHSMapRef {
-  /** Animate map to specific region */
   animateToRegion: (region: Region, duration?: number) => void;
-  /** Animate map to specific coordinate */
   animateToCoordinate: (
     coordinate: { latitude: number; longitude: number },
     duration?: number
   ) => void;
-  /** Set follow user mode */
   setFollowUser: (follow: boolean) => void;
-  /** Get current follow user state */
   isFollowingUser: () => boolean;
 }
 
-/**
- * Main map component for NHS attraction
- * Features:
- * - Clustered markers for POIs
- * - Polyline routes
- * - User location display
- * - Follow user toggle button
- */
 const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
   ({ onMarkerPress, mapPoints, userLocation, isLocationLoading = false, selectedPointId }, ref) => {
     const { isDarkColorScheme } = useTheme();
@@ -69,6 +45,10 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
     const [shouldDisplayMarkerName, setShouldDisplayMarkerName] = useState(false);
     const [isMapReady, setIsMapReady] = useState(false);
     const [isFollowingUser, setIsFollowingUser] = useState(false);
+    const mapZoomRef = useRef({
+      latitudeDelta: MAP_CENTER.latitudeDelta,
+      longitudeDelta: MAP_CENTER.longitudeDelta,
+    });
     const mapRef = useRef<any>(null);
 
     // Expose methods via ref
@@ -83,8 +63,8 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
         mapRef.current?.animateToRegion(
           {
             ...coordinate,
-            latitudeDelta: 0.002,
-            longitudeDelta: 0.002,
+            latitudeDelta: mapZoomRef.current.latitudeDelta,
+            longitudeDelta: mapZoomRef.current.longitudeDelta,
           },
           duration
         );
@@ -95,13 +75,12 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       isFollowingUser: () => isFollowingUser,
     }));
 
-    /**
-     * Handle region change - toggle marker names based on zoom level
-     */
     const handleRegionChangeComplete = useCallback((region: Region) => {
       const zoom = Math.log2(360 / region.longitudeDelta);
       const shouldShow = zoom >= 17.5;
       setShouldDisplayMarkerName((prev) => (prev === shouldShow ? prev : shouldShow));
+      mapZoomRef.current.latitudeDelta = region.latitudeDelta;
+      mapZoomRef.current.longitudeDelta = region.longitudeDelta;
     }, []);
 
     /**
@@ -128,8 +107,8 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           {
             latitude: userLocation.latitude,
             longitude: userLocation.longitude,
-            latitudeDelta: 0.002,
-            longitudeDelta: 0.002,
+            latitudeDelta: mapZoomRef.current.latitudeDelta,
+            longitudeDelta: mapZoomRef.current.longitudeDelta,
           },
           500
         );
@@ -148,8 +127,8 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           {
             latitude: userLocation.latitude,
             longitude: userLocation.longitude,
-            latitudeDelta: 0.002,
-            longitudeDelta: 0.002,
+            latitudeDelta: mapZoomRef.current.latitudeDelta,
+            longitudeDelta: mapZoomRef.current.longitudeDelta,
           },
           300 // Smooth animation
         );
@@ -174,7 +153,6 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           }}
           onPanDrag={handleMapInteraction} // Detect when user drags the map
           customMapStyle={[]}>
-          {/* Render polylines path (static for now) */}
           {renderRoutes.map((line) => (
             <Polyline
               key={line.id}
@@ -184,7 +162,6 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
             />
           ))}
 
-          {/* Render POI markers */}
           {mapPoints?.map((poi) => (
             <Marker
               key={poi.id}
@@ -192,7 +169,6 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
                 latitude: poi.latitude,
                 longitude: poi.longitude,
               }}
-              tracksViewChanges={selectedPointId === poi.id}
               onPress={() => {
                 onMarkerPress?.(poi);
               }}>
@@ -204,7 +180,6 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
             </Marker>
           ))}
 
-          {/* Render user location marker */}
           {userLocation && (
             <UserLocationMarker
               location={userLocation}
@@ -214,7 +189,6 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           )}
         </MapView>
 
-        {/* Follow user button */}
         <View style={[styles.followButtonContainer, { backgroundColor: theme.background }]}>
           <FollowUserButton
             onPress={handleFollowUserToggle}

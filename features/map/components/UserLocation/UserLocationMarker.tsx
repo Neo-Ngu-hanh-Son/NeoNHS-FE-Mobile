@@ -97,7 +97,7 @@ export default function UserLocationMarker({
       }}
       anchor={{ x: 0.5, y: 0.5 }}
       flat
-      tracksViewChanges={tracksChanges}>
+      tracksViewChanges={true}>
       <View style={styles.container}>
         <Animated.View
           style={[
