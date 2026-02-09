@@ -45,6 +45,11 @@ export const profileEndpoints = {
     // uploadAvatar: () => `profile/avatar`,
 } as const;
 
+export const transactionEndpoints = {
+    getTransactions: () => `transactions`,
+    getTransactionDetails: (id: string) => `transactions/${id}`,
+} as const;
+
 /**
  * All Endpoints (for easy access)
  */
@@ -53,5 +58,6 @@ export const endpoints = {
     users: userEndpoints,
     home: homeEndpoints,
     profile: profileEndpoints,
+    transactions: transactionEndpoints,
 } as const;
 
