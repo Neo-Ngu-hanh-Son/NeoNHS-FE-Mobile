@@ -19,7 +19,6 @@ export default function UserLocationMarker({
   const pulseScale = useRef(new Animated.Value(1)).current;
   const pulseOpacity = useRef(new Animated.Value(0.4)).current;
   const markerRef = useRef<any>(null);
-  const [tracksChanges, setTracksChanges] = useState(true);
 
   const prevCoords = useRef({
     latitude: location.latitude,
@@ -79,14 +78,6 @@ export default function UserLocationMarker({
       pulseOpacity.stopAnimation();
     };
   }, []);
-
-  // Optimization: stop tracking view changes after initial render
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     setTracksChanges(false);
-  //   }, 2000);
-  //   return () => clearTimeout(timer);
-  // }, []);
 
   return (
     <Marker

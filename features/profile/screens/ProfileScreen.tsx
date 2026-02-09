@@ -163,7 +163,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
           <ActionCard
             title="Your Order"
             desc="View your order and transaction history here"
-            onPress={() => {}}
+            onPress={() => navigation.navigate('TransactionHistory')}
           />
           <ActionCard
             title="Payment Method"
@@ -180,6 +180,18 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
             desc="Find the best answer to your question"
             onPress={() => {}}
           />
+
+          <View style={styles.settingsSection}>
+            <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>SECURITY</Text>
+            <ActionCard
+              title="Change Password"
+              desc="Update your account password for better security"
+              rightIcon={
+                <Ionicons name="chevron-forward" size={16} color={theme.mutedForeground} />
+              }
+              onPress={() => navigation.navigate('ChangePassword')}
+            />
+          </View>
 
           <View style={styles.settingsSection}>
             <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>PREFERENCES</Text>

@@ -15,10 +15,12 @@ import type {
   RequestConfig,
   ApiClientConfig,
   TokenRefreshResult,
-} from './types';
-import { ApiErrorCode } from './types';
-import { API_CONFIG } from '@/utils/constants';
-import { logger } from '@/utils/logger';
+} from "./types";
+import {
+  ApiErrorCode,
+} from "./types";
+import { API_CONFIG } from "@/utils/constants";
+import { logger } from "@/utils/logger";
 
 class ApiClient {
   private axiosInstance: AxiosInstance;
@@ -64,26 +66,18 @@ class ApiClient {
     this.axiosInstance.interceptors.request.use(
       async (config) => {
         // Log the request config
-        // logger.debug(`[ApiClient] ${config.method?.toUpperCase()} ${config.baseURL}/${config.url}`);
+        logger.debug(`[ApiClient] ${config.method?.toUpperCase()} ${config.baseURL}/${config.url}`);
 
         // Add authentication token if required
         const requiresAuth = (config as RequestConfig).requiresAuth !== false;
-        // logger.debug("[ApiClient] Request requires auth:", requiresAuth, ", token: " + (this.getAuthToken ? "available" : "not available"));
 
-        const isRetryAttemptFromRefreshToken = (config as any)._retry === true;
-
-        if (requiresAuth && this.getAuthToken && !isRetryAttemptFromRefreshToken) {
+        if (requiresAuth && this.getAuthToken) {
           const token = await this.getAuthToken();
-          // logger.debug("[ApiClient] Adding authentication token to request");
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
           } else {
-            logger.error('[ApiClient] Authentication token not found in store for this request');
+            logger.error("[ApiClient] Authentication token not found in store for this request");
           }
-        } else {
-          logger.debug(
-            '[ApiClient] Skipping adding authentication token to request (Because of requiresAuth=false or isRetryAttemptFromRefreshToken=true)'
-          );
         }
 
         // Remove custom requiresAuth property before sending
@@ -280,10 +274,10 @@ class ApiClient {
         let errorCode: string | undefined;
 
         if (responseData) {
-          if (typeof responseData === 'string') {
+          if (typeof responseData === "string") {
             // Server returned plain text error
             errorMessage = responseData;
-          } else if (typeof responseData === 'object') {
+          } else if (typeof responseData === "object") {
             // Server returned JSON error object
             // Try common error message fields in order of preference
             errorMessage =
@@ -291,14 +285,14 @@ class ApiClient {
               responseData.error ||
               responseData.detail ||
               responseData.errorMessage ||
-              (responseData.errors && typeof responseData.errors === 'string'
+              (responseData.errors && typeof responseData.errors === "string"
                 ? responseData.errors
                 : null) ||
               response.statusText ||
-              'An error occurred';
+              "An error occurred";
 
             // Extract validation errors if present
-            if (responseData.errors && typeof responseData.errors === 'object') {
+            if (responseData.errors && typeof responseData.errors === "object") {
               errorDetails = responseData.errors;
             }
 
@@ -307,7 +301,7 @@ class ApiClient {
           }
         } else {
           // No response data, use status text
-          errorMessage = response.statusText || 'An error occurred';
+          errorMessage = response.statusText || "An error occurred";
         }
 
         apiError = {

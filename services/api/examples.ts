@@ -102,7 +102,7 @@ const userService = {
      * Update user profile
      */
     async updateProfile(data: Partial<User>): Promise<ApiResponse<User>> {
-        return apiClient.put<User>(endpoints.users.updateProfile(), data);
+        return apiClient.put<User>(endpoints.users.updateProfile(123), data);
     },
 
     /**

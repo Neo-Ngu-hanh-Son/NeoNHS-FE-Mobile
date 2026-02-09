@@ -56,6 +56,7 @@ export default function ApiProvider({ children }: { children: ReactNode }) {
         logout();
       },
       onError: (error) => {},
+      timeout: 15000,
     });
   }, [accessToken, refreshToken, logout, handleTokenRefresh, refreshAuth]);
 

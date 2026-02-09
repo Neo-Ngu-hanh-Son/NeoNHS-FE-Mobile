@@ -22,7 +22,7 @@ export const authEndpoints = {
 export const userEndpoints = {
     getProfile: () => `users/profile`,
     updateProfile: (id: string | number) => `users/update-profile/${id}`,
-    changePassword: () => `users/change-password`,
+    changePassword: () => `auth/change-password`,
     getUserById: (id: string | number) => `users/${id}`,
     getUsers: () => `users`,
     deleteUser: (id: string | number) => `users/${id}`,
@@ -46,6 +46,11 @@ export const profileEndpoints = {
     // uploadAvatar: () => `profile/avatar`,
 } as const;
 
+export const transactionEndpoints = {
+    getTransactions: () => `transactions`,
+    getTransactionDetails: (id: string) => `transactions/${id}`,
+} as const;
+
 /**
  * All Endpoints (for easy access)
  */
@@ -55,5 +60,6 @@ export const endpoints = {
     home: homeEndpoints,
     profile: profileEndpoints,
     map: mapEndpoints,
+    transactions: transactionEndpoints,
 } as const;
 

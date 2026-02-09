@@ -1,0 +1,9 @@
+/**
+ * Profile Related Types
+ */
+
+export interface ChangePasswordRequest {
+    oldPassword: string;
+    newPassword: string;
+    confirmNewPassword: string;
+}
