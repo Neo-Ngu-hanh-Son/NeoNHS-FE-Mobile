@@ -1,49 +1,54 @@
 import React from 'react';
-import { Pressable, StyleSheet, ActivityIndicator, View } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
+import { logger } from '@/utils/logger';
 
-interface CenterOnUserButtonProps {
+interface FollowUserButtonProps {
   /** Callback when button is pressed */
   onPress: () => void;
   /** Whether location is currently being fetched */
   isLoading?: boolean;
   /** Whether user location is available */
   hasLocation?: boolean;
-  /** Whether location tracking is active */
-  isTracking?: boolean;
+  /** Whether the map is currently following the user */
+  isFollowing?: boolean;
 }
 
 /**
- * Floating action button to center the map on user's location
+ * Floating action button to toggle follow user mode
  * Shows different states:
  * - Loading: spinning indicator
- * - No location: crosshairs icon (gray)
- * - Has location: crosshairs icon (blue)
- * - Tracking: filled location icon
+ * - No location: navigation icon (gray)
+ * - Has location but not following: navigation icon (blue outline)
+ * - Following: filled navigation icon (blue)
  */
-export default function CenterOnUserButton({
+export default function FollowUserButton({
   onPress,
   isLoading = false,
   hasLocation = false,
-  isTracking = false,
-}: CenterOnUserButtonProps) {
+  isFollowing = false,
+}: FollowUserButtonProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
-  const getIconName = (): keyof typeof MaterialIcons.glyphMap => {
-    if (isTracking) {
-      return 'my-location';
+  const getIconName = (): keyof typeof MaterialCommunityIcons.glyphMap => {
+    if (isFollowing) {
+      return 'navigation-variant'; // Filled navigation icon when following
     }
-    return 'location-searching';
+    return 'navigation-variant-outline'; // Outline navigation icon when not following
   };
 
   const getIconColor = (): string => {
     if (!hasLocation) {
-      return theme.muted;
+      return theme.mutedForeground;
     }
     return '#4285F4'; // Google Maps blue
+  };
+
+  const getBackgroundColor = (): string => {
+    return theme.card;
   };
 
   return (
@@ -51,19 +56,18 @@ export default function CenterOnUserButton({
       style={({ pressed }) => [
         styles.button,
         {
-          backgroundColor: theme.card,
-          borderColor: theme.border,
+          backgroundColor: getBackgroundColor(),
+          borderColor: isFollowing ? '#4285F4' : theme.border,
           opacity: pressed ? 0.8 : 1,
           transform: [{ scale: pressed ? 0.95 : 1 }],
         },
       ]}
       onPress={onPress}
-      disabled={isLoading}
-    >
+      disabled={isLoading || !hasLocation}>
       {isLoading ? (
         <ActivityIndicator size="small" color="#4285F4" />
       ) : (
-        <MaterialIcons name={getIconName()} size={24} color={getIconColor()} />
+        <MaterialCommunityIcons name={getIconName()} size={24} color={getIconColor()} />
       )}
     </Pressable>
   );

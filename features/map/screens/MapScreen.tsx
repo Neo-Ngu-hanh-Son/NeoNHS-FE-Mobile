@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -31,7 +31,7 @@ export default function MapScreen({ navigation }: MapScreenProps) {
   // Modal helpers
   const { alert } = useModal();
 
-  // User location tracking
+  // User location tracking - auto-start on mount
   const {
     location: userLocation,
     isTracking,
@@ -41,9 +41,8 @@ export default function MapScreen({ navigation }: MapScreenProps) {
     startTracking,
     stopTracking,
     requestPermission,
-    getCurrentLocation,
   } = useUserLocation({
-    autoStart: false, // Don't start automatically, let user opt-in
+    autoStart: true, // Auto-start location tracking when entering map screen
     updateInterval: 3000,
     distanceInterval: 5,
   });
@@ -55,7 +54,7 @@ export default function MapScreen({ navigation }: MapScreenProps) {
         const res = await getPointOfAttraction(NHS_ATTRACTION_ID);
         setMapPoints(res.data);
       } catch (error) {
-        logger.error('Failed to fetch map points, using default map points:', error);
+        logger.error('[MapScreen] Failed to fetch map points, using default map points:', error);
       }
     }
     fetchPoints();
@@ -86,32 +85,6 @@ export default function MapScreen({ navigation }: MapScreenProps) {
   }, []);
 
   /**
-   * Handle center on user button press
-   * Starts tracking if not already tracking, then centers map
-   */
-  const handleCenterOnUser = useCallback(async () => {
-    if (!isTracking) {
-      // If not tracking, get current location first and start tracking
-      const location = await getCurrentLocation();
-      if (location && mapRef.current) {
-        mapRef.current.animateToCoordinate({
-          latitude: location.latitude,
-          longitude: location.longitude,
-        });
-      }
-      // Start continuous tracking
-      logger.info('Starting location tracking from center on user');
-      startTracking();
-    } else if (userLocation && mapRef.current) {
-      // If already tracking, just center on current location
-      mapRef.current.animateToCoordinate({
-        latitude: userLocation.latitude,
-        longitude: userLocation.longitude,
-      });
-    }
-  }, [isTracking, getCurrentLocation, startTracking, userLocation]);
-
-  /**
    * Handle permission request from banner
    */
   const handleRequestPermission = useCallback(async () => {
@@ -138,9 +111,7 @@ export default function MapScreen({ navigation }: MapScreenProps) {
         selectedPointId={selectedPoint?.id ?? ''}
         mapPoints={mapPoints}
         userLocation={userLocation}
-        isTrackingLocation={isTracking}
         isLocationLoading={isLocationLoading}
-        onCenterOnUser={handleCenterOnUser}
       />
 
       {/* Point detail modal */}

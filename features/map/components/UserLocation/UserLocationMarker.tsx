@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated, Easing } from 'react-native';
+import { View, StyleSheet, Animated, Easing, Platform } from 'react-native';
 import { Marker } from 'react-native-maps';
 import { UserLocation } from '../../hooks/useUserLocation';
 
@@ -17,9 +17,14 @@ interface UserLocationMarkerProps {
 /**
  * Marker component displaying user's current location on the map
  * Features:
+ * - Smooth animation when location changes
  * - Pulsing blue dot animation
  * - Accuracy circle (optional)
  * - Heading indicator (optional)
+ *
+ * Note: We use a regular Marker with animateMarkerToCoordinate for Android
+ * and coordinate updates for iOS, as AnimatedRegion has compatibility issues
+ * with the latest react-native-maps versions.
  */
 export default function UserLocationMarker({
   location,
@@ -29,9 +34,40 @@ export default function UserLocationMarker({
 }: UserLocationMarkerProps) {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const opacityAnim = useRef(new Animated.Value(0.4)).current;
+  const markerRef = useRef<any>(null);
+
+  // Store previous coordinates for animation
+  const prevCoords = useRef({
+    latitude: location.latitude,
+    longitude: location.longitude,
+  });
+
+  // Animate marker when location changes (Android only - iOS handles this smoothly)
+  useEffect(() => {
+    const newCoords = {
+      latitude: location.latitude,
+      longitude: location.longitude,
+    };
+
+    if (
+      prevCoords.current.latitude !== newCoords.latitude ||
+      prevCoords.current.longitude !== newCoords.longitude
+    ) {
+      if (Platform.OS === 'android' && markerRef.current) {
+        try {
+          markerRef.current.animateMarkerToCoordinate(newCoords, 500);
+        } catch (error) {
+          // Fallback: marker will just jump to new position
+          console.warn('Failed to animate marker:', error);
+        }
+      }
+      // iOS: Marker updates smoothly by default when coordinate prop changes
+
+      prevCoords.current = newCoords;
+    }
+  }, [location.latitude, location.longitude]);
 
   useEffect(() => {
-    // Create pulsing animation
     const pulseAnimation = Animated.loop(
       Animated.parallel([
         Animated.sequence([
@@ -72,14 +108,14 @@ export default function UserLocationMarker({
 
   return (
     <Marker
+      ref={markerRef}
       coordinate={{
         latitude: location.latitude,
         longitude: location.longitude,
       }}
       anchor={{ x: 0.5, y: 0.5 }}
       flat
-      tracksViewChanges={true}
-    >
+      tracksViewChanges={true}>
       <View style={styles.container}>
         {/* Pulsing outer ring */}
         <Animated.View
@@ -114,8 +150,7 @@ export default function UserLocationMarker({
               {
                 transform: [{ rotate: `${location.heading}deg` }],
               },
-            ]}
-          >
+            ]}>
             <View style={[styles.headingArrow, { borderBottomColor: color }]} />
           </View>
         )}

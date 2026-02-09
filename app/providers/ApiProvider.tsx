@@ -34,7 +34,7 @@ export default function ApiProvider({ children }: { children: ReactNode }) {
         }
         return null;
       } catch (error) {
-        logger.error('[ApiProvider] Token refresh failed:', error);
+        // logger.error('[ApiProvider] Token refresh failed:', error);
         return null;
       }
     },
@@ -55,9 +55,7 @@ export default function ApiProvider({ children }: { children: ReactNode }) {
         // logger.warn('[ApiProvider] Unauthorized and token refresh failed, logging out');
         logout();
       },
-      onError: (error) => {
-        logger.error('[ApiProvider] API Error:', error);
-      },
+      onError: (error) => {},
     });
   }, [accessToken, refreshToken, logout, handleTokenRefresh, refreshAuth]);
 

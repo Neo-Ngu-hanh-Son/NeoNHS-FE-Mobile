@@ -75,4 +75,9 @@ export const markerStyles: Record<POIType, MarkerStyle> = {
     border: '#d1fae5',
     icon: 'build',
   },
+  attraction: {
+    bg: '#8b5cf6',
+    border: '#ede9fe',
+    icon: 'attractions',
+  },
 };

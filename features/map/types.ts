@@ -10,6 +10,7 @@ export type POIType =
   | 'elevator'
   | 'event'
   | 'workshop'
+  | 'attraction' // Example: Thuy Son mountain, etc.
   | 'default';
 
 export type PointKind = 'path' | 'junction_3way' | 'junction_4way' | 'entrance' | 'dead_end';

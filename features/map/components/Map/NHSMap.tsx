@@ -17,7 +17,7 @@ import MarkerVisual from '../Marker/MarkerVisual';
 import { logger } from '@/utils/logger';
 import { View, StyleSheet } from 'react-native';
 import { UserLocation } from '../../hooks/useUserLocation';
-import { UserLocationMarker, CenterOnUserButton } from '../UserLocation';
+import { UserLocationMarker, FollowUserButton } from '../UserLocation';
 
 /**
  * Props for NHSMap component
@@ -33,12 +33,8 @@ type NHSMapProps = {
   mapPoints?: MapPoint[];
   /** User's current location (optional) */
   userLocation?: UserLocation | null;
-  /** Whether user location tracking is active */
-  isTrackingLocation?: boolean;
   /** Whether location is loading */
   isLocationLoading?: boolean;
-  /** Callback to center on user location */
-  onCenterOnUser?: () => void;
 };
 
 /**
@@ -52,6 +48,10 @@ export interface NHSMapRef {
     coordinate: { latitude: number; longitude: number },
     duration?: number
   ) => void;
+  /** Set follow user mode */
+  setFollowUser: (follow: boolean) => void;
+  /** Get current follow user state */
+  isFollowingUser: () => boolean;
 }
 
 /**
@@ -60,25 +60,15 @@ export interface NHSMapRef {
  * - Clustered markers for POIs
  * - Polyline routes
  * - User location display
- * - Center on user button
+ * - Follow user toggle button
  */
 const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
-  (
-    {
-      onMarkerPress,
-      mapPoints,
-      userLocation,
-      isTrackingLocation = false,
-      isLocationLoading = false,
-      onCenterOnUser,
-    },
-    ref
-  ) => {
+  ({ onMarkerPress, mapPoints, userLocation, isLocationLoading = false }, ref) => {
     const { isDarkColorScheme } = useTheme();
     const theme = isDarkColorScheme ? THEME.dark : THEME.light;
     const [shouldDisplayMarkerName, setShouldDisplayMarkerName] = useState(false);
     const [isMapReady, setIsMapReady] = useState(false);
-    const [autoPanToUser, setAutoPanToUser] = useState(false);
+    const [isFollowingUser, setIsFollowingUser] = useState(false);
     const mapRef = useRef<any>(null);
 
     // Expose methods via ref
@@ -99,27 +89,41 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           duration
         );
       },
+      setFollowUser: (follow: boolean) => {
+        setIsFollowingUser(follow);
+      },
+      isFollowingUser: () => isFollowingUser,
     }));
 
-    const handleAutoToggleMarkerNames = useCallback(
-      (region: Region) => {
-        const zoom = Math.log2(360 / region.longitudeDelta);
-        const shouldShow = zoom >= 17.5;
-        setShouldDisplayMarkerName((prev) => (prev === shouldShow ? prev : shouldShow));
-      },
-      [autoPanToUser, setShouldDisplayMarkerName, setAutoPanToUser]
-    );
+    /**
+     * Handle region change - toggle marker names based on zoom level
+     */
+    const handleRegionChangeComplete = useCallback((region: Region) => {
+      const zoom = Math.log2(360 / region.longitudeDelta);
+      const shouldShow = zoom >= 17.5;
+      setShouldDisplayMarkerName((prev) => (prev === shouldShow ? prev : shouldShow));
+    }, []);
 
-    const handleOnMapPress = () => {
-      // When user finish drag the map, don't auto pan to user anymore
-      if (autoPanToUser) {
-        logger.info('User moved the map, disabling auto pan to user');
-        setAutoPanToUser(false);
+    /**
+     * Handle map press/drag - disable follow mode when user interacts with map
+     */
+    const handleMapInteraction = useCallback(() => {
+      if (isFollowingUser) {
+        logger.info('User interacted with map, disabling follow mode');
+        setIsFollowingUser(false);
       }
-    };
+    }, [isFollowingUser]);
 
-    const handleCenterOnUser = useCallback(() => {
-      if (userLocation && mapRef.current) {
+    /**
+     * Handle follow user button press - toggle follow mode
+     */
+    const handleFollowUserToggle = useCallback(() => {
+      const newFollowState = !isFollowingUser;
+      setIsFollowingUser(newFollowState);
+
+      // If enabling follow mode, immediately pan to user location
+      if (newFollowState && userLocation && mapRef.current) {
+        logger.info('Follow mode enabled, panning to user location');
         mapRef.current.animateToRegion(
           {
             latitude: userLocation.latitude,
@@ -129,20 +133,17 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           },
           500
         );
+      } else {
+        logger.info('Follow mode disabled');
       }
-      onCenterOnUser?.();
-      setAutoPanToUser(true);
-    }, [userLocation, onCenterOnUser]);
+    }, [isFollowingUser, userLocation]);
 
-    // Effect to auto pan to user location if enabled
+    /**
+     * Effect to auto-pan to user location when following
+     * Triggers whenever user location updates while in follow mode
+     */
     useEffect(() => {
-      logger.info('Auto pan to user effect triggered', {
-        isMapReady,
-        autoPanToUser,
-        userLocation: userLocation !== null ? 'userLocation available' : 'no userLocation',
-      });
-      if (isMapReady && autoPanToUser && userLocation && mapRef.current) {
-        logger.info('Auto panning to user location');
+      if (isMapReady && isFollowingUser && userLocation && mapRef.current) {
         mapRef.current.animateToRegion(
           {
             latitude: userLocation.latitude,
@@ -150,10 +151,10 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
             latitudeDelta: 0.002,
             longitudeDelta: 0.002,
           },
-          500
+          300 // Smooth animation
         );
       }
-    }, [isMapReady, autoPanToUser, userLocation]);
+    }, [isMapReady, isFollowingUser, userLocation]);
 
     return (
       <View style={[styles.container, { borderColor: theme.border, borderWidth: 1 }]}>
@@ -167,11 +168,11 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           mapType="satellite"
           showsUserLocation={false} // We use custom marker
           showsMyLocationButton={false} // We use custom button
-          onRegionChangeComplete={handleAutoToggleMarkerNames}
+          onRegionChangeComplete={handleRegionChangeComplete}
           onMapReady={() => {
             setIsMapReady(true);
           }}
-          onPress={handleOnMapPress}
+          onPanDrag={handleMapInteraction} // Detect when user drags the map
           customMapStyle={[]}>
           {/* Render polylines path (static for now) */}
           {renderRoutes.map((line) => (
@@ -208,13 +209,13 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           )}
         </MapView>
 
-        {/* Center on user button */}
-        <View style={[styles.centerButtonContainer, { backgroundColor: theme.background }]}>
-          <CenterOnUserButton
-            onPress={handleCenterOnUser}
+        {/* Follow user button */}
+        <View style={[styles.followButtonContainer, { backgroundColor: theme.background }]}>
+          <FollowUserButton
+            onPress={handleFollowUserToggle}
             isLoading={isLocationLoading}
             hasLocation={!!userLocation}
-            isTracking={isTrackingLocation}
+            isFollowing={isFollowingUser}
           />
         </View>
       </View>
@@ -232,7 +233,7 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
   },
-  centerButtonContainer: {
+  followButtonContainer: {
     position: 'absolute',
     bottom: 24,
     right: 16,

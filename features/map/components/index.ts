@@ -9,7 +9,7 @@ export { default as NHSMap } from './Map/NHSMap';
 export type { NHSMapRef } from './Map/NHSMap';
 
 // User location components
-export { UserLocationMarker, CenterOnUserButton, LocationPermissionBanner } from './UserLocation';
+export { UserLocationMarker, FollowUserButton, LocationPermissionBanner } from './UserLocation';
 
 // Point detail modal
 export { default as PointDetailModal } from './PointDetailModal/PointDetailModal';
