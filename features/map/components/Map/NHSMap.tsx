@@ -63,7 +63,7 @@ export interface NHSMapRef {
  * - Follow user toggle button
  */
 const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
-  ({ onMarkerPress, mapPoints, userLocation, isLocationLoading = false }, ref) => {
+  ({ onMarkerPress, mapPoints, userLocation, isLocationLoading = false, selectedPointId }, ref) => {
     const { isDarkColorScheme } = useTheme();
     const theme = isDarkColorScheme ? THEME.dark : THEME.light;
     const [shouldDisplayMarkerName, setShouldDisplayMarkerName] = useState(false);
@@ -192,10 +192,15 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
                 latitude: poi.latitude,
                 longitude: poi.longitude,
               }}
+              tracksViewChanges={selectedPointId === poi.id}
               onPress={() => {
                 onMarkerPress?.(poi);
               }}>
-              <MarkerVisual point={poi} showName={shouldDisplayMarkerName} />
+              <MarkerVisual
+                point={poi}
+                showName={shouldDisplayMarkerName}
+                isSelected={selectedPointId === poi.id}
+              />
             </Marker>
           ))}
 

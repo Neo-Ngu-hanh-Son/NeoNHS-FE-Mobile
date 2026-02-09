@@ -1,48 +1,32 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Animated, Easing, Platform } from 'react-native';
 import { Marker } from 'react-native-maps';
 import { UserLocation } from '../../hooks/useUserLocation';
 
 interface UserLocationMarkerProps {
-  /** User's current location */
   location: UserLocation;
-  /** Whether to show the accuracy circle */
   showAccuracyCircle?: boolean;
-  /** Whether to show the heading indicator */
   showHeading?: boolean;
-  /** Custom color for the marker */
   color?: string;
 }
 
-/**
- * Marker component displaying user's current location on the map
- * Features:
- * - Smooth animation when location changes
- * - Pulsing blue dot animation
- * - Accuracy circle (optional)
- * - Heading indicator (optional)
- *
- * Note: We use a regular Marker with animateMarkerToCoordinate for Android
- * and coordinate updates for iOS, as AnimatedRegion has compatibility issues
- * with the latest react-native-maps versions.
- */
 export default function UserLocationMarker({
   location,
   showAccuracyCircle = true,
   showHeading = true,
-  color = '#4285F4', // Google Maps blue
+  color = '#4285F4',
 }: UserLocationMarkerProps) {
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const opacityAnim = useRef(new Animated.Value(0.4)).current;
+  const pulseScale = useRef(new Animated.Value(1)).current;
+  const pulseOpacity = useRef(new Animated.Value(0.4)).current;
   const markerRef = useRef<any>(null);
+  const [tracksChanges, setTracksChanges] = useState(true);
 
-  // Store previous coordinates for animation
   const prevCoords = useRef({
     latitude: location.latitude,
     longitude: location.longitude,
   });
 
-  // Animate marker when location changes (Android only - iOS handles this smoothly)
+  // Animate marker position when location changes (Android)
   useEffect(() => {
     const newCoords = {
       latitude: location.latitude,
@@ -57,54 +41,52 @@ export default function UserLocationMarker({
         try {
           markerRef.current.animateMarkerToCoordinate(newCoords, 500);
         } catch (error) {
-          // Fallback: marker will just jump to new position
           console.warn('Failed to animate marker:', error);
         }
       }
-      // iOS: Marker updates smoothly by default when coordinate prop changes
-
       prevCoords.current = newCoords;
     }
   }, [location.latitude, location.longitude]);
 
+  // Pulsing animation
   useEffect(() => {
-    const pulseAnimation = Animated.loop(
+    const animate = () => {
       Animated.parallel([
-        Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.5,
-            duration: 1500,
-            easing: Easing.out(Easing.ease),
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 0,
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.sequence([
-          Animated.timing(opacityAnim, {
-            toValue: 0,
-            duration: 1500,
-            easing: Easing.out(Easing.ease),
-            useNativeDriver: true,
-          }),
-          Animated.timing(opacityAnim, {
-            toValue: 0.4,
-            duration: 0,
-            useNativeDriver: true,
-          }),
-        ]),
-      ])
-    );
+        Animated.timing(pulseScale, {
+          toValue: 2,
+          duration: 1500,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseOpacity, {
+          toValue: 0,
+          duration: 1500,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        // Reset values and restart
+        pulseScale.setValue(1);
+        pulseOpacity.setValue(0.4);
+        animate();
+      });
+    };
 
-    pulseAnimation.start();
+    animate();
 
     return () => {
-      pulseAnimation.stop();
+      pulseScale.stopAnimation();
+      pulseOpacity.stopAnimation();
     };
-  }, [pulseAnim, opacityAnim]);
+  }, []);
+
+  // Optimization: stop tracking view changes after initial render
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     setTracksChanges(false);
+  //   }, 2000);
+  //   return () => clearTimeout(timer);
+  // }, []);
 
   return (
     <Marker
@@ -115,21 +97,19 @@ export default function UserLocationMarker({
       }}
       anchor={{ x: 0.5, y: 0.5 }}
       flat
-      tracksViewChanges={true}>
+      tracksViewChanges={tracksChanges}>
       <View style={styles.container}>
-        {/* Pulsing outer ring */}
         <Animated.View
           style={[
             styles.pulseRing,
             {
               backgroundColor: color,
-              transform: [{ scale: pulseAnim }],
-              opacity: opacityAnim,
+              transform: [{ scale: pulseScale }],
+              opacity: pulseOpacity,
             },
           ]}
         />
 
-        {/* Accuracy circle */}
         {showAccuracyCircle && location.accuracy && (
           <View
             style={[
@@ -142,7 +122,6 @@ export default function UserLocationMarker({
           />
         )}
 
-        {/* Heading indicator */}
         {showHeading && location.heading !== null && (
           <View
             style={[
@@ -155,7 +134,6 @@ export default function UserLocationMarker({
           </View>
         )}
 
-        {/* Main dot */}
         <View style={[styles.outerCircle, { backgroundColor: 'white' }]}>
           <View style={[styles.innerCircle, { backgroundColor: color }]} />
         </View>
@@ -170,8 +148,8 @@ const PULSE_SIZE = 40;
 
 const styles = StyleSheet.create({
   container: {
-    width: PULSE_SIZE,
-    height: PULSE_SIZE,
+    width: PULSE_SIZE * 2,
+    height: PULSE_SIZE * 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
