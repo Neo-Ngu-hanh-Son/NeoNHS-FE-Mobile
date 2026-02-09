@@ -4,6 +4,7 @@ import UpdateAccountScreen from "@/features/profile/screens/UpdateAccountScreen"
 import ChangePasswordScreen from "@/features/profile/screens/ChangePasswordScreen";
 import TransactionHistoryScreen from "@/features/profile/screens/TransactionHistoryScreen";
 import TransactionDetailsScreen from "@/features/profile/screens/TransactionDetailsScreen";
+import TicketVerificationScreen from "@/features/profile/screens/TicketVerificationScreen";
 import { MainStackParamList } from "./NavigationParamTypes";
 
 const Stack = createStackNavigator<MainStackParamList>();
@@ -22,6 +23,11 @@ export default function MainNavigator() {
       <Stack.Screen
         name="TransactionDetails"
         component={TransactionDetailsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="TicketVerification"
+        component={TicketVerificationScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

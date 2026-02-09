@@ -37,6 +37,7 @@ export type MainStackParamList = {
     ChangePassword: undefined;
     TransactionHistory: undefined;
     TransactionDetails: { transactionId: string };
+    TicketVerification: undefined;
 };
 
 
