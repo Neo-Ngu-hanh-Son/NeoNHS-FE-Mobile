@@ -39,5 +39,9 @@ export const userService = {
         } as any;
 
         return await uploadImageToCloudinary(fileToUpload);
+    },
+
+    async changePassword(data: any): Promise<ApiResponse<any>> {
+        return apiClient.post<any>(endpoints.users.changePassword(), data);
     }
 };

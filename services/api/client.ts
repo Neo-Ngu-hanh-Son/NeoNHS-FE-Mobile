@@ -12,7 +12,7 @@ import axios, {
 import type {
     ApiResponse,
     ApiError,
-    RequestConfig,  
+    RequestConfig,
     ApiClientConfig,
 } from "./types";
 import {
@@ -59,7 +59,7 @@ class ApiClient {
 
                 // Add authentication token if required
                 const requiresAuth = (config as RequestConfig).requiresAuth !== false;
-                
+
                 if (requiresAuth && this.getAuthToken) {
                     const token = await this.getAuthToken();
                     if (token) {
@@ -176,22 +176,22 @@ class ApiClient {
                     } else if (typeof responseData === "object") {
                         // Server returned JSON error object
                         // Try common error message fields in order of preference
-                        errorMessage = 
+                        errorMessage =
                             responseData.message ||
                             responseData.error ||
                             responseData.detail ||
                             responseData.errorMessage ||
-                            (responseData.errors && typeof responseData.errors === "string" 
-                                ? responseData.errors 
+                            (responseData.errors && typeof responseData.errors === "string"
+                                ? responseData.errors
                                 : null) ||
                             response.statusText ||
                             "An error occurred";
-                        
+
                         // Extract validation errors if present
                         if (responseData.errors && typeof responseData.errors === "object") {
                             errorDetails = responseData.errors;
                         }
-                        
+
                         // Extract error code if present
                         errorCode = responseData.code || responseData.errorCode;
                     }
