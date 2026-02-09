@@ -47,28 +47,29 @@ export default function UserLocationMarker({
     }
   }, [location.latitude, location.longitude]);
 
-  // Pulsing animation
+  // Pulsing animation loop
   useEffect(() => {
     const animate = () => {
-      Animated.parallel([
-        Animated.timing(pulseScale, {
-          toValue: 2,
-          duration: 1500,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseOpacity, {
-          toValue: 0,
-          duration: 1500,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        // Reset values and restart
-        pulseScale.setValue(1);
-        pulseOpacity.setValue(0.4);
-        animate();
-      });
+      Animated.loop(
+        Animated.parallel([
+          Animated.timing(pulseScale, {
+            toValue: 2,
+            duration: 1500,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseOpacity, {
+            toValue: 0,
+            duration: 1500,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])).start(() => {
+          // Reset values and restart
+          pulseScale.setValue(1);
+          pulseOpacity.setValue(0.4);
+          animate();
+        });
     };
 
     animate();
