@@ -162,6 +162,20 @@ export default function ProfileScreen() {
             </View>
           </View>
 
+
+          {/* Admin/Vendor Actions */}
+          {(user.role === 'ADMIN' || user.role === 'VENDOR') && (
+            <View style={{ marginBottom: 20 }}>
+              <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>MANAGEMENT</Text>
+              <ActionCard
+                title="Verify Ticket"
+                desc="Scan QR code to verify customer tickets"
+                rightIcon={<MaterialIcons name="qr-code-scanner" size={20} color={theme.primary} />}
+                onPress={() => navigation.navigate('TicketVerification')}
+              />
+            </View>
+          )}
+
           {/* Các mục chức năng */}
           <ActionCard
             title="Your Order"

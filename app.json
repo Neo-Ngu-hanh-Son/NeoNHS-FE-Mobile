@@ -41,6 +41,12 @@
         {
           "photosPermission": "The app accesses your photos to let you update your profile picture."
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow NeoNHS to access your camera to scan tickets."
+        }
       ]
     ]
   }

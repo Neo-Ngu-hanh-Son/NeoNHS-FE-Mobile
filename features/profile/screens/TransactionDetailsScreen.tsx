@@ -23,6 +23,15 @@ import ViewShot from 'react-native-view-shot';
 
 const { width } = Dimensions.get('window');
 
+const getStatusColor = (status: string) => {
+    switch (status) {
+        case 'ACTIVE': return '#22c55e';
+        case 'USED': return '#64748b';
+        case 'EXPIRED': return '#ef4444';
+        default: return '#94a3b8';
+    }
+};
+
 export default function TransactionDetailsScreen() {
     const navigation = useNavigation();
     const route = useRoute();
@@ -193,8 +202,8 @@ export default function TransactionDetailsScreen() {
                                 >
                                     <View style={styles.qrSection}>
                                         <View style={styles.qrContainer}>
-                                            {selectedTicket.qrCode ? (
-                                                <QRCode value={selectedTicket.qrCode}
+                                            {selectedTicket.ticketCode ? (
+                                                <QRCode value={selectedTicket.ticketCode}
                                                     size={180}
                                                 />
                                             ) : (
@@ -274,6 +283,9 @@ export default function TransactionDetailsScreen() {
                             <View style={styles.ticketInfo}>
                                 <Text style={[styles.ticketName, { color: theme.foreground }]} numberOfLines={1}>{ticket.itemName}</Text>
                                 <Text style={[styles.ticketCode, { color: theme.mutedForeground }]}>{ticket.ticketCode}</Text>
+                            </View>
+                            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(ticket.status) + '20' }]}>
+                                <Text style={[styles.statusText, { color: getStatusColor(ticket.status) }]}>{ticket.status}</Text>
                             </View>
                             <MaterialIcons name="chevron-right" size={24} color={theme.mutedForeground} />
                         </TouchableOpacity>
@@ -357,6 +369,16 @@ const styles = StyleSheet.create({
     },
     ticketCode: {
         fontSize: 13,
+    },
+    statusBadge: {
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 8,
+        marginRight: 8,
+    },
+    statusText: {
+        fontSize: 10,
+        fontWeight: '700',
     },
     emptyState: {
         padding: 32,

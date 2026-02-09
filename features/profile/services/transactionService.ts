@@ -16,5 +16,12 @@ export const transactionService = {
      */
     async getTransactionDetails(id: string): Promise<ApiResponse<TransactionDetail>> {
         return apiClient.get<TransactionDetail>(endpoints.transactions.getTransactionDetails(id));
+    },
+
+    /**
+     * Verify ticket via QR code
+     */
+    async verifyTicket(code: string): Promise<ApiResponse<any>> {
+        return apiClient.post<any>('/tickets/verify', { code });
     }
 };
