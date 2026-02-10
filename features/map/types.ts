@@ -1,17 +1,17 @@
 export type POIType =
-  | 'pagoda'
-  | 'cave'
-  | 'viewpoint'
-  | 'general'
-  | 'checkin'
-  | 'statue'
-  | 'gate'
-  | 'shop'
-  | 'elevator'
-  | 'event'
-  | 'workshop'
-  | 'attraction' // Example: Thuy Son mountain, etc.
-  | 'default';
+  | 'PAGODA'
+  | 'CAVE'
+  | 'VIEWPOINT'
+  | 'GENERAL'
+  | 'CHECKIN'
+  | 'STATUE'
+  | 'GATE'
+  | 'SHOP'
+  | 'ELEVATOR'
+  | 'EVENT'
+  | 'WORKSHOP'
+  | 'ATTRACTION' // Example: Thuy Son mountain, etc.
+  | 'DEFAULT';
 
 export type PointKind = 'path' | 'junction_3way' | 'junction_4way' | 'entrance' | 'dead_end';
 

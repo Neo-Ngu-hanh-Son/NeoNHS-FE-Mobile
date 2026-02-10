@@ -12,15 +12,12 @@ interface MarkerVisualProps {
 }
 
 export default function MarkerVisual({ point, showName, isSelected = false }: MarkerVisualProps) {
-  const pointType = point.type !== null ? point.type : 'default';
+  const pointType = point.type !== null ? point.type : 'DEFAULT';
   const style = markerStyles[pointType];
 
   return (
     <View style={styles.container}>
-      <Animated.View
-        style={[
-          styles.markerContainer,
-        ]}>
+      <Animated.View style={[styles.markerContainer]}>
         <View
           style={[
             styles.bubble,

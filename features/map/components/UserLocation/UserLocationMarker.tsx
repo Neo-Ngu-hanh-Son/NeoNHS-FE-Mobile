@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Animated, Easing, Platform } from 'react-native';
 import { Marker } from 'react-native-maps';
 import { UserLocation } from '../../hooks/useUserLocation';
+import { logger } from '@/utils/logger';
 
 interface UserLocationMarkerProps {
   location: UserLocation;
@@ -49,34 +50,41 @@ export default function UserLocationMarker({
 
   // Pulsing animation loop
   useEffect(() => {
-    const animate = () => {
-      Animated.loop(
-        Animated.parallel([
+    const pulseAnimation = Animated.loop(
+      Animated.parallel([
+        Animated.sequence([
           Animated.timing(pulseScale, {
             toValue: 2,
             duration: 1500,
             easing: Easing.out(Easing.ease),
             useNativeDriver: true,
           }),
+          Animated.timing(pulseScale, {
+            toValue: 1,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.sequence([
           Animated.timing(pulseOpacity, {
             toValue: 0,
             duration: 1500,
             easing: Easing.out(Easing.ease),
             useNativeDriver: true,
           }),
-        ])).start(() => {
-          // Reset values and restart
-          pulseScale.setValue(1);
-          pulseOpacity.setValue(0.4);
-          animate();
-        });
-    };
+          Animated.timing(pulseOpacity, {
+            toValue: 0.4,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+        ]),
+      ])
+    );
 
-    animate();
+    pulseAnimation.start();
 
     return () => {
-      pulseScale.stopAnimation();
-      pulseOpacity.stopAnimation();
+      pulseAnimation.stop();
     };
   }, []);
 

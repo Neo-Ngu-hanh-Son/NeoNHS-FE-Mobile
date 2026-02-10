@@ -15,67 +15,67 @@ export type MarkerStyle = {
 };
 
 export const markerStyles: Record<POIType, MarkerStyle> = {
-  default: {
+  DEFAULT: {
     bg: '#1a8f3e',
     border: '#1a8f3e',
     icon: 'not-listed-location',
   },
-  pagoda: {
+  PAGODA: {
     bg: '#7c3aed',
     border: '#ede9fe',
     icon: 'account-balance', // MaterialIcons
   },
-  cave: {
+  CAVE: {
     bg: '#374151',
     border: '#e5e7eb',
     icon: 'terrain',
   },
-  viewpoint: {
+  VIEWPOINT: {
     bg: '#0284c7',
     border: '#e0f2fe',
     icon: 'visibility',
   },
-  general: {
+  GENERAL: {
     bg: '#4b5563',
     border: '#f3f4f6',
     icon: 'place',
   },
-  checkin: {
+  CHECKIN: {
     bg: '#dc2626',
     border: '#fee2e2',
     icon: 'flag',
   },
-  statue: {
+  STATUE: {
     bg: '#d97706',
     border: '#fef3c7',
     icon: 'emoji-people',
   },
-  gate: {
+  GATE: {
     bg: '#16a34a',
     border: '#dcfce7',
     icon: 'door-front',
   },
-  shop: {
+  SHOP: {
     bg: '#ea580c',
     border: '#ffedd5',
     icon: 'storefront',
   },
-  elevator: {
+  ELEVATOR: {
     bg: '#2563eb',
     border: '#dbeafe',
     icon: 'elevator',
   },
-  event: {
+  EVENT: {
     bg: '#db2777',
     border: '#fce7f3',
     icon: 'event',
   },
-  workshop: {
+  WORKSHOP: {
     bg: '#059669',
     border: '#d1fae5',
     icon: 'build',
   },
-  attraction: {
+  ATTRACTION: {
     bg: '#8b5cf6',
     border: '#ede9fe',
     icon: 'attractions',

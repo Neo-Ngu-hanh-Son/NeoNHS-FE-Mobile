@@ -1930,7 +1930,7 @@ export const mapPoints: MapPoint[] = [
     longitude: 108.262156,
     orderIndex: 1,
     estTimeSpent: 8,
-    type: 'pagoda',
+    type: 'PAGODA',
   },
   {
     id: 'POI_chua_tu_tam',
@@ -1940,7 +1940,7 @@ export const mapPoints: MapPoint[] = [
     longitude: 108.26144,
     orderIndex: 2,
     estTimeSpent: 6,
-    type: 'pagoda',
+    type: 'PAGODA',
   },
   {
     id: 'POI_thap_cao_checkin',
@@ -1950,7 +1950,7 @@ export const mapPoints: MapPoint[] = [
     longitude: 108.262135,
     orderIndex: 3,
     estTimeSpent: 4,
-    type: 'checkin',
+    type: 'CHECKIN',
   },
   {
     id: 'POI_chua_tam_thai',
@@ -1960,7 +1960,7 @@ export const mapPoints: MapPoint[] = [
     longitude: 108.262714,
     orderIndex: 4,
     estTimeSpent: 6,
-    type: 'pagoda',
+    type: 'PAGODA',
   },
   {
     id: 'POI_ban_nuoc',
@@ -1970,7 +1970,7 @@ export const mapPoints: MapPoint[] = [
     longitude: 108.262867,
     orderIndex: 5,
     estTimeSpent: 3,
-    type: 'shop',
+    type: 'SHOP',
   },
   {
     id: 'POI_huyen_khong_cave',
@@ -1980,7 +1980,7 @@ export const mapPoints: MapPoint[] = [
     longitude: 108.262342,
     orderIndex: 6,
     estTimeSpent: 10,
-    type: 'cave',
+    type: 'CAVE',
   },
   {
     id: 'POI_linh_nham_cave',
@@ -1990,7 +1990,7 @@ export const mapPoints: MapPoint[] = [
     longitude: 108.2630874,
     orderIndex: 7,
     estTimeSpent: 12,
-    type: 'cave',
+    type: 'CAVE',
   },
   {
     id: 'POI_view_point_A',
@@ -2000,7 +2000,7 @@ export const mapPoints: MapPoint[] = [
     longitude: 108.263532,
     orderIndex: 8,
     estTimeSpent: 5,
-    type: 'viewpoint',
+    type: 'VIEWPOINT',
   },
   {
     id: 'POI_nha_ve_sinh',
@@ -2010,7 +2010,7 @@ export const mapPoints: MapPoint[] = [
     longitude: 108.2627529,
     orderIndex: 9,
     estTimeSpent: 2,
-    type: 'general',
+    type: 'GENERAL',
   },
   {
     id: 'POI_van_thong_cave',
@@ -2020,7 +2020,7 @@ export const mapPoints: MapPoint[] = [
     longitude: 108.263528,
     orderIndex: 10,
     estTimeSpent: 8,
-    type: 'cave',
+    type: 'CAVE',
   },
 
   // ======================
@@ -2034,7 +2034,7 @@ export const mapPoints: MapPoint[] = [
     longitude: 108.264472,
     orderIndex: 11,
     estTimeSpent: 5,
-    type: 'pagoda',
+    type: 'PAGODA',
   },
   {
     id: 'POI_buddha_statue',
@@ -2044,7 +2044,7 @@ export const mapPoints: MapPoint[] = [
     longitude: 108.264573,
     orderIndex: 12,
     estTimeSpent: 4,
-    type: 'statue',
+    type: 'STATUE',
   },
   {
     id: 'POI_dong_tang_chon',
@@ -2054,7 +2054,7 @@ export const mapPoints: MapPoint[] = [
     longitude: 108.26413,
     orderIndex: 13,
     estTimeSpent: 10,
-    type: 'cave',
+    type: 'CAVE',
   },
   {
     id: 'POI_artwork_checkin',
@@ -2064,7 +2064,7 @@ export const mapPoints: MapPoint[] = [
     longitude: 108.264291,
     orderIndex: 14,
     estTimeSpent: 3,
-    type: 'checkin',
+    type: 'CHECKIN',
   },
   {
     id: 'POI_thap_xa_loi',
@@ -2074,7 +2074,7 @@ export const mapPoints: MapPoint[] = [
     longitude: 108.264308,
     orderIndex: 15,
     estTimeSpent: 6,
-    type: 'pagoda',
+    type: 'PAGODA',
   },
   {
     id: 'POI_vong_hai_dai',
@@ -2084,7 +2084,7 @@ export const mapPoints: MapPoint[] = [
     longitude: 108.264221,
     orderIndex: 16,
     estTimeSpent: 5,
-    type: 'general',
+    type: 'GENERAL',
   },
 
   // These were marked as check-in only (not part of main paths)
@@ -2096,7 +2096,7 @@ export const mapPoints: MapPoint[] = [
     longitude: 108.264651,
     orderIndex: 17,
     estTimeSpent: 2,
-    type: 'checkin',
+    type: 'CHECKIN',
   },
   {
     id: 'POI_viewing_point_B',
@@ -2106,7 +2106,7 @@ export const mapPoints: MapPoint[] = [
     longitude: 108.264765,
     orderIndex: 18,
     estTimeSpent: 4,
-    type: 'viewpoint',
+    type: 'VIEWPOINT',
   },
 ];
 
@@ -2114,4 +2114,11 @@ export const mapData = {
   points,
   edges,
   mapPoints,
+};
+
+export const MAP_CENTER = {
+  latitude: 16.0035,
+  longitude: 108.2625,
+  latitudeDelta: 0.004,
+  longitudeDelta: 0.004,
 };

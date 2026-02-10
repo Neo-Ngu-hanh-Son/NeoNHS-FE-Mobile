@@ -163,7 +163,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
           <ActionCard
             title="Your Order"
             desc="View your order and transaction history here"
-            onPress={() => navigation.navigate('TransactionHistory')}
+            onPress={() => navigation.navigate('Main', { screen: 'TransactionHistory' })}
           />
           <ActionCard
             title="Payment Method"
@@ -189,7 +189,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
               rightIcon={
                 <Ionicons name="chevron-forward" size={16} color={theme.mutedForeground} />
               }
-              onPress={() => navigation.navigate('ChangePassword')}
+              onPress={() => navigation.navigate('Main', { screen: 'ChangePassword' })}
             />
           </View>
 
