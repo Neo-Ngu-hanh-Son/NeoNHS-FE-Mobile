@@ -1,3 +1,4 @@
+import { mapEndpoints } from "./map.api";
 
 /**
  * Authentication Endpoints
@@ -6,7 +7,7 @@ export const authEndpoints = {
     login: () => `auth/login`,
     register: () => `auth/register`,
     logout: () => `auth/logout`,
-    refreshToken: () => `auth/refresh`,
+    refreshToken: () => `auth/refresh-token`,
     forgotPassword: () => `auth/forgot-password`,
     resetPassword: () => `auth/reset-password`,
     verifyEmail: () => `auth/verify-email`,
@@ -58,6 +59,7 @@ export const endpoints = {
     users: userEndpoints,
     home: homeEndpoints,
     profile: profileEndpoints,
+    map: mapEndpoints,
     transactions: transactionEndpoints,
 } as const;
 

@@ -1,102 +1,103 @@
 import { DarkTheme, DefaultTheme, type Theme } from '@react-navigation/native';
- 
+
 export const THEME = {
   light: {
     // Backgrounds
-    background: 'hsl(0 0% 100%)',           // Pure white
-    card: 'hsl(0 0% 100%)',                 // Pure white
-    popover: 'hsl(0 0% 100%)',              // Pure white
-    sidebar: 'hsl(0 0% 98%)',               // Slight off-white
-    
+    background: '#ffffff',
+    card: '#ffffff',
+    popover: '#ffffff',
+    sidebar: '#fafafa',
+
     // Text colors
-    foreground: 'hsl(0 0% 9%)',             // Near black for high contrast
-    cardForeground: 'hsl(0 0% 9%)',
-    popoverForeground: 'hsl(0 0% 9%)',
-    sidebarForeground: 'hsl(0 0% 9%)',
-    
+    foreground: '#171717',
+    cardForeground: '#171717',
+    popoverForeground: '#171717',
+    sidebarForeground: '#171717',
+
     // Primary - Green theme
-    primary: 'hsl(142 71% 35%)',            // Rich green
-    primaryForeground: 'hsl(0 0% 100%)',    // White text on primary
-    sidebarPrimary: 'hsl(142 71% 35%)',
-    sidebarPrimaryForeground: 'hsl(0 0% 100%)',
-    
+    primary: '#1a8f3e',
+    primaryForeground: '#ffffff',
+    sidebarPrimary: '#1a8f3e',
+    sidebarPrimaryForeground: '#ffffff',
+
     // Secondary & Muted
-    secondary: 'hsl(0 0% 96%)',             // Light gray
-    secondaryForeground: 'hsl(0 0% 9%)',
-    muted: 'hsl(0 0% 96%)',
-    mutedForeground: 'hsl(0 0% 45%)',       // Medium gray - visible
-    accent: 'hsl(0 0% 96%)',
-    accentForeground: 'hsl(0 0% 9%)',
-    sidebarAccent: 'hsl(0 0% 96%)',
-    sidebarAccentForeground: 'hsl(0 0% 9%)',
-    
-    // Borders & Inputs - More visible
-    border: 'hsl(0 0% 85%)',                // Darker border - visible!
-    input: 'hsl(0 0% 85%)',
-    sidebarBorder: 'hsl(0 0% 85%)',
-    
+    secondary: '#f5f5f5',
+    secondaryForeground: '#171717',
+    muted: '#f5f5f5',
+    mutedForeground: '#737373',
+    accent: '#f5f5f5',
+    accentForeground: '#171717',
+    sidebarAccent: '#f5f5f5',
+    sidebarAccentForeground: '#171717',
+
+    // Borders & Inputs
+    border: '#d9d9d9',
+    input: '#d9d9d9',
+    sidebarBorder: '#d9d9d9',
+
     // Others
-    destructive: 'hsl(0 84% 60%)',          // Red for errors
-    ring: 'hsl(142 71% 45%)',               // Focus ring - green
-    sidebarRing: 'hsl(142 71% 45%)',
+    destructive: '#f03d3d',
+    ring: '#23c05a',
+    sidebarRing: '#23c05a',
     radius: '0.65rem',
-    
+
     // Charts
-    chart1: 'hsl(142 76% 36%)',
-    chart2: 'hsl(160 60% 45%)',
-    chart3: 'hsl(30 80% 55%)',
-    chart4: 'hsl(280 65% 60%)',
-    chart5: 'hsl(340 75% 55%)',
+    chart1: '#16a34a',
+    chart2: '#2eb58f',
+    chart3: '#e88a2e',
+    chart4: '#a855f7',
+    chart5: '#e11d48',
   },
+
   dark: {
-    // Backgrounds - PITCH DARK
-    background: 'hsl(0 0% 4%)',             // Near black
-    card: 'hsl(0 0% 9%)',                   // Slightly lighter for cards
-    popover: 'hsl(0 0% 9%)',
-    sidebar: 'hsl(0 0% 7%)',
-    
-    // Text colors - High contrast
-    foreground: 'hsl(0 0% 98%)',            // Near white
-    cardForeground: 'hsl(0 0% 98%)',
-    popoverForeground: 'hsl(0 0% 98%)',
-    sidebarForeground: 'hsl(0 0% 98%)',
-    
-    // Primary - Brighter green for dark mode
-    primary: 'hsl(142 71% 45%)',            // Brighter green
-    primaryForeground: 'hsl(0 0% 100%)',
-    sidebarPrimary: 'hsl(142 71% 50%)',
-    sidebarPrimaryForeground: 'hsl(0 0% 100%)',
-    
+    // Backgrounds
+    background: '#0a0a0a',
+    card: '#171717',
+    popover: '#171717',
+    sidebar: '#121212',
+
+    // Text colors
+    foreground: '#fafafa',
+    cardForeground: '#fafafa',
+    popoverForeground: '#fafafa',
+    sidebarForeground: '#fafafa',
+
+    // Primary
+    primary: '#23c05a',
+    primaryForeground: '#ffffff',
+    sidebarPrimary: '#2bd665',
+    sidebarPrimaryForeground: '#ffffff',
+
     // Secondary & Muted
-    secondary: 'hsl(0 0% 15%)',             // Dark gray
-    secondaryForeground: 'hsl(0 0% 98%)',
-    muted: 'hsl(0 0% 15%)',
-    mutedForeground: 'hsl(0 0% 60%)',       // Visible muted text
-    accent: 'hsl(0 0% 15%)',
-    accentForeground: 'hsl(0 0% 98%)',
-    sidebarAccent: 'hsl(0 0% 15%)',
-    sidebarAccentForeground: 'hsl(0 0% 98%)',
-    
-    // Borders & Inputs - More visible
-    border: 'hsl(0 0% 20%)',                // Visible border
-    input: 'hsl(0 0% 20%)',
-    sidebarBorder: 'hsl(0 0% 20%)',
-    
+    secondary: '#262626',
+    secondaryForeground: '#fafafa',
+    muted: '#262626',
+    mutedForeground: '#999999',
+    accent: '#262626',
+    accentForeground: '#fafafa',
+    sidebarAccent: '#262626',
+    sidebarAccentForeground: '#fafafa',
+
+    // Borders & Inputs
+    border: '#333333',
+    input: '#333333',
+    sidebarBorder: '#333333',
+
     // Others
-    destructive: 'hsl(0 62% 55%)',          // Red for errors
-    ring: 'hsl(142 71% 45%)',
-    sidebarRing: 'hsl(142 71% 45%)',
+    destructive: '#dc3d3d',
+    ring: '#23c05a',
+    sidebarRing: '#23c05a',
     radius: '0.65rem',
-    
+
     // Charts
-    chart1: 'hsl(142 70% 50%)',
-    chart2: 'hsl(160 60% 50%)',
-    chart3: 'hsl(30 80% 60%)',
-    chart4: 'hsl(280 65% 65%)',
-    chart5: 'hsl(340 75% 60%)',
+    chart1: '#26d665',
+    chart2: '#33cc99',
+    chart3: '#f0a33d',
+    chart4: '#b266ff',
+    chart5: '#f03d66',
   },
 };
- 
+
 export const NAV_THEME: Record<'light' | 'dark', Theme> = {
   light: {
     ...DefaultTheme,

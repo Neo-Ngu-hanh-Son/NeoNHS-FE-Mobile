@@ -1,5 +1,5 @@
 import { apiClient } from "@/services/api/client";
-import { endpoints } from "@/services/api/endpoints";
+import { endpoints } from "@/services/api/endpoints/endpoints";
 import { ApiResponse } from "@/services/api/types";
 import { Transaction, TransactionDetail } from "../types/transaction";
 

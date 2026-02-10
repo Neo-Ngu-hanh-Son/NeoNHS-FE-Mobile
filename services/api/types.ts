@@ -36,6 +36,7 @@ export interface ApiError {
  */
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
+import { User } from "@/features/auth";
 /**
  * Request Configuration
  * Extends AxiosRequestConfig with custom options
@@ -50,6 +51,15 @@ export interface RequestConfig extends Omit<AxiosRequestConfig, "method" | "para
 }
 
 /**
+ * Token Refresh Result
+ */
+export interface TokenRefreshResult {
+    accessToken: string;
+    refreshToken?: string;
+    userInfo: User;
+}
+
+/**
  * API Client Configuration
  */
 export interface ApiClientConfig {
@@ -57,6 +67,9 @@ export interface ApiClientConfig {
     timeout?: number;
     headers?: Record<string, string>;
     getAuthToken?: () => string | null | Promise<string | null>;
+    getRefreshToken?: () => string | null | Promise<string | null>;
+    onTokenRefresh?: (refreshToken: string) => Promise<TokenRefreshResult | null>;
+    onTokenRefreshed?: (result: TokenRefreshResult) => void | Promise<void>;
     onUnauthorized?: () => void;
     onError?: (error: ApiError) => void;
 }
