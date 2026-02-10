@@ -19,16 +19,11 @@ The API client is already configured in `app/providers/ApiProvider.tsx`. It auto
 ### Basic Usage
 
 ```typescript
-import { apiClient } from "@/services/api";
-import { endpoints } from "@/services/api";
+import { apiClient } from '@/services/api';
+import { endpoints } from '@/services/api';
 
 // GET request
 const response = await apiClient.get<User>(endpoints.users.getProfile());
-
-// GET with query parameters
-const response = await apiClient.get<User[]>(endpoints.users.getUsers(), {
-  params: { page: 1, limit: 10 },
-});
 
 // POST request
 const response = await apiClient.post<LoginResponse>(
@@ -38,11 +33,11 @@ const response = await apiClient.post<LoginResponse>(
 );
 
 // PUT request
-const response = await apiClient.put<User>(endpoints.users.updateProfile(), { name: "New Name" });
+const response = await apiClient.put<User>(endpoints.users.updateProfile(), { name: 'New Name' });
 
 // PATCH request
 const response = await apiClient.patch<User>(endpoints.users.updateProfile(), {
-  name: "Updated Name",
+  name: 'Updated Name',
 });
 
 // DELETE request
@@ -76,6 +71,7 @@ function ProfileScreen() {
 ```
 
 The `useApi` hook returns:
+
 - `data` - The response data
 - `loading` - Loading state boolean
 - `error` - Error object if request failed
@@ -88,17 +84,15 @@ Create service files for each feature area. For example, see `features/auth/serv
 
 ```typescript
 // features/your-feature/services/yourService.ts
-import { apiClient } from "@/services/api";
-import { endpoints } from "@/services/api";
+import { apiClient } from '@/services/api';
+import { endpoints } from '@/services/api';
 
 export const yourService = {
   getItems: () => apiClient.get<Item[]>(endpoints.yourEndpoint.getItems()),
 
-  getItemById: (id: string) => 
-    apiClient.get<Item>(endpoints.yourEndpoint.getItemById(id)),
+  getItemById: (id: string) => apiClient.get<Item>(endpoints.yourEndpoint.getItemById(id)),
 
-  createItem: (data: CreateItemData) =>
-    apiClient.post<Item>(endpoints.yourEndpoint.create(), data),
+  createItem: (data: CreateItemData) => apiClient.post<Item>(endpoints.yourEndpoint.create(), data),
 
   updateItem: (id: string, data: Partial<Item>) =>
     apiClient.put<Item>(endpoints.yourEndpoint.update(id), data),
@@ -111,7 +105,7 @@ The API client automatically handles errors:
 
 ```typescript
 try {
-  const response = await apiClient.get<User>("/users/123");
+  const response = await apiClient.get<User>('/users/123');
   // Handle success
 } catch (error) {
   const apiError = error as ApiError;
@@ -143,7 +137,7 @@ If you forget to set in .env, the default will be used here `utils/constants.ts`
 
 ```typescript
 export const API_CONFIG = {
-  BASE_URL: "https://api.yourserver.com",
+  BASE_URL: 'https://api.yourserver.com',
   TIMEOUT: 30000,
 };
 ```
@@ -153,7 +147,7 @@ export const API_CONFIG = {
 ```typescript
 apiClient.updateConfig({
   headers: {
-    "X-Custom-Header": "value",
+    'X-Custom-Header': 'value',
   },
 });
 ```
@@ -173,10 +167,10 @@ Responses are automatically transformed to:
 If you want to transform it by yourself, add `transformData == false` in the api methods
 
 ```typescript
-    const response = await apiClient.get<string>("posts/1", {
-        transformData: false,
-        // ... other config
-    });
+const response = await apiClient.get<string>('posts/1', {
+  transformData: false,
+  // ... other config
+});
 ```
 
 ## Advanced Usage
@@ -184,7 +178,7 @@ If you want to transform it by yourself, add `transformData == false` in the api
 ### Access Axios Instance
 
 ```typescript
-import { apiClient } from "@/services/api";
+import { apiClient } from '@/services/api';
 
 const axiosInstance = apiClient.getAxiosInstance();
 // Use axios features directly
@@ -195,7 +189,7 @@ const axiosInstance = apiClient.getAxiosInstance();
 ```typescript
 const controller = new AbortController();
 
-apiClient.get("/users", {
+apiClient.get('/users', {
   signal: controller.signal,
 });
 
