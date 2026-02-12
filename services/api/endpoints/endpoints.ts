@@ -1,4 +1,5 @@
 import { mapEndpoints } from "./map.api";
+import { discoverEndpoints } from "./discover.api";
 
 /**
  * Authentication Endpoints
@@ -61,5 +62,6 @@ export const endpoints = {
     profile: profileEndpoints,
     map: mapEndpoints,
     transactions: transactionEndpoints,
+    discover: discoverEndpoints,
 } as const;
 

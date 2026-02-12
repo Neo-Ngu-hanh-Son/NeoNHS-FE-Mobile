@@ -37,6 +37,12 @@ export type MainStackParamList = {
   TransactionHistory: undefined;
   TransactionDetails: { transactionId: string };
   TicketVerification: undefined;
+  AllDestinations: { initialTab?: "Points" | "Workshops" | "Events" | "Blogs"; selectedAttractionId?: string };
+  PointDetail: { pointId: string };
+  PointMapSelection: { pointId: string };
+  ActiveNavigation: { pointId: string };
+  ArrivalConfirmation: { pointId: string };
+  AudioGuide: { pointId: string };
 };
 
 /**
