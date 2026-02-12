@@ -8,6 +8,8 @@ import { Text } from "@/components/ui/text";
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { THEME } from "@/lib/theme";
 import { MainStackParamList } from "@/app/navigations/NavigationParamTypes";
+import { discoverService } from "../services/discoverServices";
+import { MapPoint } from "../../map/types";
 
 const { width, height } = Dimensions.get("window");
 
@@ -17,6 +19,34 @@ export default function PointMapSelectionScreen({ navigation, route }: Props) {
     const { isDarkColorScheme } = useTheme();
     const theme = isDarkColorScheme ? THEME.dark : THEME.light;
     const { pointId } = route.params;
+    const [point, setPoint] = React.useState<MapPoint | null>(null);
+    const [loading, setLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        const fetchPoint = async () => {
+            setLoading(true);
+            try {
+                const response = await discoverService.getPointById(pointId);
+                if (response.success && response.data) {
+                    setPoint(response.data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch point for map selection:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPoint();
+    }, [pointId]);
+
+    if (loading) {
+        return (
+            <View className="flex-1 items-center justify-center" style={{ backgroundColor: theme.background }}>
+                <Ionicons name="map" size={48} color={theme.primary} className="animate-pulse" />
+                <Text className="mt-4" style={{ color: theme.mutedForeground }}>Loading Map...</Text>
+            </View>
+        );
+    }
 
     return (
         <View className="flex-1" style={{ backgroundColor: theme.background }}>
@@ -35,10 +65,10 @@ export default function PointMapSelectionScreen({ navigation, route }: Props) {
 
                 {/* Destination Marker (Mock) */}
                 <View className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-20 items-center">
-                    <Text className="text-[10px] font-bold mb-1 text-black bg-white/80 px-2 py-0.5 rounded shadow-sm">Động Huyền Không</Text>
+                    <Text className="text-[10px] font-bold mb-1 text-black bg-white/80 px-2 py-0.5 rounded shadow-sm">{point?.name}</Text>
                     <View className="bg-white p-1 rounded-lg shadow-lg border border-slate-200">
                         <Image
-                            source={{ uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuCtps6U5-X4KnttnXCGcdQheGvVcWjuMCvFEa1lMqVgI6E1qBoW78X2YYxo7dYACANRH0JG1EWbLcdX9AAVdSPFOXRf7zhoaTfelK7CiM5J-j21ijJbHowqyMhv80vmRf1bovjGyH2L9dIqsA46iId3gZHsFEWbmcVrLv9PO6_QmGeL8lFvTrQ4tvfbNjThUKouWEjuU_IDqo7tkIWMZGQno9qzq_7ucgxZGbQ6jsqXszlh7Un_gYYhVlrmj8xyXGMT1LSD_sbmEGWt" }}
+                            source={{ uri: point?.thumbnailUrl }}
                             className="w-12 h-8 object-contain"
                         />
                     </View>
@@ -85,13 +115,13 @@ export default function PointMapSelectionScreen({ navigation, route }: Props) {
                 <View className="px-6 py-4 pb-12">
                     <View className="flex-row items-start gap-4 mb-6">
                         <Image
-                            source={{ uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuDEXx8D6nEQRUWftQLi07tHWHVaaJ80f0Ie4Okl7SZoJNNi5FuoyCOKEzgj6LfcMjEajYWZvlojnm4_VugMUpxhJd-CsdcNBQQ5VDwUPX3saXKF4pJJYuoga_wiDRdigvn3nBT3qj_bDe8iy9wpUBEwj1smVeBzv4sEgbAjhvsk6s4T9TuS6URSi6LTuALQq3yjzkodYnxalycGMcEI3vWFOqQM2HSR_la4BMxeMgiyWXMa8ftowAyfaBG-iJDLugEeM1AmO5EP4Zlm" }}
+                            source={{ uri: point?.thumbnailUrl }}
                             className="w-16 h-16 rounded-2xl object-cover"
                         />
                         <View className="flex-1">
-                            <Text className="text-xl font-bold" style={{ color: theme.foreground }}>Huyền Không Cave</Text>
+                            <Text className="text-xl font-bold" style={{ color: theme.foreground }}>{point?.name}</Text>
                             <View className="flex-row items-center gap-1 mt-1">
-                                <Text className="text-sm" style={{ color: theme.mutedForeground }}>Park • 0.5 mi away</Text>
+                                <Text className="text-sm" style={{ color: theme.mutedForeground }}>{point?.type} • Landmark</Text>
                                 <Text className="mx-1" style={{ color: theme.mutedForeground }}>•</Text>
                                 <Text className="text-sm font-semibold" style={{ color: theme.primary }}>Open now</Text>
                             </View>
@@ -99,7 +129,7 @@ export default function PointMapSelectionScreen({ navigation, route }: Props) {
                     </View>
 
                     <Text className="text-sm leading-relaxed mb-8" style={{ color: theme.mutedForeground }} numberOfLines={4}>
-                        Central Park is an urban park in New York City located between the Upper West and Upper East Sides of Manhattan...
+                        {point?.description || "No description available for this location."}
                     </Text>
 
                     <View className="flex-row gap-4">
@@ -109,9 +139,14 @@ export default function PointMapSelectionScreen({ navigation, route }: Props) {
                         >
                             <Text className="text-white font-bold text-lg">View Destination</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity className="w-14 h-14 bg-teal-500 items-center justify-center rounded-2xl shadow-lg shadow-teal-500/20">
+                        {/* <SafeAreaView> */}
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate("ActiveNavigation", { pointId })}
+                            className="w-14 h-14 bg-teal-500 items-center justify-center rounded-2xl shadow-lg shadow-teal-500/20"
+                        >
                             <Ionicons name="location" size={24} color="white" />
                         </TouchableOpacity>
+                        {/* </SafeAreaView> */}
                     </View>
                 </View>
             </View>

@@ -1,6 +1,6 @@
 import { View, ScrollView, RefreshControl, Image, TouchableOpacity, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { StackScreenProps } from "@react-navigation/stack";
 
@@ -10,6 +10,8 @@ import { THEME } from "@/lib/theme";
 import { MainStackParamList, TabsStackParamList } from "@/app/navigations/NavigationParamTypes";
 import { CompositeScreenProps } from "@react-navigation/native";
 import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
+import { discoverService } from "../services/discoverServices";
+import { Attraction } from "../../map/types";
 
 type DiscoverScreenProps = CompositeScreenProps<
   BottomTabScreenProps<TabsStackParamList, "Discover">,
@@ -19,23 +21,6 @@ type DiscoverScreenProps = CompositeScreenProps<
 // --- Hierarchy Definitions ---
 // Area (Destination) = Grouping (e.g., Marble Mountains)
 // Point (Attraction) = Specific site (e.g., Huyen Khong Cave)
-
-const POPULAR_POINTS = [
-  {
-    id: "p1",
-    name: "Huyen Khong Cave",
-    area: "Marble Mountains",
-    rating: 4.8,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuA5LTTfUqWr-CHi2mopp9s-e2rysuWDpGwQkSkZ8YY7nQW8CQzJeHiIWWXFcwuqGMw_RqUXYM85WaI5hNRPl5ifmolIljJ5tTf5ktsK7mLwm50Eq4jfDRK1J8A-06QLWV1pAI84Odr_poOQVjsf0xaNmTuYjfj7nH0YiUmwWSNNkCLuz-vTNB-jDkPvd7gBvzQwenbFgmRouSym4J9-pBmBHneF3Ku6oVcRg6P7ihRa77ufFBuwncftUp8sVHvKqMVT3p52Tels9XVU",
-  },
-  {
-    id: "p2",
-    name: "Linh Ung Pagoda",
-    area: "Son Thuy",
-    rating: 4.9,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDD5Mg6L5aaP2nTuVwIUuy1BNm5Ojsx2noIkG00c0HRvHzBxlg4OwbH8JdDe35H3rBgkTA0_9vyCO-hCVoOgzgGqvmB0shg5rsl-5EcWWeg16oX-rTFsaJAnem_a_2jTDsY9n6296km-BPglqVayvaXJ2Stwux5WWwmvCbmB_144klz8e1OUtTmlPxFCkBQMkDNfCgcrUVrQuc3L2tJK945TX355ahaE80CJB3yMWx7aJ6qZHh0EYhs8NB6baONOOHPWWFu7Pf5BwLM",
-  },
-];
 
 const WORKSHOPS = [
   {
@@ -106,11 +91,32 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
   const [refreshing, setRefreshing] = useState(false);
+  const [popularAttractions, setPopularAttractions] = useState<Attraction[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await discoverService.getAllAttractions();
+      if (response.success && response.data) {
+        setPopularAttractions(response.data.slice(0, 5));
+      }
+    } catch (error) {
+      console.error("Failed to fetch popular attractions:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1500);
-  }, []);
+    fetchData();
+  }, [fetchData]);
 
   const renderHeader = () => (
     <View className="px-5 pt-6 pb-1 sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
@@ -149,32 +155,42 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
       >
         {renderHeader()}
 
-        {/* Popular Points */}
+        {/* Popular Points (Using Attractions for now) */}
         <SectionHeader title="Popular Destinations" onSeeAll={() => navigation.navigate("AllDestinations", { initialTab: "Points" })} />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 16 }}>
-          {POPULAR_POINTS.map((point) => (
-            <TouchableOpacity
-              key={point.id}
-              className="w-72 rounded-2xl overflow-hidden shadow-sm border"
-              style={{ backgroundColor: theme.card, borderColor: theme.border }}
-              onPress={() => navigation.navigate("PointDetail", { pointId: point.id })}
-            >
-              <View className="h-48 relative">
-                <Image source={{ uri: point.image }} className="w-full h-full object-cover" />
-                <View className="absolute top-3 right-3 bg-white/90 dark:bg-slate-900/90 px-2 py-1 rounded-lg flex-row items-center gap-1">
-                  <Ionicons name="star" size={12} color="#eab308" />
-                  <Text className="text-xs font-bold">{point.rating}</Text>
+          {loading ? (
+            <View className="w-72 h-64 items-center justify-center rounded-2xl border bg-muted/20" style={{ borderColor: theme.border }}>
+              <Ionicons name="refresh" size={24} color={theme.primary} className="animate-spin" />
+            </View>
+          ) : popularAttractions.length > 0 ? (
+            popularAttractions.map((attr) => (
+              <TouchableOpacity
+                key={attr.id}
+                className="w-72 rounded-2xl overflow-hidden shadow-sm border"
+                style={{ backgroundColor: theme.card, borderColor: theme.border }}
+                onPress={() => navigation.navigate("AllDestinations", { initialTab: "Points", selectedAttractionId: attr.id })}
+              >
+                <View className="h-48 relative">
+                  <Image source={{ uri: attr.thumbnailUrl || (attr as any).image }} className="w-full h-full object-cover" />
+                  <View className="absolute top-3 right-3 bg-white/90 dark:bg-slate-900/90 px-2 py-1 rounded-lg flex-row items-center gap-1">
+                    <Ionicons name="star" size={12} color="#eab308" />
+                    <Text className="text-xs font-bold">4.8</Text>
+                  </View>
                 </View>
-              </View>
-              <View className="p-4">
-                <Text className="font-bold text-lg" style={{ color: theme.foreground }}>{point.name}</Text>
-                <View className="flex-row items-center gap-1 mt-1">
-                  <Ionicons name="location-outline" size={14} color={theme.mutedForeground} />
-                  <Text className="text-sm" style={{ color: theme.mutedForeground }}>{point.area}</Text>
+                <View className="p-4">
+                  <Text className="font-bold text-lg" style={{ color: theme.foreground }}>{attr.name}</Text>
+                  <View className="flex-row items-center gap-1 mt-1">
+                    <Ionicons name="location-outline" size={14} color={theme.mutedForeground} />
+                    <Text className="text-sm truncate pr-4" style={{ color: theme.mutedForeground }} numberOfLines={1}>{attr.address}</Text>
+                  </View>
                 </View>
-              </View>
-            </TouchableOpacity>
-          ))}
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View className="w-72 h-64 items-center justify-center rounded-2xl border bg-muted/20" style={{ borderColor: theme.border }}>
+              <Text style={{ color: theme.mutedForeground }}>No destinations found</Text>
+            </View>
+          )}
         </ScrollView>
 
         {/* Workshops */}

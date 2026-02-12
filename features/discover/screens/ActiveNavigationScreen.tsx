@@ -8,6 +8,8 @@ import { Text } from "@/components/ui/text";
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { THEME } from "@/lib/theme";
 import { MainStackParamList } from "@/app/navigations/NavigationParamTypes";
+import { discoverService } from "../services/discoverServices";
+import { MapPoint } from "../../map/types";
 
 const { width, height } = Dimensions.get("window");
 
@@ -17,6 +19,34 @@ export default function ActiveNavigationScreen({ navigation, route }: Props) {
     const { isDarkColorScheme } = useTheme();
     const theme = isDarkColorScheme ? THEME.dark : THEME.light;
     const { pointId } = route.params;
+    const [point, setPoint] = React.useState<MapPoint | null>(null);
+    const [loading, setLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        const fetchPoint = async () => {
+            setLoading(true);
+            try {
+                const response = await discoverService.getPointById(pointId);
+                if (response.success && response.data) {
+                    setPoint(response.data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch point for active navigation:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPoint();
+    }, [pointId]);
+
+    if (loading) {
+        return (
+            <View className="flex-1 items-center justify-center" style={{ backgroundColor: theme.background }}>
+                <Ionicons name="navigate" size={48} color={theme.primary} className="animate-pulse" />
+                <Text className="mt-4" style={{ color: theme.mutedForeground }}>Calculating Route...</Text>
+            </View>
+        );
+    }
 
     return (
         <View className="flex-1" style={{ backgroundColor: theme.background }}>
@@ -44,10 +74,10 @@ export default function ActiveNavigationScreen({ navigation, route }: Props) {
                 <View className="absolute top-[260px] left-[245px] z-20 items-center">
                     <View className="bg-white dark:bg-slate-800 p-2 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 mb-2">
                         <Image
-                            source={{ uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuA3Cb_BKeAYNuqRmwnBp-ew-ibbRaQ_yWVzV7Z1RRjdPDZ1e0AxQ_DrlPLg8NZ4CeKmqYIW_hGJvxGEfqb-6SF3hyBVY_95bGOgvVPKMLQLOkzHsRLcP5y7uT95sAeIzcSoEsCEHMEf-AXIvcZLHTtXtqrDQ9Qz3yfGqD2kKoxgIHRJELiREHHTJi4RffgcWuwJjgwm-wiAc4CHB7utbqYLjnGMOkprOaS3mMBIOBr6hUMmNM19bkxBUU-LK_wb6rnkMID7W_3krAix" }}
+                            source={{ uri: point?.thumbnailUrl }}
                             className="w-10 h-10 rounded object-cover"
                         />
-                        <Text className="text-[10px] font-bold mt-1 text-center" style={{ color: theme.foreground }}>Động Huyền Không</Text>
+                        <Text className="text-[10px] font-bold mt-1 text-center" style={{ color: theme.foreground }}>{point?.name}</Text>
                     </View>
                     <View className="w-3 h-3 bg-primary rounded-full border-2 border-white" />
                 </View>

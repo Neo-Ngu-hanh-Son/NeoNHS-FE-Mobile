@@ -1,6 +1,5 @@
-import React, { useState } from "react";
-import { View, ScrollView, TouchableOpacity, Image, Dimensions, Share } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React, { useState, useEffect } from "react";
+import { View, ScrollView, TouchableOpacity, Image, Dimensions, Share, Linking, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { StackScreenProps } from "@react-navigation/stack";
 
@@ -9,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { THEME } from "@/lib/theme";
 import { MainStackParamList } from "@/app/navigations/NavigationParamTypes";
+import { discoverService } from "../services/discoverServices";
+import { MapPoint } from "../../map/types";
 
 const { width } = Dimensions.get("window");
 
@@ -24,18 +25,75 @@ export default function PointDetailScreen({ navigation, route }: Props) {
     const { isDarkColorScheme } = useTheme();
     const theme = isDarkColorScheme ? THEME.dark : THEME.light;
     const { pointId } = route.params;
+    const [point, setPoint] = useState<MapPoint | null>(null);
+    const [loading, setLoading] = useState(true);
     const [isFavorite, setIsFavorite] = useState(false);
     const [isReadMore, setIsReadMore] = useState(false);
 
+    useEffect(() => {
+        const fetchPoint = async () => {
+            setLoading(true);
+            try {
+                const response = await discoverService.getPointById(pointId);
+                if (response.success && response.data) {
+                    setPoint(response.data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch point:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPoint();
+    }, [pointId]);
+
     const onShare = async () => {
+        if (!point) return;
         try {
             await Share.share({
-                message: "Check out this beautiful point of interest on NeoNHS!",
+                message: `Check out ${point.name} on NeoNHS!`,
             });
         } catch (error) {
             console.log(error);
         }
     };
+
+    const openInGoogleMaps = () => {
+        if (!point) return;
+        const url = Platform.select({
+            ios: `maps:0,0?q=${point.name}@${point.latitude},${point.longitude}`,
+            android: `geo:0,0?q=${point.latitude},${point.longitude}(${point.name})`,
+        });
+
+        if (url) {
+            Linking.canOpenURL(url).then(supported => {
+                if (supported) {
+                    Linking.openURL(url);
+                } else {
+                    const browserUrl = `https://www.google.com/maps/search/?api=1&query=${point.latitude},${point.longitude}`;
+                    Linking.openURL(browserUrl);
+                }
+            });
+        }
+    };
+
+    if (loading) {
+        return (
+            <View className="flex-1 items-center justify-center" style={{ backgroundColor: theme.background }}>
+                <Ionicons name="refresh" size={32} color={theme.primary} className="animate-spin" />
+                <Text className="mt-4" style={{ color: theme.mutedForeground }}>Loading point details...</Text>
+            </View>
+        );
+    }
+
+    if (!point) {
+        return (
+            <View className="flex-1 items-center justify-center p-5" style={{ backgroundColor: theme.background }}>
+                <Text className="text-xl font-bold mb-4" style={{ color: theme.foreground }}>Point not found</Text>
+                <Button onPress={() => navigation.goBack()}>Go Back</Button>
+            </View>
+        );
+    }
 
     return (
         <View className="flex-1" style={{ backgroundColor: theme.background }}>
@@ -43,7 +101,7 @@ export default function PointDetailScreen({ navigation, route }: Props) {
                 {/* Hero Image */}
                 <View className="relative h-[400px]">
                     <Image
-                        source={{ uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuB3Ia_EuMeNQ959XrpwY2a1J_TuVJ291xVgqM8xsvUJdodBE7LCnMIA0x-ghOu4lbre-GSjYW13HzY2kLERvBawPRSZpjREaWbILuLpEz2u4Z1UV3VB_cvk4wjtzFiPQWOag9LoI7TPaV9SXrQDmMqJAG3T0ESdAJ2tbESgWdgcV_UMKQLzTe6YywP2RWr_F2LY2mTnUf2fTCWzLxRapDORR6G94zVmM0k1OPeYk9bHR3Hj9yzvwDSeqpLPTHgf4UaOlwNkg75KxtAt" }}
+                        source={{ uri: point.thumbnailUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuB3Ia_EuMeNQ959XrpwY2a1J_TuVJ291xVgqM8xsvUJdodBE7LCnMIA0x-ghOu4lbre-GSjYW13HzY2kLERvBawPRSZpjREaWbILuLpEz2u4Z1UV3VB_cvk4wjtzFiPQWOag9LoI7TPaV9SXrQDmMqJAG3T0ESdAJ2tbESgWdgcV_UMKQLzTe6YywP2RWr_F2LY2mTnUf2fTCWzLxRapDORR6G94zVmM0k1OPeYk9bHR3Hj9yzvwDSeqpLPTHgf4UaOlwNkg75KxtAt" }}
                         className="w-full h-full object-cover"
                     />
                     <View className="absolute top-12 left-0 right-0 px-4 flex-row justify-between items-center">
@@ -81,7 +139,7 @@ export default function PointDetailScreen({ navigation, route }: Props) {
                     <View>
                         <View className="flex-row justify-between items-start mb-2">
                             <Text className="text-3xl font-bold tracking-tight pr-4 flex-1" style={{ color: theme.foreground }}>
-                                Huyền Không cave
+                                {point.name}
                             </Text>
                             <View className="flex-row items-center gap-1 bg-green-50 dark:bg-green-900/30 px-2.5 py-1 rounded-lg">
                                 <Ionicons name="star" size={14} color={theme.primary} />
@@ -98,28 +156,33 @@ export default function PointDetailScreen({ navigation, route }: Props) {
                     <View className="gap-2">
                         <Text className="text-lg font-bold" style={{ color: theme.foreground }}>About</Text>
                         <Text className="leading-relaxed" style={{ color: theme.mutedForeground }}>
-                            Discover the hidden trails of Mossy Falls, a serene nature reserve known for its bioluminescent flora and ancient limestone caves. This destination offers a unique blend of natural beauty and spiritual tranquility...
-                            {!isReadMore && <Text onPress={() => setIsReadMore(true)} className="font-bold" style={{ color: theme.primary }}> Read more</Text>}
-                            {isReadMore && <Text> The cave system features stunning rock formations and is a place of worship for many locals. Visitors are encouraged to dress modestly and respect the sacred atmosphere.</Text>}
+                            {point.description || "No description available."}
+                            {!isReadMore && point.history && <Text onPress={() => setIsReadMore(true)} className="font-bold" style={{ color: theme.primary }}> Read more</Text>}
+                            {isReadMore && <Text> {point.history}</Text>}
                         </Text>
                     </View>
 
                     {/* Location Map Preview */}
                     <View className="gap-3">
                         <Text className="text-lg font-bold" style={{ color: theme.foreground }}>Location</Text>
-                        <TouchableOpacity className="relative h-48 rounded-2xl overflow-hidden bg-muted/20">
+                        <TouchableOpacity
+                            onPress={openInGoogleMaps}
+                            className="relative h-48 rounded-3xl overflow-hidden bg-muted/20 border"
+                            style={{ borderColor: theme.border }}
+                        >
                             <Image
-                                source={{ uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuBZZUY6Flmba_HEvAt4ainR9mU1Ih15CJYknjySCAY6HXreso2wZR4ulo-6AMHb7ZNGvHf3VSESxWVXMS5FcMwZtcrzfAfGnjVhV4WobVpcH1DN7XlsW948gScKtZF3ojUDUjCecJJ068oUFB_CMTDo2Oq8ggrJi7gZh9dV0Yh7X58OWkV2R-pXfiLwFvvJkL0OFUTCS_XbXix3pOeyvLiaj0TscMR7yGI2Qex9n1guvRUn84bSn1GDq7uaFrjzCsM8m421NJYC-EZ1" }}
-                                className="w-full h-full object-cover grayscale opacity-50"
+                                source={{ uri: `https://maps.googleapis.com/maps/api/staticmap?center=${point.latitude},${point.longitude}&zoom=15&size=600x300&markers=color:red%7C${point.latitude},${point.longitude}&key=YOUR_API_KEY` }}
+                                className="w-full h-full object-cover"
                             />
-                            <View className="absolute inset-0 items-center justify-center">
-                                <View className="bg-primary p-3 rounded-full shadow-lg border-2 border-white">
-                                    <Ionicons name="map" size={24} color="white" />
+                            {/* Overlay if image fails or for styling */}
+                            <View className="absolute inset-0 bg-black/10 items-center justify-center">
+                                <View className="bg-primary p-4 rounded-full shadow-lg border-4 border-white">
+                                    <Ionicons name="location" size={28} color="white" />
                                 </View>
                             </View>
-                            <View className="absolute bottom-3 right-3 bg-white/90 dark:bg-slate-800/90 px-3 py-1.5 rounded-lg flex-row items-center gap-1.5 shadow-sm">
-                                <Ionicons name="expand" size={14} color={theme.foreground} />
-                                <Text className="text-xs font-bold" style={{ color: theme.foreground }}>Expand</Text>
+                            <View className="absolute bottom-4 right-4 bg-white/90 dark:bg-slate-800/90 px-4 py-2 rounded-xl flex-row items-center gap-2 shadow-sm">
+                                <Ionicons name="map-outline" size={16} color={theme.primary} />
+                                <Text className="text-xs font-bold" style={{ color: theme.foreground }}>Open in Maps</Text>
                             </View>
                         </TouchableOpacity>
                     </View>

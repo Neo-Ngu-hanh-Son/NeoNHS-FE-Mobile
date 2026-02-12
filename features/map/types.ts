@@ -58,7 +58,7 @@ export interface MapPoint {
   };
 }
 
-export type AttractionStatus = 'OPEN' | 'CLOSED';
+export type AttractionStatus = 'OPEN' | 'CLOSED' | 'MAINTENANCE' | 'TEMPORARILY_CLOSED';
 
 export interface Attraction {
   id: string;
