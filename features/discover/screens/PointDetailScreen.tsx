@@ -90,7 +90,7 @@ export default function PointDetailScreen({ navigation, route }: Props) {
         return (
             <View className="flex-1 items-center justify-center p-5" style={{ backgroundColor: theme.background }}>
                 <Text className="text-xl font-bold mb-4" style={{ color: theme.foreground }}>Point not found</Text>
-                <Button onPress={() => navigation.goBack()}>Go Back</Button>
+                <Button onPress={() => navigation.goBack()}><Text>Go Back</Text></Button>
             </View>
         );
     }
@@ -98,67 +98,90 @@ export default function PointDetailScreen({ navigation, route }: Props) {
     return (
         <View className="flex-1" style={{ backgroundColor: theme.background }}>
             <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
-                {/* Hero Image */}
-                <View className="relative h-[400px]">
+                {/* Hero Image / Header */}
+                <View className="relative h-[450px]">
                     <Image
                         source={{ uri: point.thumbnailUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuB3Ia_EuMeNQ959XrpwY2a1J_TuVJ291xVgqM8xsvUJdodBE7LCnMIA0x-ghOu4lbre-GSjYW13HzY2kLERvBawPRSZpjREaWbILuLpEz2u4Z1UV3VB_cvk4wjtzFiPQWOag9LoI7TPaV9SXrQDmMqJAG3T0ESdAJ2tbESgWdgcV_UMKQLzTe6YywP2RWr_F2LY2mTnUf2fTCWzLxRapDORR6G94zVmM0k1OPeYk9bHR3Hj9yzvwDSeqpLPTHgf4UaOlwNkg75KxtAt" }}
                         className="w-full h-full object-cover"
                     />
+                    <View className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/80 to-transparent" />
                     <View className="absolute top-12 left-0 right-0 px-4 flex-row justify-between items-center">
                         <TouchableOpacity
                             onPress={() => navigation.goBack()}
-                            className="w-10 h-10 items-center justify-center bg-black/30 rounded-full"
+                            className="w-12 h-12 items-center justify-center bg-white/20 dark:bg-black/20 backdrop-blur-md rounded-2xl border border-white/30"
                         >
                             <Ionicons name="arrow-back" size={24} color="white" />
                         </TouchableOpacity>
                         <View className="flex-row gap-3">
                             <TouchableOpacity
                                 onPress={() => setIsFavorite(!isFavorite)}
-                                className="w-10 h-10 items-center justify-center bg-black/30 rounded-full"
+                                className="w-12 h-12 items-center justify-center bg-white/20 dark:bg-black/20 backdrop-blur-md rounded-2xl border border-white/30"
                             >
-                                <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={20} color={isFavorite ? "#ef4444" : "white"} />
+                                <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={22} color={isFavorite ? "#f43f5e" : "white"} />
                             </TouchableOpacity>
                             <TouchableOpacity
                                 onPress={onShare}
-                                className="w-10 h-10 items-center justify-center bg-black/30 rounded-full"
+                                className="w-12 h-12 items-center justify-center bg-white/20 dark:bg-black/20 backdrop-blur-md rounded-2xl border border-white/30"
                             >
-                                <Ionicons name="share-outline" size={20} color="white" />
+                                <Ionicons name="share-outline" size={22} color="white" />
                             </TouchableOpacity>
                         </View>
                     </View>
-                    <View className="absolute bottom-6 left-4">
-                        <View className="bg-primary px-3 py-1.5 rounded-full flex-row items-center gap-1.5">
-                            <Ionicons name="checkmark-circle-outline" size={14} color="white" />
-                            <Text className="text-white text-[10px] font-bold uppercase tracking-wider">Open Now</Text>
+
+                    <View className="absolute bottom-10 left-6 right-6">
+                        <View className="bg-primary/95 self-start px-3 py-1 rounded-lg mb-3">
+                            <Text className="text-white text-[10px] font-black uppercase tracking-widest">{point.type || 'LANDMARK'}</Text>
+                        </View>
+                        <Text className="text-4xl font-black text-white leading-[42px] mb-2">{point.name}</Text>
+                        <View className="flex-row items-center gap-4">
+                            <View className="flex-row items-center gap-1.5">
+                                <Ionicons name="star" size={16} color="#fbbf24" />
+                                <Text className="text-white font-bold text-sm">4.8 (1.2k)</Text>
+                            </View>
+                            <View className="w-1 h-1 rounded-full bg-white/40" />
+                            <View className="flex-row items-center gap-1.5">
+                                <Ionicons name="walk" size={16} color="white" />
+                                <Text className="text-white font-medium text-sm">15 mins away</Text>
+                            </View>
                         </View>
                     </View>
                 </View>
 
-                <View className="px-5 py-6 space-y-8">
-                    {/* Header Info */}
-                    <View>
-                        <View className="flex-row justify-between items-start mb-2">
-                            <Text className="text-3xl font-bold tracking-tight pr-4 flex-1" style={{ color: theme.foreground }}>
-                                {point.name}
-                            </Text>
-                            <View className="flex-row items-center gap-1 bg-green-50 dark:bg-green-900/30 px-2.5 py-1 rounded-lg">
-                                <Ionicons name="star" size={14} color={theme.primary} />
-                                <Text className="text-sm font-bold" style={{ color: theme.primary }}>4.8</Text>
+                <View className="px-5 py-8 space-y-10">
+                    {/* Quick Stats Info Bar */}
+                    <View className="flex-row justify-between bg-card p-5 rounded-[28px] border shadow-sm" style={{ borderColor: theme.border }}>
+                        <View className="items-center gap-1 flex-1">
+                            <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center mb-1">
+                                <Ionicons name="time-outline" size={20} color={theme.primary} />
                             </View>
+                            <Text className="text-[10px] uppercase font-bold tracking-tighter opacity-50" style={{ color: theme.foreground }}>Duration</Text>
+                            <Text className="text-sm font-bold" style={{ color: theme.foreground }}>{point.estTimeSpent || 30} mins</Text>
                         </View>
-                        <View className="flex-row items-center gap-2">
-                            <Ionicons name="location-outline" size={16} color={theme.mutedForeground} />
-                            <Text className="text-sm" style={{ color: theme.mutedForeground }}>15 minutes walk from your current location</Text>
+                        <View className="w-px h-10 bg-border self-center" />
+                        <View className="items-center gap-1 flex-1">
+                            <View className="w-10 h-10 rounded-full bg-orange-500/10 items-center justify-center mb-1">
+                                <Ionicons name="flash-outline" size={20} color="#f97316" />
+                            </View>
+                            <Text className="text-[10px] uppercase font-bold tracking-tighter opacity-50" style={{ color: theme.foreground }}>Difficulty</Text>
+                            <Text className="text-sm font-bold" style={{ color: theme.foreground }}>Moderate</Text>
+                        </View>
+                        <View className="w-px h-10 bg-border self-center" />
+                        <View className="items-center gap-1 flex-1">
+                            <View className="w-10 h-10 rounded-full bg-teal-500/10 items-center justify-center mb-1">
+                                <Ionicons name="cloud-outline" size={20} color="#14b8a6" />
+                            </View>
+                            <Text className="text-[10px] uppercase font-bold tracking-tighter opacity-50" style={{ color: theme.foreground }}>Vibe</Text>
+                            <Text className="text-sm font-bold" style={{ color: theme.foreground }}>Spiritual</Text>
                         </View>
                     </View>
 
                     {/* About */}
-                    <View className="gap-2">
-                        <Text className="text-lg font-bold" style={{ color: theme.foreground }}>About</Text>
-                        <Text className="leading-relaxed" style={{ color: theme.mutedForeground }}>
+                    <View className="gap-3">
+                        <Text className="text-xl font-black tracking-tight" style={{ color: theme.foreground }}>Overview</Text>
+                        <Text className="leading-relaxed text-[15px]" style={{ color: theme.mutedForeground }}>
                             {point.description || "No description available."}
-                            {!isReadMore && point.history && <Text onPress={() => setIsReadMore(true)} className="font-bold" style={{ color: theme.primary }}> Read more</Text>}
-                            {isReadMore && <Text> {point.history}</Text>}
+                            {!isReadMore && point.history && <Text onPress={() => setIsReadMore(true)} className="font-bold underline" style={{ color: theme.primary }}> Read about history</Text>}
+                            {isReadMore && <Text>{"\n\n"}{point.history}</Text>}
                         </Text>
                     </View>
 

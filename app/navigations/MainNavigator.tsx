@@ -13,7 +13,6 @@ import ArrivalConfirmationScreen from "@/features/discover/screens/ArrivalConfir
 import AudioGuideScreen from "@/features/discover/screens/AudioGuideScreen";
 import { MainStackParamList } from "./NavigationParamTypes";
 
-
 const Stack = createStackNavigator<MainStackParamList>();
 
 export default function MainNavigator() {
