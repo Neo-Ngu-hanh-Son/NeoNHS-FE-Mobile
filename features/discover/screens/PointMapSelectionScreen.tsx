@@ -134,19 +134,12 @@ export default function PointMapSelectionScreen({ navigation, route }: Props) {
 
                     <View className="flex-row gap-4">
                         <TouchableOpacity
-                            onPress={() => navigation.navigate("PointDetail", { pointId })}
-                            className="flex-1 bg-primary h-14 rounded-2xl items-center justify-center shadow-lg shadow-primary/20"
-                        >
-                            <Text className="text-white font-bold text-lg">View Destination</Text>
-                        </TouchableOpacity>
-                        {/* <SafeAreaView> */}
-                        <TouchableOpacity
                             onPress={() => navigation.navigate("ActiveNavigation", { pointId })}
-                            className="w-14 h-14 bg-teal-500 items-center justify-center rounded-2xl shadow-lg shadow-teal-500/20"
+                            className="flex-1 bg-primary h-14 rounded-2xl items-center justify-center shadow-lg shadow-primary/20 flex-row gap-3"
                         >
                             <Ionicons name="location" size={24} color="white" />
+                            <Text className="text-white font-bold text-lg">Get Directions</Text>
                         </TouchableOpacity>
-                        {/* </SafeAreaView> */}
                     </View>
                 </View>
             </View>

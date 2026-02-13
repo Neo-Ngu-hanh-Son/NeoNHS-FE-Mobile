@@ -1,9 +1,10 @@
-import React, { useState } from "react";
-import { View, TouchableOpacity, ScrollView, Dimensions } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { View, TouchableOpacity, ScrollView, Dimensions, Image, ImageBackground } from "react-native";
 import { Audio, AVPlaybackStatus } from "expo-av";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { StackScreenProps } from "@react-navigation/stack";
+import { useFocusEffect } from "@react-navigation/native";
 
 import { Text } from "@/components/ui/text";
 import { useTheme } from "@/app/providers/ThemeProvider";
@@ -12,7 +13,7 @@ import { MainStackParamList } from "@/app/navigations/NavigationParamTypes";
 import { discoverService } from "../services/discoverServices";
 import { MapPoint } from "../../map/types";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 
 type Props = StackScreenProps<MainStackParamList, "AudioGuide">;
 
@@ -28,6 +29,18 @@ export default function AudioGuideScreen({ navigation, route }: Props) {
     const [duration, setDuration] = useState(0);
     const [point, setPoint] = useState<MapPoint | null>(null);
     const [loading, setLoading] = useState(true);
+
+    // --- Strict Lifecycle: Stop Audio on Leave ---
+    useFocusEffect(
+        useCallback(() => {
+            return () => {
+                if (sound) {
+                    console.log("Unloading sound as screen is focused out");
+                    sound.unloadAsync();
+                }
+            };
+        }, [sound])
+    );
 
     const onPlaybackStatusUpdate = (status: AVPlaybackStatus) => {
         if (status.isLoaded) {
@@ -54,7 +67,7 @@ export default function AudioGuideScreen({ navigation, route }: Props) {
         }
     };
 
-    React.useEffect(() => {
+    useEffect(() => {
         const fetchPoint = async () => {
             setLoading(true);
             try {
@@ -72,12 +85,6 @@ export default function AudioGuideScreen({ navigation, route }: Props) {
             }
         };
         fetchPoint();
-
-        return () => {
-            if (sound) {
-                sound.unloadAsync();
-            }
-        };
     }, [pointId]);
 
     const handlePlayPause = async () => {
@@ -126,119 +133,106 @@ export default function AudioGuideScreen({ navigation, route }: Props) {
     }
 
     return (
-        <View className="flex-1" style={{ backgroundColor: theme.background }}>
-            {/* Header */}
-            <SafeAreaView edges={["top"]} className="px-6 py-2 flex-row items-center justify-between z-10">
-                <TouchableOpacity
-                    onPress={() => navigation.goBack()}
-                    className="w-10 h-10 items-center justify-center bg-white dark:bg-slate-800 rounded-full shadow-sm"
-                    style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 }}
-                >
-                    <Ionicons name="arrow-back" size={24} color={theme.foreground} />
-                </TouchableOpacity>
-                <Text className="text-lg font-bold tracking-tight" style={{ color: theme.foreground }}>{point?.name || "Audio Guide"}</Text>
-                <View className="w-10" />
-            </SafeAreaView>
-
-            <View className="flex-1 flex-col items-center justify-center px-8">
-                {/* Visualizer / Play Button Area */}
-                <View className="relative w-64 h-64 items-center justify-center mb-10">
-                    {/* Concentric Circles Simulation */}
-                    <View className="absolute inset-0 rounded-full border border-primary/20 scale-[1.05]" style={{ borderStyle: "dashed" }} />
-                    <View className="absolute inset-0 rounded-full border border-primary/10 scale-[0.85]" />
-                    <View className="absolute inset-0 rounded-full border border-primary/20 scale-[0.70]" />
-
+        <ImageBackground
+            source={{ uri: point?.thumbnailUrl }}
+            className="flex-1"
+            blurRadius={20}
+        >
+            <View className="flex-1 bg-black/60">
+                {/* Header */}
+                <SafeAreaView edges={["top"]} className="px-6 py-2 flex-row items-center justify-between z-10">
                     <TouchableOpacity
-                        onPress={handlePlayPause}
-                        disabled={!sound}
-                        className={`w-32 h-32 rounded-full items-center justify-center shadow-xl z-20 ${!sound ? 'bg-slate-300' : 'bg-primary shadow-primary/30'}`}
+                        onPress={() => navigation.goBack()}
+                        className="w-12 h-12 items-center justify-center bg-white/20 backdrop-blur-md rounded-2xl border border-white/20"
                     >
-                        <Ionicons
-                            name={isPlaying ? "pause" : "play"}
-                            size={48}
-                            color="white"
-                            style={!isPlaying ? { marginLeft: 6 } : {}}
-                        />
+                        <Ionicons name="arrow-back" size={24} color="white" />
                     </TouchableOpacity>
-                </View>
-
-                {/* Progress Bar */}
-                <View className="w-full mb-10">
-                    <View className="relative h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                        <View className="absolute top-0 left-0 h-full bg-primary rounded-full" style={{ width: `${progress}%` }} />
+                    <View className="items-center">
+                        <Text className="text-[10px] font-black text-white/60 uppercase tracking-widest mb-0.5">Audio Guide</Text>
+                        <Text className="text-lg font-bold text-white tracking-tight">{point?.name}</Text>
                     </View>
-                    <View className="absolute top-2 w-4 h-4 bg-primary border-4 border-white dark:border-slate-900 rounded-full shadow-md" style={{ left: `${progress}%`, marginLeft: -8 }} />
+                    <TouchableOpacity className="w-12 h-12 items-center justify-center bg-white/20 backdrop-blur-md rounded-2xl border border-white/20">
+                        <Ionicons name="ellipsis-horizontal" size={24} color="white" />
+                    </TouchableOpacity>
+                </SafeAreaView>
 
-                    <View className="flex-row justify-between mt-4">
-                        <Text className="text-xs font-medium text-slate-500 dark:text-slate-400">{formatTime(position)}</Text>
-                        <Text className="text-xs font-medium text-slate-500 dark:text-slate-400">{formatTime(duration)}</Text>
-                    </View>
-                </View>
+                <View className="flex-1 flex-col items-center justify-center px-10">
+                    {/* Visualizer / Thumbnail Area */}
+                    <View className="relative w-72 h-72 items-center justify-center mb-12">
+                        <View className="absolute inset-0 rounded-[48px] overflow-hidden border-2 border-white/20 rotate-6" />
+                        <Image
+                            source={{ uri: point?.thumbnailUrl }}
+                            className="w-full h-full rounded-[48px] border-4 border-white/40 shadow-2xl"
+                        />
 
-                {/* Controls */}
-                <View className="flex-row items-center justify-between w-full max-w-[280px]">
-                    <View className="items-center gap-2">
                         <TouchableOpacity
-                            onPress={() => handleSkip(-15000)}
-                            className="w-12 h-12 bg-white dark:bg-slate-800 rounded-full shadow-sm items-center justify-center"
+                            onPress={handlePlayPause}
+                            className="absolute bottom-[-24px] w-20 h-20 bg-primary rounded-full items-center justify-center shadow-2xl shadow-primary/40 border-4 border-white"
                         >
-                            <Ionicons name="play-back-outline" size={20} color={theme.foreground} />
+                            <Ionicons
+                                name={isPlaying ? "pause" : "play"}
+                                size={32}
+                                color="white"
+                                style={!isPlaying ? { marginLeft: 4 } : {}}
+                            />
                         </TouchableOpacity>
-                        <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">-15S</Text>
                     </View>
 
-                    <View className="items-center gap-2">
+                    {/* Progress Bar */}
+                    <View className="w-full mb-12">
+                        <View className="relative h-2 w-full bg-white/20 rounded-full overflow-hidden">
+                            <View className="absolute top-0 left-0 h-full bg-white rounded-full" style={{ width: `${progress}%` }} />
+                        </View>
+                        <View className="flex-row justify-between mt-4">
+                            <Text className="text-xs font-bold text-white/60">{formatTime(position)}</Text>
+                            <Text className="text-xs font-bold text-white/60">{formatTime(duration)}</Text>
+                        </View>
+                    </View>
+
+                    {/* Controls */}
+                    <View className="flex-row items-center justify-between w-full">
                         <TouchableOpacity
                             onPress={handleSpeedChange}
-                            className="w-12 h-12 bg-white dark:bg-slate-800 rounded-full shadow-sm items-center justify-center"
+                            className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl items-center justify-center border border-white/10"
                         >
-                            <Text className="text-sm font-bold" style={{ color: theme.foreground }}>{playbackSpeed}</Text>
+                            <Text className="text-sm font-black text-white">{playbackSpeed}</Text>
                         </TouchableOpacity>
-                        <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">SPEED</Text>
-                    </View>
 
-                    <View className="items-center gap-2">
-                        <TouchableOpacity
-                            onPress={() => handleSkip(15000)}
-                            className="w-12 h-12 bg-white dark:bg-slate-800 rounded-full shadow-sm items-center justify-center"
-                        >
-                            <Ionicons name="play-forward-outline" size={20} color={theme.foreground} />
+                        <View className="flex-row items-center gap-8">
+                            <TouchableOpacity onPress={() => handleSkip(-15000)}>
+                                <Ionicons name="refresh-outline" size={32} color="white" style={{ transform: [{ scaleX: -1 }] }} />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => handleSkip(15000)}>
+                                <Ionicons name="refresh-outline" size={32} color="white" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <TouchableOpacity className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl items-center justify-center border border-white/10">
+                            <Ionicons name="share-social-outline" size={24} color="white" />
                         </TouchableOpacity>
-                        <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">+15S</Text>
                     </View>
                 </View>
-            </View>
 
-            {/* Content Section (BottomSheet-like) */}
-            <View className="bg-white dark:bg-slate-900 rounded-t-[32px] shadow-2xl px-6 pt-8 pb-12 h-[45%] border-t border-slate-100 dark:border-slate-800">
-                <View className="w-12 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full self-center mb-6" />
-                <Text className="text-xl font-bold mb-4" style={{ color: theme.foreground }}>The History of {point?.name}</Text>
-
-                <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-                    <Text className="leading-relaxed text-[15px] mb-4" style={{ color: theme.mutedForeground }}>
-                        {point?.description || "No description available for this point."}
-                    </Text>
-
-                    <View className="bg-primary/5 dark:bg-primary/20 border-l-4 border-primary rounded-xl p-4 my-2">
-                        <Text className="italic" style={{ color: theme.primary }}>
-                            Statues of Buddhist deities line the walls, watching over pilgrims. The air here is cooler, filled with the scent of incense and the echoes of prayers from centuries past.
-                        </Text>
+                {/* Content Section (Pull up like) */}
+                <View className="bg-white/95 dark:bg-slate-900/95 rounded-t-[48px] px-8 pt-8 pb-12 h-[35%] border-t border-white/20">
+                    <View className="w-16 h-1.5 bg-slate-300 dark:bg-slate-800 rounded-full self-center mb-8" />
+                    <View className="flex-row justify-between items-center mb-6">
+                        <Text className="text-2xl font-black tracking-tight" style={{ color: theme.foreground }}>Story & History</Text>
+                        <TouchableOpacity className="bg-primary/10 px-3 py-1.5 rounded-xl">
+                            <Text className="text-xs font-bold text-primary">Transcript</Text>
+                        </TouchableOpacity>
                     </View>
 
-                    <Text className="leading-relaxed text-[15px] mt-4" style={{ color: theme.mutedForeground }}>
-                        Historically, this cave served as a secret base for revolutionaries during wartime. The natural fortifications provided safety and a vantage point for those protecting the heritage of the region.
-                    </Text>
-                </ScrollView>
+                    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+                        <Text className="leading-relaxed text-lg font-medium opacity-80" style={{ color: theme.foreground }}>
+                            {point?.description || "No description available for this point."}
+                        </Text>
+                        <Text className="leading-relaxed text-lg font-medium opacity-80 mt-4" style={{ color: theme.foreground }}>
+                            {point?.history || "Steeped in centuries of tradition, this place whispers tales of ancient kings and spiritual masters who once sought solace within these stone walls."}
+                        </Text>
+                    </ScrollView>
+                </View>
             </View>
-
-            {/* Language Selection Overlay (Floating) */}
-            <TouchableOpacity className="absolute bottom-12 right-6 flex-row items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 shadow-lg rounded-full border border-slate-100 dark:border-slate-800">
-                <Ionicons name="language-outline" size={18} color={theme.mutedForeground} />
-                <Text className="text-sm font-bold" style={{ color: theme.foreground }}>EN</Text>
-                <Ionicons name="chevron-down" size={14} color={theme.mutedForeground} />
-            </TouchableOpacity>
-
-            <View className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full opacity-30" />
-        </View>
+        </ImageBackground>
     );
 }
