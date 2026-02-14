@@ -1,5 +1,6 @@
 import { mapEndpoints } from "./map.api";
 import { discoverEndpoints } from "./discover.api";
+import { eventEndpoints } from "./events.api";
 
 /**
  * Authentication Endpoints
@@ -63,5 +64,6 @@ export const endpoints = {
     map: mapEndpoints,
     transactions: transactionEndpoints,
     discover: discoverEndpoints,
+    events: eventEndpoints,
 } as const;
 
