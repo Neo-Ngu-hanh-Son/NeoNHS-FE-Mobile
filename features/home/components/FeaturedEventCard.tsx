@@ -23,7 +23,7 @@ export default function FeaturedEventCard({
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.9}
-      className="mx-4 rounded-2xl overflow-hidden h-56"
+      className="mx-4 rounded-2xl overflow-hidden h-80"
     >
       <ImageBackground
         source={{ uri: imageUrl }}

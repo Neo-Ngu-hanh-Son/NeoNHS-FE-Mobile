@@ -1,3 +1,5 @@
+import { mapEndpoints } from "./map.api";
+import { discoverEndpoints } from "./discover.api";
 
 /**
  * Authentication Endpoints
@@ -6,7 +8,7 @@ export const authEndpoints = {
     login: () => `auth/login`,
     register: () => `auth/register`,
     logout: () => `auth/logout`,
-    refreshToken: () => `auth/refresh`,
+    refreshToken: () => `auth/refresh-token`,
     forgotPassword: () => `auth/forgot-password`,
     resetPassword: () => `auth/reset-password`,
     verifyEmail: () => `auth/verify-email`,
@@ -20,8 +22,8 @@ export const authEndpoints = {
  */
 export const userEndpoints = {
     getProfile: () => `users/profile`,
-    updateProfile: () => `users/profile`,
-    changePassword: () => `users/change-password`,
+    updateProfile: (id: string | number) => `users/update-profile/${id}`,
+    changePassword: () => `auth/change-password`,
     getUserById: (id: string | number) => `users/${id}`,
     getUsers: () => `users`,
     deleteUser: (id: string | number) => `users/${id}`,
@@ -41,8 +43,13 @@ export const homeEndpoints = {
  */
 export const profileEndpoints = {
     getProfile: () => `profile`,
-    updateProfile: () => `profile`,
-    uploadAvatar: () => `profile/avatar`,
+    updateProfile: (id: string | number) => `update-profile/${id}`,
+    // uploadAvatar: () => `profile/avatar`,
+} as const;
+
+export const transactionEndpoints = {
+    getTransactions: () => `transactions`,
+    getTransactionDetails: (id: string) => `transactions/${id}`,
 } as const;
 
 /**
@@ -53,5 +60,8 @@ export const endpoints = {
     users: userEndpoints,
     home: homeEndpoints,
     profile: profileEndpoints,
+    map: mapEndpoints,
+    transactions: transactionEndpoints,
+    discover: discoverEndpoints,
 } as const;
 

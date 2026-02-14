@@ -48,7 +48,7 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
         [
           {
             text: "Continue",
-            onPress: () => navigation.navigate("ForgotPasswordOtp"),
+            onPress: () => navigation.navigate("EnterOtp", { email }),
           },
         ]
       );

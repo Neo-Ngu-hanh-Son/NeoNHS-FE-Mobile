@@ -1,14 +1,10 @@
 import 'react-native-gesture-handler';
 import RootNavigator from './navigations/RootNavigator';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Providers } from './providers/Providers';
 import '../global.css';
 import { PortalHost } from '@rn-primitives/portal';
-import {
-  configureReanimatedLogger,
-  ReanimatedLogLevel,
-} from 'react-native-reanimated';
+import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 
 import { useTheme } from './providers/ThemeProvider';
 
