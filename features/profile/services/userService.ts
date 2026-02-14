@@ -4,7 +4,7 @@
  */
 
 import type { ApiResponse } from "@/services/api/types";
-import { endpoints } from "../../../services/api/endpoints";
+import { endpoints } from "../../../services/api/endpoints/endpoints";
 import { UserProfile, UpdateProfileRequest } from "../../../services/api/examples";
 import { apiClient } from "@/services/api/client";
 import { uploadImageToCloudinary } from "@/services/cloudinary";
@@ -39,5 +39,9 @@ export const userService = {
         } as any;
 
         return await uploadImageToCloudinary(fileToUpload);
+    },
+
+    async changePassword(data: any): Promise<ApiResponse<any>> {
+        return apiClient.post<any>(endpoints.users.changePassword(), data);
     }
 };

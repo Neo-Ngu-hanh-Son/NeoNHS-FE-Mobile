@@ -1,16 +1,9 @@
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Image,
-  Alert,
-  StatusBar,
-} from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { useNavigation, CommonActions } from '@react-navigation/native';
-import type { StackNavigationProp } from '@react-navigation/stack';
+import { CommonActions, CompositeScreenProps } from '@react-navigation/native';
+import type { StackScreenProps } from '@react-navigation/stack';
+import { StatusBar } from 'expo-status-bar';
 
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
@@ -19,12 +12,18 @@ import { useAuth } from '@/features/auth/context/AuthContext';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { logger } from '@/utils/logger';
-import type { RootStackParamList } from '@/app/navigations/NavigationParamTypes';
+import type {
+  MainStackParamList,
+  RootStackParamList,
+  TabsStackParamList,
+} from '@/app/navigations/NavigationParamTypes';
 
-type ProfileNavigationProp = StackNavigationProp<RootStackParamList>;
+type ProfileNavigationProp = CompositeScreenProps<
+  StackScreenProps<TabsStackParamList, 'Profile'>,
+  StackScreenProps<RootStackParamList>
+>;
 
-export default function ProfileScreen() {
-  const navigation = useNavigation<ProfileNavigationProp>();
+export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
   const { user, isAuthenticated, logout } = useAuth();
   const { isDarkColorScheme, toggleColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
@@ -57,7 +56,7 @@ export default function ProfileScreen() {
   };
 
   const handleEditProfile = () => {
-    navigation.navigate('UpdateAccount');
+    navigation.navigate('Main', { screen: 'UpdateAccount' });
   };
 
   const ActionCard = ({ title, desc, onPress, rightIcon }: any) => (
@@ -105,7 +104,7 @@ export default function ProfileScreen() {
         styles.container,
         { backgroundColor: isDarkColorScheme ? theme.background : THEME.light.primary },
       ]}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar style="light" />
 
       {/* Header Area */}
       <SafeAreaView
@@ -160,11 +159,25 @@ export default function ProfileScreen() {
             </View>
           </View>
 
+
+          {/* Admin/Vendor Actions */}
+          {(user.role === 'ADMIN' || user.role === 'VENDOR') && (
+            <View style={{ marginBottom: 20 }}>
+              <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>MANAGEMENT</Text>
+              <ActionCard
+                title="Verify Ticket"
+                desc="Scan QR code to verify customer tickets"
+                rightIcon={<MaterialIcons name="qr-code-scanner" size={20} color={theme.primary} />}
+                onPress={() => navigation.navigate('Main', { screen: 'TicketVerification' })}
+              />
+            </View>
+          )}
+
           {/* Các mục chức năng */}
           <ActionCard
             title="Your Order"
             desc="View your order and transaction history here"
-            onPress={() => {}}
+            onPress={() => navigation.navigate('Main', { screen: 'TransactionHistory' })}
           />
           <ActionCard
             title="Payment Method"
@@ -181,6 +194,18 @@ export default function ProfileScreen() {
             desc="Find the best answer to your question"
             onPress={() => {}}
           />
+
+          <View style={styles.settingsSection}>
+            <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>SECURITY</Text>
+            <ActionCard
+              title="Change Password"
+              desc="Update your account password for better security"
+              rightIcon={
+                <Ionicons name="chevron-forward" size={16} color={theme.mutedForeground} />
+              }
+              onPress={() => navigation.navigate('Main', { screen: 'ChangePassword' })}
+            />
+          </View>
 
           <View style={styles.settingsSection}>
             <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>PREFERENCES</Text>

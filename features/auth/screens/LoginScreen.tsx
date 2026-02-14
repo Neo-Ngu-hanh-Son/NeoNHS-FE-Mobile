@@ -1,23 +1,25 @@
-import { useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
-
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Text } from '@/components/ui/text';
 import { Separator } from '@/components/ui/separator';
 import { IconButton } from '@/components/Buttons/IconButton';
 import { useTheme } from '@/app/providers/ThemeProvider';
+import { useModal } from '@/app/providers/ModalProvider';
 import { THEME } from '@/lib/theme';
 import { AuthStackParamList, RootStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { useAuth } from '../context/AuthContext';
 import AuthLayout from '../components/AuthLayout';
 import AppLink from '@/components/Navigator/AppLink';
 import LoginForm from '../components/LoginForm';
-import { GoogleSignin, isErrorWithCode, statusCodes } from '@react-native-google-signin/google-signin';
+import {
+  GoogleSignin,
+  isErrorWithCode,
+  statusCodes,
+} from '@react-native-google-signin/google-signin';
 import { logger } from '@/utils/logger';
+import LoadingOverlay from '@/components/Loader/LoadingOverlay';
 
 type LoginScreenProps = CompositeScreenProps<
   StackScreenProps<AuthStackParamList, 'Login'>,
@@ -27,6 +29,7 @@ type LoginScreenProps = CompositeScreenProps<
 export default function LoginScreen({ navigation }: LoginScreenProps) {
   const { login, loginWithGoogle, isLoading } = useAuth();
   const { isDarkColorScheme } = useTheme();
+  const { alert } = useModal();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
   const handleLogin = async (email: string, password: string) => {
@@ -38,11 +41,13 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       });
     } catch (error) {
       const errorMessage = (error as Error).message || '';
-
+      logger.error('[LoginScreen] Login failed:', errorMessage);
       // Check if account is not activated
-      if (errorMessage.toLowerCase().includes('not activated') ||
-        errorMessage.toLowerCase().includes('not verified')) {
-        Alert.alert(
+      if (
+        errorMessage.toLowerCase().includes('not activated') ||
+        errorMessage.toLowerCase().includes('not verified')
+      ) {
+        alert(
           'Email Not Verified',
           'Your account has not been verified yet. Please verify your email to continue.',
           [
@@ -59,10 +64,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         return;
       }
 
-      Alert.alert(
-        'Login Failed',
-        errorMessage || 'Unable to sign in. Please try again.'
-      );
+      alert('Login Failed', errorMessage || 'Unable to sign in. Please try again.');
     }
   };
 
@@ -88,10 +90,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       });
     } catch (error) {
       logger.error('[LoginScreen] Google login failed:', error);
-      Alert.alert(
-        'Google Login Failed',
-        'Unable to sign in with Google. Please try again.',
-      );
+      alert('Google Login Failed', 'Unable to sign in with Google. Please try again.');
     }
   };
 
