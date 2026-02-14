@@ -43,6 +43,7 @@ export type MainStackParamList = {
   ActiveNavigation: { pointId: string };
   ArrivalConfirmation: { pointId: string };
   AudioGuide: { pointId: string };
+  EventDetail: { eventId: string };
 };
 
 /**

@@ -11,6 +11,7 @@ import PointMapSelectionScreen from "@/features/discover/screens/PointMapSelecti
 import ActiveNavigationScreen from "@/features/discover/screens/ActiveNavigationScreen";
 import ArrivalConfirmationScreen from "@/features/discover/screens/ArrivalConfirmationScreen";
 import AudioGuideScreen from "@/features/discover/screens/AudioGuideScreen";
+import EventDetailScreen from "@/features/event/screens/EventDetailScreen";
 import { MainStackParamList } from "./NavigationParamTypes";
 
 const Stack = createStackNavigator<MainStackParamList>();
@@ -65,6 +66,11 @@ export default function MainNavigator() {
       <Stack.Screen
         name="AudioGuide"
         component={AudioGuideScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="EventDetail"
+        component={EventDetailScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
