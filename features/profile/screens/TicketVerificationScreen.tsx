@@ -8,6 +8,7 @@ import { THEME } from '@/lib/theme';
 import { transactionService } from '../services/transactionService';
 import LoadingOverlay from '@/components/Loader/LoadingOverlay';
 import * as ImagePicker from 'expo-image-picker';
+import { logger } from '@/utils/logger';
 import RNQRGenerator from 'rn-qr-generator';
 
 const { width, height } = Dimensions.get('window');
@@ -50,7 +51,7 @@ export default function TicketVerificationScreen() {
         setLoading(true);
 
         try {
-            console.log(`Bar code with type ${type} and data ${data} has been scanned!`);
+            logger.info(`Bar code with type ${type} and data ${data} has been scanned!`);
 
             // Clean the code if necessary (sometimes URLs are scanned)
             // Assuming the QR code contains the ticket code string directly
@@ -72,12 +73,12 @@ export default function TicketVerificationScreen() {
             }
 
         } catch (error: any) {
-            // console.error("Verification error:", error); not need
-            // Alert.alert(
-            //     "Error",
-            //     error.message || "Failed to verify ticket",
-            //     [{ text: "Scan Again", onPress: () => setScanned(false) }]
-            // );
+            logger.error("Verification error:", error);
+            Alert.alert(
+                "Error",
+                error.message || "Failed to verify ticket",
+                [{ text: "Scan Again", onPress: () => setScanned(false) }]
+            );
         } finally {
             setLoading(false);
         }
@@ -109,13 +110,13 @@ export default function TicketVerificationScreen() {
                         }
                     })
                     .catch(error => {
-                        console.error('QR detection error:', error);
+                        logger.error('QR detection error:', error);
                         Alert.alert('Error', 'Failed to detect QR code from image.');
                         setLoading(false);
                     });
             }
         } catch (error) {
-            console.error('Image picker error:', error);
+            logger.error('Image picker error:', error);
             Alert.alert('Error', 'Failed to pick image.');
             setLoading(false);
         }
