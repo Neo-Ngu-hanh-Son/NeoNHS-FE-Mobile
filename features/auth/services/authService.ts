@@ -35,15 +35,15 @@ export const authService = {
     /**
      * Logout user
      */
-    async logout(): Promise<ApiResponse<void>> {
-        return apiClient.post<void>(endpoints.auth.logout(), {}, { requiresAuth: false });
+    async logout(refreshToken: string): Promise<ApiResponse<void>> {
+        return apiClient.post<void>(endpoints.auth.logout(), { refreshToken }, { requiresAuth: false });
     },
 
     /**
      * Refresh authentication token
      */
-    async refreshToken(refreshToken: string): Promise<ApiResponse<{ token: string; refreshToken?: string }>> {
-        return apiClient.post<{ token: string; refreshToken?: string }>(
+    async refreshToken(refreshToken: string): Promise<ApiResponse<AuthResponse>> {
+        return apiClient.post<AuthResponse>(
             endpoints.auth.refreshToken(),
             { refreshToken },
             { requiresAuth: false }
@@ -68,7 +68,7 @@ export const authService = {
 
     async verifyOtp(email: string, otp: string): Promise<ApiResponse<void>> {
         return apiClient.post<void>(
-            'auth/verify',
+            endpoints.auth.verify(),
             { email, otp },
             { requiresAuth: false }
         );

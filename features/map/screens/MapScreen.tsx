@@ -1,146 +1,129 @@
-import { View, StyleSheet, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useState } from "react";
-import { Ionicons } from "@expo/vector-icons";
-import { StackScreenProps } from "@react-navigation/stack";
-import { WebView } from "react-native-webview";
+import { StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { StackScreenProps } from '@react-navigation/stack';
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { THEME } from '@/lib/theme';
+import { TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
+import { logger } from '@/utils/logger';
+import { MapPoint } from '../types';
+import PointDetailModal from '../components/PointDetailModal/PointDetailModal';
+import NHSMap, { NHSMapRef } from '../components/Map/NHSMap';
+import getPointOfAttraction from '../services/mapServices';
+import { NHS_ATTRACTION_ID } from '@/services/api/endpoints/map.api';
+import { useModal } from '@/app/providers/ModalProvider';
+import { useUserLocation } from '../hooks/useUserLocation';
+import { LocationPermissionBanner } from '../components/UserLocation';
+import { mapData } from '../data';
 
-import { Text } from "@/components/ui/text";
-import { Button } from "@/components/ui/button";
-import { useTheme } from "@/app/providers/ThemeProvider";
-import { THEME } from "@/lib/theme";
-import { TabsStackParamList } from "@/app/navigations/NavigationParamTypes";
-
-type MapScreenProps = StackScreenProps<TabsStackParamList, "Map">;
-
-// Demo URLs for WebView testing
-const DEMO_URLS = [
-  {
-    id: "openstreetmap",
-    name: "OpenStreetMap",
-    url: "https://www.openstreetmap.org/#map=15/16.0047/108.2628",
-  },
-  {
-    id: "pannellum",
-    name: "Pannellum",
-    url: "https://pannellum.org",
-  },
-  {
-    id: "virtualtour",
-    name: "Virtual Tour",
-    url: "https://photo-sphere-viewer.js.org/plugins/virtual-tour.html#virtualtourplugin",
-  },
-];
+type MapScreenProps = StackScreenProps<TabsStackParamList, 'Map'>;
 
 export default function MapScreen({ navigation }: MapScreenProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeUrl, setActiveUrl] = useState(DEMO_URLS[0]);
+  // Map state
+  const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [mapPoints, setMapPoints] = useState<MapPoint[]>(mapData.mapPoints);
+  const mapRef = useRef<NHSMapRef>(null);
+
+  // Modal helpers
+  const { alert } = useModal();
+
+  // User location tracking - auto-start on mount
+  const {
+    location: userLocation,
+    isTracking,
+    permissionStatus,
+    error: locationError,
+    isLoading: isLocationLoading,
+    startTracking,
+    stopTracking,
+    requestPermission,
+  } = useUserLocation({
+    autoStart: true, // Auto-start location tracking when entering map screen
+    updateInterval: 3000,
+    distanceInterval: 5,
+  });
+
+  // Fetch map points on mount
+  useEffect(() => {
+    async function fetchPoints() {
+      try {
+        const res = await getPointOfAttraction(NHS_ATTRACTION_ID);
+        setMapPoints(res.data);
+      } catch (error) {
+        logger.error('[MapScreen] Failed to fetch map points, using default map points:', error);
+      }
+    }
+    fetchPoints();
+  }, []);
+
+  // Cleanup location tracking on unmount
+  useEffect(() => {
+    return () => {
+      if (isTracking) {
+        stopTracking();
+      }
+    };
+  }, [isTracking, stopTracking]);
+
+  const handleMarkerPress = useCallback((point: MapPoint) => {
+    setSelectedPoint(point);
+    setModalVisible(true);
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setModalVisible(false);
+  }, []);
+
+  const handleNavigate = useCallback((point: MapPoint) => {
+    // TODO: Implement navigation to the point
+    logger.info('Navigate to:', point.name);
+    setModalVisible(false);
+  }, []);
+
+  /**
+   * Handle permission request from banner
+   */
+  const handleRequestPermission = useCallback(async () => {
+    const granted = await requestPermission();
+    if (granted) {
+      // Start tracking after permission granted
+      startTracking();
+    }
+  }, [requestPermission, startTracking]);
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.background }]}
-      edges={["top"]}
-    >
-      {/* Header */}
-      <View style={styles.header}>
-        <Text className="text-2xl font-bold" style={{ color: theme.foreground }}>
-          Map
-        </Text>
-        <Text className="text-sm mt-1" style={{ color: theme.mutedForeground }}>
-          WebView Performance Demo
-        </Text>
-      </View>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
+      {/* Permission banner - shows when permission needed or error */}
+      <LocationPermissionBanner
+        permissionStatus={permissionStatus}
+        onRequestPermission={handleRequestPermission}
+        error={locationError}
+      />
 
-      {/* URL Selector */}
-      <View style={styles.urlSelector}>
-        {DEMO_URLS.map((item) => (
-          <Button
-            key={item.id}
-            variant={activeUrl.id === item.id ? "default" : "outline"}
-            size="sm"
-            className="flex-1"
-            onPress={() => {
-              setIsLoading(true);
-              setActiveUrl(item);
-            }}
-          >
-            <Text
-              className="text-xs font-medium"
-              style={{
-                color: activeUrl.id === item.id ? theme.primaryForeground : theme.foreground,
-              }}
-            >
-              {item.name}
-            </Text>
-          </Button>
-        ))}
-      </View>
+      {/* Main map */}
+      <NHSMap
+        ref={mapRef}
+        onMarkerPress={handleMarkerPress}
+        selectedPointId={selectedPoint?.id ?? ''}
+        mapPoints={mapPoints}
+        userLocation={userLocation}
+        isLocationLoading={isLocationLoading}
+      />
 
-      {/* WebView Container */}
-      <View style={[styles.webviewContainer, { borderColor: theme.border }]}>
-        <WebView
-          source={{ uri: activeUrl.url }}
-          style={styles.webview}
-          onLoadStart={() => setIsLoading(true)}
-          onLoadEnd={() => setIsLoading(false)}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          startInLoadingState={true}
-          scalesPageToFit={true}
-          geolocationEnabled={true}
-          renderLoading={() => (
-            <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
-              <ActivityIndicator size="large" color={theme.primary} />
-              <Text className="mt-3" style={{ color: theme.mutedForeground }}>
-                Loading map...
-              </Text>
-            </View>
-          )}
-        />
-
-        {/* Loading Overlay */}
-        {isLoading && (
-          <View style={[styles.loadingOverlay, { backgroundColor: theme.background + "CC" }]}>
-            <ActivityIndicator size="large" color={theme.primary} />
-            <Text className="mt-3" style={{ color: theme.foreground }}>
-              Loading {activeUrl.name}...
-            </Text>
-          </View>
-        )}
-      </View>
-
-      {/* Quick Actions */}
-      <View style={styles.quickActions}>
-        <View style={styles.actionsRow}>
-          <View style={[styles.actionCard, { backgroundColor: theme.card }]}>
-            <Ionicons name="navigate-outline" size={20} color={theme.primary} />
-            <Text className="text-xs mt-1" style={{ color: theme.foreground }}>
-              Directions
-            </Text>
-          </View>
-          <View style={[styles.actionCard, { backgroundColor: theme.card }]}>
-            <Ionicons name="search-outline" size={20} color={theme.primary} />
-            <Text className="text-xs mt-1" style={{ color: theme.foreground }}>
-              Search
-            </Text>
-          </View>
-          <View style={[styles.actionCard, { backgroundColor: theme.card }]}>
-            <Ionicons name="bookmark-outline" size={20} color={theme.primary} />
-            <Text className="text-xs mt-1" style={{ color: theme.foreground }}>
-              Saved
-            </Text>
-          </View>
-          <View style={[styles.actionCard, { backgroundColor: theme.card }]}>
-            <Ionicons name="refresh-outline" size={20} color={theme.primary} />
-            <Text className="text-xs mt-1" style={{ color: theme.foreground }}>
-              Reload
-            </Text>
-          </View>
-        </View>
-      </View>
+      {/* Point detail modal */}
+      <PointDetailModal
+        point={selectedPoint}
+        visible={modalVisible}
+        onClose={handleCloseModal}
+        onNavigate={handleNavigate}
+        onViewDetails={() => {
+          logger.info('Not implemented yet');
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -148,57 +131,5 @@ export default function MapScreen({ navigation }: MapScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  urlSelector: {
-    flexDirection: "row",
-    paddingHorizontal: 16,
-    gap: 8,
-    marginBottom: 12,
-  },
-  webviewContainer: {
-    flex: 1,
-    marginHorizontal: 16,
-    borderRadius: 12,
-    overflow: "hidden",
-    borderWidth: 1,
-  },
-  webview: {
-    flex: 1,
-  },
-  loadingContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  loadingOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  quickActions: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  actionsRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  actionCard: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 10,
-    alignItems: "center",
   },
 });

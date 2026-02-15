@@ -2,6 +2,7 @@ import React from 'react';
 import { Modal, StyleSheet, View, ActivityIndicator } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { THEME } from '@/lib/theme';
+import { useTheme } from '@/app/providers/ThemeProvider';
 
 type LoadingOverlayProps = {
   visible: boolean;
@@ -13,7 +14,7 @@ const Spinner = React.memo(({ color }: { color: string }) => (
 ));
 
 export default function LoadingOverlay({ visible, message = 'Loading...' }: LoadingOverlayProps) {
-  const theme = THEME.light;
+  const theme = useTheme().isDarkColorScheme ? THEME.dark : THEME.light;
 
   return (
     <Modal transparent animationType="fade" visible={visible} statusBarTranslucent>

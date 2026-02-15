@@ -1,3 +1,6 @@
+import { mapEndpoints } from "./map.api";
+import { discoverEndpoints } from "./discover.api";
+import { eventEndpoints } from "./events.api";
 
 /**
  * Authentication Endpoints
@@ -6,7 +9,7 @@ export const authEndpoints = {
     login: () => `auth/login`,
     register: () => `auth/register`,
     logout: () => `auth/logout`,
-    refreshToken: () => `auth/refresh`,
+    refreshToken: () => `auth/refresh-token`,
     forgotPassword: () => `auth/forgot-password`,
     resetPassword: () => `auth/reset-password`,
     verifyEmail: () => `auth/verify-email`,
@@ -69,8 +72,11 @@ export const endpoints = {
     users: userEndpoints,
     home: homeEndpoints,
     profile: profileEndpoints,
+    map: mapEndpoints,
     transactions: transactionEndpoints,
     cart: cartEndpoints,
     payment: paymentEndpoints,
+    discover: discoverEndpoints,
+    events: eventEndpoints,
 } as const;
 

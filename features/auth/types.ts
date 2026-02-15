@@ -1,3 +1,5 @@
+import { TokenRefreshResult } from "@/services/api";
+
 export type UserRole = 'ADMIN' | 'VENDOR' | 'GUEST' | 'TOURIST' | string;
 
 /**
@@ -47,6 +49,7 @@ export interface RegisterData {
  */
 export interface AuthResponse {
     accessToken: string;
+    refreshToken: string;
     tokenType: string; // defaults to "Bearer"
     userInfo: UserInfo;
 }
@@ -56,7 +59,7 @@ export interface AuthResponse {
  */
 export interface AuthState {
     user: User | null;
-    token: string | null;
+    accessToken: string | null;
     refreshToken: string | null;
     isAuthenticated: boolean;
     isLoading: boolean;
@@ -70,7 +73,7 @@ export interface AuthContextValue extends AuthState {
     login: (credentials: LoginCredentials) => Promise<void>;
     register: (data: RegisterData) => Promise<void>;
     logout: () => Promise<void>;
-    refreshAuth: () => Promise<void>;
+    refreshAuth: (result: TokenRefreshResult) => Promise<void>;
     updateUser: (user: Partial<User>) => void;
     loginWithGoogle: (idToken: string) => Promise<void>;
 }
