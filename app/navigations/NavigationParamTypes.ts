@@ -24,6 +24,7 @@ export type TabsStackParamList = {
   Map: undefined;
   Bookings: undefined;
   Profile: undefined;
+  TestCart: undefined;
 };
 
 /**
@@ -44,6 +45,8 @@ export type MainStackParamList = {
   ArrivalConfirmation: { pointId: string };
   AudioGuide: { pointId: string };
   EventDetail: { eventId: string };
+  PreCheckout: { selectedIds: string[] };
+  Payment: { cartItemIds: string[], voucherIds: string[], amount: number, orderCode: string };
 };
 
 /**

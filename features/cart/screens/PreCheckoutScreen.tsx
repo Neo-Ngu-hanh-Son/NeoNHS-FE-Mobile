@@ -1,0 +1,214 @@
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { Text } from '@/components/ui/text';
+import { Button } from '@/components/ui/button';
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { THEME } from '@/lib/theme';
+import { cartService } from '../services/cartService';
+import { PreCheckoutResponse } from '../types';
+import LoadingOverlay from '@/components/Loader/LoadingOverlay';
+import { logger } from '@/utils/logger';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { MaterialIcons } from '@expo/vector-icons';
+import { TouchableOpacity } from 'react-native';
+
+export default function PreCheckoutScreen() {
+    const { isDarkColorScheme } = useTheme();
+    const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+    const navigation = useNavigation<any>();
+    const route = useRoute<any>();
+
+    // Expect selectedIds from route params
+    const { selectedIds, selectedVoucherId } = route.params || { selectedIds: [], selectedVoucherId: null };
+
+    const [loading, setLoading] = useState(false);
+    const [preCheckoutData, setPreCheckoutData] = useState<PreCheckoutResponse | null>(null);
+
+
+
+    const fetchPreCheckout = async () => {
+        setLoading(true);
+        try {
+            const payload = {
+                cartItemIds: selectedIds,
+                voucherIds: selectedVoucherId ? [selectedVoucherId] : []
+            };
+            const response = await cartService.preCheckout(payload);
+
+            if (response.success && response.data) {
+                setPreCheckoutData(response.data);
+                logger.info("Pre-checkout successful", response.data);
+            } else {
+                Alert.alert("Error", response.message || "Pre-checkout failed");
+                navigation.goBack();
+            }
+        } catch (error: any) {
+            logger.error("Pre-checkout error", error);
+            Alert.alert("Error", error.message || "Pre-checkout failed");
+            navigation.goBack();
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCreatePaymentLink = async () => {
+        if (!preCheckoutData) return;
+
+        setLoading(true);
+        try {
+            const payload = {
+                cartItemIds: selectedIds,
+                voucherIds: selectedVoucherId ? [selectedVoucherId] : []
+            };
+
+            const response = await cartService.createPaymentLink(payload);
+            if (response.success && response.data) {
+                logger.info("Payment link created", response.data);
+                navigation.navigate('Payment', {
+                    checkoutUrl: response.data.checkoutUrl,
+                    orderCode: response.data.orderCode
+                });
+            } else {
+                Alert.alert("Error", response.message || "Failed to create payment link");
+            }
+        } catch (error: any) {
+            logger.error("Create payment link error", error);
+            Alert.alert("Error", error.message || "Failed to create payment link");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchPreCheckout();
+    }, []);
+
+    if (!preCheckoutData) return <LoadingOverlay visible={loading} message="Calculating..." />;
+
+    return (
+        <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                    <MaterialIcons name="chevron-left" size={32} color={theme.foreground} />
+                </TouchableOpacity>
+                <Text style={[styles.title, { color: theme.foreground }]}>Order Confirmation</Text>
+                <View style={{ width: 32 }} />
+            </View>
+
+            <ScrollView contentContainerStyle={styles.content}>
+                <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                    <Text style={[styles.sectionTitle, { color: theme.foreground }]}>Items ({preCheckoutData.cartItems.length})</Text>
+                    {preCheckoutData.cartItems.map((item, index) => (
+                        <View key={item.id || index} style={[styles.itemRow, { borderBottomColor: theme.border }]}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ color: theme.foreground, fontWeight: '500' }}>{item.itemName}</Text>
+                                <Text style={{ color: theme.mutedForeground, fontSize: 12 }}>Qty: {item.quantity}</Text>
+                            </View>
+                            <Text style={{ color: theme.foreground }}>{item.totalPrice.toLocaleString()} VND</Text>
+                        </View>
+                    ))}
+                </View>
+
+                <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                    <Text style={[styles.sectionTitle, { color: theme.foreground }]}>Payment Summary</Text>
+
+                    <View style={styles.summaryRow}>
+                        <Text style={{ color: theme.mutedForeground }}>Subtotal</Text>
+                        <Text style={{ color: theme.foreground }}>{preCheckoutData.totalPrice.toLocaleString()} VND</Text>
+                    </View>
+
+                    <View style={styles.summaryRow}>
+                        <Text style={{ color: theme.mutedForeground }}>Discount</Text>
+                        <Text style={{ color: '#22c55e' }}>-{preCheckoutData.discountValue.toLocaleString()} VND</Text>
+                    </View>
+
+                    {preCheckoutData.appliedVoucher && (
+                        <View style={[styles.voucherRow, { backgroundColor: 'rgba(34, 197, 94, 0.1)' }]}>
+                            <MaterialIcons name="local-offer" size={16} color="#22c55e" />
+                            <Text style={{ color: '#22c55e', fontSize: 12, marginLeft: 4 }}>
+                                Applied: {preCheckoutData.appliedVoucher.code}
+                            </Text>
+                        </View>
+                    )}
+
+                    <View style={[styles.divider, { backgroundColor: theme.border }]} />
+
+                    <View style={styles.summaryRow}>
+                        <Text style={{ color: theme.foreground, fontWeight: 'bold', fontSize: 16 }}>Total Payment</Text>
+                        <Text style={{ color: theme.primary, fontWeight: 'bold', fontSize: 20 }}>{preCheckoutData.finalTotalPrice.toLocaleString()} VND</Text>
+                    </View>
+                </View>
+            </ScrollView>
+
+            <View style={[styles.footer, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
+                <Button onPress={handleCreatePaymentLink}>
+                    <Text style={{ color: 'white' }}>Confirm Payment</Text>
+                </Button>
+            </View>
+        </SafeAreaView>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+    },
+    backButton: {
+        padding: 4,
+    },
+    title: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    content: {
+        padding: 20,
+        gap: 20,
+    },
+    card: {
+        padding: 16,
+        borderRadius: 16,
+        borderWidth: 1,
+    },
+    sectionTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 16,
+    },
+    itemRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+    },
+    summaryRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 8,
+    },
+    voucherRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 8,
+        borderRadius: 8,
+        alignSelf: 'flex-start',
+        marginTop: 4,
+        marginBottom: 8,
+    },
+    divider: {
+        height: 1,
+        marginVertical: 12,
+    },
+    footer: {
+        padding: 20,
+        borderTopWidth: 1,
+    }
+});

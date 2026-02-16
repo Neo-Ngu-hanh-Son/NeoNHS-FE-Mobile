@@ -53,6 +53,20 @@ export const transactionEndpoints = {
     getTransactionDetails: (id: string) => `transactions/${id}`,
 } as const;
 
+export const cartEndpoints = {
+    getCart: () => `cart`,
+    addToCart: () => `cart/add`,
+    updateCartItem: (itemId: string) => `cart/items/${itemId}`,
+    removeCartItem: (itemId: string) => `cart/items/${itemId}`,
+    preCheckout: () => `cart/pre-checkout`,
+    getVouchers: () => `cart/vouchers`,
+} as const;
+
+export const paymentEndpoints = {
+    createPaymentLink: () => `payment/create-payment-link`,
+    verifyPayment: (orderCode: string | number) => `payment/success?orderCode=${orderCode}`,
+} as const;
+
 /**
  * All Endpoints (for easy access)
  */
@@ -63,6 +77,8 @@ export const endpoints = {
     profile: profileEndpoints,
     map: mapEndpoints,
     transactions: transactionEndpoints,
+    cart: cartEndpoints,
+    payment: paymentEndpoints,
     discover: discoverEndpoints,
     events: eventEndpoints,
 } as const;

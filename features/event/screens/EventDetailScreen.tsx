@@ -193,9 +193,8 @@ export default function EventDetailScreen({ navigation, route }: Props) {
         <View className="flex-row px-5 mt-6 gap-2">
           <TouchableOpacity
             onPress={() => setActiveTab("info")}
-            className={`flex-1 py-3 rounded-xl items-center ${
-              activeTab === "info" ? "bg-primary" : ""
-            }`}
+            className={`flex-1 py-3 rounded-xl items-center ${activeTab === "info" ? "bg-primary" : ""
+              }`}
             style={
               activeTab !== "info"
                 ? { backgroundColor: theme.muted }
@@ -203,9 +202,8 @@ export default function EventDetailScreen({ navigation, route }: Props) {
             }
           >
             <Text
-              className={`font-bold text-sm ${
-                activeTab === "info" ? "text-white" : ""
-              }`}
+              className={`font-bold text-sm ${activeTab === "info" ? "text-white" : ""
+                }`}
               style={activeTab !== "info" ? { color: theme.mutedForeground } : undefined}
             >
               Details
@@ -213,9 +211,8 @@ export default function EventDetailScreen({ navigation, route }: Props) {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setActiveTab("tickets")}
-            className={`flex-1 py-3 rounded-xl items-center ${
-              activeTab === "tickets" ? "bg-primary" : ""
-            }`}
+            className={`flex-1 py-3 rounded-xl items-center ${activeTab === "tickets" ? "bg-primary" : ""
+              }`}
             style={
               activeTab !== "tickets"
                 ? { backgroundColor: theme.muted }
@@ -223,9 +220,8 @@ export default function EventDetailScreen({ navigation, route }: Props) {
             }
           >
             <Text
-              className={`font-bold text-sm ${
-                activeTab === "tickets" ? "text-white" : ""
-              }`}
+              className={`font-bold text-sm ${activeTab === "tickets" ? "text-white" : ""
+                }`}
               style={
                 activeTab !== "tickets"
                   ? { color: theme.mutedForeground }
@@ -262,7 +258,6 @@ export default function EventDetailScreen({ navigation, route }: Props) {
               tickets={tickets}
               loading={ticketsLoading}
               theme={theme}
-              onBuyPress={handleBuyTicket}
             />
           )}
         </View>

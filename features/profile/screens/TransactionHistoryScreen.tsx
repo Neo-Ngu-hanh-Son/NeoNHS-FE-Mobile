@@ -137,7 +137,7 @@ export default function TransactionHistoryScreen() {
                     <Text style={[styles.amount, { color: theme.foreground }]}>{formattedAmount}</Text>
                 </View>
 
-                {displayStatus === 'PAID' && (
+                {/* {displayStatus === 'PAID' && (
                     <TouchableOpacity
                         style={[styles.downloadButton, { backgroundColor: getStatusColor(displayStatus) }]}
                         onPress={(e) => handleDownload(item.id, e)}
@@ -145,7 +145,8 @@ export default function TransactionHistoryScreen() {
                         <MaterialIcons name="picture-as-pdf" size={18} color="white" />
                         <Text style={styles.downloadText}>Download Receipt</Text>
                     </TouchableOpacity>
-                )}
+                )
+                } */}
             </TouchableOpacity>
         )
     };
