@@ -55,6 +55,9 @@ export const transactionEndpoints = {
 
 export const cartEndpoints = {
     getCart: () => `cart`,
+    addToCart: () => `cart/add`,
+    updateCartItem: (itemId: string) => `cart/items/${itemId}`,
+    removeCartItem: (itemId: string) => `cart/items/${itemId}`,
     preCheckout: () => `cart/pre-checkout`,
     getVouchers: () => `cart/vouchers`,
 } as const;

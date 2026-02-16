@@ -1,5 +1,5 @@
 import { apiClient } from "@/services/api/client";
-import { endpoints } from "@/services/api/endpoints";
+import { endpoints } from "@/services/api/endpoints/endpoints";
 import { ApiResponse } from "@/services/api/types";
 import { Cart, PreCheckoutResponse, PaymentLinkResponse, CreatePaymentLinkRequest, Voucher } from "../types";
 
@@ -12,6 +12,27 @@ export const cartService = {
     },
 
     /**
+     * Add item to cart
+     */
+    async addToCart(ticketCatalogId: string, quantity: number) {
+        return apiClient.post<any>(endpoints.cart.addToCart(), { ticketCatalogId, quantity });
+    },
+
+    /**
+     * Update cart item quantity
+     */
+    async updateCartItem(itemId: string, quantity: number) {
+        return apiClient.put<any>(endpoints.cart.updateCartItem(itemId), { quantity });
+    },
+
+    /**
+     * Remove item from cart
+     */
+    async removeCartItem(itemId: string) {
+        return apiClient.delete<any>(endpoints.cart.removeCartItem(itemId));
+    },
+
+    /**
     * Get user vouchers
     */
     async getVouchers() {
@@ -21,7 +42,7 @@ export const cartService = {
     /**
      * Pre-checkout to calculate totals
      */
-    async preCheckout(body: any = {}) {
+    async preCheckout(body: { cartItemIds: string[], voucherIds: string[] }) {
         return apiClient.post<PreCheckoutResponse>(endpoints.cart.preCheckout(), body);
     },
 

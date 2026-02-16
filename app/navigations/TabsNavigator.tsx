@@ -102,7 +102,7 @@ export default function TabsNavigator() {
         name="TestCart"
         component={CartListScreen}
         options={{
-          title: "Test Cart",
+          title: "My Cart",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "cart" : "cart-outline"}

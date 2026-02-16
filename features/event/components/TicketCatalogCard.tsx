@@ -1,8 +1,9 @@
-import React from "react";
-import { View, TouchableOpacity } from "react-native";
+import React, { useState } from "react";
+import { View, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { Text } from "@/components/ui/text";
+import { Button } from "@/components/ui/button";
 import { TicketCatalogResponse, TicketCatalogStatus } from "../types";
 import {
   getTicketStatusColor,
@@ -12,6 +13,7 @@ import {
   formatDaysOfWeek,
   formatDate,
 } from "../utils/helpers";
+import { cartService } from "../../cart/services/cartService";
 
 interface ThemeColors {
   foreground: string;
@@ -32,10 +34,52 @@ export default function TicketCatalogCard({
   theme,
   onBuyPress,
 }: TicketCatalogCardProps) {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [quantity, setQuantity] = useState("1");
+  const [isAdding, setIsAdding] = useState(false);
+
   const discount = calcDiscount(ticket.price, ticket.originalPrice);
   const isSoldOut = ticket.status === TicketCatalogStatus.SOLD_OUT;
   const isUnavailable = ticket.status === TicketCatalogStatus.INACTIVE;
   const canBuy = !isSoldOut && !isUnavailable;
+
+  const handleOpenModal = () => {
+    if (onBuyPress) {
+      onBuyPress(ticket);
+    } else {
+      setQuantity("1");
+      setModalVisible(true);
+    }
+  };
+
+  const handleAddToCart = async () => {
+    const qty = parseInt(quantity);
+    if (isNaN(qty) || qty <= 0) {
+      Alert.alert("Invalid Quantity", "Please enter a valid quantity greater than 0.");
+      return;
+    }
+
+    if (ticket.totalQuota != null && qty > ticket.remainingQuantity) {
+      Alert.alert("Quantity Exceeded", `Only ${ticket.remainingQuantity} tickets remaining.`);
+      return;
+    }
+
+    setIsAdding(true);
+    try {
+      const response = await cartService.addToCart(ticket.id, qty);
+      if (response.success) {
+        Alert.alert("Success", "Ticket added to cart successfully", [
+          { text: "OK", onPress: () => setModalVisible(false) }
+        ]);
+      } else {
+        Alert.alert("Error", response.message || "Failed to add to cart");
+      }
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "An error occurred");
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
   return (
     <View
@@ -173,7 +217,7 @@ export default function TicketCatalogCard({
           backgroundColor: canBuy ? theme.primary : theme.mutedForeground + "30",
         }}
         disabled={!canBuy}
-        onPress={() => onBuyPress?.(ticket)}
+        onPress={handleOpenModal}
         activeOpacity={0.7}
       >
         <Ionicons
@@ -188,10 +232,75 @@ export default function TicketCatalogCard({
           {isSoldOut
             ? "Sold Out"
             : isUnavailable
-            ? "Unavailable"
-            : "Buy Ticket"}
+              ? "Unavailable"
+              : "Add to Cart"}
         </Text>
       </TouchableOpacity>
+
+      {/* Add to Cart Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <View style={{ width: "85%", backgroundColor: theme.card, borderRadius: 20, padding: 20, alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4, elevation: 5 }}>
+            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 15, color: theme.foreground, textAlign: 'center' }}>
+              {ticket.name}
+            </Text>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
+              <Text style={{ fontSize: 16, color: theme.foreground, marginRight: 10 }}>Quantity:</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', borderColor: theme.border, borderWidth: 1, borderRadius: 8 }}>
+                <TouchableOpacity
+                  onPress={() => setQuantity(prev => Math.max(1, parseInt(prev || "0") - 1).toString())}
+                  style={{ padding: 10 }}
+                >
+                  <Ionicons name="remove" size={20} color={theme.foreground} />
+                </TouchableOpacity>
+                <TextInput
+                  style={{ width: 50, textAlign: 'center', color: theme.foreground, fontSize: 16, padding: 5 }}
+                  keyboardType="numeric"
+                  value={quantity}
+                  onChangeText={setQuantity}
+                />
+                <TouchableOpacity
+                  onPress={() => setQuantity(prev => (parseInt(prev || "0") + 1).toString())}
+                  style={{ padding: 10 }}
+                >
+                  <Ionicons name="add" size={20} color={theme.foreground} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={{ width: '100%', gap: 10 }}>
+              <TouchableOpacity
+                style={{ backgroundColor: theme.primary, padding: 12, borderRadius: 10, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' }}
+                onPress={handleAddToCart}
+                disabled={isAdding}
+              >
+                {isAdding ? (
+                  <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
+                ) : (
+                  <Ionicons name="cart" size={20} color="#fff" style={{ marginRight: 8 }} />
+                )}
+                <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 16 }}>
+                  {isAdding ? "Adding..." : "Add to Cart"}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{ backgroundColor: 'transparent', padding: 12, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: theme.border }}
+                onPress={() => setModalVisible(false)}
+                disabled={isAdding}
+              >
+                <Text style={{ color: theme.foreground, fontWeight: "bold" }}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

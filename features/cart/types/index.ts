@@ -19,7 +19,7 @@ export interface Voucher {
     code: string;
     description: string | null;
     discountValue: number;
-    type: string;
+    type: 'FIXED' | 'PERCENT';
     minOrderValue: number;
 }
 
@@ -27,10 +27,25 @@ export interface PreCheckoutResponse {
     cartItems: CartItem[];
     totalPrice: number;
     validVouchers: Voucher[];
-    invalidVouchers: any[];
+    invalidVouchers: Voucher[];
     discountValue: number;
     finalTotalPrice: number;
     appliedVoucher: Voucher | null;
+    transactionDate: string;
+}
+
+export interface PreCheckoutRequest {
+    cartItemIds: string[];
+    voucherIds: string[];
+}
+
+export interface AddToCartRequest {
+    ticketCatalogId: string;
+    quantity: number;
+}
+
+export interface UpdateCartItemRequest {
+    quantity: number;
 }
 
 export interface CreatePaymentLinkRequest {

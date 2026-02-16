@@ -71,16 +71,65 @@ export default function CartListScreen() {
         setSelectedItems(newSelection);
     };
 
+    const validSelectedItems = cart?.items ? cart.items.filter(item => selectedItems.has(item.id)) : [];
+    const validSelectedCount = validSelectedItems.length;
+
     const handleProceedToPreCheckout = () => {
-        if (selectedItems.size === 0) {
+        if (validSelectedCount === 0) {
             Alert.alert("Selection Required", "Please select at least one item to proceed.");
             return;
         }
-        const selectedIds = Array.from(selectedItems);
+        const selectedIds = validSelectedItems.map(item => item.id);
         navigation.navigate('PreCheckout', {
             selectedIds,
             selectedVoucherId: selectedVoucher?.userVoucherId
         });
+    };
+    const handleUpdateQuantity = async (itemId: string, newQuantity: number) => {
+        if (newQuantity < 1) return;
+
+        try {
+            const response = await cartService.updateCartItem(itemId, newQuantity);
+            if (response.success) {
+                fetchCart();
+            } else {
+                Alert.alert("Error", response.message || "Failed to update quantity");
+            }
+        } catch (error: any) {
+            Alert.alert("Error", error.message || "Failed to update quantity");
+        }
+    };
+
+    const handleRemoveItem = (itemId: string) => {
+        Alert.alert(
+            "Remove Item",
+            "Are you sure you want to remove this item from your cart?",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Remove",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            const response = await cartService.removeCartItem(itemId);
+                            if (response.success) {
+                                // Remove from selected items if it was selected
+                                if (selectedItems.has(itemId)) {
+                                    const newSelection = new Set(selectedItems);
+                                    newSelection.delete(itemId);
+                                    setSelectedItems(newSelection);
+                                }
+                                fetchCart();
+                            } else {
+                                Alert.alert("Error", response.message || "Failed to remove item");
+                            }
+                        } catch (error: any) {
+                            Alert.alert("Error", error.message || "Failed to remove item");
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     const renderCartItem = ({ item }: { item: CartItem }) => {
@@ -108,18 +157,40 @@ export default function CartListScreen() {
                     {isSelected && <Ionicons name="checkmark" size={16} color="white" />}
                 </View>
                 <View style={{ flex: 1 }}>
-                    <Text style={[styles.itemName, { color: theme.foreground }]}>{item.itemName}</Text>
+                    <View style={styles.row}>
+                        <Text style={[styles.itemName, { color: theme.foreground, flex: 1 }]}>{item.itemName}</Text>
+                        <TouchableOpacity onPress={() => handleRemoveItem(item.id)} style={{ padding: 4 }}>
+                            <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                        </TouchableOpacity>
+                    </View>
+
                     <View style={styles.row}>
                         <Text style={{ color: theme.mutedForeground }}>Price:</Text>
                         <Text style={{ color: theme.foreground }}>{item.price.toLocaleString()} VND</Text>
                     </View>
-                    <View style={styles.row}>
+
+                    <View style={[styles.row, { alignItems: 'center', marginTop: 4 }]}>
                         <Text style={{ color: theme.mutedForeground }}>Quantity:</Text>
-                        <Text style={{ color: theme.foreground }}>{item.quantity}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8, borderWidth: 1, borderColor: theme.border, borderRadius: 6 }}>
+                            <TouchableOpacity
+                                onPress={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                                style={{ padding: 4, paddingHorizontal: 8 }}
+                            >
+                                <Ionicons name="remove" size={16} color={theme.foreground} />
+                            </TouchableOpacity>
+                            <Text style={{ color: theme.foreground, paddingHorizontal: 8, fontWeight: 'bold' }}>{item.quantity}</Text>
+                            <TouchableOpacity
+                                onPress={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                                style={{ padding: 4, paddingHorizontal: 8 }}
+                            >
+                                <Ionicons name="add" size={16} color={theme.foreground} />
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                    <View style={styles.row}>
+
+                    <View style={[styles.row, { marginTop: 4 }]}>
                         <Text style={{ color: theme.mutedForeground }}>Total:</Text>
-                        <Text style={{ color: theme.foreground }}>{item.totalPrice.toLocaleString()} VND</Text>
+                        <Text style={{ color: theme.primary, fontWeight: 'bold' }}>{item.totalPrice.toLocaleString()} VND</Text>
                     </View>
                 </View>
             </TouchableOpacity>
@@ -161,7 +232,7 @@ export default function CartListScreen() {
                 onRequestClose={() => setShowVoucherModal(false)}
             >
                 <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                    <View style={{ backgroundColor: theme.background, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '70%' }}>
+                    <View style={{ backgroundColor: theme.background, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '70%', paddingBottom: 40 }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                             <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.foreground }}>Select Voucher</Text>
                             <TouchableOpacity onPress={() => setShowVoucherModal(false)}>
@@ -239,17 +310,16 @@ export default function CartListScreen() {
                 </TouchableOpacity>
 
                 <View style={styles.totalRow}>
-                    <Text style={{ color: theme.foreground }}>Selected: {selectedItems.size}</Text>
+                    <Text style={{ color: theme.foreground }}>Selected: {validSelectedCount}</Text>
                     <Text style={{ color: theme.foreground, fontWeight: 'bold' }}>
                         Total: {
-                            cart?.items
-                                .filter(item => selectedItems.has(item.id))
+                            validSelectedItems
                                 .reduce((sum, item) => sum + item.totalPrice, 0)
                                 .toLocaleString() || 0
                         } VND
                     </Text>
                 </View>
-                <Button onPress={handleProceedToPreCheckout} disabled={selectedItems.size === 0}>
+                <Button onPress={handleProceedToPreCheckout} disabled={validSelectedCount === 0}>
                     <Text style={{ color: 'white' }}>Proceed to Checkout</Text>
                 </Button>
             </View>
@@ -275,11 +345,11 @@ const styles = StyleSheet.create({
     },
     listContent: {
         padding: 20,
-        paddingBottom: 100,
+        paddingBottom: 220, // Increased bottom padding to accommodate updated footer
     },
     card: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'center', // Changed from flex-start to center for better alignment
         padding: 16,
         borderRadius: 12,
         marginBottom: 12,
@@ -301,6 +371,7 @@ const styles = StyleSheet.create({
     row: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        alignItems: 'center',
         marginBottom: 4,
     },
     footer: {
