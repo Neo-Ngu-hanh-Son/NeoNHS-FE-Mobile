@@ -25,7 +25,6 @@ interface PointDetailModalProps {
   point: MapPoint | null;
   visible: boolean;
   onClose: () => void;
-  onNavigate?: (point: MapPoint) => void;
   onViewDetails?: (point: MapPoint) => void;
 }
 
@@ -33,7 +32,6 @@ export default function PointDetailModal({
   point,
   visible,
   onClose,
-  onNavigate,
   onViewDetails,
 }: PointDetailModalProps) {
   const { isDarkColorScheme } = useTheme();
@@ -100,7 +98,10 @@ export default function PointDetailModal({
 
                 {/* Action buttons */}
                 <View style={styles.actions}>
-                  <IconButton icon="navigate" onPress={() => onNavigate?.(point)} variant="default">
+                  <IconButton
+                    icon="navigate"
+                    onPress={() => onViewDetails?.(point)}
+                    variant="default">
                     <Text>Guide me there</Text>
                   </IconButton>
 

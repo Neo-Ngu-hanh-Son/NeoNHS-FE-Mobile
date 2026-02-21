@@ -2,4 +2,4 @@
  * Home Screens Barrel Export
  */
 
-export { default as HomeScreenNew } from "./HomeScreenNew";
+export { default as HomeScreen } from "./HomeScreen";

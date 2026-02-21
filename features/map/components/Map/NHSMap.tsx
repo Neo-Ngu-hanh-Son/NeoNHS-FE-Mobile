@@ -11,13 +11,15 @@ import React, {
 import { MapPoint } from '../..';
 import { Marker, Polyline, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { MAP_CENTER } from '../../data';
-import MapView from 'react-native-map-clustering';
+// import MapView from 'react-native-map-clustering';
+import MapView from 'react-native-maps';
 import { renderRoutes } from '../../data/mapDataOptimized';
 import MarkerVisual from '../Marker/MarkerVisual';
 import { logger } from '@/utils/logger';
 import { View, StyleSheet } from 'react-native';
 import { UserLocation } from '../../hooks/useUserLocation';
 import { UserLocationMarker, FollowUserButton } from '../UserLocation';
+import { useFocusEffect } from '@react-navigation/native';
 
 type NHSMapProps = {
   onMarkerPress?: (point: MapPoint) => void;
@@ -50,6 +52,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       longitudeDelta: MAP_CENTER.longitudeDelta,
     });
     const mapRef = useRef<any>(null);
+    const [mapKey, setMapKey] = useState(0); // This make it so that the map re-renders when we want to reset it (e.g. on screen focus)
 
     // Expose methods via ref
     useImperativeHandle(ref, () => ({
@@ -135,15 +138,23 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       }
     }, [isMapReady, isFollowingUser, userLocation]);
 
+    // Reset map when screen gains focus to ensure it re-renders with latest data and theme
+    useFocusEffect(
+      useCallback(() => {
+        setMapKey((prev) => prev + 1);
+      }, [])
+    );
+
     return (
       <View style={[styles.container, { borderColor: theme.border, borderWidth: 1 }]}>
         <MapView
+          key={mapKey}
           ref={mapRef}
           style={styles.map}
           provider={PROVIDER_GOOGLE}
           initialRegion={MAP_CENTER}
-          clusterColor={theme.primary}
-          radius={10}
+          // clusterColor={theme.primary}
+          // radius={10}
           mapType="satellite"
           showsUserLocation={false} // We use custom marker
           showsMyLocationButton={false} // We use custom button

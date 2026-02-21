@@ -65,15 +65,11 @@ export interface Attraction {
   name: string;
   description: string;
   address: string;
-
   latitude: number;
   longitude: number;
-
-  openHour: string; // format: "HH:mm:ss"
-  closeHour: string; // format: "HH:mm:ss"
-
   status: AttractionStatus;
-
   thumbnailUrl: string;
   mapImageUrl: string | null;
+  openHour: string;  // format: "HH:mm:ss"
+  closeHour: string; // format: "HH:mm:ss"
 }

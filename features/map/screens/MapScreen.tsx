@@ -4,20 +4,23 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
-import { TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
+import { MainStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { logger } from '@/utils/logger';
 import { MapPoint } from '../types';
 import PointDetailModal from '../components/PointDetailModal/PointDetailModal';
 import NHSMap, { NHSMapRef } from '../components/Map/NHSMap';
-import getPointOfAttraction from '../services/mapServices';
+import { getAllDestinations, getPointOfAttraction } from '../services/mapServices';
 import { NHS_ATTRACTION_ID } from '@/services/api/endpoints/map.api';
 import { useModal } from '@/app/providers/ModalProvider';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { LocationPermissionBanner } from '../components/UserLocation';
 import { mapData } from '../data';
+import { CompositeScreenProps } from '@react-navigation/native';
 
-type MapScreenProps = StackScreenProps<TabsStackParamList, 'Map'>;
-
+type MapScreenProps = CompositeScreenProps<
+  StackScreenProps<TabsStackParamList, 'Map'>,
+  StackScreenProps<MainStackParamList>
+>;
 export default function MapScreen({ navigation }: MapScreenProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
@@ -47,11 +50,12 @@ export default function MapScreen({ navigation }: MapScreenProps) {
     distanceInterval: 5,
   });
 
-  // Fetch map points on mount
+  // Fetch ALL map points on mount
   useEffect(() => {
     async function fetchPoints() {
       try {
-        const res = await getPointOfAttraction(NHS_ATTRACTION_ID);
+        const destinations = await getAllDestinations({ search: 'thuy son' });
+        const res = await getPointOfAttraction(destinations.data[0].id);
         setMapPoints(res.data);
       } catch (error) {
         logger.error('[MapScreen] Failed to fetch map points, using default map points:', error);
@@ -79,8 +83,12 @@ export default function MapScreen({ navigation }: MapScreenProps) {
   }, []);
 
   const handleNavigate = useCallback((point: MapPoint) => {
-    // TODO: Implement navigation to the point
-    logger.info('Navigate to:', point.name);
+    if (point.id && point.id !== 'offline') {
+      logger.info('Navigate to:', point);
+      navigation.navigate('PointDetail', { pointId: point.id });
+    } else {
+      alert('Navigation Unavailable', 'Please connect to the internet to access this feature.');
+    }
     setModalVisible(false);
   }, []);
 
@@ -119,10 +127,7 @@ export default function MapScreen({ navigation }: MapScreenProps) {
         point={selectedPoint}
         visible={modalVisible}
         onClose={handleCloseModal}
-        onNavigate={handleNavigate}
-        onViewDetails={() => {
-          logger.info('Not implemented yet');
-        }}
+        onViewDetails={handleNavigate}
       />
     </SafeAreaView>
   );

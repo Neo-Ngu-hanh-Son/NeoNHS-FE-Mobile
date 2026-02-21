@@ -1,6 +1,7 @@
 import { mapEndpoints } from "./map.api";
 import { discoverEndpoints } from "./discover.api";
 import { eventEndpoints } from "./events.api";
+import { blogEndpoints } from "./blog.api";
 
 /**
  * Authentication Endpoints
@@ -81,5 +82,6 @@ export const endpoints = {
     payment: paymentEndpoints,
     discover: discoverEndpoints,
     events: eventEndpoints,
+    blog: blogEndpoints,
 } as const;
 

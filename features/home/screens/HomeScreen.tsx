@@ -22,12 +22,15 @@ import {
   PlaceCard,
   HighlightCard,
 } from '../components';
+import BlogCard from '../components/BlogCard';
+import { useHomeBlogs } from '../hooks/useHomeBlogs';
 import axios from 'axios';
 import { logger } from '@/utils/logger';
 import { apiClient } from '@/services/api';
 import LoadingOverlay from '@/components/Loader/LoadingOverlay';
+import ExploreSection from '../components/ExploreSection';
 
-type HomeScreenNewProps = CompositeScreenProps<
+type HomeScreen = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Home'>,
   StackScreenProps<RootStackParamList>
 >;
@@ -157,19 +160,21 @@ const DESTINATIONS = [
   },
 ];
 
-export default function HomeScreenNew({ navigation }: HomeScreenNewProps) {
+export default function HomeScreen({ navigation }: HomeScreen) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const { user } = useAuth();
 
   const [refreshing, setRefreshing] = useState(false);
+  const { blogs, loading: blogsLoading, refetch: refetchBlogs } = useHomeBlogs(6);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
+    refetchBlogs();
     setTimeout(() => {
       setRefreshing(false);
     }, 1500);
-  }, []);
+  }, [refetchBlogs]);
 
   // Navigation handlers
   const handleNotificationPress = () => {
@@ -193,6 +198,13 @@ export default function HomeScreenNew({ navigation }: HomeScreenNewProps) {
 
   const handleGuidePress = (guideId: string) => {
     // TODO: Navigate to blog/guide details
+  };
+
+  const handleBlogPress = (blogId: string) => {
+    navigation.navigate('Main', {
+      screen: 'BlogDetails',
+      params: { blogId },
+    });
   };
 
   const handleViewAllBlogs = () => {
@@ -245,6 +257,9 @@ export default function HomeScreenNew({ navigation }: HomeScreenNewProps) {
           <SearchBar onPress={handleSearchPress} />
         </View>
 
+        <SectionHeader title="Explore" />
+        <ExploreSection />
+
         {/* ============================================ */}
         {/* SECTION 1: Hero / Pinned Editorial */}
         {/* ============================================ */}
@@ -261,7 +276,7 @@ export default function HomeScreenNew({ navigation }: HomeScreenNewProps) {
         {/* SECTION 3: Helpful & Informational Blogs */}
         {/* "Know Before You Go" */}
         {/* ============================================ */}
-        <SectionHeader title="Know Before You Go" showSeeAll onSeeAllPress={handleViewAllBlogs} />
+        <SectionHeader title="Know Before You Go" />
         <View className="flex-row flex-wrap gap-4 px-4">
           {GUIDES.map((guide) => (
             <GuideCard
@@ -273,6 +288,23 @@ export default function HomeScreenNew({ navigation }: HomeScreenNewProps) {
             />
           ))}
         </View>
+
+        {/* ============================================ */}
+        {/* SECTION: Latest Blogs (from API) */}
+        {/* ============================================ */}
+        {blogs.length > 0 && (
+          <>
+            <SectionHeader title="Latest Blogs" showSeeAll onSeeAllPress={handleViewAllBlogs} />
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8 }}>
+              {blogs.map((blog) => (
+                <BlogCard key={blog.id} blog={blog} onPress={() => handleBlogPress(blog.id)} />
+              ))}
+            </ScrollView>
+          </>
+        )}
 
         {/* ============================================ */}
         {/* SECTION 4: Highlights About Ngu Hanh Son */}

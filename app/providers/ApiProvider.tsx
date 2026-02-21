@@ -55,7 +55,9 @@ export default function ApiProvider({ children }: { children: ReactNode }) {
         // logger.warn('[ApiProvider] Unauthorized and token refresh failed, logging out');
         logout();
       },
-      onError: (error) => {},
+      onError: (error) => {
+        logger.error('[ApiProvider] API error:', error);
+      },
       timeout: 15000,
     });
   }, [accessToken, refreshToken, logout, handleTokenRefresh, refreshAuth]);

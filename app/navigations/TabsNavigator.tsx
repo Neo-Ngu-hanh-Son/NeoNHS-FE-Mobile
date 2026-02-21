@@ -2,18 +2,16 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import HomeScreenNew from "@/features/home/screens/HomeScreenNew";
-import { DiscoverScreen } from "@/features/discover/screens";
-import { MapScreen } from "@/features/map/screens";
-import { BookingsScreen } from "@/features/bookings/screens";
-import ProfileScreen from "@/features/profile/screens/ProfileScreen";
-import CartListScreen from "@/features/cart/screens/CartListScreen";
-
+import HomeScreen from '@/features/home/screens/HomeScreen';
+import { DiscoverScreen } from '@/features/discover/screens';
+import { MapScreen } from '@/features/map/screens';
+import { BookingsScreen } from '@/features/bookings/screens';
+import ProfileScreen from '@/features/profile/screens/ProfileScreen';
+import CartListScreen from '@/features/cart/screens/CartListScreen';
 
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import type { TabsStackParamList } from './NavigationParamTypes';
-import { TestWebviewMap } from '@/features/map/components/TestWebviewMap';
 
 const Tab = createBottomTabNavigator<TabsStackParamList>();
 
@@ -46,7 +44,7 @@ export default function TabsNavigator() {
       }}>
       <Tab.Screen
         name="Home"
-        component={HomeScreenNew}
+        component={HomeScreen}
         options={{
           title: 'Home',
           tabBarIcon: ({ color, size, focused }) => (
@@ -102,13 +100,9 @@ export default function TabsNavigator() {
         name="TestCart"
         component={CartListScreen}
         options={{
-          title: "My Cart",
+          title: 'My Cart',
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "cart" : "cart-outline"}
-              color={color}
-              size={size}
-            />
+            <Ionicons name={focused ? 'cart' : 'cart-outline'} color={color} size={size} />
           ),
         }}
       />

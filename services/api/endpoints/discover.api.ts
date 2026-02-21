@@ -3,4 +3,5 @@ export const discoverEndpoints = {
     getAttractionById: (id: string | number) => `attractions/${id}`,
     getPointsOfAttraction: (attractionId: string | number) => `points/all/${attractionId}`,
     getPointById: (id: string | number) => `points/${id}`,
+    getAttractions: () => `attractions`,
 } as const;
