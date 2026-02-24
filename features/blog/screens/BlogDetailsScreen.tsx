@@ -12,6 +12,7 @@ import { logger } from '@/utils/logger';
 import type { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import type { BlogResponse } from '../types/blog';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import LoadingOverlay from '@/components/Loader/LoadingOverlay';
 
 type Props = StackScreenProps<MainStackParamList, 'BlogDetails'>;
 
@@ -42,11 +43,7 @@ export default function BlogDetailsScreen({ navigation, route }: Props) {
   }, [fetchBlog]);
 
   if (loading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <Text variant="muted">Loading blog…</Text>
-      </View>
-    );
+    return <LoadingOverlay visible={loading} />;
   }
 
   if (error || !blog) {

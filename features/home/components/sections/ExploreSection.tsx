@@ -16,6 +16,7 @@ import {
 import { StackScreenProps } from '@react-navigation/stack';
 import { fetchStats } from '@/services/api/common/statsService';
 import { StatsResponse } from '@/types/common';
+import SectionHeader from '../SectionHeader';
 
 type Props = {};
 
@@ -50,23 +51,23 @@ export default function ExploreSection() {
   });
   const { isDarkColorScheme } = useTheme();
 
-  useFocusEffect(
-    useCallback(() => {
-      const startFetch = async () => {
-        try {
-          const response = await fetchStats();
-          if (response.success) {
-            setStats(response.data);
-          } else {
-            logger.error('Failed to fetch stats');
-          }
-        } catch (error) {
-          logger.error('Error fetching stats:', error);
-        }
-      };
-      startFetch();
-    }, [])
-  );
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     const startFetch = async () => {
+  //       try {
+  //         const response = await fetchStats();
+  //         if (response.success) {
+  //           setStats(response.data);
+  //         } else {
+  //           logger.error('Failed to fetch stats');
+  //         }
+  //       } catch (error) {
+  //         logger.error('Error fetching stats:', error);
+  //       }
+  //     };
+  //     startFetch();
+  //   }, [])
+  // );
 
   const handleNavigate = (item: ExploreItem) => {
     switch (item.key) {
@@ -101,6 +102,7 @@ export default function ExploreSection() {
   };
   return (
     <View>
+      <SectionHeader title="Explore" />
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -125,7 +127,7 @@ export default function ExploreSection() {
               style={{ marginRight: index === exploreItems.length - 1 ? 0 : 20 }}>
               <View
                 className={[
-                  'mb-2 h-16 w-16 items-center justify-center rounded-full border border-border bg-primary',
+                  'mb-2 h-14 w-14 items-center justify-center rounded-sm border border-border bg-primary',
                   'shadow-sm',
                   isActive ? 'scale-105' : 'scale-100',
                 ].join(' ')}
@@ -163,7 +165,7 @@ export default function ExploreSection() {
                 }}>
                 {item.name}
               </Text>
-              <Text
+              {/* <Text
                 className="text-xs text-muted-foreground"
                 style={{
                   color: isDarkColorScheme
@@ -171,7 +173,7 @@ export default function ExploreSection() {
                     : THEME.light.mutedForeground,
                 }}>
                 {getCountForItem(item.key)}
-              </Text>
+              </Text> */}
             </Pressable>
           );
         })}

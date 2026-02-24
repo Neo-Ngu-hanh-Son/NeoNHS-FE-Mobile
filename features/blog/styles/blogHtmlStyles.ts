@@ -1,6 +1,10 @@
-import { cssRulesFromSpecs, defaultTableStylesSpecs, TableStyleSpecs } from "@native-html/table-plugin";
-import { Platform } from "react-native";
-import type { MixedStyleDeclaration } from "react-native-render-html";
+import {
+  cssRulesFromSpecs,
+  defaultTableStylesSpecs,
+  TableStyleSpecs,
+} from '@native-html/table-plugin';
+import { Platform } from 'react-native';
+import type { MixedStyleDeclaration } from 'react-native-render-html';
 
 /**
  * Base style applied to all text
@@ -8,7 +12,7 @@ import type { MixedStyleDeclaration } from "react-native-render-html";
 export const baseStyle: MixedStyleDeclaration = {
   fontSize: 16,
   lineHeight: 26,
-  color: "#1e293b",
+  color: '#1e293b',
 };
 
 /**
@@ -17,40 +21,40 @@ export const baseStyle: MixedStyleDeclaration = {
 export const tagsStyles: Record<string, MixedStyleDeclaration> = {
   h1: {
     fontSize: 32,
-    fontWeight: "800",
-    color: "#0f172a",
+    fontWeight: '800',
+    color: '#0f172a',
     marginTop: 20,
     marginBottom: 12,
     lineHeight: 38,
   },
   h2: {
     fontSize: 26,
-    fontWeight: "700",
-    color: "#1e293b",
+    fontWeight: '700',
+    color: '#1e293b',
     marginTop: 18,
     marginBottom: 10,
     lineHeight: 34,
   },
   h3: {
     fontSize: 21,
-    fontWeight: "600",
-    color: "#334155",
+    fontWeight: '600',
+    color: '#334155',
     marginTop: 16,
     marginBottom: 8,
     lineHeight: 30,
   },
   h4: {
     fontSize: 18,
-    fontWeight: "600",
-    color: "#475569",
+    fontWeight: '600',
+    color: '#475569',
     marginTop: 14,
     marginBottom: 6,
     lineHeight: 28,
   },
   h5: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#64748b",
+    fontWeight: '600',
+    color: '#64748b',
     marginTop: 12,
     marginBottom: 4,
     lineHeight: 26,
@@ -67,9 +71,9 @@ export const tagsStyles: Record<string, MixedStyleDeclaration> = {
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderLeftWidth: 4,
-    borderLeftColor: "#137fec",
-    backgroundColor: "#f0f7ff",
-    fontStyle: "italic",
+    borderLeftColor: '#137fec',
+    backgroundColor: '#f0f7ff',
+    fontStyle: 'italic',
     fontSize: 16,
     lineHeight: 26,
   },
@@ -91,16 +95,14 @@ export const tagsStyles: Record<string, MixedStyleDeclaration> = {
   },
 
   a: {
-    color: "#137fec",
-    textDecorationLine: "underline",
+    color: '#137fec',
+    textDecorationLine: 'underline',
   },
 
   img: {
-    maxWidth: "100%",
-    height: "auto",
-    borderRadius: 10,
-    marginTop: 16,
-    marginBottom: 16,
+    width: '100%',
+    marginVertical: 16,
+    alignSelf: 'center',
   },
 
   // table: {
@@ -138,66 +140,66 @@ export const tagsStyles: Record<string, MixedStyleDeclaration> = {
  */
 export const classesStyles: Record<string, MixedStyleDeclaration> = {
   // Headings
-  "blog-editor-h1": tagsStyles.h1,
-  "blog-editor-h2": tagsStyles.h2,
-  "blog-editor-h3": tagsStyles.h3,
-  "blog-editor-h4": tagsStyles.h4,
-  "blog-editor-h5": tagsStyles.h5,
+  'blog-editor-h1': tagsStyles.h1,
+  'blog-editor-h2': tagsStyles.h2,
+  'blog-editor-h3': tagsStyles.h3,
+  'blog-editor-h4': tagsStyles.h4,
+  'blog-editor-h5': tagsStyles.h5,
 
   // Paragraph
-  "blog-editor-paragraph": {
+  'blog-editor-paragraph': {
     marginTop: 0,
     marginBottom: 8,
   },
 
   // Quote
-  "blog-editor-quote": tagsStyles.blockquote,
+  'blog-editor-quote': tagsStyles.blockquote,
 
   // Lists
-  "blog-editor-list-ol": {
+  'blog-editor-list-ol': {
     marginTop: 8,
     marginBottom: 8,
     paddingLeft: 22,
   },
-  "blog-editor-list-ul": {
+  'blog-editor-list-ul': {
     marginTop: 8,
     marginBottom: 8,
     paddingLeft: 22,
   },
-  "blog-editor-listitem": tagsStyles.li,
+  'blog-editor-listitem': tagsStyles.li,
 
   // Link
-  "blog-editor-link": {
-    color: "#137fec",
-    textDecorationLine: "underline",
+  'blog-editor-link': {
+    color: '#137fec',
+    textDecorationLine: 'underline',
   },
 
   // Inline code
-  "blog-editor-text-code": {
-    fontFamily: Platform.select({ ios: "Menlo", android: "monospace", default: "monospace" }),
+  'blog-editor-text-code': {
+    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' }),
     fontSize: 14,
-    backgroundColor: "#f1f5f9",
-    color: "#e11d48",
+    backgroundColor: '#f1f5f9',
+    color: '#e11d48',
     paddingVertical: 2,
     paddingHorizontal: 6,
     borderRadius: 4,
   },
 
   // Code blocks
-  "blog-editor-code": {
+  'blog-editor-code': {
     marginTop: 16,
     marginBottom: 16,
     paddingVertical: 14,
     paddingHorizontal: 16,
-    backgroundColor: "#1e293b",
+    backgroundColor: '#1e293b',
     borderRadius: 10,
-    fontFamily: Platform.select({ ios: "Menlo", android: "monospace", default: "monospace" }),
+    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' }),
     fontSize: 14,
     lineHeight: 22,
   },
 
   // Image
-  "blog-editor-image": tagsStyles.img,
+  'blog-editor-image': tagsStyles.img,
 
   // Tables
   // "blog-editor-table": tagsStyles.table,
@@ -206,10 +208,10 @@ export const classesStyles: Record<string, MixedStyleDeclaration> = {
   // "blog-editor-table-cell-header": tagsStyles.th,
 
   // Text-enhancing classes
-  "blog-editor-text-bold": { fontWeight: "700" },
-  "blog-editor-text-italic": { fontStyle: "italic" },
-  "blog-editor-text-underline": { textDecorationLine: "underline" },
-  "blog-editor-text-strikethrough": { textDecorationLine: "line-through" },
+  'blog-editor-text-bold': { fontWeight: '700' },
+  'blog-editor-text-italic': { fontStyle: 'italic' },
+  'blog-editor-text-underline': { textDecorationLine: 'underline' },
+  'blog-editor-text-strikethrough': { textDecorationLine: 'line-through' },
 };
 
 export const cleanTableSpecs: TableStyleSpecs = {
@@ -246,7 +248,7 @@ export const cleanTableSpecs: TableStyleSpecs = {
   trOddColor: '#1e293b',
 
   trEvenBackground: '#f8fafc',
-  trEvenColor: '#1e293b'
+  trEvenColor: '#1e293b',
 };
 
 export const tableCssRules =

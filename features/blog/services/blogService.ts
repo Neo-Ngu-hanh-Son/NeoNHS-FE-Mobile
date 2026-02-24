@@ -1,15 +1,9 @@
-import { apiClient, endpoints } from "@/services/api";
-import type { ApiResponse } from "@/services/api/types";
-import type { BlogResponse, BlogPageResponse, BlogListParams } from "../types";
+import { apiClient, endpoints } from '@/services/api';
+import type { ApiResponse } from '@/services/api/types';
+import type { BlogResponse, BlogPageResponse, BlogListParams } from '../types';
 
 export const blogService = {
-  /**
-   * Fetch a paginated list of blogs.
-   * Backend: GET /blogs?page=&size=&search=&status=&tags=&sortBy=&sortDir=
-   */
-  getBlogs: async (
-    params: BlogListParams = {},
-  ): Promise<BlogPageResponse> => {
+  getBlogs: async (params: BlogListParams = {}): Promise<BlogPageResponse> => {
     const queryParams: Record<string, string | number | boolean> = {};
     if (params.page !== undefined) queryParams.page = params.page;
     if (params.size !== undefined) queryParams.size = params.size;
@@ -20,11 +14,13 @@ export const blogService = {
     if (params.tags?.length) {
       queryParams.tags = params.tags.join(',');
     }
+    if (params.categorySlug) queryParams.categorySlug = params.categorySlug;
+    if (params.isFeatured !== undefined) queryParams.isFeatured = params.isFeatured;
 
-    const response = await apiClient.get<BlogPageResponse>(
-      endpoints.blog.getBlogs(),
-      { requiresAuth: false, params: queryParams },
-    );
+    const response = await apiClient.get<BlogPageResponse>(endpoints.blog.getBlogs(), {
+      requiresAuth: false,
+      params: queryParams,
+    });
 
     return response.data;
   },

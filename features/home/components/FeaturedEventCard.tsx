@@ -12,7 +12,7 @@ type FeaturedEventCardProps = {
   onPress?: () => void;
 };
 
-export default function FeaturedEventCard({
+export default function FeaturedCard({
   tag = 'EVENT',
   title,
   description,

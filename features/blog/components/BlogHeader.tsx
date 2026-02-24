@@ -56,7 +56,7 @@ export default function BlogHeader({ blog }: BlogHeaderProps) {
       </View>
 
       <View
-        className="gap-3 px-4"
+        className="gap-3 px-4 py-4"
         style={{
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
@@ -68,6 +68,9 @@ export default function BlogHeader({ blog }: BlogHeaderProps) {
         <Text variant="h3" className="mt-2">
           {blog.title}
         </Text>
+
+        {/* Short desc*/}
+        <Text variant="muted">{blog.summary}</Text>
 
         {/* Meta row */}
         <View className="flex-row items-center gap-2">

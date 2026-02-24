@@ -58,6 +58,8 @@ export interface BlogListParams {
   tags?: string[];
   sortBy?: string;
   sortDir?: 'asc' | 'desc';
+  categorySlug?: string;
+  isFeatured?: boolean;
 }
 
 export interface BlogFilters {
@@ -65,6 +67,7 @@ export interface BlogFilters {
   tags: string[];
   sortBy: string;
   sortDir: 'asc' | 'desc';
+  isFeatured?: boolean;
 }
 
 export type BlogSortOption = {
@@ -74,7 +77,7 @@ export type BlogSortOption = {
 };
 
 export const BLOG_DEFAULT_FILTERS: BlogFilters = {
-  status: undefined,
+  status: 'PUBLISHED',
   tags: [],
   sortBy: 'publishedAt',
   sortDir: 'desc',
@@ -87,10 +90,10 @@ export const BLOG_SORT_OPTIONS: BlogSortOption[] = [
 ];
 
 export const BLOG_STATUS_OPTIONS: Array<{ label: string; value?: string }> = [
-  { label: 'All', value: undefined },
+  // { label: 'All', value: undefined },
   { label: 'Published', value: 'PUBLISHED' },
-  { label: 'Draft', value: 'DRAFT' },
-  { label: 'Archived', value: 'ARCHIVED' },
+  // { label: 'Draft', value: 'DRAFT' },
+  // { label: 'Archived', value: 'ARCHIVED' },
 ];
 
 export const BLOG_TAG_OPTIONS: string[] = [

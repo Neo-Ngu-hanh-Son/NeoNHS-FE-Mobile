@@ -37,6 +37,7 @@ export default function BlogCard({ blog, onPress }: BlogCardProps) {
         {
           width: CARD_WIDTH,
           backgroundColor: theme.card,
+          // Subtle shadow
           shadowColor: '#000',
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: isDarkColorScheme ? 0.3 : 0.08,

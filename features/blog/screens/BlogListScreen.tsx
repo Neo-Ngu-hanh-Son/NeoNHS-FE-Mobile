@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { FlatList, Keyboard } from 'react-native';
+import { FlatList, Keyboard, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackScreenProps } from '@react-navigation/stack';
 import { Text } from '@/components/ui/text';
@@ -11,6 +11,8 @@ import BlogListHeader from '@/features/blog/components/BlogListHeader';
 import BlogFilterModal from '@/features/blog/components/BlogFilterModal';
 import { BLOG_DEFAULT_FILTERS } from '@/features/blog/types';
 import type { Blog, BlogFilters } from '@/features/blog/types';
+import { Button } from '@/components/ui/button';
+import { Ionicons } from '@expo/vector-icons';
 
 type Props = StackScreenProps<MainStackParamList, 'BlogList'>;
 
@@ -57,9 +59,23 @@ export default function BlogListScreen({ navigation }: Props) {
     [setFilters]
   );
 
+  const goBack = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
+
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <Text className="px-4 pt-3 text-2xl font-bold text-foreground">Blogs</Text>
+      <View className="flex-row items-center justify-start gap-4 px-4 py-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          onPress={goBack}
+          accessibilityLabel="Go back"
+          className="rounded-full bg-black/30">
+          <Ionicons name="arrow-back" size={22} color="white" />
+        </Button>
+        <Text className="px-4 pt-3 text-2xl font-bold text-foreground">Blogs</Text>
+      </View>
       <BlogListHeader
         search={search}
         onSearchChange={setSearch}

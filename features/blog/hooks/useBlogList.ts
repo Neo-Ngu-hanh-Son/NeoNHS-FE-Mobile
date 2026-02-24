@@ -15,10 +15,10 @@ interface UseBlogListReturn {
   page: number;
   totalPages: number;
   loading: boolean;
-  refreshing: boolean;
   fetchBlogs: () => Promise<void>;
   loadMore: () => void;
   refresh: () => Promise<void>;
+  fetchFeaturedBlog: () => Promise<void>;
 }
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -32,33 +32,19 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const isFetchingRef = useRef(false);
 
   const requestPage = useCallback(
-    async ({
-      targetPage,
-      replace,
-      isRefresh,
-    }: {
-      targetPage: number;
-      replace: boolean;
-      isRefresh: boolean;
-    }) => {
+    async ({ targetPage, replace }: { targetPage: number; replace: boolean }) => {
       if (isFetchingRef.current) {
         return;
       }
 
       isFetchingRef.current = true;
 
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-
+      setLoading(true);
       try {
         const pageData = await blogService.getBlogs({
           page: targetPage,
@@ -70,7 +56,9 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
           sortDir: activeFilters.sortDir,
         });
 
-        const incomingBlogs: Blog[] = pageData.content.map(({ contentJSON: _contentJson, ...blog }) => blog);
+        const incomingBlogs: Blog[] = pageData.content.map(
+          ({ contentJSON: _contentJson, ...blog }) => blog
+        );
 
         setBlogs((prevBlogs) => (replace ? incomingBlogs : [...prevBlogs, ...incomingBlogs]));
         setPage(pageData.number);
@@ -80,22 +68,27 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
       } finally {
         isFetchingRef.current = false;
         setLoading(false);
-        setRefreshing(false);
       }
     },
-    [activeFilters.sortBy, activeFilters.sortDir, activeFilters.status, activeFilters.tags, normalizedSearch, size],
+    [
+      activeFilters.sortBy,
+      activeFilters.sortDir,
+      activeFilters.status,
+      activeFilters.tags,
+      normalizedSearch,
+      size,
+    ]
   );
 
   const fetchBlogs = useCallback(async () => {
     await requestPage({
       targetPage: 0,
       replace: true,
-      isRefresh: false,
     });
   }, [requestPage]);
 
   const loadMore = useCallback(() => {
-    if (loading || refreshing || isFetchingRef.current) {
+    if (loading || isFetchingRef.current) {
       return;
     }
 
@@ -106,32 +99,44 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
     void requestPage({
       targetPage: page + 1,
       replace: false,
-      isRefresh: false,
     });
-  }, [loading, page, refreshing, requestPage, totalPages]);
+  }, [loading, page, requestPage, totalPages]);
 
   const refresh = useCallback(async () => {
     await requestPage({
       targetPage: 0,
       replace: true,
-      isRefresh: true,
     });
   }, [requestPage]);
 
-  useEffect(() => {
-    setBlogs([]);
-    setPage(0);
-    void fetchBlogs();
-  }, [fetchBlogs, normalizedSearch, activeFilters]);
+  const fetchFeaturedBlog = async () => {
+    setLoading(true);
+    try {
+      const featuredBlogs = await blogService.getBlogs({
+        page: 0,
+        size: 1,
+        search: normalizedSearch,
+        status: activeFilters.status,
+        tags: activeFilters.tags,
+        sortBy: 'featured',
+        sortDir: 'desc',
+      });
+      setBlogs(featuredBlogs.content);
+    } catch (error) {
+      throw new Error('Failed to fetch featured blog');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return {
     blogs,
     page,
     totalPages,
     loading,
-    refreshing,
     fetchBlogs,
     loadMore,
     refresh,
+    fetchFeaturedBlog,
   };
 }

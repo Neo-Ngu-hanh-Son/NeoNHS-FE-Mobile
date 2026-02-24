@@ -1,6 +1,6 @@
 import { ScrollView, View, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { StackScreenProps } from '@react-navigation/stack';
 import { CompositeScreenProps } from '@react-navigation/native';
 
@@ -11,225 +11,114 @@ import { RootStackParamList, TabsStackParamList } from '@/app/navigations/Naviga
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { Ionicons } from '@expo/vector-icons';
-
-import {
-  HomeHeader,
-  SearchBar,
-  FeaturedEventCard,
-  SectionHeader,
-  GuideCard,
-  ExperienceCard,
-  PlaceCard,
-  HighlightCard,
-} from '../components';
-import BlogCard from '../components/BlogCard';
-import { useHomeBlogs } from '../hooks/useHomeBlogs';
-import axios from 'axios';
 import { logger } from '@/utils/logger';
-import { apiClient } from '@/services/api';
-import LoadingOverlay from '@/components/Loader/LoadingOverlay';
-import ExploreSection from '../components/ExploreSection';
+
+import { useBlogList } from '@/features/blog';
+import useGuides from '../hooks/useGuides';
+import useOverviews from '../hooks/useOverviews';
+import useHomeEvents from '../hooks/useHomeEvents';
+import useHomeDestinations from '../hooks/useHomeDestinations';
+import useFeaturedBlog from '../hooks/useFeaturedBlog';
+import { HomeHeader, SearchBar } from '../components';
+import {
+  ExploreSection,
+  FeaturedSection,
+  KnowBeforeYouGoSection,
+  AboutNHSSection,
+  LatestBlogsSection,
+  UpcomingEventsSection,
+  MustSeePlacesSection,
+} from '../components/sections';
 
 type HomeScreen = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Home'>,
   StackScreenProps<RootStackParamList>
 >;
-
-// ============================================
-// SECTION 1: Hero / Pinned Editorial
-// ============================================
-const HERO_CONTENT = {
-  tag: 'FEATURED',
-  title: 'Welcome to Ngu Hanh Son',
-  description:
-    'Discover the Marble Mountains - a cluster of five marble and limestone hills with caves, tunnels, and Buddhist sanctuaries.',
-  imageUrl: 'https://images.unsplash.com/photo-1528127269322-539801943592?w=800&q=80',
-};
-
-// ============================================
-// SECTION 3: Helpful & Informational Blogs
-// "Know Before You Go" / "Getting Started"
-// ============================================
-const GUIDES = [
-  {
-    id: '1',
-    title: 'Hidden Gems of the Water Mountain',
-    description: 'Discover the secret paths and ancient shrines that most tourists miss when...',
-    imageUrl: 'https://images.unsplash.com/photo-1528892952291-009c663ce843?w=400&q=80',
-  },
-  {
-    id: '2',
-    title: 'A Guide to Buying Authentic Art',
-    description: 'How to distinguish high-quality crafts from mass-produced souvenirs...',
-    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80',
-  },
-  {
-    id: '3',
-    title: 'Cultural Tips & Temple Etiquette',
-    description: 'Learn about dress codes, customs, and how to be a respectful visitor...',
-    imageUrl: 'https://images.unsplash.com/photo-1523731407965-2430cd12f5e4?w=400&q=80',
-  },
-  {
-    id: '4',
-    title: 'Best Times to Visit NHS',
-    description: 'Morning vs evening, seasonal tips, and avoiding the crowds...',
-    imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80',
-  },
-];
-
-// ============================================
-// SECTION 4: Highlights About Ngu Hanh Son
-// ============================================
-const HIGHLIGHTS = [
-  {
-    id: '1',
-    title: 'History of the Marble Mountains',
-    description:
-      'Dating back centuries, these five peaks represent the five elements of the universe: metal, wood, water, fire, and earth.',
-    imageUrl: 'https://images.unsplash.com/photo-1509439581779-6298f75bf6e5?w=400&q=80',
-  },
-  {
-    id: '2',
-    title: 'Cultural & Spiritual Significance',
-    description:
-      'Home to numerous Buddhist pagodas and Hindu grottos, these mountains have been a pilgrimage site for centuries.',
-    imageUrl: 'https://images.unsplash.com/photo-1528181304800-259b08848526?w=400&q=80',
-  },
-];
-
-// ============================================
-// SECTION 5: Popular Experiences (Preview)
-// "Popular Right Now"
-// ============================================
-const EXPERIENCES = [
-  {
-    id: '1',
-    title: 'Stone Carving Workshop',
-    tag: 'Workshop' as const,
-    imageUrl: 'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=400&q=80',
-  },
-  {
-    id: '2',
-    title: 'Lantern Festival Night',
-    tag: 'Event' as const,
-    imageUrl: 'https://images.unsplash.com/photo-1602524816069-8ccc4c0cafee?w=400&q=80',
-  },
-  {
-    id: '3',
-    title: 'Sunrise Meditation Tour',
-    tag: 'Tour' as const,
-    imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80',
-  },
-  {
-    id: '4',
-    title: 'Traditional Art Class',
-    tag: 'Workshop' as const,
-    imageUrl: 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=400&q=80',
-  },
-];
-
-// ============================================
-// SECTION 6: Featured Destinations
-// "Must-See Places"
-// ============================================
-const DESTINATIONS = [
-  {
-    id: '1',
-    name: 'Huyen Khong Cave',
-    imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-  },
-  {
-    id: '2',
-    name: 'Tam Thai Pagoda',
-    imageUrl: 'https://images.unsplash.com/photo-1528181304800-259b08848526?w=400&q=80',
-  },
-  {
-    id: '3',
-    name: 'Linh Ung Pagoda',
-    imageUrl: 'https://images.unsplash.com/photo-1555921015-5532091f6026?w=400&q=80',
-  },
-  {
-    id: '4',
-    name: 'Am Phu Cave',
-    imageUrl: 'https://images.unsplash.com/photo-1504893524553-b855bce32c67?w=400&q=80',
-  },
-  {
-    id: '5',
-    name: 'Non Nuoc Stone Village',
-    imageUrl: 'https://images.unsplash.com/photo-1523731407965-2430cd12f5e4?w=400&q=80',
-  },
-];
-
 export default function HomeScreen({ navigation }: HomeScreen) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const { user } = useAuth();
 
   const [refreshing, setRefreshing] = useState(false);
-  const { blogs, loading: blogsLoading, refetch: refetchBlogs } = useHomeBlogs(6);
+  // This one is for blogs
+  const {
+    blogs,
+    loading: blogsLoading,
+    refresh: refetchBlogs,
+  } = useBlogList({
+    size: 6,
+  });
 
-  const onRefresh = useCallback(() => {
+  const { loading: guidesLoading, guides, fetchGuides } = useGuides();
+  const { loading: overviewsLoading, overviews, fetchOverviews } = useOverviews();
+  const { loading: homeEventsLoading, homeEvents, fetchHomeEvents } = useHomeEvents();
+  const { loading: destinationsLoading, destinations, fetchDestinations } = useHomeDestinations();
+  const { loading: featuredLoading, featuredBlog, fetchfeaturedBlog } = useFeaturedBlog();
+
+  useEffect(() => {
+    void refetchBlogs();
+  }, []);
+
+  useEffect(() => {
+    void fetchfeaturedBlog();
+  }, []);
+
+  useEffect(() => {
+    void fetchGuides();
+  }, []);
+
+  useEffect(() => {
+    void fetchOverviews();
+  }, []);
+
+  useEffect(() => {
+    void fetchHomeEvents();
+  }, []);
+
+  useEffect(() => {
+    void fetchDestinations();
+  }, []);
+
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    refetchBlogs();
-    setTimeout(() => {
+    try {
+      await Promise.all([
+        refetchBlogs(),
+        fetchfeaturedBlog(),
+        fetchGuides(),
+        fetchOverviews(),
+        fetchHomeEvents(),
+        fetchDestinations(),
+      ]);
+    } catch (error) {
+      logger.error('Error refreshing home sections:', error);
+    } finally {
       setRefreshing(false);
-    }, 1500);
-  }, [refetchBlogs]);
+    }
+  }, [
+    refetchBlogs,
+    fetchfeaturedBlog,
+    fetchGuides,
+    fetchOverviews,
+    fetchHomeEvents,
+    fetchDestinations,
+  ]);
 
-  // Navigation handlers
-  const handleNotificationPress = () => {
-    // TODO: Navigate to notifications
-  };
+  function handleNotificationPress(): void {
+    logger.info('Notifications pressed on Home');
+  }
 
-  const handleProfilePress = () => {
-    navigation.navigate('Main', {
-      screen: 'Tabs',
-      params: { screen: 'Profile' },
-    });
-  };
+  function handleProfilePress(): void {
+    navigation.navigate('Profile');
+  }
 
-  const handleSearchPress = () => {
-    // TODO: Navigate to search screen
-  };
+  function handleSearchPress(): void {
+    navigation.navigate('Main', { screen: 'AllDestinations', params: {} });
+  }
 
-  const handleHeroPress = () => {
-    // TODO: Navigate to introduction page
-  };
-
-  const handleGuidePress = (guideId: string) => {
-    // TODO: Navigate to blog/guide details
-  };
-
-  const handleBlogPress = (blogId: string) => {
-    navigation.navigate('Main', {
-      screen: 'BlogDetails',
-      params: { blogId },
-    });
-  };
-
-  const handleViewAllBlogs = () => {
-    // TODO: Navigate to blogs list
-  };
-
-  const handleHighlightPress = (highlightId: string) => {
-    // TODO: Navigate to highlight details
-  };
-
-  const handleExperiencePress = (experienceId: string) => {
-    // TODO: Navigate to experience details
-  };
-
-  const handleSeeMoreExperiences = () => {
-    // TODO: Navigate to Discover tab
-  };
-
-  const handlePlacePress = (placeId: string) => {
-    // TODO: Navigate to destination details
-  };
-
-  const handleExploreAllDestinations = () => {
-    // TODO: Navigate to Discover tab
-  };
+  function handleExploreAllDestinations(): void {
+    navigation.navigate('Main', { screen: 'AllDestinations', params: {} });
+  }
 
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
@@ -257,118 +146,19 @@ export default function HomeScreen({ navigation }: HomeScreen) {
           <SearchBar onPress={handleSearchPress} />
         </View>
 
-        <SectionHeader title="Explore" />
         <ExploreSection />
 
-        {/* ============================================ */}
-        {/* SECTION 1: Hero / Pinned Editorial */}
-        {/* ============================================ */}
-        <SectionHeader title="Featured" />
-        <FeaturedEventCard
-          tag={HERO_CONTENT.tag}
-          title={HERO_CONTENT.title}
-          description={HERO_CONTENT.description}
-          imageUrl={HERO_CONTENT.imageUrl}
-          onPress={handleHeroPress}
-        />
+        <FeaturedSection loading={featuredLoading} featuredBlog={featuredBlog} />
 
-        {/* ============================================ */}
-        {/* SECTION 3: Helpful & Informational Blogs */}
-        {/* "Know Before You Go" */}
-        {/* ============================================ */}
-        <SectionHeader title="Know Before You Go" />
-        <View className="flex-row flex-wrap gap-4 px-4">
-          {GUIDES.map((guide) => (
-            <GuideCard
-              key={guide.id}
-              title={guide.title}
-              description={guide.description}
-              imageUrl={guide.imageUrl}
-              onPress={() => handleGuidePress(guide.id)}
-            />
-          ))}
-        </View>
+        <KnowBeforeYouGoSection guides={guides} loading={guidesLoading} />
 
-        {/* ============================================ */}
-        {/* SECTION: Latest Blogs (from API) */}
-        {/* ============================================ */}
-        {blogs.length > 0 && (
-          <>
-            <SectionHeader title="Latest Blogs" showSeeAll onSeeAllPress={handleViewAllBlogs} />
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8 }}>
-              {blogs.map((blog) => (
-                <BlogCard key={blog.id} blog={blog} onPress={() => handleBlogPress(blog.id)} />
-              ))}
-            </ScrollView>
-          </>
-        )}
+        <AboutNHSSection overviews={overviews} loading={overviewsLoading} />
 
-        {/* ============================================ */}
-        {/* SECTION 4: Highlights About Ngu Hanh Son */}
-        {/* ============================================ */}
-        <SectionHeader title="About Ngu Hanh Son" />
-        <View className="gap-3">
-          {HIGHLIGHTS.map((highlight) => (
-            <HighlightCard
-              key={highlight.id}
-              title={highlight.title}
-              description={highlight.description}
-              imageUrl={highlight.imageUrl}
-              linkText="Learn More"
-              onPress={() => handleHighlightPress(highlight.id)}
-            />
-          ))}
-        </View>
+        <LatestBlogsSection blogs={blogs} loading={blogsLoading} />
 
-        {/* ============================================ */}
-        {/* SECTION 5: Popular Experiences (Preview) */}
-        {/* "Popular Right Now" */}
-        {/* ============================================ */}
-        <SectionHeader
-          title="Popular Right Now"
-          showSeeAll
-          onSeeAllPress={handleSeeMoreExperiences}
-        />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16 }}>
-          {EXPERIENCES.map((experience) => (
-            <ExperienceCard
-              key={experience.id}
-              title={experience.title}
-              tag={experience.tag}
-              imageUrl={experience.imageUrl}
-              onPress={() => handleExperiencePress(experience.id)}
-            />
-          ))}
-        </ScrollView>
+        <UpcomingEventsSection events={homeEvents} loading={homeEventsLoading} />
 
-        {/* ============================================ */}
-        {/* SECTION 6: Featured Destinations */}
-        {/* "Must-See Places" */}
-        {/* ============================================ */}
-        <SectionHeader
-          title="Must-See Places"
-          showSeeAll
-          onSeeAllPress={handleExploreAllDestinations}
-        />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16 }}>
-          {DESTINATIONS.map((place) => (
-            <PlaceCard
-              key={place.id}
-              name={place.name}
-              imageUrl={place.imageUrl}
-              onPress={() => handlePlacePress(place.id)}
-            />
-          ))}
-        </ScrollView>
+        <MustSeePlacesSection destinations={destinations} loading={destinationsLoading} />
 
         {/* Explore All Destinations Link */}
         <View className="mt-4 px-4">

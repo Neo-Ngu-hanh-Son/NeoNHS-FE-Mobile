@@ -1,10 +1,10 @@
-import { View, Image, TouchableOpacity, Dimensions, StyleSheet } from "react-native";
-import { Text } from "@/components/ui/text";
-import { useTheme } from "@/app/providers/ThemeProvider";
-import { THEME } from "@/lib/theme";
+import { View, Image, TouchableOpacity, Dimensions, StyleSheet } from 'react-native';
+import { Text } from '@/components/ui/text';
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { THEME } from '@/lib/theme';
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CARD_WIDTH = (SCREEN_WIDTH - 48) / 2; // 16px padding on each side + 16px gap
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CARD_WIDTH = SCREEN_WIDTH * 0.8;
 
 type GuideCardProps = {
   title: string;
@@ -13,12 +13,7 @@ type GuideCardProps = {
   onPress?: () => void;
 };
 
-export default function GuideCard({
-  title,
-  description,
-  imageUrl,
-  onPress,
-}: GuideCardProps) {
+export default function GuideCard({ title, description, imageUrl, onPress }: GuideCardProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
@@ -32,14 +27,13 @@ export default function GuideCard({
           width: CARD_WIDTH,
           backgroundColor: theme.card,
           // Subtle shadow for elevation effect
-          shadowColor: isDarkColorScheme ? "#000" : "#000",
+          shadowColor: isDarkColorScheme ? '#000' : '#000',
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: isDarkColorScheme ? 0.3 : 0.08,
           shadowRadius: 8,
           elevation: 3,
         },
-      ]}
-    >
+      ]}>
       {/* Image */}
       <Image
         source={{ uri: imageUrl }}
@@ -52,15 +46,13 @@ export default function GuideCard({
         <Text
           className="text-base font-bold leading-5"
           style={{ color: theme.foreground }}
-          numberOfLines={2}
-        >
+          numberOfLines={2}>
           {title}
         </Text>
         <Text
-          className="text-sm leading-5 mt-1"
+          className="mt-1 text-sm leading-5"
           style={{ color: theme.mutedForeground }}
-          numberOfLines={2}
-        >
+          numberOfLines={3}>
           {description}
         </Text>
       </View>
@@ -71,10 +63,11 @@ export default function GuideCard({
 const styles = StyleSheet.create({
   container: {
     borderRadius: 12,
-    overflow: "hidden",
+    overflow: 'hidden',
+    marginRight: 12,
   },
   image: {
-    width: "100%",
+    width: '100%',
     height: 120,
   },
   content: {
