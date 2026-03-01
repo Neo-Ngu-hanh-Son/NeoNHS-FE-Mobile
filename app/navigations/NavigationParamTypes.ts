@@ -75,6 +75,12 @@ export type EventRoutes = {
   EventDetail: { eventId: string };
 };
 
+/* Workshops */
+export type WorkshopRoutes = {
+  WorkshopList: undefined;
+  WorkshopDetail: { workshopId: string };
+};
+
 /* Checkout */
 export type CheckoutRoutes = {
   PreCheckout: { selectedIds: string[] };
@@ -102,6 +108,7 @@ export type MainStackParamList =
   DestinationRoutes &
   MapRoutes &
   EventRoutes &
+  WorkshopRoutes &
   CheckoutRoutes &
   BlogRoutes;
 
