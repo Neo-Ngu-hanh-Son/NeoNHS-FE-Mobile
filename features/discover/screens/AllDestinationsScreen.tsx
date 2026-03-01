@@ -10,6 +10,8 @@ import { THEME } from "@/lib/theme";
 import { MainStackParamList } from "@/app/navigations/NavigationParamTypes";
 import { discoverService } from "../services/discoverServices";
 import { Attraction, MapPoint } from "../../map/types";
+import { eventService } from "../../event/services/eventService";
+import { EventResponse } from "../../event/types";
 
 type Props = StackScreenProps<MainStackParamList, "AllDestinations">;
 
@@ -21,10 +23,7 @@ const WORKSHOPS = [
     { id: "w2", name: "Lantern Making", rating: 4.8, distance: "1.5 km", image: "https://images.unsplash.com/photo-1549462980-6a013627d729?w=500&auto=format&fit=crop" },
 ];
 
-const EVENTS = [
-    { id: "e1", name: "Full Moon Festival", date: "Feb 24, 2024", location: "Hoi An Ancient Town", image: "https://images.unsplash.com/photo-1506461883276-594a12b11cf3?w=500&auto=format&fit=crop" },
-    { id: "e2", name: "Dragon Bridge Show", date: "Sat & Sun Night", location: "Dragon Bridge", image: "https://images.unsplash.com/photo-1606751271131-4a4be5a04eb7?w=500&auto=format&fit=crop" },
-];
+// Events are now loaded from API
 
 const BLOGS = [
     { id: "b1", title: "Top 5 Views in Marble Mountains", author: "Alex J.", date: "Jan 15", image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=500&auto=format&fit=crop" },
@@ -39,6 +38,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
     const [selectedAttractionId, setSelectedAttractionId] = useState<string | undefined>(route.params?.selectedAttractionId);
     const [attractions, setAttractions] = useState<Attraction[]>([]);
     const [points, setPoints] = useState<MapPoint[]>([]);
+    const [events, setEvents] = useState<EventResponse[]>([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -57,6 +57,11 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
                         if (pointsResponse.success && pointsResponse.data) {
                             setPoints(pointsResponse.data);
                         }
+                    }
+                } else if (activeTab === "Events") {
+                    const response = await eventService.getAllEvents();
+                    if (response.success && response.data) {
+                        setEvents(response.data);
                     }
                 }
             } catch (error) {
@@ -144,7 +149,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
         switch (activeTab) {
             case "Points": data = selectedAttractionId ? points : attractions; break;
             case "Workshops": data = WORKSHOPS; break;
-            case "Events": data = EVENTS; break;
+            case "Events": data = events; break;
             case "Blogs": data = BLOGS; break;
         }
 
@@ -169,12 +174,14 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
                                 } else {
                                     navigation.navigate("PointDetail", { pointId: item.id });
                                 }
+                            } else if (activeTab === "Events") {
+                                navigation.navigate("EventDetail", { eventId: item.id });
                             }
                         }}
                         className="bg-white dark:bg-slate-800 p-3 rounded-2xl border flex-row items-center gap-4"
                         style={{ borderColor: theme.border }}
                     >
-                        <Image source={{ uri: item.thumbnailUrl || item.image }} className="w-24 h-24 rounded-2xl object-cover" />
+                        <Image source={{ uri: item.thumbnailUrl || item.image || undefined }} className="w-24 h-24 rounded-2xl object-cover" />
                         <View className="flex-1">
                             <Text className="font-bold text-lg" style={{ color: theme.foreground }}>{item.name || item.title}</Text>
 
@@ -213,8 +220,16 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
 
                             {activeTab === "Events" && (
                                 <View className="gap-1 mt-1">
-                                    <Text className="text-sm font-semibold" style={{ color: theme.primary }}>{item.date}</Text>
-                                    <Text className="text-xs" style={{ color: theme.mutedForeground }}>{item.location}</Text>
+                                    {item.startTime && (
+                                        <Text className="text-sm font-semibold" style={{ color: theme.primary }}>
+                                            {new Date(item.startTime).toLocaleDateString("vi-VN", { day: "2-digit", month: "short", year: "numeric" })}
+                                        </Text>
+                                    )}
+                                    <Text className="text-xs" style={{ color: theme.mutedForeground }}>{item.locationName || "TBD"}</Text>
+                                    <View className="flex-row items-center gap-1">
+                                        <View className="w-2 h-2 rounded-full" style={{ backgroundColor: item.status === 'UPCOMING' ? '#3b82f6' : item.status === 'ONGOING' ? '#10b981' : item.status === 'CANCELLED' ? '#ef4444' : '#6b7280' }} />
+                                        <Text className="text-[10px] font-bold uppercase" style={{ color: item.status === 'UPCOMING' ? '#3b82f6' : item.status === 'ONGOING' ? '#10b981' : item.status === 'CANCELLED' ? '#ef4444' : '#6b7280' }}>{item.status}</Text>
+                                    </View>
                                 </View>
                             )}
 

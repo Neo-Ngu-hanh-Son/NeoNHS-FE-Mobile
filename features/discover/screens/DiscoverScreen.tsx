@@ -12,6 +12,8 @@ import { CompositeScreenProps } from "@react-navigation/native";
 import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { discoverService } from "../services/discoverServices";
 import { Attraction } from "../../map/types";
+import { eventService } from "../../event/services/eventService";
+import { EventResponse } from "../../event/types";
 
 type DiscoverScreenProps = CompositeScreenProps<
   BottomTabScreenProps<TabsStackParamList, "Discover">,
@@ -52,25 +54,6 @@ const WORKSHOPS = [
   },
 ];
 
-const EVENTS = [
-  {
-    id: "e1",
-    name: "Avalokitesvara Festival",
-    location: "Quan Am Pagoda",
-    month: "Feb",
-    day: "19",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAj0EbE0KnjIcdXnC06Fh8qgXR0hUm99aT0Xd4sZBVjsYB4PH5oNltpp9H7g3UT4Uupo-jdtPHrwVKGGBF3WEcAdJrbEJdIJ--K4_DVVxpr0STpRgQZaL3nGAsmESl-lRxJlUdOhjMUV0ZVrhQ9yFefFEu4Px2rpjcmQgZne4-pbny2IbO0YMuxP2Jiih_a--Dqm3PWxLepjlbFMxFjbcrhv_T3cexKY_XxDDOg2t_Ou6FpEPbTge-fSPu8zJcPLMVUWzVL9CHO0Szu",
-  },
-  {
-    id: "e2",
-    name: "Cultural Dance Night",
-    location: "Non Nuoc Village",
-    month: "Mar",
-    day: "05",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCCVvpDIm-tDyaXzCgMvpsPw2M9_SiB49K6Fbfv2JPvGeuJSyGxf-s1zJRy3bTQ7DZXwVytdJv3GooSJcKW0OA5T3l_oj1xHGGkcBqefXcDJ7EaGJp7lO-RoT-9_17SzZh1QH6tb7Yw0kYyLAKMpMtGKVq03HxkCk3VjxIovldHaQS63ZKCwU09AdvndR1b4QqbReNgi_kk0I6Elp3w470O5N1_8xdUZc0ElgrBS9LDHwyxqUB5vGMWg-OLFcF5dWIPnVy-pT96bA7a",
-  },
-];
-
 const BLOGS = [
   {
     id: "b1",
@@ -86,6 +69,25 @@ const BLOGS = [
   },
 ];
 
+/** Format ISO datetime to { month, day } */
+function formatEventDate(dateStr?: string | null): { month: string; day: string } {
+  if (!dateStr) return { month: "TBD", day: "--" };
+  const d = new Date(dateStr);
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return { month: months[d.getMonth()], day: String(d.getDate()).padStart(2, "0") };
+}
+
+/** Map EventStatus to display color */
+function getStatusColor(status: string): string {
+  switch (status) {
+    case "UPCOMING": return "#3b82f6";
+    case "ONGOING": return "#10b981";
+    case "COMPLETED": return "#6b7280";
+    case "CANCELLED": return "#ef4444";
+    default: return "#6b7280";
+  }
+}
+
 export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
@@ -93,18 +95,31 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
   const [refreshing, setRefreshing] = useState(false);
   const [popularAttractions, setPopularAttractions] = useState<Attraction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [events, setEvents] = useState<EventResponse[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    setEventsLoading(true);
     try {
-      const response = await discoverService.getAllAttractions();
-      if (response.success && response.data) {
-        setPopularAttractions(response.data.slice(0, 5));
+      // Fetch attractions
+      const attractionResponse = discoverService.getAllAttractions();
+      // Fetch upcoming events
+      const eventResponse = eventService.getEvents({ page: 0, size: 5, status: "UPCOMING" as any, sortBy: "startTime", sortDir: "asc" });
+
+      const [attrRes, evtRes] = await Promise.all([attractionResponse, eventResponse]);
+
+      if (attrRes.success && attrRes.data) {
+        setPopularAttractions(attrRes.data.slice(0, 5));
+      }
+      if (evtRes.success && evtRes.data) {
+        setEvents(evtRes.data.content || []);
       }
     } catch (error) {
-      console.error("Failed to fetch popular attractions:", error);
+      console.error("Failed to fetch data:", error);
     } finally {
       setLoading(false);
+      setEventsLoading(false);
       setRefreshing(false);
     }
   }, []);
@@ -218,31 +233,70 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
           ))}
         </ScrollView>
 
-        {/* Upcoming Events */}
+        {/* Upcoming Events — from API */}
         <SectionHeader title="Upcoming Events" onSeeAll={() => navigation.navigate("AllDestinations", { initialTab: "Events" })} />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 16 }}>
-          {EVENTS.map((event) => (
-            <TouchableOpacity
-              key={event.id}
-              className="w-64 rounded-2xl overflow-hidden shadow-sm border"
-              style={{ backgroundColor: theme.card, borderColor: theme.border }}
-            >
-              <View className="h-36 relative">
-                <Image source={{ uri: event.image }} className="w-full h-full object-cover" />
-                <View className="absolute top-3 left-3 bg-white dark:bg-slate-900 rounded-xl p-1.5 min-w-[45px] items-center shadow-lg">
-                  <Text className="text-[10px] font-bold text-red-500 uppercase leading-none mb-1">{event.month}</Text>
-                  <Text className="text-lg font-bold leading-none" style={{ color: theme.foreground }}>{event.day}</Text>
-                </View>
-              </View>
-              <View className="p-3">
-                <Text className="font-bold text-md leading-tight" style={{ color: theme.foreground }}>{event.name}</Text>
-                <View className="flex-row items-center gap-1 mt-1">
-                  <Ionicons name="location-outline" size={14} color={theme.mutedForeground} />
-                  <Text className="text-xs" style={{ color: theme.mutedForeground }}>{event.location}</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
+          {eventsLoading ? (
+            <View className="w-64 h-52 items-center justify-center rounded-2xl border bg-muted/20" style={{ borderColor: theme.border }}>
+              <Ionicons name="refresh" size={24} color={theme.primary} className="animate-spin" />
+            </View>
+          ) : events.length > 0 ? (
+            events.map((event) => {
+              const { month, day } = formatEventDate(event.startTime);
+              return (
+                <TouchableOpacity
+                  key={event.id}
+                  className="w-64 rounded-2xl overflow-hidden shadow-sm border"
+                  style={{ backgroundColor: theme.card, borderColor: theme.border }}
+                  onPress={() => navigation.navigate("EventDetail", { eventId: event.id })}
+                >
+                  <View className="h-36 relative">
+                    <Image source={{ uri: event.thumbnailUrl || undefined }} className="w-full h-full object-cover" />
+                    {/* Date badge */}
+                    <View className="absolute top-3 left-3 bg-white dark:bg-slate-900 rounded-xl p-1.5 min-w-[45px] items-center shadow-lg">
+                      <Text className="text-[10px] font-bold text-red-500 uppercase leading-none mb-1">{month}</Text>
+                      <Text className="text-lg font-bold leading-none" style={{ color: theme.foreground }}>{day}</Text>
+                    </View>
+                    {/* Status badge */}
+                    <View
+                      className="absolute top-3 right-3 px-2 py-0.5 rounded-lg"
+                      style={{ backgroundColor: getStatusColor(event.status) }}
+                    >
+                      <Text className="text-white text-[10px] font-bold uppercase">{event.status}</Text>
+                    </View>
+                  </View>
+                  <View className="p-3">
+                    <Text className="font-bold text-md leading-tight" style={{ color: theme.foreground }} numberOfLines={1}>{event.name}</Text>
+                    <View className="flex-row items-center gap-1 mt-1">
+                      <Ionicons name="location-outline" size={14} color={theme.mutedForeground} />
+                      <Text className="text-xs" style={{ color: theme.mutedForeground }} numberOfLines={1}>{event.locationName || "TBD"}</Text>
+                    </View>
+                    {/* Tags */}
+                    {event.tags && event.tags.length > 0 && (
+                      <View className="flex-row flex-wrap gap-1 mt-2">
+                        {event.tags.slice(0, 2).map((tag) => (
+                          <View key={tag.id} className="px-2 py-0.5 rounded" style={{ backgroundColor: tag.tagColor + "20" }}>
+                            <Text className="text-[10px] font-semibold" style={{ color: tag.tagColor }}>{tag.name}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                    {/* Price */}
+                    {event.isTicketRequired && event.price != null && (
+                      <Text className="text-xs font-bold mt-1" style={{ color: theme.primary }}>
+                        {event.price.toLocaleString("vi-VN")}đ
+                      </Text>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              );
+            })
+          ) : (
+            <View className="w-64 h-52 items-center justify-center rounded-2xl border bg-muted/20" style={{ borderColor: theme.border }}>
+              <Ionicons name="calendar-outline" size={32} color={theme.mutedForeground} />
+              <Text className="mt-2 text-sm" style={{ color: theme.mutedForeground }}>No upcoming events</Text>
+            </View>
+          )}
         </ScrollView>
 
         {/* Travel Blogs */}
@@ -260,4 +314,3 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
     </SafeAreaView>
   );
 }
-

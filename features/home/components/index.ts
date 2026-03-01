@@ -12,3 +12,4 @@ export { default as AboutCard } from "./AboutCard";
 export { default as ExperienceCard } from "./ExperienceCard";
 export { default as PlaceCard } from "./PlaceCard";
 export { default as HighlightCard } from "./HighlightCard";
+export { default as BlogCard } from "./BlogCard";

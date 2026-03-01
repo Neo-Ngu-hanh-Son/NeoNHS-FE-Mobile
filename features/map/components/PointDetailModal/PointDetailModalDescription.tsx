@@ -18,10 +18,7 @@ export default function PointDetailModalDescription({ point }: PointDetailModalD
           style={[styles.description, { color: theme.foreground }]}
           ellipsizeMode="tail"
           numberOfLines={3}>
-          Nobisat qui alias, eos, libero, ipsa! Suntamet tempora at ratione culpa sed. Quaetempore
-          sunt nobis aut vero nesciunt? Nihilquia id, laborum, vel, ipsum odit.Invel dolor quam,
-          ipsum, qui dolores. Sintamet, lorem sint, dolore, sit, neque. Sitodit, velit, nesciunt sit
-          natus ratione! Remautem illo nihil illo quasi, ratione.
+          {point.description}
         </Text>
       )}
     </View>

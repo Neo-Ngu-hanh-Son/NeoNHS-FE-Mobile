@@ -1,10 +1,9 @@
-// navigation/types.ts
-import type { NavigatorScreenParams } from '@react-navigation/native';
+import type { NavigatorScreenParams } from "@react-navigation/native";
 
-/**
- * Authentication Stack Navigation Parameters
- * Contains screens for user authentication flow
- */
+/* ============================================================
+   AUTH STACK
+   ============================================================ */
+
 export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -14,30 +13,56 @@ export type AuthStackParamList = {
   VerifyEmail: { email?: string; fromRegister?: boolean };
 };
 
-/**
- * Bottom Tabs Navigation Parameters
- * Contains the main app screens accessible via bottom tabs
- */
+/* ============================================================
+   TABS STACK
+   ============================================================ */
+
 export type TabsStackParamList = {
   Home: undefined;
   Discover: undefined;
   Map: undefined;
   Bookings: undefined;
   Profile: undefined;
+  TestCart: undefined;
 };
 
-/**
- * Main Stack Navigation Parameters
- * Contains the primary app flow including the bottom tabs (Put your other main app screens here if they are not in the tabs navigator)
- */
-export type MainStackParamList = {
-  Tabs: NavigatorScreenParams<TabsStackParamList>;
+/* ============================================================
+   FEATURE ROUTES
+   ============================================================ */
+
+/* Blog */
+export type BlogRoutes = {
+  BlogList: undefined;
+  BlogDetails: { blogId: string };
+};
+
+/* Account */
+export type AccountRoutes = {
   UpdateAccount: undefined;
   ChangePassword: undefined;
+};
+
+/* Transactions */
+export type TransactionRoutes = {
   TransactionHistory: undefined;
   TransactionDetails: { transactionId: string };
+};
+
+/* Tickets */
+export type TicketRoutes = {
   TicketVerification: undefined;
-  AllDestinations: { initialTab?: "Points" | "Workshops" | "Events" | "Blogs"; selectedAttractionId?: string };
+};
+
+/* Destinations */
+export type DestinationRoutes = {
+  AllDestinations: {
+    initialTab?: "Points" | "Workshops" | "Events" | "Blogs";
+    selectedAttractionId?: string;
+  };
+};
+
+/* Map / Points */
+export type MapRoutes = {
   PointDetail: { pointId: string };
   PointMapSelection: { pointId: string };
   ActiveNavigation: { pointId: string };
@@ -45,10 +70,45 @@ export type MainStackParamList = {
   AudioGuide: { pointId: string };
 };
 
-/**
- * Root Stack Navigation Parameters
- * Top-level navigation that switches between Auth and Main flows
- */
+/* Events */
+export type EventRoutes = {
+  EventDetail: { eventId: string };
+};
+
+/* Checkout */
+export type CheckoutRoutes = {
+  PreCheckout: { selectedIds: string[] };
+  Payment: {
+    cartItemIds: string[];
+    voucherIds: string[];
+    amount: number;
+    orderCode: string;
+  };
+};
+
+/* ============================================================
+   MAIN STACK (MERGED)
+   ============================================================ */
+
+type BaseMainRoutes = {
+  Tabs: NavigatorScreenParams<TabsStackParamList>;
+};
+
+export type MainStackParamList =
+  BaseMainRoutes &
+  AccountRoutes &
+  TransactionRoutes &
+  TicketRoutes &
+  DestinationRoutes &
+  MapRoutes &
+  EventRoutes &
+  CheckoutRoutes &
+  BlogRoutes;
+
+/* ============================================================
+   ROOT STACK
+   ============================================================ */
+
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
   Main: NavigatorScreenParams<MainStackParamList>;

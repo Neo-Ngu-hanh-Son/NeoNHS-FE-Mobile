@@ -76,7 +76,7 @@ class ApiClient {
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
           } else {
-            logger.error("[ApiClient] Authentication token not found in store for this request");
+            logger.error("[ApiClient] Authentication token not found in store for this request, skipping");
           }
         }
 

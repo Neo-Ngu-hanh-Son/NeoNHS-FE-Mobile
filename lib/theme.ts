@@ -2,99 +2,99 @@ import { DarkTheme, DefaultTheme, type Theme } from '@react-navigation/native';
 
 export const THEME = {
   light: {
-    // Backgrounds
-    background: '#ffffff',
-    card: '#ffffff',
+    // Background Layers
+    background: '#f8faf9', // App background (soft off-white)
+    card: '#ffffff', // Cards / containers
     popover: '#ffffff',
-    sidebar: '#fafafa',
+    sidebar: '#f1f5f4',
 
-    // Text colors
-    foreground: '#171717',
-    cardForeground: '#171717',
-    popoverForeground: '#171717',
-    sidebarForeground: '#171717',
+    // Text Colors
+    foreground: '#0f172a', // Main text (strong contrast)
+    cardForeground: '#0f172a',
+    popoverForeground: '#0f172a',
+    sidebarForeground: '#0f172a',
 
-    // Primary - Green theme
-    primary: '#1a8f3e',
+    // Primary (Deeper green for authority)
+    primary: '#15803d',
     primaryForeground: '#ffffff',
-    sidebarPrimary: '#1a8f3e',
+    sidebarPrimary: '#166534',
     sidebarPrimaryForeground: '#ffffff',
 
-    // Secondary & Muted
-    secondary: '#f5f5f5',
-    secondaryForeground: '#171717',
-    muted: '#f5f5f5',
-    mutedForeground: '#737373',
-    accent: '#f5f5f5',
-    accentForeground: '#171717',
-    sidebarAccent: '#f5f5f5',
-    sidebarAccentForeground: '#171717',
+    // Secondary & Muted Surfaces
+    secondary: '#eef2ef',
+    secondaryForeground: '#0f172a',
+    muted: '#e5e7eb',
+    mutedForeground: '#475569',
+    accent: '#e2e8f0',
+    accentForeground: '#0f172a',
+    sidebarAccent: '#e2e8f0',
+    sidebarAccentForeground: '#0f172a',
 
     // Borders & Inputs
-    border: '#d9d9d9',
-    input: '#d9d9d9',
-    sidebarBorder: '#d9d9d9',
+    border: '#cbd5e1',
+    input: '#cbd5e1',
+    sidebarBorder: '#d1d5db',
 
-    // Others
-    destructive: '#f03d3d',
-    ring: '#23c05a',
-    sidebarRing: '#23c05a',
-    radius: '0.65rem',
+    // Status / Utility
+    destructive: '#dc2626',
+    ring: '#16a34a',
+    sidebarRing: '#16a34a',
+    radius: '0.75rem',
 
     // Charts
     chart1: '#16a34a',
-    chart2: '#2eb58f',
-    chart3: '#e88a2e',
-    chart4: '#a855f7',
-    chart5: '#e11d48',
+    chart2: '#0ea5e9',
+    chart3: '#f59e0b',
+    chart4: '#8b5cf6',
+    chart5: '#ef4444',
   },
 
   dark: {
-    // Backgrounds
-    background: '#0a0a0a',
-    card: '#171717',
-    popover: '#171717',
-    sidebar: '#121212',
+    // Background Layers
+    background: '#0f1115', // Slightly lifted from pure black
+    card: '#171923',
+    popover: '#171923',
+    sidebar: '#111827',
 
-    // Text colors
-    foreground: '#fafafa',
-    cardForeground: '#fafafa',
-    popoverForeground: '#fafafa',
-    sidebarForeground: '#fafafa',
+    // Text Colors
+    foreground: '#f8fafc',
+    cardForeground: '#f8fafc',
+    popoverForeground: '#f8fafc',
+    sidebarForeground: '#f8fafc',
 
-    // Primary
-    primary: '#23c05a',
-    primaryForeground: '#ffffff',
-    sidebarPrimary: '#2bd665',
+    // Primary (Brighter for dark contrast)
+    primary: '#22c55e',
+    primaryForeground: '#0b0f0c',
+    sidebarPrimary: '#16a34a',
     sidebarPrimaryForeground: '#ffffff',
 
-    // Secondary & Muted
-    secondary: '#262626',
-    secondaryForeground: '#fafafa',
-    muted: '#262626',
-    mutedForeground: '#999999',
-    accent: '#262626',
-    accentForeground: '#fafafa',
-    sidebarAccent: '#262626',
-    sidebarAccentForeground: '#fafafa',
+    // Secondary & Muted Surfaces
+    secondary: '#1f2937',
+    secondaryForeground: '#f8fafc',
+    muted: '#1e293b',
+    mutedForeground: '#94a3b8',
+    accent: '#1e293b',
+    accentForeground: '#f8fafc',
+    sidebarAccent: '#1f2937',
+    sidebarAccentForeground: '#f8fafc',
 
     // Borders & Inputs
-    border: '#333333',
-    input: '#333333',
-    sidebarBorder: '#333333',
+    border: '#334155',
+    input: '#334155',
+    sidebarBorder: '#374151',
 
-    // Others
-    destructive: '#dc3d3d',
-    ring: '#23c05a',
-    sidebarRing: '#23c05a',
-    radius: '0.65rem',
+    // Status / Utility
+    destructive: '#ef4444',
+    ring: '#22c55e',
+    sidebarRing: '#22c55e',
+    radius: '0.75rem',
 
     // Charts
-    chart1: '#26d665',
-    chart2: '#33cc99',
-    chart3: '#f0a33d',
-    chart4: '#b266ff',
-    chart5: '#f03d66',
+    chart1: '#22c55e',
+    chart2: '#38bdf8',
+    chart3: '#fbbf24',
+    chart4: '#a78bfa',
+    chart5: '#f87171',
   },
 };
 

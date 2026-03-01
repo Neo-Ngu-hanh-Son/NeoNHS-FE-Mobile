@@ -17,8 +17,8 @@ export default function UserLocationMarker({
   showHeading = true,
   color = '#4285F4',
 }: UserLocationMarkerProps) {
-  const pulseScale = useRef(new Animated.Value(1)).current;
-  const pulseOpacity = useRef(new Animated.Value(0.4)).current;
+  const pulseScale = 1;
+  const pulseOpacity = 0.4;
   const markerRef = useRef<any>(null);
 
   const prevCoords = useRef({
@@ -48,46 +48,6 @@ export default function UserLocationMarker({
     }
   }, [location.latitude, location.longitude]);
 
-  // Pulsing animation loop
-  useEffect(() => {
-    const pulseAnimation = Animated.loop(
-      Animated.parallel([
-        Animated.sequence([
-          Animated.timing(pulseScale, {
-            toValue: 2,
-            duration: 1500,
-            easing: Easing.out(Easing.ease),
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseScale, {
-            toValue: 1,
-            duration: 0,
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.sequence([
-          Animated.timing(pulseOpacity, {
-            toValue: 0,
-            duration: 1500,
-            easing: Easing.out(Easing.ease),
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseOpacity, {
-            toValue: 0.4,
-            duration: 0,
-            useNativeDriver: true,
-          }),
-        ]),
-      ])
-    );
-
-    pulseAnimation.start();
-
-    return () => {
-      pulseAnimation.stop();
-    };
-  }, []);
-
   return (
     <Marker
       ref={markerRef}
@@ -99,7 +59,7 @@ export default function UserLocationMarker({
       flat
       tracksViewChanges={true}>
       <View style={styles.container}>
-        <Animated.View
+        <View
           style={[
             styles.pulseRing,
             {
@@ -157,13 +117,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: PULSE_SIZE,
     height: PULSE_SIZE,
-    borderRadius: PULSE_SIZE / 2,
+    borderRadius: 9999,
   },
   accuracyCircle: {
     position: 'absolute',
     width: PULSE_SIZE * 1.5,
     height: PULSE_SIZE * 1.5,
-    borderRadius: (PULSE_SIZE * 1.5) / 2,
+    borderRadius: 9999,
     borderWidth: 1,
   },
   headingContainer: {
