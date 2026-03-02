@@ -5,6 +5,7 @@ import ChangePasswordScreen from '@/features/profile/screens/ChangePasswordScree
 import TransactionHistoryScreen from '@/features/profile/screens/TransactionHistoryScreen';
 import TransactionDetailsScreen from '@/features/profile/screens/TransactionDetailsScreen';
 import TicketVerificationScreen from '@/features/profile/screens/TicketVerificationScreen';
+import KycVerificationScreen from '@/features/profile/screens/KycVerificationScreen';
 import PreCheckoutScreen from '@/features/cart/screens/PreCheckoutScreen';
 import PaymentScreen from '@/features/cart/screens/PaymentScreen';
 import AllDestinationsScreen from '@/features/discover/screens/AllDestinationsScreen';
@@ -33,6 +34,11 @@ export default function MainNavigator() {
       <Stack.Screen
         name="ChangePassword"
         component={ChangePasswordScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="KycVerification"
+        component={KycVerificationScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -111,3 +117,4 @@ export default function MainNavigator() {
     </Stack.Navigator>
   );
 }
+

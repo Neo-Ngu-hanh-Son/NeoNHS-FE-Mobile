@@ -40,6 +40,7 @@ export type BlogRoutes = {
 export type AccountRoutes = {
   UpdateAccount: undefined;
   ChangePassword: undefined;
+  KycVerification: undefined;
 };
 
 /* Transactions */
