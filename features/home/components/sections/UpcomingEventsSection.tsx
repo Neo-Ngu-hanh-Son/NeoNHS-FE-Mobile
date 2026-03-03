@@ -33,7 +33,7 @@ export default function UpcomingEventsSection({ events, loading }: Props) {
   }
 
   return (
-    <View>
+    <View className="mb-4">
       <SectionHeader title="Upcoming events" showSeeAll onSeeAllPress={handleSeeMoreExperiences} />
       <ScrollView
         horizontal

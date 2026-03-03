@@ -1,4 +1,4 @@
-import { ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { CompositeScreenProps, useNavigation } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 
@@ -29,22 +29,28 @@ export default function KnowBeforeYouGoSection({ guides, loading }: Props) {
   }
 
   return (
-    <View>
+    <View className="mb-4">
       <SectionHeader title="Know Before You Go" />
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8 }}>
-        {guides.map((guide) => (
-          <GuideCard
-            key={guide.id}
-            title={guide.title}
-            description={guide.summary ?? ''}
-            imageUrl={guide.thumbnailUrl ?? guide.bannerUrl ?? ''}
-            onPress={() => handleGuidePress(guide.id)}
-          />
-        ))}
-      </ScrollView>
+      <View style={{ height: 240 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingVertical: 8,
+            gap: 16,
+          }}>
+          {guides.map((guide) => (
+            <GuideCard
+              key={guide.id}
+              title={guide.title}
+              description={guide.summary ?? ''}
+              imageUrl={guide.thumbnailUrl ?? guide.bannerUrl ?? ''}
+              onPress={() => handleGuidePress(guide.id)}
+            />
+          ))}
+        </ScrollView>
+      </View>
     </View>
   );
 }

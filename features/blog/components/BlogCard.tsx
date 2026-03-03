@@ -31,11 +31,11 @@ function BlogCardComponent({ blog, onPress }: BlogCardProps) {
           {blog.thumbnailUrl ? (
             <Image
               source={{ uri: blog.thumbnailUrl }}
-              className="h-28 w-28 bg-muted"
+              className="h-32 w-28 bg-muted"
               resizeMode="cover"
             />
           ) : (
-            <View className="h-28 w-28 bg-muted" />
+            <View className="h-32 w-28 bg-muted" />
           )}
 
           <View className="flex-1 px-3 py-2">

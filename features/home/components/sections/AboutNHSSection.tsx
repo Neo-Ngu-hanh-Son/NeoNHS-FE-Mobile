@@ -29,7 +29,7 @@ export default function AboutNHSSection({ overviews, loading }: Props) {
   }
 
   return (
-    <View>
+    <View className="mb-4">
       <SectionHeader title="About Ngu Hanh Son" />
       <View className="gap-3">
         {overviews.map((overview) => (

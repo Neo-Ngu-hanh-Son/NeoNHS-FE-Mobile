@@ -8,7 +8,7 @@ import TicketVerificationScreen from '@/features/profile/screens/TicketVerificat
 import PreCheckoutScreen from '@/features/cart/screens/PreCheckoutScreen';
 import PaymentScreen from '@/features/cart/screens/PaymentScreen';
 import AllDestinationsScreen from '@/features/discover/screens/AllDestinationsScreen';
-import PointDetailScreen from '@/features/discover/screens/PointDetailScreen';
+import PointDetailScreen from '@/features/point/screens/PointDetailScreen';
 import PointMapSelectionScreen from '@/features/discover/screens/PointMapSelectionScreen';
 import ActiveNavigationScreen from '@/features/discover/screens/ActiveNavigationScreen';
 import ArrivalConfirmationScreen from '@/features/discover/screens/ArrivalConfirmationScreen';
@@ -16,7 +16,9 @@ import AudioGuideScreen from '@/features/discover/screens/AudioGuideScreen';
 import EventDetailScreen from '@/features/event/screens/EventDetailScreen';
 import BlogListScreen from '@/features/blog/screens/BlogListScreen';
 import BlogDetailsScreen from '@/features/blog/screens/BlogDetailsScreen';
+import TestWebViewScreen from '@/features/panorama/screens/PanoramaScreen';
 import { MainStackParamList } from './NavigationParamTypes';
+import PanoramaScreen from '@/features/panorama/screens/PanoramaScreen';
 
 const Stack = createStackNavigator<MainStackParamList>();
 
@@ -97,6 +99,7 @@ export default function MainNavigator() {
         component={BlogDetailsScreen}
         options={{ headerShown: false }}
       />
+      <Stack.Screen name="Panorama" component={PanoramaScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }

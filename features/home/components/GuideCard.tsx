@@ -1,10 +1,12 @@
-import { View, Image, TouchableOpacity, Dimensions, StyleSheet } from 'react-native';
+import { View, Image, Dimensions, StyleSheet, Pressable } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
+import { logger } from '@/utils/logger';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH * 0.8;
+const CARD_HEIGHT = 220;
 
 type GuideCardProps = {
   title: string;
@@ -18,59 +20,69 @@ export default function GuideCard({ title, description, imageUrl, onPress }: Gui
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={onPress}
-      activeOpacity={0.8}
-      style={[
-        styles.container,
-        {
-          width: CARD_WIDTH,
-          backgroundColor: theme.card,
-          // Subtle shadow for elevation effect
-          shadowColor: isDarkColorScheme ? '#000' : '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: isDarkColorScheme ? 0.3 : 0.08,
-          shadowRadius: 8,
-          elevation: 3,
-        },
-      ]}>
-      {/* Image */}
-      <Image
-        source={{ uri: imageUrl }}
-        style={[styles.image, { backgroundColor: theme.muted }]}
-        resizeMode="cover"
-      />
+      android_ripple={{ color: 'rgba(0,0,0,0.12)', foreground: true }}
+      className="overflow-hidden rounded-xl active:opacity-90">
+      <View
+        style={[
+          styles.innerContainer,
+          styles.shadowWrapper,
+          {
+            backgroundColor: theme.card,
+          },
+        ]}>
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: imageUrl }}
+            style={[styles.image, { backgroundColor: theme.muted }]}
+            resizeMode="cover"
+          />
+        </View>
 
-      {/* Content */}
-      <View style={styles.content}>
-        <Text
-          className="text-base font-bold leading-5"
-          style={{ color: theme.foreground }}
-          numberOfLines={2}>
-          {title}
-        </Text>
-        <Text
-          className="mt-1 text-sm leading-5"
-          style={{ color: theme.mutedForeground }}
-          numberOfLines={3}>
-          {description}
-        </Text>
+        <View style={styles.textContainer}>
+          <Text
+            className="text-base font-bold leading-5"
+            style={{ color: theme.foreground }}
+            numberOfLines={2}>
+            {title}
+          </Text>
+          <Text
+            className="mt-1 text-sm leading-5"
+            style={{ color: theme.mutedForeground }}
+            numberOfLines={3}>
+            {description}
+          </Text>
+        </View>
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  shadowWrapper: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  innerContainer: {
     borderRadius: 12,
     overflow: 'hidden',
-    marginRight: 12,
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
   },
-  image: {
+  imageContainer: {
     width: '100%',
     height: 120,
   },
-  content: {
-    padding: 12,
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  textContainer: {
+    flex: 1,
+    padding: 8,
   },
 });

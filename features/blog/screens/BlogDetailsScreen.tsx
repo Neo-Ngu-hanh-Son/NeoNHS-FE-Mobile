@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
@@ -13,6 +13,7 @@ import type { MainStackParamList } from '@/app/navigations/NavigationParamTypes'
 import type { BlogResponse } from '../types/blog';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LoadingOverlay from '@/components/Loader/LoadingOverlay';
+import FullScreenLoader from '@/components/Loader/FullScreenLoader';
 
 type Props = StackScreenProps<MainStackParamList, 'BlogDetails'>;
 
@@ -43,7 +44,7 @@ export default function BlogDetailsScreen({ navigation, route }: Props) {
   }, [fetchBlog]);
 
   if (loading) {
-    return <LoadingOverlay visible={loading} />;
+    return <FullScreenLoader message="Loading blog post..." />;
   }
 
   if (error || !blog) {

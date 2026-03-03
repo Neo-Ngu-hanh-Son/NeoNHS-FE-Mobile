@@ -1,11 +1,11 @@
-import { View, Image, TouchableOpacity, Dimensions, StyleSheet } from 'react-native';
+import { View, Image, Pressable, Dimensions, StyleSheet } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import type { BlogResponse } from '@/features/blog/types/blog';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = SCREEN_WIDTH * 0.6;
+const CARD_WIDTH = SCREEN_WIDTH * 0.8;
 
 type BlogCardProps = {
   blog: BlogResponse;
@@ -29,22 +29,19 @@ export default function BlogCard({ blog, onPress }: BlogCardProps) {
     : null;
 
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={onPress}
-      activeOpacity={0.8}
-      style={[
-        styles.container,
-        {
-          width: CARD_WIDTH,
-          backgroundColor: theme.card,
-          // Subtle shadow
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: isDarkColorScheme ? 0.3 : 0.08,
-          shadowRadius: 8,
-          elevation: 3,
-        },
-      ]}>
+      android_ripple={{ color: 'rgba(0,0,0,0.12)', foreground: true }}
+      className="mr-3 overflow-hidden rounded-xl active:opacity-90"
+      style={{
+        width: CARD_WIDTH,
+        backgroundColor: theme.card,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: isDarkColorScheme ? 0.3 : 0.08,
+        shadowRadius: 8,
+        elevation: 3,
+      }}>
       {coverImage ? (
         <Image
           source={{ uri: coverImage }}
@@ -87,16 +84,11 @@ export default function BlogCard({ blog, onPress }: BlogCardProps) {
           </View>
         ) : null}
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    borderRadius: 12,
-    overflow: 'hidden',
-    marginRight: 12,
-  },
   image: {
     width: '100%',
     height: 120,

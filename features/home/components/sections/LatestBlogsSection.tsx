@@ -33,7 +33,7 @@ export default function LatestBlogsSection({ blogs, loading }: Props) {
   }
 
   return (
-    <View>
+    <View className="mb-4">
       <SectionHeader title="Latest Blogs" showSeeAll onSeeAllPress={handleViewAllBlogs} />
       <ScrollView
         horizontal

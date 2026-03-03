@@ -33,11 +33,12 @@ type NHSMapProps = {
 export interface NHSMapRef {
   animateToRegion: (region: Region, duration?: number) => void;
   animateToCoordinate: (
-    coordinate: { latitude: number; longitude: number },
+    coordinate: { latitude: number; longitude: number; latDelta?: number; lngDelta?: number },
     duration?: number
   ) => void;
   setFollowUser: (follow: boolean) => void;
   isFollowingUser: () => boolean;
+  setZoom: (zoom: number) => void;
 }
 
 const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
@@ -51,23 +52,24 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       latitudeDelta: MAP_CENTER.latitudeDelta,
       longitudeDelta: MAP_CENTER.longitudeDelta,
     });
-    const mapRef = useRef<any>(null);
+    const mapRef = useRef<MapView>(null);
+    const currentRegionRef = useRef<Region>(MAP_CENTER);
     const [mapKey, setMapKey] = useState(0); // This make it so that the map re-renders when we want to reset it (e.g. on screen focus)
 
-    // Expose methods via ref
+    // Expose methods to parent via ref
     useImperativeHandle(ref, () => ({
       animateToRegion: (region: Region, duration = 500) => {
         mapRef.current?.animateToRegion(region, duration);
       },
       animateToCoordinate: (
-        coordinate: { latitude: number; longitude: number },
+        coordinate: { latitude: number; longitude: number; latDelta?: number; lngDelta?: number },
         duration = 500
       ) => {
         mapRef.current?.animateToRegion(
           {
             ...coordinate,
-            latitudeDelta: mapZoomRef.current.latitudeDelta,
-            longitudeDelta: mapZoomRef.current.longitudeDelta,
+            latitudeDelta: coordinate.latDelta ?? mapZoomRef.current.latitudeDelta,
+            longitudeDelta: coordinate.lngDelta ?? mapZoomRef.current.longitudeDelta,
           },
           duration
         );
@@ -76,12 +78,28 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
         setIsFollowingUser(follow);
       },
       isFollowingUser: () => isFollowingUser,
+      setZoom: (delta: number) => {
+        const current = currentRegionRef.current;
+
+        mapRef.current?.animateToRegion(
+          {
+            latitude: current.latitude,
+            longitude: current.longitude,
+            latitudeDelta: delta,
+            longitudeDelta: delta,
+          },
+          500
+        );
+      },
     }));
 
     const handleRegionChangeComplete = useCallback((region: Region) => {
       const zoom = Math.log2(360 / region.longitudeDelta);
       const shouldShow = zoom >= 17.5;
       setShouldDisplayMarkerName((prev) => (prev === shouldShow ? prev : shouldShow));
+
+      // Store for later
+      currentRegionRef.current = region;
       mapZoomRef.current.latitudeDelta = region.latitudeDelta;
       mapZoomRef.current.longitudeDelta = region.longitudeDelta;
     }, []);
@@ -173,23 +191,24 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
             />
           ))}
 
-          {mapPoints?.map((poi) => (
-            <Marker
-              key={poi.id}
-              coordinate={{
-                latitude: poi.latitude,
-                longitude: poi.longitude,
-              }}
-              onPress={() => {
-                onMarkerPress?.(poi);
-              }}>
-              <MarkerVisual
-                point={poi}
-                showName={shouldDisplayMarkerName}
-                isSelected={selectedPointId === poi.id}
-              />
-            </Marker>
-          ))}
+          {isMapReady &&
+            mapPoints?.map((poi) => (
+              <Marker
+                key={poi.id}
+                coordinate={{
+                  latitude: poi.latitude,
+                  longitude: poi.longitude,
+                }}
+                onPress={() => {
+                  onMarkerPress?.(poi);
+                }}>
+                <MarkerVisual
+                  point={poi}
+                  showName={shouldDisplayMarkerName}
+                  isSelected={selectedPointId === poi.id}
+                />
+              </Marker>
+            ))}
 
           {userLocation && (
             <UserLocationMarker

@@ -39,7 +39,8 @@ export default function FeaturedSection({ featuredBlog, loading }: Props) {
   }
 
   return (
-    <View>
+    <View className="mb-4">
+      <SectionHeader title="Featured" />
       <FeaturedCard
         tag={featuredBlog.blogCategory?.name || 'General'}
         title={featuredBlog.title}

@@ -1,10 +1,10 @@
-import { View, Image, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { Text } from "@/components/ui/text";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useTheme } from "@/app/providers/ThemeProvider";
-import { THEME } from "@/lib/theme";
+import { View, Image, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Text } from '@/components/ui/text';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { THEME } from '@/lib/theme';
 
 type HighlightCardProps = {
   title: string;
@@ -18,33 +18,36 @@ export default function HighlightCard({
   title,
   description,
   imageUrl,
-  linkText = "Learn More",
+  linkText = 'Learn More',
   onPress,
 }: HighlightCardProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
-      <Card className="flex-row mx-4 p-0 gap-0 overflow-hidden">
+    <Pressable
+      onPress={onPress}
+      android_ripple={{ color: 'rgba(0,0,0,0.12)', foreground: true }}
+      className="elevation-sm mx-4 overflow-hidden rounded-xl active:opacity-90">
+      <Card className="flex-row gap-0 overflow-hidden p-0">
         <Image
           source={{ uri: imageUrl }}
-          className="w-28 h-32"
+          className="h-32 w-28"
           style={{ backgroundColor: theme.muted }}
         />
-        <View className="flex-1 p-3 justify-center">
-          <Text className="text-base font-bold mb-1" numberOfLines={1}>
+        <View className="flex-1 justify-center p-3">
+          <Text className="mb-1 text-base font-bold" numberOfLines={1}>
             {title}
           </Text>
-          <Text variant="muted" className="text-xs leading-4 mb-2" numberOfLines={3}>
+          <Text variant="muted" className="mb-2 text-xs leading-4" numberOfLines={3}>
             {description}
           </Text>
-          <Button variant="link" className="p-0 h-auto self-start gap-1" onPress={onPress}>
-            <Text className="text-primary text-sm font-semibold">{linkText}</Text>
+          <Button variant="link" className="h-auto gap-1 self-start p-0" onPress={onPress}>
+            <Text className="text-sm font-semibold text-primary">{linkText}</Text>
             <Ionicons name="arrow-forward" size={14} color={theme.primary} />
           </Button>
         </View>
       </Card>
-    </TouchableOpacity>
+    </Pressable>
   );
 }

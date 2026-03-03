@@ -3,7 +3,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { CommonActions, CompositeScreenProps } from '@react-navigation/native';
 import type { StackScreenProps } from '@react-navigation/stack';
-import { StatusBar } from 'expo-status-bar';
 
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
@@ -29,12 +28,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
   const handleLogin = () => {
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: 'Auth', params: { screen: 'Login' } }],
-      })
-    );
+    navigation.navigate('Auth', { screen: 'Login' });
   };
 
   const handleLogout = () => {
@@ -104,8 +98,6 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
         styles.container,
         { backgroundColor: isDarkColorScheme ? theme.background : THEME.light.primary },
       ]}>
-      <StatusBar style="light" />
-
       {/* Header Area */}
       <SafeAreaView
         edges={['top']}
@@ -159,11 +151,12 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
             </View>
           </View>
 
-
           {/* Admin/Vendor Actions */}
           {(user.role === 'ADMIN' || user.role === 'VENDOR') && (
             <View style={{ marginBottom: 20 }}>
-              <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>MANAGEMENT</Text>
+              <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>
+                MANAGEMENT
+              </Text>
               <ActionCard
                 title="Verify Ticket"
                 desc="Scan QR code to verify customer tickets"

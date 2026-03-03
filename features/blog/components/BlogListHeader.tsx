@@ -6,15 +6,13 @@ import { Button } from '@/components/ui/button';
 
 interface BlogListHeaderProps {
   search: string;
-  onSearchChange: (value: string) => void;
+  onSearchSubmit: (value: string) => void;
   onOpenFilters: () => void;
 }
 
-const SEARCH_DEBOUNCE_MS = 400;
-
 export default function BlogListHeader({
   search,
-  onSearchChange,
+  onSearchSubmit,
   onOpenFilters,
 }: BlogListHeaderProps) {
   const [inputValue, setInputValue] = useState(search);
@@ -23,13 +21,10 @@ export default function BlogListHeader({
     setInputValue(search);
   }, [search]);
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      onSearchChange(inputValue);
-    }, SEARCH_DEBOUNCE_MS);
-
-    return () => clearTimeout(timeoutId);
-  }, [inputValue, onSearchChange]);
+  const handleSubmitSearch = () => {
+    Keyboard.dismiss();
+    onSearchSubmit(inputValue);
+  };
 
   return (
     <View className="flex-row items-center gap-2 px-4 pb-2 pt-3">
@@ -39,12 +34,16 @@ export default function BlogListHeader({
           value={inputValue}
           onChangeText={setInputValue}
           returnKeyType="search"
-          onSubmitEditing={() => {
-            Keyboard.dismiss();
-            onSearchChange(inputValue);
-          }}
+          onSubmitEditing={handleSubmitSearch}
         />
       </View>
+      <Button
+        variant="outline"
+        size="icon"
+        onPress={handleSubmitSearch}
+        accessibilityLabel="Search blogs">
+        <Ionicons name="search" size={18} color="currentColor" />
+      </Button>
       <Button
         variant="outline"
         size="icon"

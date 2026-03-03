@@ -14,8 +14,8 @@ import type { TokenRefreshResult } from '@/services/api/types';
 export default function ApiProvider({ children }: { children: ReactNode }) {
   const { accessToken, refreshToken, logout, refreshAuth } = useAuth();
 
-  const API_URL = process.env.EXPO_PUBLIC_API_URL;
-
+  // const API_URL = process.env.EXPO_PUBLIC_API_URL;
+  const API_URL = 'https://fwbgft4w-8080.asse.devtunnels.ms/api';
   /**
    * Handle token refresh request
    * Called by API client when a 401 is received

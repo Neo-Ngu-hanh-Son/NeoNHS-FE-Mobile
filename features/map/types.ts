@@ -50,6 +50,7 @@ export interface MapPoint {
   orderIndex?: number;
   estTimeSpent?: number;
   type: POIType;
+  panoramaImageUrl?: string; // For 360 view
 
   // Optional graph attachment
   attachedTo?: {

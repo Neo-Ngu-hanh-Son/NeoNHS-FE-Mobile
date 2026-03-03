@@ -1,34 +1,41 @@
-import { StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { StackScreenProps } from '@react-navigation/stack';
-import { useTheme } from '@/app/providers/ThemeProvider';
-import { THEME } from '@/lib/theme';
 import { MainStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { logger } from '@/utils/logger';
 import { MapPoint } from '../types';
 import PointDetailModal from '../components/PointDetailModal/PointDetailModal';
 import NHSMap, { NHSMapRef } from '../components/Map/NHSMap';
 import { getAllDestinations, getPointOfAttraction } from '../services/mapServices';
-import { NHS_ATTRACTION_ID } from '@/services/api/endpoints/map.api';
 import { useModal } from '@/app/providers/ModalProvider';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { LocationPermissionBanner } from '../components/UserLocation';
 import { mapData } from '../data';
 import { CompositeScreenProps } from '@react-navigation/native';
+import { ScreenLayout } from '@/components/common/ScreenLayout';
 
 type MapScreenProps = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Map'>,
   StackScreenProps<MainStackParamList>
 >;
-export default function MapScreen({ navigation }: MapScreenProps) {
-  const { isDarkColorScheme } = useTheme();
-  const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+export default function MapScreen({ navigation, route }: MapScreenProps) {
+  const initialPointId = route.params?.pointId;
+  const [showBackButton, setShowBackButton] = useState(!!initialPointId);
+
+  // Sync showBackButton when navigating to this tab with a new pointId
+  // (useState only captures the value on first mount, but this tab persists)
+  useEffect(() => {
+    if (initialPointId) {
+      setShowBackButton(true);
+    }
+  }, [initialPointId]);
+
+  console.log('showBackButton', showBackButton);
+  console.log('point id', initialPointId);
 
   // Map state
   const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [mapPoints, setMapPoints] = useState<MapPoint[]>(mapData.mapPoints);
+  const [mapPoints, setMapPoints] = useState<MapPoint[]>([]);
   const mapRef = useRef<NHSMapRef>(null);
 
   // Modal helpers
@@ -59,10 +66,35 @@ export default function MapScreen({ navigation }: MapScreenProps) {
         setMapPoints(res.data);
       } catch (error) {
         logger.error('[MapScreen] Failed to fetch map points, using default map points:', error);
+        setMapPoints(mapData.mapPoints);
       }
     }
     fetchPoints();
   }, []);
+
+  // Auto-focus on a point if navigated with a pointId
+  useEffect(() => {
+    if (!initialPointId || mapPoints.length === 0) return;
+
+    const targetPoint = mapPoints.find((p) => p.id === initialPointId);
+    if (targetPoint) {
+      logger.info('[MapScreen] Auto-focusing on point:', targetPoint.name);
+      setSelectedPoint(targetPoint);
+      setModalVisible(true);
+
+      setTimeout(() => {
+        mapRef.current?.animateToCoordinate(
+          {
+            latitude: targetPoint.latitude,
+            longitude: targetPoint.longitude,
+            latDelta: 0.001,
+            lngDelta: 0.001,
+          },
+          600
+        );
+      }, 500);
+    }
+  }, [initialPointId, mapPoints]);
 
   // Cleanup location tracking on unmount
   useEffect(() => {
@@ -104,7 +136,7 @@ export default function MapScreen({ navigation }: MapScreenProps) {
   }, [requestPermission, startTracking]);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
+    <ScreenLayout showBackButton={showBackButton}>
       {/* Permission banner - shows when permission needed or error */}
       <LocationPermissionBanner
         permissionStatus={permissionStatus}
@@ -129,12 +161,6 @@ export default function MapScreen({ navigation }: MapScreenProps) {
         onClose={handleCloseModal}
         onViewDetails={handleNavigate}
       />
-    </SafeAreaView>
+    </ScreenLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});

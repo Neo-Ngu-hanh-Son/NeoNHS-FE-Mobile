@@ -33,7 +33,7 @@ export default function MustSeePlacesSection({ destinations, loading }: Props) {
   }
 
   return (
-    <View>
+    <View className="mb-4">
       <SectionHeader
         title="Must-See Places"
         showSeeAll

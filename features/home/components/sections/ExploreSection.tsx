@@ -101,7 +101,7 @@ export default function ExploreSection() {
     }
   };
   return (
-    <View>
+    <View className="mb-4">
       <SectionHeader title="Explore" />
       <ScrollView
         horizontal

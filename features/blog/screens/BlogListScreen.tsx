@@ -19,25 +19,28 @@ type Props = StackScreenProps<MainStackParamList, 'BlogList'>;
 export default function BlogListScreen({ navigation }: Props) {
   const [search, setSearch] = useState('');
   const [isFilterModalVisible, setFilterModalVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const listRef = useRef<FlatList<Blog>>(null);
 
   const { currentFilters, setFilters } = useBlogFilters(BLOG_DEFAULT_FILTERS);
 
-  const { blogs, loading, refreshing, loadMore, refresh } = useBlogList({
+  const { blogs, loading, loadMore, refresh, fetchBlogs } = useBlogList({
     search,
     filters: currentFilters,
   });
 
   useEffect(() => {
+    void fetchBlogs();
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
-  }, [search, currentFilters]);
+  }, [fetchBlogs, search, currentFilters]);
 
   const handleEndReached = useCallback(() => {
     loadMore();
   }, [loadMore]);
 
   const handleRefresh = useCallback(() => {
-    void refresh();
+    setRefreshing(true);
+    void refresh().finally(() => setRefreshing(false));
   }, [refresh]);
 
   const handlePressBlog = useCallback(
@@ -50,6 +53,10 @@ export default function BlogListScreen({ navigation }: Props) {
   const handleOpenFilters = useCallback(() => {
     Keyboard.dismiss();
     setFilterModalVisible(true);
+  }, []);
+
+  const handleSearchSubmit = useCallback((value: string) => {
+    setSearch(value);
   }, []);
 
   const handleApplyFilters = useCallback(
@@ -78,7 +85,7 @@ export default function BlogListScreen({ navigation }: Props) {
       </View>
       <BlogListHeader
         search={search}
-        onSearchChange={setSearch}
+        onSearchSubmit={handleSearchSubmit}
         onOpenFilters={handleOpenFilters}
       />
       <BlogList

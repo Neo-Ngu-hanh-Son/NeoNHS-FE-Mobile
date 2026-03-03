@@ -9,6 +9,7 @@ import React, {
 import { useColorScheme as useNativeColorScheme } from 'react-native';
 import { storage } from '@/utils/storage';
 import { THEME } from '@/lib/theme';
+import { useColorScheme } from 'nativewind';
 
 type ColorScheme = 'light' | 'dark';
 
@@ -31,6 +32,7 @@ interface ThemeProviderProps {
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const systemColorScheme = useNativeColorScheme();
+  const { setColorScheme: setNativeColorScheme } = useColorScheme();
   const [colorScheme, setColorSchemeState] = useState<ColorScheme>('light');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -41,9 +43,11 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         const savedScheme = await storage.getItem<ColorScheme>(THEME_STORAGE_KEY);
         if (savedScheme && (savedScheme === 'light' || savedScheme === 'dark')) {
           setColorSchemeState(savedScheme);
+          setNativeColorScheme(savedScheme);
         } else if (systemColorScheme) {
           // Use system preference if no saved preference
           setColorSchemeState(systemColorScheme);
+          setNativeColorScheme(systemColorScheme);
         }
       } catch (error) {
         console.error('Failed to load theme preference:', error);
@@ -58,12 +62,14 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const setColorScheme = useCallback(async (scheme: ColorScheme) => {
     setColorSchemeState(scheme);
     await storage.setItem(THEME_STORAGE_KEY, scheme);
+    setNativeColorScheme(scheme);
   }, []);
 
   const toggleColorScheme = useCallback(() => {
     const newScheme = colorScheme === 'light' ? 'dark' : 'light';
     setColorScheme(newScheme);
-  }, [colorScheme, setColorScheme]);
+    setNativeColorScheme(newScheme);
+  }, [colorScheme, setColorScheme, setNativeColorScheme]);
 
   const getCurrentTheme = useCallback((): typeof THEME.light | typeof THEME.dark => {
     const theme = colorScheme === 'light' ? THEME.light : THEME.dark;

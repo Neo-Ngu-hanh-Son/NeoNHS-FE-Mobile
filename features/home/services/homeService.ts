@@ -7,7 +7,9 @@ import discoverService from '@/features/discover/services/discoverServices';
 
 export const homeService = {
   getFeatured: async () => {
-    return await blogService.getBlogs({});
+    return await blogService.getBlogs({
+      isFeatured: true,
+    });
   },
   getKnowBeforeYouGo: async () => {
     return await blogService.getBlogs({

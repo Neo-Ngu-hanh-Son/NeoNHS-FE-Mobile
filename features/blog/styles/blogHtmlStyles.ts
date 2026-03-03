@@ -104,35 +104,6 @@ export const tagsStyles: Record<string, MixedStyleDeclaration> = {
     marginVertical: 16,
     alignSelf: 'center',
   },
-
-  // table: {
-  //   marginTop: 16,
-  //   marginBottom: 16,
-  //   borderWidth: 1,
-  //   borderColor: "red",
-  // },
-  // tr: {
-  //   // borderBottomWidth: 1,
-  //   // borderBottomColor: "#e2e8f0",
-  // },
-  // th: {
-  //   paddingVertical: 10,
-  //   paddingHorizontal: 12,
-  //   // backgroundColor: "#f8fafc",
-  //   fontWeight: "700",
-  //   // color: "#334155",
-  //   fontSize: 14,
-  //   borderWidth: 1,
-  //   // borderColor: "#e2e8f0",
-  // },
-  // td: {
-  //   paddingVertical: 10,
-  //   paddingHorizontal: 12,
-  //   fontSize: 14,
-  //   // color: "#1e293b",
-  //   // borderWidth: 1,
-  //   // borderColor: "#e2e8f0",
-  // },
 };
 
 /**
@@ -200,12 +171,6 @@ export const classesStyles: Record<string, MixedStyleDeclaration> = {
 
   // Image
   'blog-editor-image': tagsStyles.img,
-
-  // Tables
-  // "blog-editor-table": tagsStyles.table,
-  // "blog-editor-table-row": tagsStyles.tr,
-  // "blog-editor-table-cell": tagsStyles.td,
-  // "blog-editor-table-cell-header": tagsStyles.th,
 
   // Text-enhancing classes
   'blog-editor-text-bold': { fontWeight: '700' },

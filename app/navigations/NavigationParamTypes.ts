@@ -1,4 +1,4 @@
-import type { NavigatorScreenParams } from "@react-navigation/native";
+import type { NavigatorScreenParams } from '@react-navigation/native';
 
 /* ============================================================
    AUTH STACK
@@ -20,7 +20,7 @@ export type AuthStackParamList = {
 export type TabsStackParamList = {
   Home: undefined;
   Discover: undefined;
-  Map: undefined;
+  Map: { pointId?: string } | undefined;
   Bookings: undefined;
   Profile: undefined;
   TestCart: undefined;
@@ -56,7 +56,7 @@ export type TicketRoutes = {
 /* Destinations */
 export type DestinationRoutes = {
   AllDestinations: {
-    initialTab?: "Points" | "Workshops" | "Events" | "Blogs";
+    initialTab?: 'Points' | 'Workshops' | 'Events' | 'Blogs';
     selectedAttractionId?: string;
   };
 };
@@ -68,6 +68,7 @@ export type MapRoutes = {
   ActiveNavigation: { pointId: string };
   ArrivalConfirmation: { pointId: string };
   AudioGuide: { pointId: string };
+  Panorama: { pointId: string };
 };
 
 /* Events */
@@ -94,8 +95,7 @@ type BaseMainRoutes = {
   Tabs: NavigatorScreenParams<TabsStackParamList>;
 };
 
-export type MainStackParamList =
-  BaseMainRoutes &
+export type MainStackParamList = BaseMainRoutes &
   AccountRoutes &
   TransactionRoutes &
   TicketRoutes &
