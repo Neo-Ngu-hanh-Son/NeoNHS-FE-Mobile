@@ -39,6 +39,12 @@ export default function UpdateAccountScreen() {
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || '');
   const [userId, setUserId] = useState(user?.id || '');
 
+  // Bank info
+  const [bankName, setBankName] = useState('');
+  const [bankBin, setBankBin] = useState('');
+  const [bankAccountNumber, setBankAccountNumber] = useState('');
+  const [bankAccountName, setBankAccountName] = useState('');
+
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -54,6 +60,10 @@ export default function UpdateAccountScreen() {
           setPhoneNumber(response.data.phoneNumber || '');
           setAvatarUrl(response.data.avatarUrl || '');
           setUserId(response.data.id || '');
+          setBankName(response.data.bankName || '');
+          setBankBin(response.data.bankBin || '');
+          setBankAccountNumber(response.data.bankAccountNumber || '');
+          setBankAccountName(response.data.bankAccountName || '');
         }
       } catch (error) {
         console.error('Fetch initial data error:', error);
@@ -119,6 +129,10 @@ export default function UpdateAccountScreen() {
         phoneNumber: phoneNumber ? phoneNumber.trim() : '',
         email: email.trim(),
         avatarUrl: avatarUrl ? avatarUrl : '',
+        bankName: bankName.trim() || undefined,
+        bankBin: bankBin.trim() || undefined,
+        bankAccountNumber: bankAccountNumber.trim() || undefined,
+        bankAccountName: bankAccountName.trim() || undefined,
       };
 
       console.log('Sending data to server:', updateData);
@@ -241,6 +255,56 @@ export default function UpdateAccountScreen() {
                       style={[styles.inputCustom, { flex: 1, borderColor: theme.border }]}
                     />
                   </View>
+                </View>
+              </View>
+
+              {/* Bank Information Section */}
+              <Text className="mt-6 mb-4 text-lg font-bold" style={{ color: theme.foreground }}>
+                Bank Information
+              </Text>
+
+              <View style={styles.formContainer}>
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.label, { color: theme.foreground }]}>Bank Name</Text>
+                  <Input
+                    value={bankName}
+                    onChangeText={setBankName}
+                    placeholder="e.g. MB Bank, Vietcombank"
+                    style={[styles.inputCustom, { borderColor: theme.border }]}
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.label, { color: theme.foreground }]}>Bank BIN</Text>
+                  <Input
+                    value={bankBin}
+                    onChangeText={setBankBin}
+                    placeholder="e.g. 970422"
+                    keyboardType="numeric"
+                    style={[styles.inputCustom, { borderColor: theme.border }]}
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.label, { color: theme.foreground }]}>Account Number</Text>
+                  <Input
+                    value={bankAccountNumber}
+                    onChangeText={setBankAccountNumber}
+                    placeholder="Enter account number"
+                    keyboardType="numeric"
+                    style={[styles.inputCustom, { borderColor: theme.border }]}
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.label, { color: theme.foreground }]}>Account Name</Text>
+                  <Input
+                    value={bankAccountName}
+                    onChangeText={setBankAccountName}
+                    placeholder="e.g. NGUYEN VAN A"
+                    autoCapitalize="characters"
+                    style={[styles.inputCustom, { borderColor: theme.border }]}
+                  />
                 </View>
               </View>
 

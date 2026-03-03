@@ -41,6 +41,7 @@ export type AccountRoutes = {
   UpdateAccount: undefined;
   ChangePassword: undefined;
   KycVerification: undefined;
+  Withdraw: undefined;
 };
 
 /* Transactions */

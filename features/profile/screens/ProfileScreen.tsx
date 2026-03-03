@@ -152,7 +152,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
           </View>
 
           {/* KYC Verification */}
-          {!(user as any).kycVerified ? (
+          {!user.kycVerified ? (
             <TouchableOpacity
               style={[styles.kycCard, { backgroundColor: theme.card, borderColor: theme.primary }]}
               onPress={() => navigation.navigate('Main', { screen: 'KycVerification' })}
@@ -202,6 +202,17 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
               />
             </View>
           )}
+
+          {/* Wallet Section */}
+          <View style={{ marginBottom: 8 }}>
+            <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>WALLET</Text>
+            <ActionCard
+              title="Withdraw Money"
+              desc="Transfer your balance to your bank account"
+              rightIcon={<MaterialIcons name="account-balance-wallet" size={20} color={theme.primary} />}
+              onPress={() => navigation.navigate('Main', { screen: 'Withdraw' })}
+            />
+          </View>
 
           {/* Các mục chức năng */}
           <ActionCard
