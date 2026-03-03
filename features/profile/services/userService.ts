@@ -17,6 +17,10 @@ export interface UpdateAccountData {
     email?: string;
     phoneNumber?: string;
     avatarUrl?: string;
+    bankName?: string;
+    bankBin?: string;
+    bankAccountNumber?: string;
+    bankAccountName?: string;
 }
 
 /**
@@ -75,6 +79,14 @@ export const userService = {
      */
     async performKyc(userId: string, data: KycRequest): Promise<ApiResponse<KycResponse>> {
         return apiClient.post<KycResponse>(endpoints.users.performKyc(userId), data);
+    },
+
+    /**
+     * Withdraw money from user balance to bank account
+     * @param amount - Amount in VND to withdraw
+     */
+    async withdraw(amount: number): Promise<ApiResponse<any>> {
+        return apiClient.post<any>(endpoints.users.withdraw(amount), {});
     },
 };
 
