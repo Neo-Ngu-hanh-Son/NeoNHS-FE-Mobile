@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, Share } from 'react-native';
+import React, { useState } from 'react';
+import { View, Share } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { CompositeScreenProps } from '@react-navigation/native';
 
@@ -7,8 +7,8 @@ import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import { MainStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { discoverService } from '../../discover/services/discoverServices';
-import { MapPoint } from '../../map/types';
 import FullScreenLoader from '@/components/Loader/FullScreenLoader';
+import { RefreshableScrollView } from '@/components/common/RefreshableScrollView';
 
 import {
   PointDetailHero,
@@ -20,6 +20,8 @@ import {
   PointDetailReviews,
   PointDetailBottomBar,
 } from '../components';
+import { useQuery } from '@tanstack/react-query';
+import { logger } from '@/utils/logger';
 
 type Props = CompositeScreenProps<
   StackScreenProps<MainStackParamList, 'PointDetail'>,
@@ -28,28 +30,21 @@ type Props = CompositeScreenProps<
 
 export default function PointDetailScreen({ navigation, route }: Props) {
   const { pointId } = route.params;
-  const [point, setPoint] = useState<MapPoint | null>(null);
-  const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isReadMore, setIsReadMore] = useState(false);
 
-  // ─── Data fetching ───
-  useEffect(() => {
-    const fetchPoint = async () => {
-      setLoading(true);
-      try {
-        const response = await discoverService.getPointById(pointId);
-        if (response.success && response.data) {
-          setPoint(response.data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch point:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPoint();
-  }, [pointId]);
+  const {
+    data: point,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ['pointDetail', pointId],
+    queryFn: async () => {
+      const response = await discoverService.getPointById(pointId);
+      return response.data;
+    },
+  });
 
   // ─── Actions ───
   const handleShare = async () => {
@@ -78,16 +73,18 @@ export default function PointDetailScreen({ navigation, route }: Props) {
   };
 
   // ─── Loading state ───
-  if (loading) {
+  if (isLoading) {
     return <FullScreenLoader message="Loading point details..." />;
   }
 
-  // ─── Error / not found state ───
-  if (!point) {
+  if (isError || !point) {
+    logger.error('Error fetching point details:', isError);
     return (
-      <View className="flex-1 items-center justify-center bg-background p-6">
-        <Text className="mb-4 text-xl font-bold">Point not found</Text>
-        <Button onPress={() => navigation.goBack()}>
+      <View className="flex-1 items-center justify-center bg-background px-5">
+        <Text variant="muted" className="text-center">
+          Unable to load point details. Please try again later.
+        </Text>
+        <Button variant="outline" onPress={() => navigation.goBack()} className="mt-4">
           <Text>Go Back</Text>
         </Button>
       </View>
@@ -97,10 +94,10 @@ export default function PointDetailScreen({ navigation, route }: Props) {
   // ─── Main content ───
   return (
     <View className="flex-1 bg-background">
-      <ScrollView
-        className="flex-1"
+      <RefreshableScrollView
+        onRefresh={() => refetch()}
         contentContainerStyle={{ paddingBottom: 120 }}
-        showsVerticalScrollIndicator={false}>
+        edges={[]}>
         {/* Hero image with nav buttons */}
         <PointDetailHero
           point={point}
@@ -134,7 +131,7 @@ export default function PointDetailScreen({ navigation, route }: Props) {
           {/* Reviews */}
           <PointDetailReviews />
         </View>
-      </ScrollView>
+      </RefreshableScrollView>
 
       {/* Sticky bottom CTA bar */}
       <PointDetailBottomBar

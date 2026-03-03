@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { View, Text } from 'react-native';
 import { CompositeScreenProps, useNavigation } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 
@@ -9,8 +9,9 @@ import FeaturedCard from '../FeaturedEventCard';
 import BlogCardSkeleton from '@/components/common/BlogCardSkeleton';
 
 type Props = {
-  featuredBlog: BlogResponse | null;
+  featuredBlog: BlogResponse | undefined;
   loading: boolean;
+  error?: Error | null;
 };
 
 type HomeScreenProps = CompositeScreenProps<
@@ -18,7 +19,7 @@ type HomeScreenProps = CompositeScreenProps<
   StackScreenProps<RootStackParamList>
 >;
 
-export default function FeaturedSection({ featuredBlog, loading }: Props) {
+export default function FeaturedSection({ featuredBlog, loading, error }: Props) {
   const { navigate } = useNavigation<HomeScreenProps['navigation']>();
 
   function handleHeroPress(): void {
@@ -27,6 +28,15 @@ export default function FeaturedSection({ featuredBlog, loading }: Props) {
     }
 
     navigate('Main', { screen: 'BlogDetails', params: { blogId: featuredBlog.id } });
+  }
+
+  if (error && !featuredBlog) {
+    return (
+      <View>
+        <SectionHeader title="Featured" />
+        <Text className="text-red-500">Failed to load featured blog.</Text>
+      </View>
+    );
   }
 
   if (loading || !featuredBlog) {

@@ -4,4 +4,6 @@ export const mapEndpoints = {
   getPointsOfAttraction: (attractionId: string | number) => `points/all/${attractionId}`,
   getPanorama: (pointId: string) => `points/${pointId}/panorama`,
   getCheckinPanorama: (pointId: string) => `checkin-points/${pointId}/panorama`,
+  getMobilePointPanorama: () => `places/panorama/mobile`,
+  getMobileCheckinPointPanorama: () => `places/checkin-points/panorama/mobile`,
 } as const;

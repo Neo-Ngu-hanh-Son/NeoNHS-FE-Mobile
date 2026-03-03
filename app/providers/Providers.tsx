@@ -6,21 +6,25 @@ import { ReactNode } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import GoogleLoginProvider from './GoogleLoginProvider';
 import LoadingProvider from './LoadingProvider';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '@/services/api/tanstack/queryClient';
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <SafeAreaProvider>
-      <ThemeProvider>
-        <GoogleLoginProvider>
-          <ModalProvider>
-            <LoadingProvider>
-              <AuthProvider>
-                <ApiProvider>{children}</ApiProvider>
-              </AuthProvider>
-            </LoadingProvider>
-          </ModalProvider>
-        </GoogleLoginProvider>
-      </ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <GoogleLoginProvider>
+            <ModalProvider>
+              <LoadingProvider>
+                <AuthProvider>
+                  <ApiProvider>{children}</ApiProvider>
+                </AuthProvider>
+              </LoadingProvider>
+            </ModalProvider>
+          </GoogleLoginProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
     </SafeAreaProvider>
   );
 }

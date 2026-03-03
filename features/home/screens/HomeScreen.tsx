@@ -1,6 +1,6 @@
 import { ScrollView, View, RefreshControl, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { StackScreenProps } from '@react-navigation/stack';
 import { CompositeScreenProps } from '@react-navigation/native';
 
@@ -40,7 +40,20 @@ export default function HomeScreen({ navigation }: HomeScreen) {
   const { user } = useAuth();
 
   const [refreshing, setRefreshing] = useState(false);
-  // This one is for blogs
+
+  const {
+    data: featuredBlog,
+    isError: isFeaturedBlogError,
+    isLoading: isFeaturedBlogLoading,
+    error: featuredBlogError,
+    refetch: refetchFeaturedBlog,
+  } = useFeaturedBlog();
+  const { data: guides, isLoading: guidesLoading, refetch: refetchGuides } = useGuides();
+  const {
+    data: overviews,
+    isLoading: overviewsLoading,
+    refetch: refetchOverviews,
+  } = useOverviews();
   const {
     blogs,
     loading: blogsLoading,
@@ -48,60 +61,37 @@ export default function HomeScreen({ navigation }: HomeScreen) {
   } = useBlogList({
     size: 6,
   });
-
-  const { loading: guidesLoading, guides, fetchGuides } = useGuides();
-  const { loading: overviewsLoading, overviews, fetchOverviews } = useOverviews();
-  const { loading: homeEventsLoading, homeEvents, fetchHomeEvents } = useHomeEvents();
-  const { loading: destinationsLoading, destinations, fetchDestinations } = useHomeDestinations();
-  const { loading: featuredLoading, featuredBlog, fetchfeaturedBlog } = useFeaturedBlog();
-
-  useEffect(() => {
-    void refetchBlogs();
-  }, []);
-
-  useEffect(() => {
-    void fetchfeaturedBlog();
-  }, []);
-
-  useEffect(() => {
-    void fetchGuides();
-  }, []);
-
-  useEffect(() => {
-    void fetchOverviews();
-  }, []);
-
-  useEffect(() => {
-    void fetchHomeEvents();
-  }, []);
-
-  useEffect(() => {
-    void fetchDestinations();
-  }, []);
+  const {
+    data: homeEvents,
+    isLoading: homeEventsLoading,
+    refetch: refetchHomeEvents,
+  } = useHomeEvents();
+  const {
+    data: destinations,
+    isLoading: destinationsLoading,
+    refetch: refetchDestinations,
+  } = useHomeDestinations();
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    try {
-      await Promise.all([
-        refetchBlogs(),
-        fetchfeaturedBlog(),
-        fetchGuides(),
-        fetchOverviews(),
-        fetchHomeEvents(),
-        fetchDestinations(),
-      ]);
-    } catch (error) {
-      logger.error('Error refreshing home sections:', error);
-    } finally {
+
+    Promise.allSettled([
+      refetchFeaturedBlog(),
+      refetchBlogs(),
+      refetchGuides(),
+      refetchOverviews(),
+      refetchHomeEvents(),
+      refetchDestinations(),
+    ]).finally(() => {
       setRefreshing(false);
-    }
+    });
   }, [
+    refetchFeaturedBlog,
     refetchBlogs,
-    fetchfeaturedBlog,
-    fetchGuides,
-    fetchOverviews,
-    fetchHomeEvents,
-    fetchDestinations,
+    refetchGuides,
+    refetchOverviews,
+    refetchHomeEvents,
+    refetchDestinations,
   ]);
 
   function handleNotificationPress(): void {
@@ -148,17 +138,21 @@ export default function HomeScreen({ navigation }: HomeScreen) {
 
         <ExploreSection />
 
-        <FeaturedSection loading={featuredLoading} featuredBlog={featuredBlog} />
+        <FeaturedSection
+          loading={isFeaturedBlogLoading}
+          featuredBlog={featuredBlog}
+          error={featuredBlogError}
+        />
 
-        <KnowBeforeYouGoSection guides={guides} loading={guidesLoading} />
+        <KnowBeforeYouGoSection guides={guides ?? []} loading={guidesLoading} />
 
-        <AboutNHSSection overviews={overviews} loading={overviewsLoading} />
+        <AboutNHSSection overviews={overviews ?? []} loading={overviewsLoading} />
 
         <LatestBlogsSection blogs={blogs} loading={blogsLoading} />
 
-        <UpcomingEventsSection events={homeEvents} loading={homeEventsLoading} />
+        <UpcomingEventsSection events={homeEvents ?? []} loading={homeEventsLoading} />
 
-        <MustSeePlacesSection destinations={destinations} loading={destinationsLoading} />
+        <MustSeePlacesSection destinations={destinations ?? []} loading={destinationsLoading} />
 
         {/* Explore All Destinations Link */}
         <View className="mt-4 px-4">

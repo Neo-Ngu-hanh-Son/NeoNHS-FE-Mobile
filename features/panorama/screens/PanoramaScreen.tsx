@@ -14,8 +14,8 @@ import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { panoramaService } from '../services/panoramaService';
 import { PointPanoramaResponse } from '../types';
 
-const TEST_WEBVIEW_URL =
-  'https://fwbgft4w-5173.asse.devtunnels.ms/places/0690048e-12fb-11f1-863b-56fe45b15398/panorama/';
+// const TEST_WEBVIEW_URL =
+//   'https://fwbgft4w-5173.asse.devtunnels.ms/places/0690048e-12fb-11f1-863b-56fe45b15398/panorama/';
 
 type Props = StackScreenProps<MainStackParamList, 'Panorama'>;
 
@@ -55,12 +55,25 @@ export default function PanoramaScreen({ route }: Props) {
     true; // note: this 'true;' is required for Android
   `;
 
+  const FE_URL = panoramaService.getPanoramaFrontEndUrl();
+  if (!FE_URL) {
+    return (
+      <ScreenLayout showBackButton={true}>
+        <View className="flex-1 items-center justify-center">
+          <Text style={{ color: theme.destructive }}>
+            FE URL is not configured, please re-check .env file
+          </Text>
+        </View>
+      </ScreenLayout>
+    );
+  }
+
   return (
     <ScreenLayout showBackButton={true}>
       {/* Set the status bar to black */}
       <StatusBar style="auto" />
       <WebView
-        source={{ uri: TEST_WEBVIEW_URL }}
+        source={{ uri: FE_URL }}
         injectedJavaScriptBeforeContentLoaded={runFirst}
         style={styles.webview}
         startInLoadingState

@@ -24,7 +24,7 @@ export default function KnowBeforeYouGoSection({ guides, loading }: Props) {
     navigate('Main', { screen: 'BlogDetails', params: { blogId: id } });
   }
 
-  if (!loading && guides.length === 0) {
+  if (guides == null || guides.length === 0) {
     return null;
   }
 

@@ -1,18 +1,13 @@
-import { useEffect, useState, useCallback } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
-import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import BlogHeader from '../components/BlogHeader';
 import BlogContent from '../components/BlogContent';
-import { blogService } from '../services/blogService';
-import { logger } from '@/utils/logger';
+import { useBlogDetail } from '../hooks/useBlogDetail';
 
 import type { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
-import type { BlogResponse } from '../types/blog';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import LoadingOverlay from '@/components/Loader/LoadingOverlay';
 import FullScreenLoader from '@/components/Loader/FullScreenLoader';
 
 type Props = StackScreenProps<MainStackParamList, 'BlogDetails'>;
@@ -20,38 +15,17 @@ type Props = StackScreenProps<MainStackParamList, 'BlogDetails'>;
 export default function BlogDetailsScreen({ navigation, route }: Props) {
   const { blogId } = route.params;
 
-  const [blog, setBlog] = useState<BlogResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: blog, isLoading, isError, error, refetch } = useBlogDetail(blogId);
 
-  const fetchBlog = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await blogService.getBlogById(blogId);
-      setBlog(response.data);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to load blog post';
-      logger.error('[BlogDetailsScreen]', message);
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  }, [blogId]);
-
-  useEffect(() => {
-    fetchBlog();
-  }, [fetchBlog]);
-
-  if (loading) {
+  if (isLoading) {
     return <FullScreenLoader message="Loading blog post..." />;
   }
 
-  if (error || !blog) {
+  if (isError || !blog) {
     return (
       <View className="flex-1 items-center justify-center gap-4 bg-background px-6">
-        <Text variant="muted">{error ?? 'Blog post not found.'}</Text>
-        <Button variant="outline" onPress={fetchBlog}>
+        <Text variant="muted">{error?.message ?? 'Blog post not found.'}</Text>
+        <Button variant="outline" onPress={() => refetch()}>
           <Text>Retry</Text>
         </Button>
       </View>

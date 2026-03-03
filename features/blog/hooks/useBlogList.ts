@@ -56,7 +56,11 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
           sortDir: activeFilters.sortDir,
         });
 
-        const incomingBlogs: Blog[] = pageData.content.map(
+        const content = Array.isArray(pageData?.content)
+          ? pageData.content
+          : [];
+
+        const incomingBlogs = content.map(
           ({ contentJSON: _contentJson, ...blog }) => blog
         );
 

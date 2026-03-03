@@ -28,7 +28,7 @@ export default function MustSeePlacesSection({ destinations, loading }: Props) {
     navigate('Main', { screen: 'PointDetail', params: { pointId: id } });
   }
 
-  if (!loading && destinations.length === 0) {
+  if (destinations == null || destinations.length === 0) {
     return null;
   }
 

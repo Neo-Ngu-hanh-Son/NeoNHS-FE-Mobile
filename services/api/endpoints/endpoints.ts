@@ -2,6 +2,7 @@ import { mapEndpoints } from './map.api';
 import { discoverEndpoints } from './discover.api';
 import { eventEndpoints } from './events.api';
 import { blogEndpoints } from './blog.api';
+import { workshopEndpoints } from './workshops.api';
 
 /**
  * Authentication Endpoints
@@ -85,4 +86,5 @@ export const endpoints = {
   discover: discoverEndpoints,
   events: eventEndpoints,
   blog: blogEndpoints,
+  workshops: workshopEndpoints,
 } as const;

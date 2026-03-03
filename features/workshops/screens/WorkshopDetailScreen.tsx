@@ -1,85 +1,59 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback } from 'react';
 import {
   View,
   ScrollView,
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
-import { StackScreenProps } from "@react-navigation/stack";
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { StackScreenProps } from '@react-navigation/stack';
 
-import { Text } from "@/components/ui/text";
-import { useTheme } from "@/app/providers/ThemeProvider";
-import { THEME } from "@/lib/theme";
-import { MainStackParamList } from "@/app/navigations/NavigationParamTypes";
-import { WorkshopTemplateResponse, WorkshopSessionResponse } from "../types";
-import {
-  WorkshopImageGallery,
-  WorkshopInfoSection,
-  WorkshopSessionList,
-} from "../components";
-import { MOCK_WORKSHOP_TEMPLATES, MOCK_WORKSHOP_SESSIONS } from "../data/mockData";
+import { Text } from '@/components/ui/text';
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { THEME } from '@/lib/theme';
+import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
+import { WorkshopImageGallery, WorkshopInfoSection, WorkshopSessionList } from '../components';
+import { useWorkshopDetail } from '../hooks/useWorkshopDetail';
+import { useWorkshopSessions } from '../hooks/useWorkshopSessions';
 
-type Props = StackScreenProps<MainStackParamList, "WorkshopDetail">;
+type Props = StackScreenProps<MainStackParamList, 'WorkshopDetail'>;
 
 export default function WorkshopDetailScreen({ navigation, route }: Props) {
   const { workshopId } = route.params;
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
-  const [workshop, setWorkshop] = useState<WorkshopTemplateResponse | null>(null);
-  const [sessions, setSessions] = useState<WorkshopSessionResponse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [sessionsLoading, setSessionsLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<"info" | "sessions">("info");
+  const [activeTab, setActiveTab] = useState<'info' | 'sessions'>('info');
 
-  const fetchWorkshopDetail = useCallback(() => {
-    setLoading(true);
-    setTimeout(() => {
-      const found = MOCK_WORKSHOP_TEMPLATES.find((w) => w.id === workshopId) || null;
-      setWorkshop(found);
-      setLoading(false);
-      setRefreshing(false);
-    }, 400);
-  }, [workshopId]);
+  const {
+    data: workshop,
+    isLoading: loading,
+    refetch: refetchWorkshop,
+  } = useWorkshopDetail(workshopId);
 
-  const fetchSessions = useCallback(() => {
-    setSessionsLoading(true);
-    setTimeout(() => {
-      const data = MOCK_WORKSHOP_SESSIONS[workshopId] || [];
-      setSessions(data);
-      setSessionsLoading(false);
-    }, 500);
-  }, [workshopId]);
-
-  useEffect(() => {
-    fetchWorkshopDetail();
-  }, [fetchWorkshopDetail]);
-
-  useEffect(() => {
-    if (activeTab === "sessions" && sessions.length === 0) {
-      fetchSessions();
-    }
-  }, [activeTab, fetchSessions, sessions.length]);
+  const {
+    data: sessions,
+    isLoading: sessionsLoading,
+    refetch: refetchSessions,
+  } = useWorkshopSessions(workshopId, activeTab === 'sessions');
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchWorkshopDetail();
-    if (activeTab === "sessions") {
-      fetchSessions();
-    }
-  }, [fetchWorkshopDetail, fetchSessions, activeTab]);
+    Promise.allSettled([
+      refetchWorkshop(),
+      ...(activeTab === 'sessions' ? [refetchSessions()] : []),
+    ]).finally(() => setRefreshing(false));
+  }, [refetchWorkshop, refetchSessions, activeTab]);
 
   if (loading) {
     return (
       <SafeAreaView
         className="flex-1 items-center justify-center"
         style={{ backgroundColor: theme.background }}
-        edges={["top"]}
-      >
+        edges={['top']}>
         <ActivityIndicator size="large" color={theme.primary} />
         <Text className="mt-3 text-sm" style={{ color: theme.mutedForeground }}>
           Loading workshop...
@@ -93,48 +67,40 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
       <SafeAreaView
         className="flex-1 items-center justify-center"
         style={{ backgroundColor: theme.background }}
-        edges={["top"]}
-      >
+        edges={['top']}>
         <Ionicons name="alert-circle-outline" size={48} color={theme.mutedForeground} />
         <Text className="mt-3 text-lg font-bold" style={{ color: theme.foreground }}>
           Workshop not found
         </Text>
-        <Text className="mt-1 text-sm text-center px-10" style={{ color: theme.mutedForeground }}>
+        <Text className="mt-1 px-10 text-center text-sm" style={{ color: theme.mutedForeground }}>
           This workshop may no longer be available.
         </Text>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          className="mt-4 px-6 py-2.5 rounded-full"
-          style={{ backgroundColor: theme.primary }}
-        >
-          <Text className="text-white font-semibold">Go Back</Text>
+          className="mt-4 rounded-full px-6 py-2.5"
+          style={{ backgroundColor: theme.primary }}>
+          <Text className="font-semibold text-white">Go Back</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView
-      className="flex-1"
-      style={{ backgroundColor: theme.background }}
-      edges={["top"]}
-    >
+    <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
       {/* Header */}
       <View
-        className="px-4 py-3 flex-row items-center justify-between border-b"
-        style={{ borderColor: theme.border }}
-      >
-        <TouchableOpacity onPress={() => navigation.goBack()} className="p-2 -ml-2">
+        className="flex-row items-center justify-between border-b px-4 py-3"
+        style={{ borderColor: theme.border }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} className="-ml-2 p-2">
           <Ionicons name="arrow-back" size={24} color={theme.foreground} />
         </TouchableOpacity>
         <Text
-          className="text-lg font-bold flex-1 ml-2"
+          className="ml-2 flex-1 text-lg font-bold"
           style={{ color: theme.foreground }}
-          numberOfLines={1}
-        >
+          numberOfLines={1}>
           {workshop.name}
         </Text>
-        <TouchableOpacity className="p-2 -mr-2">
+        <TouchableOpacity className="-mr-2 p-2">
           <Ionicons name="share-outline" size={22} color={theme.foreground} />
         </TouchableOpacity>
       </View>
@@ -150,8 +116,7 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
             tintColor={theme.primary}
             colors={[theme.primary]}
           />
-        }
-      >
+        }>
         {/* Image Gallery */}
         <WorkshopImageGallery
           images={workshop.images}
@@ -163,45 +128,40 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
         <WorkshopInfoSection workshop={workshop} theme={theme} />
 
         {/* Tabs */}
-        <View className="flex-row px-5 mt-6 gap-2">
+        <View className="mt-6 flex-row gap-2 px-5">
           <TouchableOpacity
-            onPress={() => setActiveTab("info")}
-            className={`flex-1 py-3 rounded-xl items-center ${
-              activeTab === "info" ? "bg-primary" : ""
+            onPress={() => setActiveTab('info')}
+            className={`flex-1 items-center rounded-xl py-3 ${
+              activeTab === 'info' ? 'bg-primary' : ''
             }`}
-            style={activeTab !== "info" ? { backgroundColor: theme.muted } : undefined}
-          >
+            style={activeTab !== 'info' ? { backgroundColor: theme.muted } : undefined}>
             <Text
-              className={`font-bold text-sm ${activeTab === "info" ? "text-white" : ""}`}
-              style={activeTab !== "info" ? { color: theme.mutedForeground } : undefined}
-            >
+              className={`text-sm font-bold ${activeTab === 'info' ? 'text-white' : ''}`}
+              style={activeTab !== 'info' ? { color: theme.mutedForeground } : undefined}>
               Details
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => setActiveTab("sessions")}
-            className={`flex-1 py-3 rounded-xl items-center ${
-              activeTab === "sessions" ? "bg-primary" : ""
+            onPress={() => setActiveTab('sessions')}
+            className={`flex-1 items-center rounded-xl py-3 ${
+              activeTab === 'sessions' ? 'bg-primary' : ''
             }`}
-            style={activeTab !== "sessions" ? { backgroundColor: theme.muted } : undefined}
-          >
+            style={activeTab !== 'sessions' ? { backgroundColor: theme.muted } : undefined}>
             <Text
-              className={`font-bold text-sm ${activeTab === "sessions" ? "text-white" : ""}`}
-              style={activeTab !== "sessions" ? { color: theme.mutedForeground } : undefined}
-            >
+              className={`text-sm font-bold ${activeTab === 'sessions' ? 'text-white' : ''}`}
+              style={activeTab !== 'sessions' ? { color: theme.mutedForeground } : undefined}>
               Book Sessions
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Tab Content */}
-        <View className="px-5 mt-4">
-          {activeTab === "info" ? (
+        <View className="mt-4 px-5">
+          {activeTab === 'info' ? (
             <View>
               <Text
-                className="text-xs font-bold uppercase tracking-wider mb-3"
-                style={{ color: theme.mutedForeground }}
-              >
+                className="mb-3 text-xs font-bold uppercase tracking-wider"
+                style={{ color: theme.mutedForeground }}>
                 About this workshop
               </Text>
               {workshop.fullDescription ? (
@@ -216,17 +176,16 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
 
               {/* What's included */}
               <Text
-                className="text-xs font-bold uppercase tracking-wider mt-6 mb-3"
-                style={{ color: theme.mutedForeground }}
-              >
+                className="mb-3 mt-6 text-xs font-bold uppercase tracking-wider"
+                style={{ color: theme.mutedForeground }}>
                 What's included
               </Text>
               <View className="gap-2.5">
                 {[
-                  { icon: "checkmark-circle" as const, text: "All materials and equipment" },
-                  { icon: "checkmark-circle" as const, text: "Expert instructor guidance" },
-                  { icon: "checkmark-circle" as const, text: "Refreshments provided" },
-                  { icon: "checkmark-circle" as const, text: "Certificate of completion" },
+                  { icon: 'checkmark-circle' as const, text: 'All materials and equipment' },
+                  { icon: 'checkmark-circle' as const, text: 'Expert instructor guidance' },
+                  { icon: 'checkmark-circle' as const, text: 'Refreshments provided' },
+                  { icon: 'checkmark-circle' as const, text: 'Certificate of completion' },
                 ].map((item, idx) => (
                   <View key={idx} className="flex-row items-center gap-2.5">
                     <Ionicons name={item.icon} size={18} color={theme.primary} />
@@ -239,7 +198,7 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
             </View>
           ) : (
             <WorkshopSessionList
-              sessions={sessions}
+              sessions={sessions ?? []}
               loading={sessionsLoading}
               theme={theme}
             />

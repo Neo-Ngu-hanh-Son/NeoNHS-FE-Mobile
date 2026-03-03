@@ -28,7 +28,7 @@ export default function UpcomingEventsSection({ events, loading }: Props) {
     navigate('Main', { screen: 'EventDetail', params: { eventId: id } });
   }
 
-  if (!loading && events.length === 0) {
+  if (events == null || events.length === 0) {
     return null;
   }
 

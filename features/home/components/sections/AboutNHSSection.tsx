@@ -24,7 +24,7 @@ export default function AboutNHSSection({ overviews, loading }: Props) {
     navigate('Main', { screen: 'BlogDetails', params: { blogId: id } });
   }
 
-  if (!loading && overviews.length === 0) {
+  if (overviews == null || overviews.length === 0) {
     return null;
   }
 

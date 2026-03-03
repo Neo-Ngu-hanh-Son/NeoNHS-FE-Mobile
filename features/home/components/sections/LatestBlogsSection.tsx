@@ -28,7 +28,7 @@ export default function LatestBlogsSection({ blogs, loading }: Props) {
     navigate('Main', { screen: 'BlogDetails', params: { blogId: id } });
   }
 
-  if (!loading && blogs.length === 0) {
+  if (blogs == null || blogs.length === 0) {
     return null;
   }
 
