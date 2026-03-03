@@ -6,12 +6,24 @@ import { apiClient, endpoints, ApiResponse } from '@/services/api';
 import {
   WorkshopTemplateResponse,
   WorkshopSessionResponse,
+  WorkshopTagResponse,
   WorkshopPageResponse,
   WorkshopFilterParams,
   WorkshopSearchParams,
 } from '../types';
 
 export const workshopService = {
+  /**
+   * Get all workshop tags
+   * GET /api/wtags/all
+   */
+  getAllTags: async (): Promise<ApiResponse<WorkshopTagResponse[]>> => {
+    return await apiClient.get<WorkshopTagResponse[]>(
+      endpoints.workshops.getAllTags(),
+      { requiresAuth: false }
+    );
+  },
+
   /**
    * Get paginated list of active workshop templates
    * GET /api/public/workshops/templates
