@@ -30,6 +30,7 @@ export const userEndpoints = {
   getUserById: (id: string | number) => `users/${id}`,
   getUsers: () => `users`,
   deleteUser: (id: string | number) => `users/${id}`,
+  performKyc: (id: string | number) => `users/${id}/kyc`,
 } as const;
 
 /**

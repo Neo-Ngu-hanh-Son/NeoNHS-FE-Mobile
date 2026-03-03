@@ -40,6 +40,7 @@ export type BlogRoutes = {
 export type AccountRoutes = {
   UpdateAccount: undefined;
   ChangePassword: undefined;
+  KycVerification: undefined;
 };
 
 /* Transactions */
@@ -76,6 +77,12 @@ export type EventRoutes = {
   EventDetail: { eventId: string };
 };
 
+/* Workshops */
+export type WorkshopRoutes = {
+  WorkshopList: undefined;
+  WorkshopDetail: { workshopId: string };
+};
+
 /* Checkout */
 export type CheckoutRoutes = {
   PreCheckout: { selectedIds: string[] };
@@ -102,6 +109,7 @@ export type MainStackParamList = BaseMainRoutes &
   DestinationRoutes &
   MapRoutes &
   EventRoutes &
+  WorkshopRoutes &
   CheckoutRoutes &
   BlogRoutes;
 

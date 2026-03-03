@@ -19,6 +19,29 @@ export interface UpdateAccountData {
     avatarUrl?: string;
 }
 
+/**
+ * KYC Request - 3 base64-encoded images
+ */
+export interface KycRequest {
+    frontImageBase64: string;
+    backImageBase64: string;
+    selfieImageBase64: string;
+}
+
+/**
+ * KYC Response from backend
+ */
+export interface KycResponse {
+    success: boolean;
+    message: string;
+    fullName?: string;
+    idNumber?: string;
+    dateOfBirth?: string;
+    address?: string;
+    faceMatchScore?: number;
+    isFake?: boolean;
+}
+
 export const userService = {
     async getProfile(): Promise<ApiResponse<UserProfile>> {
         return apiClient.get<UserProfile>(endpoints.users.getProfile());
@@ -43,5 +66,15 @@ export const userService = {
 
     async changePassword(data: any): Promise<ApiResponse<any>> {
         return apiClient.post<any>(endpoints.users.changePassword(), data);
-    }
+    },
+
+    /**
+     * Perform KYC verification via VNPT eKYC API
+     * @param userId - User UUID
+     * @param data - KycRequest with 3 base64 images
+     */
+    async performKyc(userId: string, data: KycRequest): Promise<ApiResponse<KycResponse>> {
+        return apiClient.post<KycResponse>(endpoints.users.performKyc(userId), data);
+    },
 };
+

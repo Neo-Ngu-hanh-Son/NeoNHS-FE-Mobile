@@ -151,6 +151,43 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
             </View>
           </View>
 
+          {/* KYC Verification */}
+          {!(user as any).kycVerified ? (
+            <TouchableOpacity
+              style={[styles.kycCard, { backgroundColor: theme.card, borderColor: theme.primary }]}
+              onPress={() => navigation.navigate('Main', { screen: 'KycVerification' })}
+              activeOpacity={0.7}>
+              <View style={styles.kycCardLeft}>
+                <View style={[styles.kycIconCircle, { backgroundColor: THEME.light.primary + '15' }]}>
+                  <MaterialIcons name="verified-user" size={24} color={THEME.light.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.cardTitle, { color: theme.foreground }]}>Verify Account</Text>
+                  <Text style={[styles.cardDesc, { color: theme.mutedForeground }]}>
+                    Verify your identity with CCCD for payback
+                  </Text>
+                </View>
+              </View>
+              <MaterialIcons name="chevron-right" size={22} color={theme.primary} />
+            </TouchableOpacity>
+          ) : (
+            <View style={[styles.kycCard, { backgroundColor: '#22C55E10', borderColor: '#22C55E' }]}>
+              <View style={styles.kycCardLeft}>
+                <View style={[styles.kycIconCircle, { backgroundColor: '#22C55E20' }]}>
+                  <MaterialIcons name="check-circle" size={24} color="#22C55E" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.cardTitle, { color: theme.foreground }]}>Account Verified</Text>
+                  <Text style={[styles.cardDesc, { color: '#22C55E' }]}>
+                    Your identity has been verified
+                  </Text>
+                </View>
+              </View>
+              <MaterialIcons name="verified" size={22} color="#22C55E" />
+            </View>
+          )}
+
+
           {/* Admin/Vendor Actions */}
           {(user.role === 'ADMIN' || user.role === 'VENDOR') && (
             <View style={{ marginBottom: 20 }}>
@@ -175,17 +212,17 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
           <ActionCard
             title="Payment Method"
             desc="Save your preferred payment method for smoother transactions"
-            onPress={() => {}}
+            onPress={() => { }}
           />
           <ActionCard
             title="Coupon & Voucher"
             desc="Claim vouchers and discounts for reduced prices or free shipping"
-            onPress={() => {}}
+            onPress={() => { }}
           />
           <ActionCard
             title="Support Center"
             desc="Find the best answer to your question"
-            onPress={() => {}}
+            onPress={() => { }}
           />
 
           <View style={styles.settingsSection}>
@@ -221,7 +258,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
                     <Ionicons name="chevron-forward" size={16} color={theme.mutedForeground} />
                   </View>
                 }
-                onPress={() => {}}
+                onPress={() => { }}
               />
             </View>
           </View>
@@ -356,5 +393,26 @@ const styles = StyleSheet.create({
     padding: 30,
     borderRadius: 20,
     borderWidth: 1,
+  },
+  kycCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 14,
+    borderRadius: 20,
+    borderWidth: 1.5,
+  },
+  kycCardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  kycIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

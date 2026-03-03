@@ -5,6 +5,7 @@ import ChangePasswordScreen from '@/features/profile/screens/ChangePasswordScree
 import TransactionHistoryScreen from '@/features/profile/screens/TransactionHistoryScreen';
 import TransactionDetailsScreen from '@/features/profile/screens/TransactionDetailsScreen';
 import TicketVerificationScreen from '@/features/profile/screens/TicketVerificationScreen';
+import KycVerificationScreen from '@/features/profile/screens/KycVerificationScreen';
 import PreCheckoutScreen from '@/features/cart/screens/PreCheckoutScreen';
 import PaymentScreen from '@/features/cart/screens/PaymentScreen';
 import AllDestinationsScreen from '@/features/discover/screens/AllDestinationsScreen';
@@ -14,6 +15,7 @@ import ActiveNavigationScreen from '@/features/discover/screens/ActiveNavigation
 import ArrivalConfirmationScreen from '@/features/discover/screens/ArrivalConfirmationScreen';
 import AudioGuideScreen from '@/features/discover/screens/AudioGuideScreen';
 import EventDetailScreen from '@/features/event/screens/EventDetailScreen';
+import { WorkshopListScreen, WorkshopDetailScreen } from '@/features/workshops/screens';
 import BlogListScreen from '@/features/blog/screens/BlogListScreen';
 import BlogDetailsScreen from '@/features/blog/screens/BlogDetailsScreen';
 import TestWebViewScreen from '@/features/panorama/screens/PanoramaScreen';
@@ -34,6 +36,11 @@ export default function MainNavigator() {
       <Stack.Screen
         name="ChangePassword"
         component={ChangePasswordScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="KycVerification"
+        component={KycVerificationScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -93,6 +100,16 @@ export default function MainNavigator() {
         component={EventDetailScreen}
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="WorkshopList"
+        component={WorkshopListScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="WorkshopDetail"
+        component={WorkshopDetailScreen}
+        options={{ headerShown: false }}
+      />
       <Stack.Screen name="BlogList" component={BlogListScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name="BlogDetails"
@@ -103,3 +120,4 @@ export default function MainNavigator() {
     </Stack.Navigator>
   );
 }
+

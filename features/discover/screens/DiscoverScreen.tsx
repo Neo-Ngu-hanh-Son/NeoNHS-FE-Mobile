@@ -14,6 +14,7 @@ import { discoverService } from "../services/discoverServices";
 import { Attraction } from "../../map/types";
 import { eventService } from "../../event/services/eventService";
 import { EventResponse } from "../../event/types";
+import { MOCK_WORKSHOP_TEMPLATES } from "../../workshops/data/mockData";
 
 type DiscoverScreenProps = CompositeScreenProps<
   BottomTabScreenProps<TabsStackParamList, "Discover">,
@@ -24,35 +25,7 @@ type DiscoverScreenProps = CompositeScreenProps<
 // Area (Destination) = Grouping (e.g., Marble Mountains)
 // Point (Attraction) = Specific site (e.g., Huyen Khong Cave)
 
-const WORKSHOPS = [
-  {
-    id: "w1",
-    name: "Stone Carving Basics",
-    category: "ART",
-    rating: 4.5,
-    reviews: 120,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCr-NjNNLRtozdgMDFmPTpHyuOUUGPO6f-8Wy4w86GQyNfka0cnI5wcAgSignl8A9L3UEzT8PrQTH1WCTJspHDGLr6O3EYHLL8_LmgaRBhqv0B0Je_zlL56xZT0c1OeBOF47wkjz5jixG4o0k61h72phCvXHmX-TgV8TV6g9lu_vMortFeOlraX0OxYvreRrGwC44OgorWcQALW9NAsP4-b7gYEpDDWqXcOnq8Z3cUyh7bsCGjcW0ZauziOtEppeCS570kIh-1MH1HI",
-    color: "#10b981",
-  },
-  {
-    id: "w2",
-    name: "Traditional Pottery",
-    category: "CRAFT",
-    rating: 4.8,
-    reviews: 85,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_uAmqAALLmD-bR-hrV_0QcfphnagxjcUkKF7f_PfSMebA3xJDP78ls9YAbVGdvJYqKFwU8EMrIe_DTXNAd7U3CAOTLXBGNapSE3vNLZ8bW0qqWBKNj3e0P9f2COUOXCQ9Z0P-GaVfvuqyugLI25hHPhnQhf_4BT9TvSxgVLb4EChY_QbaxS-UnCsccFZoiGUEyNQCuyqf2pZWX3uhFEAdKr-bhbgotdUwKIwoAhqYnS2c1RPt9lx3sgtHxVF2eQbZD_2CH-4dpnmW",
-    color: "#3b82f6",
-  },
-  {
-    id: "w3",
-    name: "Silk Weaving",
-    category: "TEXTILE",
-    rating: 4.7,
-    reviews: 42,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDszdZiFODZxVQ908Zv-_entgY4jqUzw1YeKHvOz0YacHl8lkhZ9A_Ot2KgLVYnXh9GFxxTkPF1ir2vqwWVsXRrX82d4mFc8JdEQtj0azBxWeaUBI_VS1jRdtF67vq0jKUKE0jidZb1DVOLNrCpk2mm6W56RDwdSLmHk7Nyg2o2hNjfmjV9nJ-vFUQ7garg1q8w7kPRTNUHP_5cGXSZyOVVQzegLh92Xs8HdOEzrO_d9phqPZ9Yf8946y76CaKDXMoQ-cFHSjUgUD5-",
-    color: "#f97316",
-  },
-];
+const DISCOVER_WORKSHOPS = MOCK_WORKSHOP_TEMPLATES.slice(0, 4);
 
 const BLOGS = [
   {
@@ -211,26 +184,37 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
         {/* Workshops */}
         <SectionHeader title="Workshops" onSeeAll={() => navigation.navigate("AllDestinations", { initialTab: "Workshops" })} />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 16 }}>
-          {WORKSHOPS.map((workshop) => (
-            <TouchableOpacity key={workshop.id} className="w-44">
-              <View className="relative w-44 h-44 rounded-2xl overflow-hidden mb-2">
-                <Image source={{ uri: workshop.image }} className="w-full h-full object-cover" />
-                <View
-                  className="absolute bottom-3 left-3 px-2 py-0.5 rounded"
-                  style={{ backgroundColor: workshop.color }}
-                >
-                  <Text className="text-white text-[10px] font-bold tracking-wider">{workshop.category}</Text>
+          {DISCOVER_WORKSHOPS.map((workshop) => {
+            const thumb = workshop.images.find((img) => img.isThumbnail) || workshop.images[0];
+            const tagColor = workshop.tags[0]?.tagColor || theme.primary;
+            const tagName = workshop.tags[0]?.name || "";
+            return (
+              <TouchableOpacity
+                key={workshop.id}
+                className="w-44"
+                onPress={() => navigation.navigate("WorkshopDetail", { workshopId: workshop.id })}
+              >
+                <View className="relative w-44 h-44 rounded-2xl overflow-hidden mb-2">
+                  {thumb && <Image source={{ uri: thumb.imageUrl }} className="w-full h-full object-cover" />}
+                  {tagName ? (
+                    <View className="absolute bottom-3 left-3 px-2 py-0.5 rounded" style={{ backgroundColor: tagColor }}>
+                      <Text className="text-white text-[10px] font-bold tracking-wider">{tagName}</Text>
+                    </View>
+                  ) : null}
                 </View>
-              </View>
-              <Text className="font-bold text-sm leading-tight" style={{ color: theme.foreground }}>{workshop.name}</Text>
-              <View className="flex-row items-center gap-1 mt-1">
-                <Ionicons name="star" size={12} color="#eab308" />
-                <Text className="text-xs font-medium" style={{ color: theme.foreground }}>
-                  {workshop.rating} <Text className="text-slate-400">({workshop.reviews} reviews)</Text>
+                <Text className="font-bold text-sm leading-tight" style={{ color: theme.foreground }} numberOfLines={1}>{workshop.name}</Text>
+                <View className="flex-row items-center gap-1 mt-1">
+                  <Ionicons name="star" size={12} color="#eab308" />
+                  <Text className="text-xs font-medium" style={{ color: theme.foreground }}>
+                    {workshop.averageRating.toFixed(1)} <Text className="text-slate-400">({workshop.totalRatings})</Text>
+                  </Text>
+                </View>
+                <Text className="text-xs mt-0.5" style={{ color: theme.primary }}>
+                  {workshop.defaultPrice.toLocaleString("vi-VN")}đ
                 </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
 
         {/* Upcoming Events — from API */}
