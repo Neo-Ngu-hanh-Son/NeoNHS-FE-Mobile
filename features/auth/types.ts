@@ -16,6 +16,7 @@ export interface UserInfo {
     isActive: boolean;
     isVerified: boolean;
     isBanned: boolean;
+    kycVerified?: boolean;
     createdAt: string; // ISO timestamp (LocalDateTime)
     updatedAt: string; // ISO timestamp (LocalDateTime)
 }
