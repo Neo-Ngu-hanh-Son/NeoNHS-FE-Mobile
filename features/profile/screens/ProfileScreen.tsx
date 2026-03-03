@@ -160,7 +160,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
           </View>
 
           {/* KYC Verification */}
-          {!(user as any).kycVerified ? (
+          {!user.kycVerified ? (
             <TouchableOpacity
               style={[styles.kycCard, { backgroundColor: theme.card, borderColor: theme.primary }]}
               onPress={() => navigation.navigate('Main', { screen: 'KycVerification' })}

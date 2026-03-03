@@ -217,7 +217,7 @@ export default function KycVerificationScreen({ navigation }: Props) {
 
                 if (response.data.success) {
                     // Update local user state
-                    updateUser({ kycVerified: true } as any);
+                    updateUser({ kycVerified: true });
                 }
             } else {
                 // API returned error in wrapper
