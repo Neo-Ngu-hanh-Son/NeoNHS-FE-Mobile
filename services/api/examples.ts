@@ -34,6 +34,15 @@ export interface UserProfile {
     email: string;
     fullname: string;
     phoneNumber?: string;
+    bankName?: string;
+    bankBin?: string;
+    bankAccountNumber?: string;
+    bankAccountName?: string;
+    balance?: number;
+    isBankVerified?: boolean;
+    kycVerified?: boolean;
+    kycFullName?: string;
+    kycIdNumber?: string;
 }
 
 export interface UpdateProfileRequest {
@@ -41,6 +50,10 @@ export interface UpdateProfileRequest {
     phoneNumber?: string;
     email: string;
     avatarUrl?: string;
+    bankName?: string;
+    bankBin?: string;
+    bankAccountNumber?: string;
+    bankAccountName?: string;
 }
 
 const authService = {
