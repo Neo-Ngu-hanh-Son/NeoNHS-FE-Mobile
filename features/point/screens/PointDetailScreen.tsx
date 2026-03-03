@@ -22,6 +22,7 @@ import {
 } from '../components';
 import { useQuery } from '@tanstack/react-query';
 import { logger } from '@/utils/logger';
+import { usePanorama } from '@/app/providers/ParanomaProvider';
 
 type Props = CompositeScreenProps<
   StackScreenProps<MainStackParamList, 'PointDetail'>,
@@ -32,6 +33,7 @@ export default function PointDetailScreen({ navigation, route }: Props) {
   const { pointId } = route.params;
   const [isFavorite, setIsFavorite] = useState(false);
   const [isReadMore, setIsReadMore] = useState(false);
+  const { openPanorama, closePanorama } = usePanorama();
 
   const {
     data: point,
@@ -69,7 +71,8 @@ export default function PointDetailScreen({ navigation, route }: Props) {
   };
 
   const handleOpenPanorama = () => {
-    navigation.navigate('Panorama', { pointId });
+    if (!point) return;
+    openPanorama(pointId);
   };
 
   // ─── Loading state ───

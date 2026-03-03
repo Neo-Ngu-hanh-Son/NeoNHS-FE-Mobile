@@ -8,12 +8,12 @@ import { useAuth } from '@/features/auth';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { NAV_THEME } from '@/lib/theme';
 import LoadingOverlay from '@/components/Loader/LoadingOverlay';
+import { PanoramaProvider } from '../providers/ParanomaProvider';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
-  const { isAuthenticated, isInitialized } = useAuth();
-  const { colorScheme, isDarkColorScheme, isLoading: isThemeLoading } = useTheme();
+  const { colorScheme, isDarkColorScheme } = useTheme();
 
   // Show loading screen while initializing auth state or theme
   // if (!isInitialized || isThemeLoading) {
@@ -23,10 +23,12 @@ export default function RootNavigator() {
   return (
     <View className={`flex-1 ${isDarkColorScheme ? 'dark' : ''}`}>
       <NavigationContainer theme={NAV_THEME[colorScheme]}>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Main" component={MainNavigator} />
-          <Stack.Screen name="Auth" component={AuthNavigator} />
-        </Stack.Navigator>
+        <PanoramaProvider>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Main" component={MainNavigator} />
+            <Stack.Screen name="Auth" component={AuthNavigator} />
+          </Stack.Navigator>
+        </PanoramaProvider>
       </NavigationContainer>
     </View>
   );

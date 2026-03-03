@@ -9,6 +9,9 @@ import LoadingProvider from './LoadingProvider';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/services/api/tanstack/queryClient';
 
+/**
+ * NOTE: Any providers that use navigation should be nested inside NavigationContainer in RootNavigator.tsx, otherwise you will have issues with useNavigation() hook
+ */
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <SafeAreaProvider>

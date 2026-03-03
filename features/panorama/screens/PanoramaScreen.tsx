@@ -69,7 +69,7 @@ export default function PanoramaScreen({ route }: Props) {
   }
 
   return (
-    <ScreenLayout showBackButton={true}>
+    <ScreenLayout showBackButton={true} onBack={() => {}}>
       {/* Set the status bar to black */}
       <StatusBar style="auto" />
       <WebView

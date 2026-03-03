@@ -60,14 +60,13 @@ export function ScreenLayout({
 
       {showBackButton && (
         <Button
-          className="transition-all duration-200 active:bg-transparent"
+          className="transition-all duration-200 active:scale-95 active:bg-secondary/80 dark:active:bg-secondary/30"
           variant={'outline'}
           size={'icon'}
           style={[
             styles.backButton,
             {
               top: insets.top + 12,
-              backgroundColor: theme.background,
               borderColor: theme.border,
             },
           ]}
