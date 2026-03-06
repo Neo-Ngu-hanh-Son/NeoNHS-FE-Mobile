@@ -50,14 +50,6 @@ export default {
           androidGoogleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAP_API,
         },
       ],
-      [
-        'expo-build-properties',
-        {
-          android: {
-            kotlinVersion: '1.9.24',
-          },
-        },
-      ],
     ],
   },
 };
