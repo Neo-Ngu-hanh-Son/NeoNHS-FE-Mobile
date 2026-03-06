@@ -73,6 +73,8 @@ export default function PointDetailScreen({ navigation, route }: Props) {
   const handleOpenPanorama = () => {
     if (!point) return;
     openPanorama(pointId);
+    // Navigate to the panorama screen so that the user can also see the back button and have a consistent experience
+    // navigation.navigate('Panorama', { pointId });
   };
 
   // ─── Loading state ───

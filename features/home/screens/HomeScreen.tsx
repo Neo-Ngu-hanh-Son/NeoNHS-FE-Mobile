@@ -148,7 +148,7 @@ export default function HomeScreen({ navigation }: HomeScreen) {
 
         <AboutNHSSection overviews={overviews ?? []} loading={overviewsLoading} />
 
-        <LatestBlogsSection blogs={blogs} loading={blogsLoading} />
+        <LatestBlogsSection blogs={blogs ?? []} loading={blogsLoading} />
 
         <UpcomingEventsSection events={homeEvents ?? []} loading={homeEventsLoading} />
 

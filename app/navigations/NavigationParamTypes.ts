@@ -70,6 +70,7 @@ export type MapRoutes = {
   ActiveNavigation: { pointId: string };
   ArrivalConfirmation: { pointId: string };
   AudioGuide: { pointId: string };
+  PointHistoryAudio: { pointId: string };
   Panorama: { pointId: string };
 };
 
