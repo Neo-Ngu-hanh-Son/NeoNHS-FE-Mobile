@@ -11,13 +11,13 @@ export interface AudioMetadata {
   language: string;
   title: string;
   artist: string;
+  coverImage?: string;
 }
 
 export interface PointHistoryAudioResponse {
   id: string;
   pointId: string;
   audioUrl: string;
-  coverImage?: string;
   historyText: string;
   words: WordTiming[];
   metadata: AudioMetadata;

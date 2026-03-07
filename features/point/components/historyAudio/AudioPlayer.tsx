@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { View } from 'react-native';
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useFocusEffect } from '@react-navigation/native';
@@ -11,8 +11,8 @@ import { logger } from '@/utils/logger';
 type AudioPlayerProps = {
   /** The URL of the audio file to play */
   audioUrl: string | undefined;
-  /** Called every ~100ms with the current position in milliseconds */
-  onPositionUpdate?: (positionMillis: number) => void;
+  /** Called when the active word index changes (for transcript highlighting) */
+  onActiveIndexChange?: (index: number) => void;
   audio: PointHistoryAudioResponse;
 };
 
@@ -22,7 +22,7 @@ type AudioPlayerProps = {
  *
  * Styled to sit inside a card on the PointHistoryAudioScreen.
  */
-export default function AudioPlayer({ audioUrl, onPositionUpdate, audio }: AudioPlayerProps) {
+export default function AudioPlayer({ audioUrl, onActiveIndexChange, audio }: AudioPlayerProps) {
   const player = useAudioPlayer(audioUrl ?? null, {
     downloadFirst: true,
     updateInterval: 100,
@@ -39,6 +39,15 @@ export default function AudioPlayer({ audioUrl, onPositionUpdate, audio }: Audio
     [status.currentTime]
   );
   const duration = useMemo(() => Math.round((status.duration || 0) * 1000), [status.duration]);
+  const lockScreenMetadata = useMemo(
+    () => ({
+      title: audio.metadata.title,
+      artist: audio.metadata.artist,
+      albumTitle: audio.metadata.title,
+      artworkUrl: audio.metadata.coverImage,
+    }),
+    [audio.metadata.title, audio.metadata.artist, audio.metadata.coverImage]
+  );
 
   // Configure audio mode once for silent mode + background playback.
   useEffect(() => {
@@ -51,15 +60,32 @@ export default function AudioPlayer({ audioUrl, onPositionUpdate, audio }: Audio
     });
   }, []);
 
-  // Bubble playback position up to parent for transcript syncing.
+  // Compute active word index and notify parent only when it changes.
+  const activeIndexRef = useRef(-1);
   useEffect(() => {
-    onPositionUpdate?.(position);
-  }, [position, onPositionUpdate]);
+    const posInSec = status.currentTime || 0;
+    const newIndex = audio.words.findIndex((w) => posInSec >= w.start && posInSec <= w.end);
+    if (newIndex !== activeIndexRef.current) {
+      activeIndexRef.current = newIndex;
+      onActiveIndexChange?.(newIndex);
+    }
+  }, [status.currentTime, audio.words, onActiveIndexChange]);
 
   // Reset playback speed indicator when source changes.
   useEffect(() => {
     setPlaybackSpeed('1x');
   }, [audioUrl]);
+
+  // Source can auto-play after replace(); ensure lock-screen metadata follows playback state.
+  useEffect(() => {
+    if (!isReady) return;
+
+    if (status.playing) {
+      player.setActiveForLockScreen(true, lockScreenMetadata);
+    } else {
+      player.setActiveForLockScreen(false);
+    }
+  }, [audioUrl, isReady, status.playing, player, lockScreenMetadata]);
 
   // Release lock screen controls when a track completes.
   useEffect(() => {
@@ -86,12 +112,7 @@ export default function AudioPlayer({ audioUrl, onPositionUpdate, audio }: Audio
       player.pause();
       player.setActiveForLockScreen(false);
     } else {
-      player.setActiveForLockScreen(true, {
-        title: audio.metadata.title,
-        artist: audio.metadata.artist,
-        albumTitle: audio.metadata.title,
-        artworkUrl: audio.coverImage,
-      });
+      player.setActiveForLockScreen(true, lockScreenMetadata);
       player.play();
     }
   };

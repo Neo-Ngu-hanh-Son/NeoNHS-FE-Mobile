@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Image, ScrollView, View } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { CompositeScreenProps } from '@react-navigation/native';
@@ -43,21 +43,12 @@ export default function PointHistoryAudioScreen({ route }: Props) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const selectedAudio = historyAudios[selectedIndex];
 
-  // ─── Playback position (received from AudioPlayer) ───
-  const [positionMillis, setPositionMillis] = useState(0);
-
-  const handlePositionUpdate = useCallback((millis: number) => {
-    setPositionMillis(millis);
-  }, []);
-
   // ─── Active word index for highlighting ───
-  const activeIndex = useMemo(() => {
-    if (!selectedAudio) return -1;
-    const positionInSeconds = positionMillis / 1000;
-    return selectedAudio.words.findIndex(
-      (word) => positionInSeconds >= word.start && positionInSeconds <= word.end
-    );
-  }, [positionMillis, selectedAudio]);
+  const [activeIndex, setActiveIndex] = useState(-1);
+
+  const handleActiveIndexChange = useCallback((index: number) => {
+    setActiveIndex(index);
+  }, []);
 
   // ─── Loading state ───
   if (isLoading) {
@@ -97,10 +88,10 @@ export default function PointHistoryAudioScreen({ route }: Props) {
 
       {/* Transcript (word flow) */}
       <View className="mt-5 rounded-2xl border border-border bg-card p-5">
-        {selectedAudio.coverImage ? (
+        {selectedAudio.metadata.coverImage ? (
           <Image
-            source={{ uri: selectedAudio.coverImage }}
-            className="mb-4 h-44 w-full rounded-xl"
+            source={{ uri: selectedAudio.metadata.coverImage }}
+            className="mb-4 h-40 w-full rounded-xl"
             resizeMode="cover"
           />
         ) : null}
@@ -112,7 +103,7 @@ export default function PointHistoryAudioScreen({ route }: Props) {
           </Text>
         </View>
         <ScrollView
-          style={{ maxHeight: 300 }}
+          style={{ maxHeight: 200 }}
           showsVerticalScrollIndicator={true}
           nestedScrollEnabled={true}>
           <HistoryWordFlow words={selectedAudio?.words || []} activeIndex={activeIndex} />
@@ -123,7 +114,7 @@ export default function PointHistoryAudioScreen({ route }: Props) {
       <View className="mt-5">
         <AudioPlayer
           audioUrl={selectedAudio?.audioUrl}
-          onPositionUpdate={handlePositionUpdate}
+          onActiveIndexChange={handleActiveIndexChange}
           audio={selectedAudio}
         />
       </View>
