@@ -7,6 +7,7 @@ import { useTheme } from '@/app/providers/ThemeProvider';
 import { Button } from '@/components/ui/button';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { parseIntoVNDate } from '@/utils/date';
 
 interface BlogHeaderProps {
   blog: BlogResponse;
@@ -19,13 +20,7 @@ export default function BlogHeader({ blog }: BlogHeaderProps) {
   const { goBack } = useNavigation();
   const { getCurrentTheme } = useTheme();
 
-  const formattedDate = blog.publishedAt
-    ? new Date(blog.publishedAt).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      })
-    : null;
+  const formattedDate = blog.publishedAt ? parseIntoVNDate(blog.publishedAt) : null;
 
   return (
     <View className="gap-3">

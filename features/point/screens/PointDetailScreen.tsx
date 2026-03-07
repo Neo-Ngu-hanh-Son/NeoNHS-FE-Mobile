@@ -48,6 +48,13 @@ export default function PointDetailScreen({ navigation, route }: Props) {
     },
   });
 
+  let hasAudio = false;
+  if (point) {
+    if (point.historyAudioCount && point.historyAudioCount > 0) {
+      hasAudio = true;
+    }
+  }
+
   // ─── Actions ───
   const handleShare = async () => {
     if (!point) return;
@@ -67,7 +74,8 @@ export default function PointDetailScreen({ navigation, route }: Props) {
   };
 
   const handleAudioGuide = () => {
-    navigation.navigate('AudioGuide', { pointId });
+    // navigation.navigate('AudioGuide', { pointId });
+    navigation.navigate('PointHistoryAudio', { pointId });
   };
 
   const handleOpenPanorama = () => {
@@ -143,6 +151,7 @@ export default function PointDetailScreen({ navigation, route }: Props) {
         pointId={pointId}
         onNavigate={handleNavigate}
         onAudioGuide={handleAudioGuide}
+        hasAudio={hasAudio}
       />
     </View>
   );

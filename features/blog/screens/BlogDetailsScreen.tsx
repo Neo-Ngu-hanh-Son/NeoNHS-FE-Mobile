@@ -21,6 +21,16 @@ export default function BlogDetailsScreen({ navigation, route }: Props) {
 
   const { data: blog, isLoading, isError, error, refetch } = useBlogDetail(blogId);
 
+  useEffect(() => {
+    if (!blogId) return;
+    const timer = setTimeout(() => {
+      blogService.incrementBlogView(blogId);
+      console.log(`[BlogDetailsPage] Incremented view count for blog ID: ${blogId}`);
+    }, BLOG_MINIMUM_READING_TIME_SECONDS * 1000);
+
+    return () => clearTimeout(timer);
+  }, [blogId]);
+
   if (isLoading) {
     return <FullScreenLoader message="Loading blog post..." />;
   }
@@ -35,16 +45,6 @@ export default function BlogDetailsScreen({ navigation, route }: Props) {
       </View>
     );
   }
-
-  useEffect(() => {
-    if (!blogId) return;
-    const timer = setTimeout(() => {
-      blogService.incrementBlogView(blogId);
-      console.log(`[BlogDetailsPage] Incremented view count for blog ID: ${blogId}`);
-    }, BLOG_MINIMUM_READING_TIME_SECONDS * 1000);
-
-    return () => clearTimeout(timer);
-  }, [blogId]);
 
   return (
     <SafeAreaView className="flex-1">
