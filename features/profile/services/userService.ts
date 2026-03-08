@@ -84,9 +84,13 @@ export const userService = {
     /**
      * Withdraw money from user balance to bank account
      * @param amount - Amount in VND to withdraw
+     * @param livePhotoBase64 - Live photo for face verification (base64 encoded)
      */
-    async withdraw(amount: number): Promise<ApiResponse<any>> {
-        return apiClient.post<any>(endpoints.users.withdraw(amount), {});
+    async withdraw(amount: number, livePhotoBase64: string): Promise<ApiResponse<any>> {
+        return apiClient.post<any>(endpoints.users.withdraw(), {
+            amount,
+            livePhotoBase64,
+        });
     },
 };
 
