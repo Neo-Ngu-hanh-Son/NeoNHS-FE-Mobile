@@ -50,6 +50,19 @@ export default {
           androidGoogleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAP_API,
         },
       ],
+      [
+        'expo-av',
+        {
+          androidImplementation: 'ExoPlayer',
+          microphonePermission: false,
+        },
+      ],
+      [
+        'expo-audio',
+        {
+          enableBackgroundPlayback: true,
+        },
+      ],
     ],
   },
 };

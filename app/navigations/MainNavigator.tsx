@@ -22,6 +22,8 @@ import BlogDetailsScreen from '@/features/blog/screens/BlogDetailsScreen';
 import TestWebViewScreen from '@/features/panorama/screens/PanoramaScreen';
 import { MainStackParamList } from './NavigationParamTypes';
 import PanoramaScreen from '@/features/panorama/screens/PanoramaScreen';
+import PointHistoryAudioScreen from '@/features/point/screens/PointHistoryAudioScreen';
+import { Text } from '@/components/ui/text';
 
 const Stack = createStackNavigator<MainStackParamList>();
 
@@ -44,11 +46,7 @@ export default function MainNavigator() {
         component={KycVerificationScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
-        name="Withdraw"
-        component={WithdrawScreen}
-        options={{ headerShown: false }}
-      />
+      <Stack.Screen name="Withdraw" component={WithdrawScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name="TransactionHistory"
         component={TransactionHistoryScreen}
@@ -101,6 +99,17 @@ export default function MainNavigator() {
         component={AudioGuideScreen}
         options={{ headerShown: false }}
       />
+
+      <Stack.Screen
+        name="PointHistoryAudio"
+        component={PointHistoryAudioScreen}
+        options={{
+          headerShown: false,
+          headerTitleAlign: 'left',
+          headerTitle: 'History audios',
+        }}
+      />
+
       <Stack.Screen
         name="EventDetail"
         component={EventDetailScreen}
@@ -126,4 +135,3 @@ export default function MainNavigator() {
     </Stack.Navigator>
   );
 }
-

@@ -31,4 +31,15 @@ export const blogService = {
       requiresAuth: false,
     });
   },
+
+  /** Increment the view count for a blog post */
+  incrementBlogView: async (id: string | number): Promise<void> => {
+    try {
+      await apiClient.post(endpoints.blog.incrementView(id), null, {
+        requiresAuth: false,
+      });
+    } catch (error) {
+      console.error(`[blogService] Failed to increment view count for blog ID ${id}:`, error);
+    }
+  },
 };

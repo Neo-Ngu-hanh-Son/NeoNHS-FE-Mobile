@@ -11,12 +11,14 @@ type PointDetailBottomBarProps = {
   pointId: string;
   onNavigate: () => void;
   onAudioGuide: () => void;
+  hasAudio: boolean;
 };
 
 export function PointDetailBottomBar({
   pointId,
   onNavigate,
   onAudioGuide,
+  hasAudio,
 }: PointDetailBottomBarProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
@@ -39,13 +41,15 @@ export function PointDetailBottomBar({
         </Button>
 
         {/* Audio guide button */}
-        <Button
-          onPress={onAudioGuide}
-          variant="outline"
-          className="h-14 w-14 rounded-2xl"
-          size="icon">
-          <Ionicons name="headset-outline" size={22} color={theme.foreground} />
-        </Button>
+        {hasAudio && (
+          <Button
+            onPress={onAudioGuide}
+            variant="outline"
+            className="h-14 w-14 rounded-2xl"
+            size="icon">
+            <Ionicons name="headset-outline" size={22} color={theme.foreground} />
+          </Button>
+        )}
       </View>
     </View>
   );

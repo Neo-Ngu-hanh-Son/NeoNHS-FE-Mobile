@@ -43,8 +43,6 @@ export interface MapPoint {
   name: string;
   description?: string;
   thumbnailUrl?: string;
-  history?: string;
-  historyAudioUrl?: string;
   latitude: number;
   longitude: number;
   orderIndex?: number;
@@ -57,6 +55,8 @@ export interface MapPoint {
     type: 'node' | 'edge';
     refId: string; // nodeId or edgeId
   };
+
+  historyAudioCount?: number;
 }
 
 export type AttractionStatus = 'OPEN' | 'CLOSED' | 'MAINTENANCE' | 'TEMPORARILY_CLOSED';
@@ -71,6 +71,6 @@ export interface Attraction {
   status: AttractionStatus;
   thumbnailUrl: string;
   mapImageUrl: string | null;
-  openHour: string;  // format: "HH:mm:ss"
+  openHour: string; // format: "HH:mm:ss"
   closeHour: string; // format: "HH:mm:ss"
 }

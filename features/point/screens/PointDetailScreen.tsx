@@ -48,6 +48,13 @@ export default function PointDetailScreen({ navigation, route }: Props) {
     },
   });
 
+  let hasAudio = false;
+  if (point) {
+    if (point.historyAudioCount && point.historyAudioCount > 0) {
+      hasAudio = true;
+    }
+  }
+
   // ─── Actions ───
   const handleShare = async () => {
     if (!point) return;
@@ -67,12 +74,15 @@ export default function PointDetailScreen({ navigation, route }: Props) {
   };
 
   const handleAudioGuide = () => {
-    navigation.navigate('AudioGuide', { pointId });
+    // navigation.navigate('AudioGuide', { pointId });
+    navigation.navigate('PointHistoryAudio', { pointId });
   };
 
   const handleOpenPanorama = () => {
     if (!point) return;
     openPanorama(pointId);
+    // Navigate to the panorama screen so that the user can also see the back button and have a consistent experience
+    // navigation.navigate('Panorama', { pointId });
   };
 
   // ─── Loading state ───
@@ -141,6 +151,7 @@ export default function PointDetailScreen({ navigation, route }: Props) {
         pointId={pointId}
         onNavigate={handleNavigate}
         onAudioGuide={handleAudioGuide}
+        hasAudio={hasAudio}
       />
     </View>
   );
