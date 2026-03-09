@@ -119,7 +119,7 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
 
   const popularAttractions = (allAttractions ?? []).slice(0, 5);
   const events = eventsData?.content ?? [];
-  const discoverWorkshops = workshopData?.content ?? [];
+  const discoverWorkshops = (workshopData?.content ?? []).filter((w) => w.isPublished !== false);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);

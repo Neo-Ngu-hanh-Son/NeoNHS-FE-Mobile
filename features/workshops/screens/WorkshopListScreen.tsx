@@ -94,9 +94,9 @@ export function WorkshopListContent({ onNavigateToDetail }: WorkshopListContentP
 
   const { data: tags, isLoading: isLoadingTags } = useWorkshopTags();
 
-  // Flatten all pages into a single array
+  // Flatten all pages into a single array and filter out unpublished workshops
   const workshops = useMemo(
-    () => data?.pages.flatMap((page) => page.content) ?? [],
+    () => data?.pages.flatMap((page) => page.content).filter((w) => w.isPublished !== false) ?? [],
     [data],
   );
 
@@ -357,9 +357,9 @@ export function WorkshopListContent({ onNavigateToDetail }: WorkshopListContentP
               </View>
             </View>
 
-            <View className="flex-row items-center justify-between mt-1">
+            <View className="flex-row items-center justify-between">
               <Text
-                className="text-xs"
+                className="text-xs flex-shrink"
                 style={{ color: theme.mutedForeground }}
                 numberOfLines={1}
               >
