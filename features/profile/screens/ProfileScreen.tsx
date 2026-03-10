@@ -2,6 +2,7 @@ import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { CommonActions, CompositeScreenProps } from '@react-navigation/native';
+import { useCallback, useEffect } from 'react';
 import type { StackScreenProps } from '@react-navigation/stack';
 
 import { Text } from '@/components/ui/text';
@@ -23,13 +24,35 @@ type ProfileNavigationProp = CompositeScreenProps<
 >;
 
 export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, updateUser } = useAuth();
   const { isDarkColorScheme, toggleColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
   const handleLogin = () => {
     navigation.navigate('Auth', { screen: 'Login' });
   };
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (isAuthenticated) {
+        try {
+          const { userService } = require('../services/userService');
+          const response = await userService.getProfile();
+          if (response.success && response.data) {
+            updateUser(response.data);
+          }
+        } catch (error) {
+          logger.error('Fetch profile error:', error);
+        }
+      }
+    };
+
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchProfile();
+    });
+
+    return unsubscribe;
+  }, [navigation, isAuthenticated]);
 
   const handleLogout = () => {
     Alert.alert('Sign Out', 'Are you sure?', [
