@@ -3,15 +3,17 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { MainStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { logger } from '@/utils/logger';
 import { MapPoint } from '../types';
-import PointDetailModal from '../components/PointDetailModal/PointDetailModal';
+import MapPointDetailModal from '../components/PointDetailModal/PointDetailModal';
 import NHSMap, { NHSMapRef } from '../components/Map/NHSMap';
-import { getAllDestinations, getPointOfAttraction } from '../services/mapServices';
+import { mapService } from '../services/mapServices';
 import { useModal } from '@/app/providers/ModalProvider';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { LocationPermissionBanner } from '../components/UserLocation';
 import { mapData } from '../data';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { ScreenLayout } from '@/components/common/ScreenLayout';
+import { useQuery } from '@tanstack/react-query';
+import CheckinCameraButton from '../components/Camera/CheckinCameraButton';
 
 type MapScreenProps = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Map'>,
@@ -29,13 +31,9 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     }
   }, [initialPointId]);
 
-  console.log('showBackButton', showBackButton);
-  console.log('point id', initialPointId);
-
   // Map state
   const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [mapPoints, setMapPoints] = useState<MapPoint[]>([]);
   const mapRef = useRef<NHSMapRef>(null);
 
   // Modal helpers
@@ -57,26 +55,26 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     distanceInterval: 5,
   });
 
-  // Fetch ALL map points on mount
+  const { data: mapPoints = mapData.mapPoints, isError: isMapPointsError } = useQuery({
+    queryKey: ['mapPoints'],
+    queryFn: async () => {
+      const res = await mapService.getMapPoints();
+      return res.data as MapPoint[];
+    },
+  });
+
   useEffect(() => {
-    async function fetchPoints() {
-      try {
-        const destinations = await getAllDestinations({ search: 'thuy son' });
-        const res = await getPointOfAttraction(destinations.data[0].id);
-        setMapPoints(res.data);
-      } catch (error) {
-        logger.error('[MapScreen] Failed to fetch map points, using default map points:', error);
-        setMapPoints(mapData.mapPoints);
-      }
+    if (isMapPointsError) {
+      logger.error('[MapScreen] Failed to fetch map points, using default map points.');
     }
-    fetchPoints();
-  }, []);
+  }, [isMapPointsError]);
 
   // Auto-focus on a point if navigated with a pointId
   useEffect(() => {
     if (!initialPointId || mapPoints.length === 0) return;
 
     const targetPoint = mapPoints.find((p) => p.id === initialPointId);
+
     if (targetPoint) {
       logger.info('[MapScreen] Auto-focusing on point:', targetPoint.name);
       setSelectedPoint(targetPoint);
@@ -85,8 +83,8 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
       setTimeout(() => {
         mapRef.current?.animateToCoordinate(
           {
-            latitude: targetPoint.latitude,
-            longitude: targetPoint.longitude,
+            latitude: parseFloat(targetPoint.latitude),
+            longitude: parseFloat(targetPoint.longitude),
             latDelta: 0.001,
             lngDelta: 0.001,
           },
@@ -114,15 +112,31 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     setModalVisible(false);
   }, []);
 
-  const handleNavigate = useCallback((point: MapPoint) => {
-    if (point.id && point.id !== 'offline') {
-      logger.info('Navigate to:', point);
-      navigation.navigate('PointDetail', { pointId: point.id });
-    } else {
-      alert('Navigation Unavailable', 'Please connect to the internet to access this feature.');
-    }
-    setModalVisible(false);
-  }, []);
+  const handleNavigate = useCallback(
+    (point: MapPoint) => {
+      if (point.id && point.id !== 'offline') {
+        logger.info('Navigate to:', point);
+
+        if (point.type === 'EVENT') {
+          navigation.navigate('EventDetail', { eventId: point.id });
+        } else if (point.type === 'WORKSHOP') {
+          navigation.navigate('WorkshopDetail', { workshopId: point.id });
+        } else if (point.type === 'CHECKIN') {
+          if (point.attractionId) {
+            navigation.navigate('PointDetail', { pointId: point.attractionId });
+          } else {
+            alert('Details Unavailable', 'This check-in point is not linked to a parent point.');
+          }
+        } else {
+          navigation.navigate('PointDetail', { pointId: point.id });
+        }
+      } else {
+        alert('Navigation Unavailable', 'Please connect to the internet to access this feature.');
+      }
+      setModalVisible(false);
+    },
+    [alert, navigation]
+  );
 
   /**
    * Handle permission request from banner
@@ -155,12 +169,13 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
       />
 
       {/* Point detail modal */}
-      <PointDetailModal
+      <MapPointDetailModal
         point={selectedPoint}
         visible={modalVisible}
         onClose={handleCloseModal}
         onViewDetails={handleNavigate}
       />
+      <CheckinCameraButton onOpenCamera={() => {}} isSugestingCheckin={true} />
     </ScreenLayout>
   );
 }

@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, Easing } from 'react-native';
 import { MapPoint } from '../../types';
 import { markerStyles } from './MarkerStyles';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { StrokeText } from '@charmy.tech/react-native-stroke-text';
 
 interface MarkerVisualProps {
@@ -27,7 +27,7 @@ export default function MarkerVisual({ point, showName, isSelected = false }: Ma
               borderWidth: isSelected ? 3 : 2,
             },
           ]}>
-          <MaterialIcons name={style.icon} size={16} color="#fff" />
+          <MaterialCommunityIcons name={style.icon} size={16} color="#fff" />
         </View>
         <View
           style={[

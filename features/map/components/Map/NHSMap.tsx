@@ -7,6 +7,7 @@ import React, {
   useState,
   forwardRef,
   useEffect,
+  useMemo,
 } from 'react';
 import { MapPoint } from '../..';
 import { Marker, Polyline, PROVIDER_GOOGLE, Region } from 'react-native-maps';
@@ -48,13 +49,14 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
     const [shouldDisplayMarkerName, setShouldDisplayMarkerName] = useState(false);
     const [isMapReady, setIsMapReady] = useState(false);
     const [isFollowingUser, setIsFollowingUser] = useState(false);
+    const [mapKey, setMapKey] = useState(0);
+
     const mapZoomRef = useRef({
       latitudeDelta: MAP_CENTER.latitudeDelta,
       longitudeDelta: MAP_CENTER.longitudeDelta,
     });
     const mapRef = useRef<MapView>(null);
     const currentRegionRef = useRef<Region>(MAP_CENTER);
-    const [mapKey, setMapKey] = useState(0); // This make it so that the map re-renders when we want to reset it (e.g. on screen focus)
 
     // Expose methods to parent via ref
     useImperativeHandle(ref, () => ({
@@ -156,10 +158,96 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       }
     }, [isMapReady, isFollowingUser, userLocation]);
 
-    // Reset map when screen gains focus to ensure it re-renders with latest data and theme
+    // 1. Memoize the routes (since they never change)
+    const memoizedRoutes = useMemo(() => {
+      return renderRoutes.map((line) => (
+        <Polyline
+          key={line.id}
+          coordinates={line.coordinates}
+          strokeColor="#fafafa50"
+          strokeWidth={8}
+        />
+      ));
+    }, []); // Empty array because renderRoutes is static imported data
+
+    // 2. Memoize the map points
+    const memoizedMarkers = useMemo(() => {
+      if (!isMapReady || !mapPoints) return null;
+
+      const parentMarkers = mapPoints
+        .filter(
+          (poi) =>
+            Number.isFinite(parseFloat(poi.latitude)) && Number.isFinite(parseFloat(poi.longitude))
+        )
+        .map((poi) => (
+          <Marker
+            key={poi.id}
+            coordinate={{
+              latitude: parseFloat(poi.latitude),
+              longitude: parseFloat(poi.longitude),
+            }}
+            onPress={() => {
+              onMarkerPress?.(poi);
+            }}>
+            <MarkerVisual
+              point={poi}
+              showName={shouldDisplayMarkerName}
+              isSelected={selectedPointId === poi.id}
+            />
+          </Marker>
+        ));
+
+      const checkinMarkers = mapPoints.flatMap((parentPoint) =>
+        (parentPoint.checkinPoints ?? [])
+          .filter(
+            (checkin) =>
+              checkin.isActive !== false &&
+              Number.isFinite(checkin.latitude) &&
+              Number.isFinite(checkin.longitude)
+          )
+          .map((checkin) => {
+            const checkinAsPoint: MapPoint = {
+              id: checkin.id,
+              name: checkin.name,
+              description: checkin.description,
+              thumbnailUrl: checkin.thumbnailUrl,
+              latitude: String(checkin.latitude),
+              longitude: String(checkin.longitude),
+              type: checkin.type ?? 'CHECKIN',
+              attractionId: parentPoint.id,
+              panoramaImageUrl: checkin.panoramaImageUrl,
+              defaultYaw: checkin.defaultYaw,
+              defaultPitch: checkin.defaultPitch,
+            };
+
+            return (
+              <Marker
+                key={`checkin-${checkin.id}`}
+                coordinate={{
+                  latitude: checkin.latitude,
+                  longitude: checkin.longitude,
+                }}
+                zIndex={30}
+                onPress={() => {
+                  onMarkerPress?.(checkinAsPoint);
+                }}>
+                <MarkerVisual
+                  point={checkinAsPoint}
+                  showName={shouldDisplayMarkerName}
+                  isSelected={selectedPointId === checkin.id}
+                />
+              </Marker>
+            );
+          })
+      );
+
+      return [...parentMarkers, ...checkinMarkers];
+    }, [isMapReady, mapPoints, shouldDisplayMarkerName, selectedPointId, onMarkerPress]);
+
     useFocusEffect(
       useCallback(() => {
         setMapKey((prev) => prev + 1);
+        logger.info('Refresing map screen: ', mapKey + 1);
       }, [])
     );
 
@@ -182,33 +270,9 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           }}
           onPanDrag={handleMapInteraction} // Detect when user drags the map
           customMapStyle={[]}>
-          {renderRoutes.map((line) => (
-            <Polyline
-              key={line.id}
-              coordinates={line.coordinates}
-              strokeColor="#fafafa50"
-              strokeWidth={8}
-            />
-          ))}
-
-          {isMapReady &&
-            mapPoints?.map((poi) => (
-              <Marker
-                key={poi.id}
-                coordinate={{
-                  latitude: poi.latitude,
-                  longitude: poi.longitude,
-                }}
-                onPress={() => {
-                  onMarkerPress?.(poi);
-                }}>
-                <MarkerVisual
-                  point={poi}
-                  showName={shouldDisplayMarkerName}
-                  isSelected={selectedPointId === poi.id}
-                />
-              </Marker>
-            ))}
+          {/* Markers */}
+          {memoizedRoutes}
+          {memoizedMarkers}
 
           {userLocation && (
             <UserLocationMarker
@@ -252,4 +316,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default NHSMap;
+export default React.memo(NHSMap);

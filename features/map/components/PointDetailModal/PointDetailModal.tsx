@@ -17,6 +17,7 @@ import { IconButton } from '@/components/Buttons/IconButton';
 import PointDetailModalHeader from './PointDetailModalHeader';
 import PointDetailModalImage from './PointDetailModalImage';
 import PointDetailModalDescription from './PointDetailModalDescription';
+import { Button } from '@/components/ui/button';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const MODAL_HEIGHT = SCREEN_HEIGHT * 0.45;
@@ -28,7 +29,20 @@ interface PointDetailModalProps {
   onViewDetails?: (point: MapPoint) => void;
 }
 
-export default function PointDetailModal({
+const formatDateTime = (value?: string) => {
+  if (!value) return 'N/A';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString();
+};
+
+const formatParticipants = (current?: number, max?: number) => {
+  if (typeof current !== 'number' && typeof max !== 'number') return 'N/A';
+  if (typeof current === 'number' && typeof max === 'number') return `${current}/${max}`;
+  return String(current ?? max ?? 'N/A');
+};
+
+export default function MapPointDetailModal({
   point,
   visible,
   onClose,
@@ -56,6 +70,47 @@ export default function PointDetailModal({
   }, [visible, slideAnim]);
 
   if (!point) return null;
+
+  const isEvent = point.type === 'EVENT';
+  const isWorkshop = point.type === 'WORKSHOP';
+  const isCheckin = point.type === 'CHECKIN';
+
+  const detailRows = [
+    ...(isEvent || isWorkshop
+      ? [
+          { label: 'Start time', value: formatDateTime(point.startTime) },
+          { label: 'End time', value: formatDateTime(point.endTime) },
+          {
+            label: 'Participants',
+            value: formatParticipants(point.currentEnrolled, point.maxParticipants),
+          },
+        ]
+      : []),
+    ...(isWorkshop
+      ? [
+          {
+            label: 'Organizer',
+            value: point.workshopOrganizerName || 'N/A',
+          },
+        ]
+      : []),
+  ];
+
+  const primaryActionLabel = isEvent
+    ? 'View event'
+    : isWorkshop
+      ? 'View workshop'
+      : isCheckin
+        ? 'Open parent point'
+        : 'Guide me there';
+
+  const secondaryActionLabel = isEvent
+    ? 'Event details'
+    : isWorkshop
+      ? 'Workshop details'
+      : isCheckin
+        ? 'Check-in details'
+        : 'View details';
 
   return (
     <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
@@ -96,21 +151,36 @@ export default function PointDetailModal({
 
                 <PointDetailModalDescription point={point} />
 
+                {detailRows.length > 0 && (
+                  <View style={[styles.detailSection, { borderColor: theme.border }]}>
+                    {detailRows.map((row) => (
+                      <View key={row.label} style={styles.detailRow}>
+                        <Text style={[styles.detailLabel, { color: theme.mutedForeground }]}>
+                          {row.label}
+                        </Text>
+                        <Text style={[styles.detailValue, { color: theme.foreground }]}>
+                          {row.value}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+
                 {/* Action buttons */}
                 <View style={styles.actions}>
-                  <IconButton
-                    icon="navigate"
+                  <Button
+                    // icon="navigate"
                     onPress={() => onViewDetails?.(point)}
                     variant="default">
-                    <Text>Guide me there</Text>
-                  </IconButton>
+                    <Text>View details</Text>
+                  </Button>
 
-                  <IconButton
+                  {/* <IconButton
                     icon="bookmark-outline"
                     variant="outline"
                     onPress={() => onViewDetails?.(point)}>
-                    <Text>View Details</Text>
-                  </IconButton>
+                    <Text>{secondaryActionLabel}</Text>
+                  </IconButton> */}
                 </View>
               </ScrollView>
             </Animated.View>
@@ -126,6 +196,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'flex-end',
+    zIndex: 999,
   },
   modalContainer: {
     borderTopLeftRadius: 24,
@@ -181,6 +252,29 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 24,
     justifyContent: 'space-around',
+  },
+  detailSection: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 16,
+    gap: 8,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  detailLabel: {
+    fontSize: 12,
+  },
+  detailValue: {
+    fontSize: 13,
+    fontWeight: '600',
+    flexShrink: 1,
+    textAlign: 'right',
   },
   headerRow: {
     flexDirection: 'row',

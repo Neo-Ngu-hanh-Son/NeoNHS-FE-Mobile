@@ -39,24 +39,56 @@ export type Edge = {
 
 // These are special points used for map markers and interactions (They are not necessarily nodes in the graph, but can be on the edges)
 export interface MapPoint {
+  // Base PointResponse Fields
   id: string;
   name: string;
   description?: string;
   thumbnailUrl?: string;
-  latitude: number;
-  longitude: number;
+  latitude: string;
+  longitude: string;
   orderIndex?: number;
   estTimeSpent?: number;
   type: POIType;
-  panoramaImageUrl?: string; // For 360 view
+  attractionId?: string;
+  panoramaImageUrl?: string;
+  defaultYaw?: number;
+  defaultPitch?: number;
+  googlePlaceId?: string;
+  historyAudioCount?: number;
 
-  // Optional graph attachment
+  // Children check-in points
+  checkinPoints?: MapPointCheckin[];
+
+  // MapPointResponse Specific Fields (Events & Workshops)
+  startTime?: string;
+  endTime?: string;
+  shortDescription?: string;
+  maxParticipants?: number;
+  currentEnrolled?: number;
+  workshopOrganizerName?: string;
+
+  // Only used by front end map (Don't mind about this)
   attachedTo?: {
     type: 'node' | 'edge';
     refId: string; // nodeId or edgeId
   };
+}
 
-  historyAudioCount?: number;
+
+export interface MapPointCheckin {
+  id: string;
+  name: string;
+  description?: string;
+  thumbnailUrl?: string;
+  isActive?: boolean;
+  latitude: number;
+  longitude: number;
+  type: POIType;
+  panoramaImageUrl?: string; // For 360 view
+  defaultYaw?: number;
+  defaultPitch?: number;
+  rewardPoints?: number;
+  qrCode?: string;
 }
 
 export type AttractionStatus = 'OPEN' | 'CLOSED' | 'MAINTENANCE' | 'TEMPORARILY_CLOSED';

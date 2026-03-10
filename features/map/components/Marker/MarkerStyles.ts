@@ -1,8 +1,8 @@
 import type { POIType } from '@/features/map/types';
 import { ComponentProps } from 'react';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 
-type IconName = ComponentProps<typeof MaterialIcons>['name'];
+type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
 export function getMarkerStyle(type: POIType): MarkerStyle {
   return markerStyles[type];
@@ -18,66 +18,66 @@ export const markerStyles: Record<POIType, MarkerStyle> = {
   DEFAULT: {
     bg: '#1a8f3e',
     border: '#1a8f3e',
-    icon: 'not-listed-location',
+    icon: 'help-circle-outline',
   },
   PAGODA: {
     bg: '#7c3aed',
     border: '#ede9fe',
-    icon: 'account-balance', // MaterialIcons
+    icon: 'temple-buddhist',
   },
   CAVE: {
     bg: '#374151',
     border: '#e5e7eb',
-    icon: 'terrain',
+    icon: 'image-filter-hdr',
   },
   VIEWPOINT: {
     bg: '#0284c7',
     border: '#e0f2fe',
-    icon: 'visibility',
+    icon: 'eye-outline',
   },
   GENERAL: {
     bg: '#4b5563',
     border: '#f3f4f6',
-    icon: 'place',
+    icon: 'map-marker',
   },
   CHECKIN: {
     bg: '#dc2626',
     border: '#fee2e2',
-    icon: 'flag',
+    icon: 'flag-variant',
   },
   STATUE: {
     bg: '#d97706',
     border: '#fef3c7',
-    icon: 'emoji-people',
+    icon: 'human-handsup', // Good for statues/monuments
   },
   GATE: {
     bg: '#16a34a',
     border: '#dcfce7',
-    icon: 'door-front',
+    icon: 'gate',
   },
   SHOP: {
     bg: '#ea580c',
     border: '#ffedd5',
-    icon: 'storefront',
+    icon: 'store',
   },
   ELEVATOR: {
     bg: '#2563eb',
     border: '#dbeafe',
-    icon: 'elevator',
+    icon: 'elevator-passenger',
   },
   EVENT: {
     bg: '#db2777',
     border: '#fce7f3',
-    icon: 'event',
+    icon: 'calendar-star', // Distinctive for events
   },
   WORKSHOP: {
     bg: '#059669',
     border: '#d1fae5',
-    icon: 'build',
+    icon: 'tools', // "Tools" is the classic workshop vibe in Community
   },
   ATTRACTION: {
     bg: '#8b5cf6',
     border: '#ede9fe',
-    icon: 'attractions',
+    icon: 'ferris-wheel', // Perfect for attractions
   },
 };
