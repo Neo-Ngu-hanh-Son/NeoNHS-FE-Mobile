@@ -23,6 +23,7 @@ import TestWebViewScreen from '@/features/panorama/screens/PanoramaScreen';
 import { MainStackParamList } from './NavigationParamTypes';
 import PanoramaScreen from '@/features/panorama/screens/PanoramaScreen';
 import PointHistoryAudioScreen from '@/features/point/screens/PointHistoryAudioScreen';
+import CheckinCameraScreen from '@/features/map/screens/CheckinCameraScreen';
 import { Text } from '@/components/ui/text';
 
 const Stack = createStackNavigator<MainStackParamList>();
@@ -132,6 +133,11 @@ export default function MainNavigator() {
         options={{ headerShown: false }}
       />
       <Stack.Screen name="Panorama" component={PanoramaScreen} options={{ headerShown: false }} />
+      <Stack.Screen
+        name="CheckinCamera"
+        component={CheckinCameraScreen}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 }

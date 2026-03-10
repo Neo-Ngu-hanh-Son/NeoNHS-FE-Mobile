@@ -21,6 +21,7 @@ import { View, StyleSheet } from 'react-native';
 import { UserLocation } from '../../hooks/useUserLocation';
 import { UserLocationMarker, FollowUserButton } from '../UserLocation';
 import { useFocusEffect } from '@react-navigation/native';
+import { parseFloatOrDefault } from '@/utils/parseNumber';
 
 type NHSMapProps = {
   onMarkerPress?: (point: MapPoint) => void;
@@ -177,14 +178,15 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       const parentMarkers = mapPoints
         .filter(
           (poi) =>
-            Number.isFinite(parseFloat(poi.latitude)) && Number.isFinite(parseFloat(poi.longitude))
+            parseFloatOrDefault(poi.latitude, -1) !== -1 &&
+            parseFloatOrDefault(poi.longitude, -1) !== -1
         )
         .map((poi) => (
           <Marker
             key={poi.id}
             coordinate={{
-              latitude: parseFloat(poi.latitude),
-              longitude: parseFloat(poi.longitude),
+              latitude: parseFloatOrDefault(poi.latitude, 0),
+              longitude: parseFloatOrDefault(poi.longitude, 0),
             }}
             onPress={() => {
               onMarkerPress?.(poi);
@@ -202,8 +204,8 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           .filter(
             (checkin) =>
               checkin.isActive !== false &&
-              Number.isFinite(checkin.latitude) &&
-              Number.isFinite(checkin.longitude)
+              parseFloatOrDefault(checkin.latitude, -1) !== -1 &&
+              parseFloatOrDefault(checkin.longitude, -1) !== -1
           )
           .map((checkin) => {
             const checkinAsPoint: MapPoint = {
@@ -211,8 +213,8 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
               name: checkin.name,
               description: checkin.description,
               thumbnailUrl: checkin.thumbnailUrl,
-              latitude: String(checkin.latitude),
-              longitude: String(checkin.longitude),
+              latitude: checkin.latitude,
+              longitude: checkin.longitude,
               type: checkin.type ?? 'CHECKIN',
               attractionId: parentPoint.id,
               panoramaImageUrl: checkin.panoramaImageUrl,
@@ -224,8 +226,8 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
               <Marker
                 key={`checkin-${checkin.id}`}
                 coordinate={{
-                  latitude: checkin.latitude,
-                  longitude: checkin.longitude,
+                  latitude: parseFloatOrDefault(checkin.latitude, 0),
+                  longitude: parseFloatOrDefault(checkin.longitude, 0),
                 }}
                 zIndex={30}
                 onPress={() => {
@@ -238,6 +240,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
                 />
               </Marker>
             );
+
           })
       );
 
@@ -313,6 +316,7 @@ const styles = StyleSheet.create({
     padding: 6,
     borderRadius: 12,
     elevation: 4,
+    zIndex: 10,
   },
 });
 

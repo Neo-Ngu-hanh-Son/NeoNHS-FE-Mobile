@@ -32,9 +32,12 @@ export default {
         foregroundImage: './assets/images/NeoNHSLogo.png',
         backgroundColor: '#ffffff',
       },
+      permissions: [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION"
+      ],
     },
-
-    permissions: ['ACCESS_FINE_LOCATION'],
 
     plugins: [
       [
@@ -51,18 +54,26 @@ export default {
         },
       ],
       [
-        'expo-av',
-        {
-          androidImplementation: 'ExoPlayer',
-          microphonePermission: false,
-        },
-      ],
-      [
         'expo-audio',
         {
           enableBackgroundPlayback: true,
         },
       ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location.",
+          isAndroidBackgroundLocationEnabled: true,
+
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
+          "barcodeScannerEnabled": true
+        }
+      ]
     ],
   },
 };

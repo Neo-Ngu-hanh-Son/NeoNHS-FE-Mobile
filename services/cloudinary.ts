@@ -5,7 +5,7 @@ export const CLOUDINARY_CONFIG = {
     PRESET_NAME: "demo-upload",
     FOLDER_NAME: "NeoNHS",
     API_URL: `https://api.cloudinary.com/v1_1/dsrxsfr0q/image/upload`,
-    VIDEO_API_URL: `https://api.cloudinary.com/v1_1/dsrxsfr0q/video/upload`, 
+    VIDEO_API_URL: `https://api.cloudinary.com/v1_1/dsrxsfr0q/video/upload`,
 };
 
 export const uploadImageToCloudinary = async (file: string | Blob) => {

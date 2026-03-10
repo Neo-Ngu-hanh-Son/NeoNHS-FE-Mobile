@@ -108,13 +108,12 @@ export default function CheckinCameraButton({
           <Animated.View style={ringStyle(scale1, opacity1)} />
           <Animated.View style={ringStyle(scale2, opacity2)} />
           <Animated.View style={ringStyle(scale3, opacity3)} />
+          <View className='absolute bottom-20 px-2 py-1 rounded-md bg-white bg-opacity-70 flex-row items-center gap-1'>
+            <Text className="text-sm font-medium text-primary">Check-in nearby!</Text>
+          </View>
         </>
       )}
-      {/* Small tool tips saying checkin nearby! */}
-      <View className='absolute bottom-20 px-2 py-1 rounded-md bg-white bg-opacity-70 flex-row items-center gap-1'>
-        <Text className="text-sm font-medium text-primary">Check-in nearby!</Text>
-        {/* <MaterialCommunityIcons name="hand-pointing-down" size={24} color={"#15803d"} /> */}
-      </View>
+
       <Button
         className="elevation-5 h-16 w-16 rounded-full p-3 shadow-lg bg-primary"
         onPress={onOpenCamera}

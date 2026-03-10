@@ -1,3 +1,5 @@
+import { GeofencingEventType, LocationRegion } from "expo-location";
+
 export type POIType =
   | 'PAGODA'
   | 'CAVE'
@@ -44,8 +46,8 @@ export interface MapPoint {
   name: string;
   description?: string;
   thumbnailUrl?: string;
-  latitude: string;
-  longitude: string;
+  latitude: number;
+  longitude: number;
   orderIndex?: number;
   estTimeSpent?: number;
   type: POIType;
@@ -105,4 +107,10 @@ export interface Attraction {
   mapImageUrl: string | null;
   openHour: string; // format: "HH:mm:ss"
   closeHour: string; // format: "HH:mm:ss"
+}
+
+
+export interface BackgroundGeoFencingData {
+  region: LocationRegion;
+  eventType: GeofencingEventType;
 }

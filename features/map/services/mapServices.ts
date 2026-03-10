@@ -46,6 +46,7 @@ export const mapService = {
       }
     );
 
+
     return {
       ...response,
       data: {
@@ -68,9 +69,10 @@ export const mapService = {
   },
 
   getMapPoints: async () => {
-    return await apiClient.get<MapPoint[]>(endpoints.map.getMapPoints(), {
+    const res = await apiClient.get<MapPoint[]>(endpoints.map.getMapPoints(), {
       requiresAuth: false,
     });
+    return res;
   },
 };
 
