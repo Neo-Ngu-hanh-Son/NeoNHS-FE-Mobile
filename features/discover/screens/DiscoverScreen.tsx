@@ -20,7 +20,7 @@ import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { useAttractions } from '../hooks/useAttractions';
 import { useEvents } from '../../event/hooks/useEvents';
 import { EventStatus } from '../../event/types';
-import { MOCK_WORKSHOP_TEMPLATES } from '../../workshops/data/mockData';
+import { useWorkshopTemplates } from '../../workshops/hooks/useWorkshopTemplates';
 
 type DiscoverScreenProps = CompositeScreenProps<
   BottomTabScreenProps<TabsStackParamList, 'Discover'>,
@@ -30,8 +30,6 @@ type DiscoverScreenProps = CompositeScreenProps<
 // --- Hierarchy Definitions ---
 // Area (Destination) = Grouping (e.g., Marble Mountains)
 // Point (Attraction) = Specific site (e.g., Huyen Khong Cave)
-
-const DISCOVER_WORKSHOPS = MOCK_WORKSHOP_TEMPLATES.slice(0, 4);
 
 const BLOGS = [
   {
@@ -113,13 +111,20 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
     sortDir: 'asc',
   });
 
+  const {
+    data: workshopData,
+    isLoading: workshopsLoading,
+    refetch: refetchWorkshops,
+  } = useWorkshopTemplates({ page: 1, size: 4, sortBy: 'createdAt', sortDir: 'desc' });
+
   const popularAttractions = (allAttractions ?? []).slice(0, 5);
   const events = eventsData?.content ?? [];
+  const discoverWorkshops = (workshopData?.content ?? []).filter((w) => w.isPublished !== false);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    Promise.allSettled([refetchAttractions(), refetchEvents()]).finally(() => setRefreshing(false));
-  }, [refetchAttractions, refetchEvents]);
+    Promise.allSettled([refetchAttractions(), refetchEvents(), refetchWorkshops()]).finally(() => setRefreshing(false));
+  }, [refetchAttractions, refetchEvents, refetchWorkshops]);
 
   const renderHeader = () => (
     <View className="sticky top-0 bg-white/80 px-5 pb-1 pt-6 backdrop-blur-md dark:bg-slate-900/80">
@@ -230,51 +235,65 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 20, gap: 16 }}>
-          {DISCOVER_WORKSHOPS.map((workshop) => {
-            const thumb = workshop.images.find((img) => img.isThumbnail) || workshop.images[0];
-            const tagColor = workshop.tags[0]?.tagColor || theme.primary;
-            const tagName = workshop.tags[0]?.name || '';
-            return (
-              <TouchableOpacity
-                key={workshop.id}
-                className="w-44"
-                onPress={() => navigation.navigate('WorkshopDetail', { workshopId: workshop.id })}>
-                <View className="relative mb-2 h-44 w-44 overflow-hidden rounded-2xl">
-                  {thumb && (
-                    <Image
-                      source={{ uri: thumb.imageUrl }}
-                      className="h-full w-full object-cover"
-                    />
-                  )}
-                  {tagName ? (
-                    <View
-                      className="absolute bottom-3 left-3 rounded px-2 py-0.5"
-                      style={{ backgroundColor: tagColor }}>
-                      <Text className="text-[10px] font-bold tracking-wider text-white">
-                        {tagName}
-                      </Text>
-                    </View>
-                  ) : null}
-                </View>
-                <Text
-                  className="text-sm font-bold leading-tight"
-                  style={{ color: theme.foreground }}
-                  numberOfLines={1}>
-                  {workshop.name}
-                </Text>
-                <View className="mt-1 flex-row items-center gap-1">
-                  <Ionicons name="star" size={12} color="#eab308" />
-                  <Text className="text-xs font-medium" style={{ color: theme.foreground }}>
-                    {workshop.averageRating.toFixed(1)}{' '}
-                    <Text className="text-slate-400">({workshop.totalRatings})</Text>
+          {workshopsLoading ? (
+            <View
+              className="h-52 w-44 items-center justify-center rounded-2xl border bg-muted/20"
+              style={{ borderColor: theme.border }}>
+              <Ionicons name="refresh" size={24} color={theme.primary} />
+            </View>
+          ) : discoverWorkshops.length > 0 ? (
+            discoverWorkshops.map((workshop) => {
+              const thumb = workshop.images.find((img) => img.isThumbnail) || workshop.images[0];
+              const tagColor = workshop.tags[0]?.tagColor || theme.primary;
+              const tagName = workshop.tags[0]?.name || '';
+              return (
+                <TouchableOpacity
+                  key={workshop.id}
+                  className="w-44"
+                  onPress={() => navigation.navigate('WorkshopDetail', { workshopId: workshop.id })}>
+                  <View className="relative mb-2 h-44 w-44 overflow-hidden rounded-2xl">
+                    {thumb && (
+                      <Image
+                        source={{ uri: thumb.imageUrl }}
+                        className="h-full w-full object-cover"
+                      />
+                    )}
+                    {tagName ? (
+                      <View
+                        className="absolute bottom-3 left-3 rounded px-2 py-0.5"
+                        style={{ backgroundColor: tagColor }}>
+                        <Text className="text-[10px] font-bold tracking-wider text-white">
+                          {tagName}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
+                  <Text
+                    className="text-sm font-bold leading-tight"
+                    style={{ color: theme.foreground }}
+                    numberOfLines={1}>
+                    {workshop.name}
                   </Text>
-                </View>
-                <Text className="mt-0.5 text-xs" style={{ color: theme.primary }}>
-                  {workshop.defaultPrice.toLocaleString('vi-VN')}đ
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+                  <View className="mt-1 flex-row items-center gap-1">
+                    <Ionicons name="star" size={12} color="#eab308" />
+                    <Text className="text-xs font-medium" style={{ color: theme.foreground }}>
+                      {workshop.averageRating.toFixed(1)}{' '}
+                      <Text className="text-slate-400">({workshop.totalRatings})</Text>
+                    </Text>
+                  </View>
+                  <Text className="mt-0.5 text-xs" style={{ color: theme.primary }}>
+                    {workshop.defaultPrice.toLocaleString('vi-VN')}đ
+                  </Text>
+                </TouchableOpacity>
+              );
+            })
+          ) : (
+            <View
+              className="h-52 w-44 items-center justify-center rounded-2xl border bg-muted/20"
+              style={{ borderColor: theme.border }}>
+              <Text style={{ color: theme.mutedForeground }}>No workshops found</Text>
+            </View>
+          )}
         </ScrollView>
 
         {/* Upcoming Events — from API */}

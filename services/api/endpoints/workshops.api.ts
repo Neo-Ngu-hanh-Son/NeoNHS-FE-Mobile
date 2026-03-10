@@ -11,4 +11,6 @@ export const workshopEndpoints = {
   searchTemplates: () => `public/workshops/templates/search`,
   /** GET /api/public/workshops/templates/{id}/sessions */
   getTemplateSessions: (id: string | number) => `public/workshops/templates/${id}/sessions`,
+  /** GET /api/wtags/all */
+  getAllTags: () => `wtags/all`,
 } as const;
