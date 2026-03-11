@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
 import { logger } from '@/utils/logger';
 import checkinServices from '../services/checkinServices';
 import { mapConstants } from '../mapConstants';
@@ -21,9 +22,7 @@ export interface UserLocation {
   timestamp: number;
 }
 
-
 export type LocationPermissionStatus = 'undetermined' | 'granted' | 'denied';
-
 
 export interface UseUserLocationReturn {
   /** Current user location, null if not available */
@@ -51,7 +50,6 @@ export interface UseUserLocationReturn {
   /** Calculate distance in meters between two points */
   calculateDistance: (point1: LatLng, point2: LatLng) => number;
 }
-
 
 export interface UseUserLocationOptions {
   /** Whether to start tracking immediately on mount */
@@ -132,12 +130,16 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
       if (granted) {
         const { status: notificationStatus } = await Location.requestBackgroundPermissionsAsync();
         if (notificationStatus !== 'granted') {
-          logger.warn('Background location permission not granted, geofencing notifications may not work properly');
+          logger.warn(
+            'Background location permission not granted, geofencing notifications may not work properly'
+          );
         }
 
         const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
         if (backgroundStatus !== 'granted') {
-          logger.warn('Background location permission not granted, geofencing may not work properly');
+          logger.warn(
+            'Background location permission not granted, geofencing may not work properly'
+          );
         }
       }
 
@@ -268,13 +270,15 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
 
   const syncNearbyGeofences = async (latitude: number, longitude: number) => {
     let nearbyPoints: MapPointCheckin[] = [];
-    // Request permission first
-
-
     try {
-      nearbyPoints = (await checkinServices.getNearbyCheckIns(latitude, longitude,
-        mapConstants.checkinPointDetectRadiusMeters)).data;
-      const regions = nearbyPoints.map(point => ({
+      nearbyPoints = (
+        await checkinServices.getNearbyCheckIns(
+          latitude,
+          longitude,
+          mapConstants.checkinPointDetectRadiusMeters
+        )
+      ).data;
+      const regions = nearbyPoints.map((point) => ({
         identifier: point.id, // Your UUID from backend
         latitude: point.latitude,
         longitude: point.longitude,
@@ -284,6 +288,13 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
       }));
 
       let gateKeep = false;
+
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        logger.warn(
+          'Notifications permission not granted, geofencing notifications may not work properly'
+        );
+      }
       const { status: notificationStatus } = await Location.requestBackgroundPermissionsAsync();
       if (notificationStatus !== 'granted') {
         logger.warn('Background location permission not granted, stopping geofencing');
@@ -304,18 +315,20 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
       return [];
     } finally {
       // Still return the nearby points even if geofencing setup fails
-      logger.debug('Returning nearby check-in points length: ', nearbyPoints.length);
+      logger.debug('Returning nearby check-in points length: ' + nearbyPoints.length);
       return nearbyPoints;
     }
   };
 
-  const calculateDistance = (point1: { latitude: number; longitude: number }
-    , point2: { latitude: number; longitude: number }) => {
+  const calculateDistance = (
+    point1: { latitude: number; longitude: number },
+    point2: { latitude: number; longitude: number }
+  ) => {
     return geolib.getDistance(
       { latitude: point1.latitude, longitude: point1.longitude },
       { latitude: point2.latitude, longitude: point2.longitude }
     );
-  }
+  };
 
   // Check permission on mount
   useEffect(() => {

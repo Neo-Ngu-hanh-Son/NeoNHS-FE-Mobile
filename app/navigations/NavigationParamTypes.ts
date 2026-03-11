@@ -73,6 +73,7 @@ export type MapRoutes = {
   PointHistoryAudio: { pointId: string };
   Panorama: { pointId: string };
   CheckinCamera: { pointId?: string | null; };
+  CheckinComplete: { imageUrl?: string; rewardPoints?: number };
 };
 
 /* Events */

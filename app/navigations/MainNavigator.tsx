@@ -24,6 +24,7 @@ import { MainStackParamList } from './NavigationParamTypes';
 import PanoramaScreen from '@/features/panorama/screens/PanoramaScreen';
 import PointHistoryAudioScreen from '@/features/point/screens/PointHistoryAudioScreen';
 import CheckinCameraScreen from '@/features/map/screens/CheckinCameraScreen';
+import CheckinCompleteScreen from '@/features/map/screens/CheckinCompleteScreen';
 import { Text } from '@/components/ui/text';
 
 const Stack = createStackNavigator<MainStackParamList>();
@@ -136,6 +137,11 @@ export default function MainNavigator() {
       <Stack.Screen
         name="CheckinCamera"
         component={CheckinCameraScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CheckinComplete"
+        component={CheckinCompleteScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

@@ -114,3 +114,24 @@ export interface BackgroundGeoFencingData {
   region: LocationRegion;
   eventType: GeofencingEventType;
 }
+
+export enum CheckinMethod {
+  MANUAL = 'MANUAL',
+  QR_CODE = 'QR_CODE',
+  GPS = 'GPS',
+}
+export interface CheckinImageRequest {
+  id?: string; // UUID (can be omitted if creating fresh)
+  imageUrl: string;
+  caption?: string; // Optional caption
+}
+
+export interface UserCheckinRequest {
+  latitude: number;
+  longitude: number;
+  imageUrl?: string;        // Main check-in image URL
+  method: CheckinMethod;
+  note?: string;
+  checkinPointId: string;
+  images?: CheckinImageRequest[]; // Additional image objects with captions
+}

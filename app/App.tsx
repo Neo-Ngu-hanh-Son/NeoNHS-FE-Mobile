@@ -10,6 +10,7 @@ import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import { BackgroundGeoFencingData } from '@/features/map';
+import { logger } from '@/utils/logger';
 
 // This is the default configuration
 configureReanimatedLogger({
@@ -35,7 +36,7 @@ TaskManager.defineTask<BackgroundGeoFencingData>(
     if (!data) return;
 
     const { eventType, region } = data;
-
+    logger.debug(`[GeofencingTask] Event: ${eventType}, Region: ${region.identifier}`);
     if (eventType === Location.GeofencingEventType.Enter) {
       await Notifications.scheduleNotificationAsync({
         content: {

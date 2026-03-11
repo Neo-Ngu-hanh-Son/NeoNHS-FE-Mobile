@@ -16,12 +16,14 @@ import { useQuery } from '@tanstack/react-query';
 import CheckinCameraButton from '../components/Camera/CheckinCameraButton';
 import { useCheckinProximity } from '../hooks/useCheckinProximity';
 import { parseFloatOrDefault } from '@/utils/parseNumber';
+import { useAuth } from '@/features/auth/context/AuthContext';
 
 type MapScreenProps = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Map'>,
   StackScreenProps<MainStackParamList>
 >;
 export default function MapScreen({ navigation, route }: MapScreenProps) {
+  const { isAuthenticated } = useAuth();
   const initialPointId = route.params?.pointId;
   const [showBackButton, setShowBackButton] = useState(!!initialPointId);
   const isSyncingNearbyCheckinsRef = useRef(false);
@@ -227,10 +229,15 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
   );
 
   const handleOpenCheckinCamera = useCallback(() => {
+    if (!isAuthenticated) {
+      navigation.getParent()?.getParent()?.navigate('Auth', { screen: 'Login' });
+      return;
+    }
+
     navigation.navigate('CheckinCamera', {
       pointId: activePoint?.id,
     });
-  }, [activePoint, navigation]);
+  }, [activePoint, isAuthenticated, navigation]);
 
   return (
     <ScreenLayout showBackButton={showBackButton}>
