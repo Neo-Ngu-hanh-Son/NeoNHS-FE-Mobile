@@ -119,28 +119,29 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     setModalVisible(false);
   }, []);
 
-  const handleNavigate = useCallback((point: MapPoint) => {
-    if (point.id && point.id !== 'offline') {
-      logger.info('Navigate to:', point);
+  const handleNavigate = useCallback(
+    (point: MapPoint) => {
+      if (point.id && point.id !== 'offline') {
+        logger.info('Navigate to:', point);
 
-      if (point.type === 'EVENT') {
-        navigation.navigate('EventDetail', { eventId: point.id });
-      } else if (point.type === 'WORKSHOP') {
-        navigation.navigate('WorkshopDetail', { workshopId: point.id });
-      } else if (point.type === 'CHECKIN') {
-        if (point.attractionId) {
-          navigation.navigate('PointDetail', { pointId: point.attractionId });
+        if (point.type === 'EVENT') {
+          navigation.navigate('EventDetail', { eventId: point.id });
+        } else if (point.type === 'WORKSHOP') {
+          navigation.navigate('WorkshopDetail', { workshopId: point.id });
+        } else if (point.type === 'CHECKIN') {
+          if (point.id) {
+            navigation.navigate('PointDetail', { pointId: point.id });
+          } else {
+            alert('Details Unavailable', 'This check-in point is not linked to a parent point.');
+          }
         } else {
-          alert('Details Unavailable', 'This check-in point is not linked to a parent point.');
+          navigation.navigate('PointDetail', { pointId: point.id });
         }
       } else {
-        navigation.navigate('PointDetail', { pointId: point.id });
+        alert('Navigation Unavailable', 'Please connect to the internet to access this feature.');
       }
-    } else {
-      alert('Navigation Unavailable', 'Please connect to the internet to access this feature.');
-    }
-    setModalVisible(false);
-  },
+      setModalVisible(false);
+    },
     [alert, navigation]
   );
 
@@ -209,7 +210,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
           );
         }
       } catch (e) {
-        logger.error("[MapScreen] Error occurred while syncing nearby checkins:", e);
+        logger.error('[MapScreen] Error occurred while syncing nearby checkins:', e);
       } finally {
         isSyncingNearbyCheckinsRef.current = false;
       }
@@ -222,11 +223,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     };
   }, [userLocation, previousLocation, calculateDistance, syncNearbyGeofences]);
 
-  const activePoint = useCheckinProximity(
-    userLocation,
-    checkinPoints,
-    20
-  );
+  const activePoint = useCheckinProximity(userLocation, checkinPoints, 20);
 
   const handleOpenCheckinCamera = useCallback(() => {
     if (!isAuthenticated) {

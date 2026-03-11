@@ -97,8 +97,7 @@ export default function CheckinCameraCapture({
               <TouchableOpacity
                 onPress={onClose}
                 disabled={isBusy}
-                className="h-10 w-10 items-center justify-center rounded-full bg-black/40"
-              >
+                className="h-10 w-10 items-center justify-center rounded-full bg-black/40">
                 <Ionicons name="close" size={26} color="white" />
               </TouchableOpacity>
 
@@ -107,15 +106,14 @@ export default function CheckinCameraCapture({
               <TouchableOpacity
                 onPress={handlePickImage}
                 disabled={isBusy}
-                className="h-10 w-10 items-center justify-center rounded-full bg-black/40"
-              >
+                className="h-10 w-10 items-center justify-center rounded-full bg-black/40">
                 <Ionicons name="image" size={22} color="white" />
               </TouchableOpacity>
             </View>
           </View>
 
           <View className="flex-1 items-center justify-center px-6">
-            <View className="h-64 w-64 rounded-2xl border-2 border-green-500" />
+            {/*<View className="h-64 w-64 rounded-2xl border-2 border-green-500" />*/}
             <Text className="mt-4 text-center text-sm font-semibold text-white">
               Take a photo to complete check-in
             </Text>
@@ -127,8 +125,7 @@ export default function CheckinCameraCapture({
         <TouchableOpacity
           style={[styles.captureButton, isBusy ? styles.captureButtonDisabled : null]}
           onPress={handleTakePicture}
-          disabled={isBusy}
-        >
+          disabled={isBusy}>
           <View style={styles.captureButtonInner} />
         </TouchableOpacity>
       </View>
