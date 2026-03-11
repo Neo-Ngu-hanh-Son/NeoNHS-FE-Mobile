@@ -62,7 +62,7 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
     );
   }
 
-  if (!workshop) {
+  if (!workshop || workshop.isPublished === false) {
     return (
       <SafeAreaView
         className="flex-1 items-center justify-center"
@@ -70,10 +70,12 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
         edges={['top']}>
         <Ionicons name="alert-circle-outline" size={48} color={theme.mutedForeground} />
         <Text className="mt-3 text-lg font-bold" style={{ color: theme.foreground }}>
-          Workshop not found
+          {!workshop ? 'Workshop not found' : 'Workshop unavailable'}
         </Text>
         <Text className="mt-1 px-10 text-center text-sm" style={{ color: theme.mutedForeground }}>
-          This workshop may no longer be available.
+          {!workshop
+            ? 'This workshop may no longer be available.'
+            : 'This workshop is currently not published and cannot be booked.'}
         </Text>
         <TouchableOpacity
           onPress={() => navigation.goBack()}

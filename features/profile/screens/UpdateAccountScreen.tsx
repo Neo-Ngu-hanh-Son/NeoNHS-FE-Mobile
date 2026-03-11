@@ -10,6 +10,8 @@ import {
   Image,
   StatusBar,
   ActivityIndicator,
+  Modal,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,6 +28,21 @@ import { userService } from '../services/userService';
 import { uploadImageToCloudinary } from '@/services/cloudinary';
 import { ApiError } from '@/services/api/types';
 import { logger } from '@/utils/logger';
+
+interface Bank {
+  id: number;
+  name: string;
+  code: string;
+  bin: string;
+  shortName: string;
+  logo: string;
+  transferSupported: number;
+  lookupSupported: number;
+  short_name: string;
+  support: number;
+  isTransfer: number;
+  swift_code: string;
+}
 
 export default function UpdateAccountScreen() {
   const navigation = useNavigation();
@@ -45,11 +62,59 @@ export default function UpdateAccountScreen() {
   const [bankAccountNumber, setBankAccountNumber] = useState('');
   const [bankAccountName, setBankAccountName] = useState('');
 
+  const [banks, setBanks] = useState<Bank[]>([]);
+  const [filteredBanks, setFilteredBanks] = useState<Bank[]>([]);
+  const [isBankModalVisible, setIsBankModalVisible] = useState(false);
+  const [searchBankQuery, setSearchBankQuery] = useState('');
+  const [isLoadingBanks, setIsLoadingBanks] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Fetch dữ liệu mới nhất khi mở màn hình
+  const fetchBanks = async () => {
+    try {
+      setIsLoadingBanks(true);
+      const response = await fetch('https://api.vietqr.io/v2/banks');
+      const data = await response.json();
+      if (data.code === '00') {
+        setBanks(data.data);
+        setFilteredBanks(data.data);
+      }
+    } catch (error) {
+      console.error('Fetch banks error:', error);
+    } finally {
+      setIsLoadingBanks(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBanks();
+  }, []);
+
+  useEffect(() => {
+    if (searchBankQuery.trim() === '') {
+      setFilteredBanks(banks);
+    } else {
+      const lowerQuery = searchBankQuery.toLowerCase();
+      const filtered = banks.filter(
+        (bank) =>
+          bank.name.toLowerCase().includes(lowerQuery) ||
+          bank.shortName.toLowerCase().includes(lowerQuery) ||
+          bank.bin.toLowerCase().includes(lowerQuery)
+      );
+      setFilteredBanks(filtered);
+    }
+  }, [searchBankQuery, banks]);
+
+  const handleSelectBank = (bank: Bank) => { // User yêu cầu: sẽ hiện list ... chọn xong set bin luôn
+    setBankName(bank.shortName);
+    setBankBin(bank.bin);
+    setIsBankModalVisible(false);
+    setSearchBankQuery('');
+  };
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -266,23 +331,23 @@ export default function UpdateAccountScreen() {
               <View style={styles.formContainer}>
                 <View style={styles.inputGroup}>
                   <Text style={[styles.label, { color: theme.foreground }]}>Bank Name</Text>
-                  <Input
-                    value={bankName}
-                    onChangeText={setBankName}
-                    placeholder="e.g. MB Bank, Vietcombank"
-                    style={[styles.inputCustom, { borderColor: theme.border }]}
-                  />
+                  <TouchableOpacity
+                    onPress={() => setIsBankModalVisible(true)}
+                    style={[styles.inputCustom, { borderColor: theme.border, justifyContent: 'center' }]}>
+                    <Text style={{ color: bankName ? theme.foreground : theme.mutedForeground }}>
+                      {bankName ? banks.find(b => b.bin === bankBin)?.shortName || bankName : 'Select a bank'}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
 
                 <View style={styles.inputGroup}>
                   <Text style={[styles.label, { color: theme.foreground }]}>Bank BIN</Text>
-                  <Input
-                    value={bankBin}
-                    onChangeText={setBankBin}
-                    placeholder="e.g. 970422"
-                    keyboardType="numeric"
-                    style={[styles.inputCustom, { borderColor: theme.border }]}
-                  />
+                  <View
+                    style={[styles.inputCustom, { borderColor: theme.border, justifyContent: 'center', backgroundColor: theme.muted }]}>
+                    <Text style={{ color: bankBin ? theme.foreground : theme.mutedForeground }}>
+                      {bankBin ? bankBin : 'Auto-filled upon bank selection'}
+                    </Text>
+                  </View>
                 </View>
 
                 <View style={styles.inputGroup}>
@@ -326,6 +391,52 @@ export default function UpdateAccountScreen() {
           </KeyboardAvoidingView>
         </View>
       </SafeAreaView>
+
+      <Modal
+        visible={isBankModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setIsBankModalVisible(false)}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+          <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: theme.border, flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity onPress={() => setIsBankModalVisible(false)} style={{ padding: 8, marginRight: 8 }}>
+              <Ionicons name="close" size={24} color={theme.foreground} />
+            </TouchableOpacity>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.foreground, flex: 1 }}>Select Bank</Text>
+          </View>
+          <View style={{ padding: 16 }}>
+            <Input
+              value={searchBankQuery}
+              onChangeText={setSearchBankQuery}
+              placeholder="Search by name, short name or BIN..."
+              style={[styles.inputCustom, { borderColor: theme.border }]}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
+          {isLoadingBanks ? (
+            <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 20 }} />
+          ) : (
+            <FlatList
+              data={filteredBanks}
+              keyExtractor={(item) => item.bin}
+              keyboardShouldPersistTaps="handled"
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: theme.border }}
+                  onPress={() => handleSelectBank(item)}>
+                  <Image source={{ uri: item.logo }} style={{ width: 40, height: 40, resizeMode: 'contain', marginRight: 16 }} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 16, fontWeight: 'bold', color: theme.foreground }}>{item.shortName}</Text>
+                    <Text style={{ fontSize: 12, color: theme.mutedForeground }}>{item.name}</Text>
+                  </View>
+                  <Text style={{ fontSize: 14, color: theme.mutedForeground }}>{item.bin}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          )}
+        </SafeAreaView>
+      </Modal>
     </View>
   );
 }

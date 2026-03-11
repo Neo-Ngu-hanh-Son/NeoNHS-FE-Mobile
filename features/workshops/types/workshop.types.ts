@@ -49,6 +49,7 @@ export interface WorkshopTemplateResponse {
   minParticipants: number;
   maxParticipants: number;
   status: WorkshopTemplateStatus;
+  isPublished: boolean;
   averageRating: number;
   totalRatings: number;
   vendorId: string;
