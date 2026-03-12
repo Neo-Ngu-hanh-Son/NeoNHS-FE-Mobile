@@ -1,4 +1,4 @@
-import { GeofencingEventType, LocationRegion } from "expo-location";
+import { GeofencingEventType, LocationRegion } from 'expo-location';
 
 export type POIType =
   | 'PAGODA'
@@ -12,7 +12,8 @@ export type POIType =
   | 'ELEVATOR'
   | 'EVENT'
   | 'WORKSHOP'
-  | 'ATTRACTION' // Example: Thuy Son mountain, etc.
+  | 'ATTRACTION' // Not used anymore bruh
+  | 'USER_CHECKIN'
   | 'DEFAULT';
 
 export type PointKind = 'path' | 'junction_3way' | 'junction_4way' | 'entrance' | 'dead_end';
@@ -76,7 +77,6 @@ export interface MapPoint {
   };
 }
 
-
 export interface MapPointCheckin {
   id: string;
   name: string;
@@ -91,6 +91,7 @@ export interface MapPointCheckin {
   defaultPitch?: number;
   rewardPoints?: number;
   qrCode?: string;
+  isUserCheckedIn?: boolean;
 }
 
 export type AttractionStatus = 'OPEN' | 'CLOSED' | 'MAINTENANCE' | 'TEMPORARILY_CLOSED';
@@ -108,7 +109,6 @@ export interface Attraction {
   openHour: string; // format: "HH:mm:ss"
   closeHour: string; // format: "HH:mm:ss"
 }
-
 
 export interface BackgroundGeoFencingData {
   region: LocationRegion;
@@ -129,9 +129,13 @@ export interface CheckinImageRequest {
 export interface UserCheckinRequest {
   latitude: number;
   longitude: number;
-  imageUrl?: string;        // Main check-in image URL
   method: CheckinMethod;
   note?: string;
   checkinPointId: string;
-  images?: CheckinImageRequest[]; // Additional image objects with captions
+  checkinImageRequest?: CheckinImageRequest[];
 }
+
+export type UserCheckinResultResponse = {
+  earnedPoints: number;
+  userTotalPoints: number;
+};

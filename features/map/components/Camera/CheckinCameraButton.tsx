@@ -1,7 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { Animated, View, Text } from 'react-native';
 import { Button } from '@/components/ui/button';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAuth } from '@/features/auth/context/AuthContext';
+import { useNavigation } from '@react-navigation/native';
 
 export default function CheckinCameraButton({
   onOpenCamera,
@@ -18,6 +20,7 @@ export default function CheckinCameraButton({
 
   const scale3 = useRef(new Animated.Value(1)).current;
   const opacity3 = useRef(new Animated.Value(0.6)).current;
+
 
   useEffect(() => {
     if (!isSugestingCheckin) return;

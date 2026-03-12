@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { View } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { MainStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { logger } from '@/utils/logger';
@@ -17,6 +18,7 @@ import CheckinCameraButton from '../components/Camera/CheckinCameraButton';
 import { useCheckinProximity } from '../hooks/useCheckinProximity';
 import { parseFloatOrDefault } from '@/utils/parseNumber';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import FullScreenLoader from '@/components/Loader/FullScreenLoader';
 
 type MapScreenProps = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Map'>,
@@ -64,13 +66,19 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     distanceInterval: 5,
   });
 
-  const { data: mapPoints = mapData.mapPoints, isError: isMapPointsError } = useQuery({
+  const {
+    data: mapPoints = mapData.mapPoints,
+    isError: isMapPointsError,
+    isLoading: isMapPointsLoading,
+  } = useQuery({
     queryKey: ['mapPoints'],
     queryFn: async () => {
       const res = await mapService.getMapPoints();
       return res.data as MapPoint[];
     },
   });
+
+  const activePoint = useCheckinProximity(userLocation, checkinPoints, 20);
 
   if (isMapPointsError) {
     logger.error('[MapScreen] Failed to fetch map points, using default map points.');
@@ -180,7 +188,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
         return;
       }
 
-      // Only call backend when user moved at least 10m, or at first location update.
+      // Only call backend when user moved at least 30m, or at first location update.
       const previousCoords = {
         latitude: previousLocation?.latitude ?? userLocation.latitude,
         longitude: previousLocation?.longitude ?? userLocation.longitude,
@@ -190,7 +198,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
         { latitude: previousCoords.latitude, longitude: previousCoords.longitude }
       );
 
-      if (distanceMoved <= 10 && previousLocation) {
+      if (distanceMoved <= 30 && previousLocation) {
         return;
       }
 
@@ -223,7 +231,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     };
   }, [userLocation, previousLocation, calculateDistance, syncNearbyGeofences]);
 
-  const activePoint = useCheckinProximity(userLocation, checkinPoints, 20);
+  const isMapBootstrapping = isMapPointsLoading || (isLocationLoading && !userLocation);
 
   const handleOpenCheckinCamera = useCallback(() => {
     if (!isAuthenticated) {
@@ -233,6 +241,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
 
     navigation.navigate('CheckinCamera', {
       pointId: activePoint?.id,
+      pointName: activePoint?.name ?? '',
     });
   }, [activePoint, isAuthenticated, navigation]);
 
@@ -266,6 +275,24 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
         onOpenCamera={handleOpenCheckinCamera}
         isSugestingCheckin={activePoint != null}
       />
+
+      {isMapBootstrapping ? (
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+            zIndex: 999,
+          }}>
+          <FullScreenLoader
+            hideBack
+            message={isMapPointsLoading ? 'Loading map points...' : 'Acquiring your location...'}
+          />
+        </View>
+      ) : null}
     </ScreenLayout>
   );
 }

@@ -9,10 +9,6 @@ type LoadingOverlayProps = {
   message?: string;
 };
 
-const Spinner = React.memo(({ color }: { color: string }) => (
-  <ActivityIndicator animating size="large" color={color} />
-));
-
 export default function LoadingOverlay({ visible, message = 'Loading...' }: LoadingOverlayProps) {
   const theme = useTheme().isDarkColorScheme ? THEME.dark : THEME.light;
 
@@ -20,7 +16,7 @@ export default function LoadingOverlay({ visible, message = 'Loading...' }: Load
     <Modal transparent animationType="fade" visible={visible} statusBarTranslucent>
       <View style={styles.backdrop} pointerEvents="auto">
         <View style={[styles.container, { backgroundColor: theme.card }]}>
-          <Spinner color={theme.primary} />
+          <ActivityIndicator animating size="large" color={theme.primary} />
           {message ? (
             <Text style={[styles.message, { color: theme.foreground }]}>{message}</Text>
           ) : null}

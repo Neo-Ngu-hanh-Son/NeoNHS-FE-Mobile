@@ -42,6 +42,7 @@ export type AccountRoutes = {
   ChangePassword: undefined;
   KycVerification: undefined;
   Withdraw: undefined;
+  CheckinGallery: undefined;
 };
 
 /* Transactions */
@@ -72,8 +73,8 @@ export type MapRoutes = {
   AudioGuide: { pointId: string };
   PointHistoryAudio: { pointId: string };
   Panorama: { pointId: string };
-  CheckinCamera: { pointId?: string | null; };
-  CheckinComplete: { imageUrl?: string; rewardPoints?: number };
+  CheckinCamera: { pointId?: string | null; pointName: string };
+  CheckinComplete: { imageUrl?: string; rewardPoints?: number, userTotalPoints?: number };
 };
 
 /* Events */

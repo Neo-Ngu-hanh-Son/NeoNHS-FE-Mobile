@@ -43,7 +43,12 @@ export const markerStyles: Record<POIType, MarkerStyle> = {
   CHECKIN: {
     bg: '#dc2626',
     border: '#fee2e2',
-    icon: 'flag-variant',
+    icon: 'camera',
+  },
+  USER_CHECKIN: {
+    bg: '#15803d',
+    border: '#dcfce7',
+    icon: 'camera',
   },
   STATUE: {
     bg: '#d97706',

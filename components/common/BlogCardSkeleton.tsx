@@ -1,7 +1,6 @@
-import { View } from 'react-native';
 import { Card } from '../ui/card';
 import { Skeleton } from '../ui/skeleton';
-import { useWindowDimensions } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 
 type Props = {
   horizontal?: boolean;

@@ -1,6 +1,7 @@
 import { apiClient, endpoints } from '@/services/api';
 import { Attraction, MapPoint, MapPointCheckin } from '../types';
 import { PageResponse } from '@/services/api/types';
+import { logger } from '@/utils/logger';
 
 export const mapService = {
   getPointOfAttraction: async (attractionId: string) => {
@@ -46,7 +47,6 @@ export const mapService = {
       }
     );
 
-
     return {
       ...response,
       data: {
@@ -70,9 +70,9 @@ export const mapService = {
 
   getMapPoints: async () => {
     const res = await apiClient.get<MapPoint[]>(endpoints.map.getMapPoints(), {
-      requiresAuth: false,
+      requiresAuth: true,
     });
+    // logger.info('Map points', res.data);
     return res;
   },
 };
-

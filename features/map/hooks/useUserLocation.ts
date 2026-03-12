@@ -134,13 +134,6 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
             'Background location permission not granted, geofencing notifications may not work properly'
           );
         }
-
-        const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
-        if (backgroundStatus !== 'granted') {
-          logger.warn(
-            'Background location permission not granted, geofencing may not work properly'
-          );
-        }
       }
 
       return granted;
@@ -308,14 +301,15 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
       }
 
       if (regions.length > 0 && !gateKeep) {
-        await Location.startGeofencingAsync(GEOFENCING_TASK, regions);
+        // This make it so that the app only send one notification.
+        await Location.startGeofencingAsync(GEOFENCING_TASK, [regions[0]]);
       }
     } catch (err) {
       logger.error('Failed to sync geofences', err);
       return [];
     } finally {
       // Still return the nearby points even if geofencing setup fails
-      logger.debug('Returning nearby check-in points length: ' + nearbyPoints.length);
+      logger.debug('Check-in points near user: ' + nearbyPoints.length);
       return nearbyPoints;
     }
   };

@@ -3,6 +3,7 @@ import { Alert, Image, Share, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { StackScreenProps } from '@react-navigation/stack';
+import * as MediaLibrary from 'expo-media-library';
 
 import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,7 @@ import { logger } from '@/utils/logger';
 type CheckinCompleteScreenProps = StackScreenProps<MainStackParamList, 'CheckinComplete'>;
 
 export default function CheckinCompleteScreen({ navigation, route }: CheckinCompleteScreenProps) {
-  const { imageUrl, rewardPoints } = route.params;
+  const { imageUrl, rewardPoints, userTotalPoints } = route.params;
 
   const handleShare = async () => {
     if (!imageUrl) {
@@ -27,6 +28,27 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
     } catch (error) {
       logger.error('[CheckinCompleteScreen] Failed to share check-in image', error);
       Alert.alert('Share failed', 'Could not share your check-in right now.');
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!imageUrl) {
+      Alert.alert('No image to save', 'This check-in has no image available to save.');
+      return;
+    }
+
+    try {
+      const permission = await MediaLibrary.requestPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permission required', 'Please allow media library permission to save photos.');
+        return;
+      }
+
+      await MediaLibrary.saveToLibraryAsync(imageUrl);
+      Alert.alert('Saved', 'Photo has been saved to your device.');
+    } catch (error) {
+      logger.error('[CheckinCompleteScreen] Failed to save check-in image', error);
+      Alert.alert('Save failed', 'Could not save your check-in photo right now.');
     }
   };
 
@@ -57,6 +79,7 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
             <Text className="ml-2 text-lg font-semibold text-[#15803d]">
               You earned {rewardPoints ?? 50} Points!
             </Text>
+            <Text className="ml-2 text-sm text-muted-foreground">(Total: {userTotalPoints ?? '...'} Points)</Text>
           </View>
         </View>
 
@@ -87,6 +110,10 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
         <Button onPress={handleShare} variant="outline" className="h-12 rounded-full border-primary">
           <Ionicons name="camera" size={18} color="#15803d" />
           <Text className="text-primary">Share Photo</Text>
+        </Button>
+        <Button onPress={handleDownload} variant="outline" className="h-12 rounded-full border-primary">
+          <Ionicons name="download" size={18} color="#15803d" />
+          <Text className="text-primary">Download Photo</Text>
         </Button>
         <Button
           onPress={() => navigation.navigate('Tabs', { screen: 'Map' })}

@@ -6,9 +6,9 @@ export const mapEndpoints = {
   getCheckinPointsByPointId: (pointId: string, _params?: {
     page?: number; size?: number; sortBy?: string;
     sortDir?: 'asc' | 'desc'; search?: string
-  }) => `/api/points/${pointId}/check-ins`,
+  }) => `/points/${pointId}/check-ins`,
   getCheckinPointById: (pointId: string, checkinId: string) =>
-    `/api/points/${pointId}/check-ins/${checkinId}`,
+    `/points/${pointId}/check-ins/${checkinId}`,
   getMapPoints: () => `points/map`,
 
   // Panorama endpoints
@@ -18,8 +18,7 @@ export const mapEndpoints = {
   getMobileCheckinPointPanorama: () => `places/checkin-points/panorama/mobile`,
 
   // Check-in related endpoints
-  checkIn: (pointId: string) => `points/${pointId}/check-ins`,
-  userCheckIn: () => `/api/users/check-in`,
+  userCheckIn: () => `users/check-ins`,
   getNearbyCheckIns: () =>
     `points/-1/check-ins/nearby`,
 } as const;

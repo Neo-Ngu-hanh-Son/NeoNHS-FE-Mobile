@@ -4,10 +4,8 @@ import { View } from 'react-native';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import type { RootStackParamList } from './NavigationParamTypes';
-import { useAuth } from '@/features/auth';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { NAV_THEME } from '@/lib/theme';
-import LoadingOverlay from '@/components/Loader/LoadingOverlay';
 import { PanoramaProvider } from '../providers/ParanomaProvider';
 
 const Stack = createStackNavigator<RootStackParamList>();

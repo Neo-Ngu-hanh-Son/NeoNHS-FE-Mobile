@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react';
 
-import { uploadImageToCloudinary } from '@/services/cloudinary';
 import checkinServices from '@/features/map/services/checkinServices';
-import { CheckinMethod, UserCheckinRequest } from '@/features/map/types';
+import { CheckinImageRequest, CheckinMethod, UserCheckinRequest } from '@/features/map/types';
 import { useUserLocation } from '@/features/map/hooks/useUserLocation';
+import { logger } from '@/utils/logger';
 
 export type CheckinDraftImage = {
   localUri: string;
@@ -38,30 +38,46 @@ export function useSubmitUserCheckin() {
           throw new Error('Unable to get your location. Please enable location permission and try again.');
         }
 
-        const uploadedImages = await Promise.all(
-          images.map(async (image) => {
-            const uploadedImageUrl = await uploadImageToCloudinary(image.localUri);
+        const fileParts = images.map((image, index) => {
+          const fileName = image.localUri.split('/').pop() || `checkin-${index + 1}.jpg`;
+          const extension = fileName.split('.').pop()?.toLowerCase();
+          const mimeType = extension ? `image/${extension === 'jpg' ? 'jpeg' : extension}` : 'image/jpeg';
 
-            if (!uploadedImageUrl) {
+          return {
+            uri: image.localUri,
+            name: fileName,
+            type: mimeType,
+          };
+        });
+
+        const uploadedImages = await Promise.all(
+          fileParts.map(async (filePart, index) => {
+            const uploadResponse = await checkinServices.uploadCheckinImage(filePart);
+            const imageUrl = uploadResponse?.data;
+
+            if (!imageUrl) {
               throw new Error('Could not upload one of your photos. Please try again.');
             }
 
             return {
-              imageUrl: uploadedImageUrl,
-              caption: image.caption,
-            };
+              imageUrl,
+              caption: images[index]?.caption?.trim() || '',
+            } as CheckinImageRequest;
           })
         );
+
+        logger.info('[useSubmitUserCheckin] Uploaded check-in images', { uploadedImages });
 
         const payload: UserCheckinRequest = {
           latitude: currentLocation.latitude,
           longitude: currentLocation.longitude,
           method: CheckinMethod.GPS,
           checkinPointId,
-          imageUrl: uploadedImages[0]?.imageUrl,
-          note: uploadedImages[0]?.caption,
-          images: uploadedImages,
+          note: images[0]?.caption?.trim() || undefined,
+          checkinImageRequest: uploadedImages,
         };
+
+        logger.info('[useSubmitUserCheckin] Submitting check-in', { payload });
 
         const response = await checkinServices.userCheckIn(payload);
         const isSuccess = Boolean(response?.success) || response?.status === 200;
@@ -73,6 +89,8 @@ export function useSubmitUserCheckin() {
         return {
           message: response?.message,
           imageUrl: uploadedImages[0]?.imageUrl,
+          earnedPoints: response?.data?.earnedPoints,
+          userTotalPoints: response?.data?.userTotalPoints,
         };
       } finally {
         setIsSubmitting(false);

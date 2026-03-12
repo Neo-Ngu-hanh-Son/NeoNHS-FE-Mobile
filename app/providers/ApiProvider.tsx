@@ -2,7 +2,6 @@ import { ReactNode, useEffect, useCallback } from 'react';
 import { apiClient } from '@/services/api';
 import { useAuth } from '@/features/auth';
 import { authService } from '@/features/auth/services/authService';
-import { storage } from '@/utils/storage';
 import { logger } from '@/utils/logger';
 import type { TokenRefreshResult } from '@/services/api/types';
 
@@ -34,7 +33,7 @@ export default function ApiProvider({ children }: { children: ReactNode }) {
         }
         return null;
       } catch (error) {
-        // logger.error('[ApiProvider] Token refresh failed:', error);
+        logger.error('[ApiProvider] Token refresh failed:', error);
         return null;
       }
     },
@@ -58,7 +57,7 @@ export default function ApiProvider({ children }: { children: ReactNode }) {
       onError: (error) => {
         logger.error('[ApiProvider] API error:', error);
       },
-      timeout: 15000,
+      timeout: 30000,
     });
   }, [accessToken, refreshToken, logout, handleTokenRefresh, refreshAuth]);
 

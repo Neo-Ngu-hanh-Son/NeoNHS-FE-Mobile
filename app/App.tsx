@@ -36,15 +36,18 @@ TaskManager.defineTask<BackgroundGeoFencingData>(
     if (!data) return;
 
     const { eventType, region } = data;
-    logger.debug(`[GeofencingTask] Event: ${eventType}, Region: ${region.identifier}`);
     if (eventType === Location.GeofencingEventType.Enter) {
+      logger.info(`[Background Task] Entered geofence for region ${region.identifier}`);
       await Notifications.scheduleNotificationAsync({
         content: {
           title: "📍 Nearby Check-in!",
           body: "You are close to a point. Open the app to check in!",
           data: { pointId: region.identifier },
         },
-        trigger: null,
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: 1,
+        },
       });
     }
   }

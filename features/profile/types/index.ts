@@ -7,3 +7,5 @@ export interface ChangePasswordRequest {
     newPassword: string;
     confirmNewPassword: string;
 }
+
+export * from './checkinGallery';

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
@@ -7,20 +7,26 @@ import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { logger } from '@/utils/logger';
+import CheckinCameraCenterHint from '@/features/map/components/Camera/CheckinCameraCenterHint';
+import { CameraIcon } from 'lucide-react-native';
 
 type CheckinCameraCaptureProps = {
   isBusy: boolean;
   onClose: () => void;
   onImageSelected: (imageUri: string) => void;
+  pointName?: string;
 };
 
 export default function CheckinCameraCapture({
   isBusy,
   onClose,
   onImageSelected,
+  pointName,
 }: CheckinCameraCaptureProps) {
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
+  const [cameraReady, setCameraReady] = useState(false);
+  const [cameraFacing, setCameraFacing] = useState<'front' | 'back'>('back');
 
   useEffect(() => {
     if (!permission) {
@@ -29,13 +35,15 @@ export default function CheckinCameraCapture({
   }, [permission, requestPermission]);
 
   const handleTakePicture = async () => {
-    if (!cameraRef.current || isBusy) {
+    if (!cameraRef.current || isBusy || !cameraReady) {
       return;
     }
 
     try {
-      const photo = await cameraRef.current.takePictureAsync({ quality: 1 });
-
+      const photo = await cameraRef.current.takePictureAsync({
+        quality: 0.9,
+        skipProcessing: true,
+      });
       if (!photo?.uri) {
         Alert.alert('Capture failed', 'Could not capture photo. Please try again.');
         return;
@@ -71,6 +79,15 @@ export default function CheckinCameraCapture({
     }
   };
 
+  const handleToggleCameraFacing = () => {
+    if (isBusy) {
+      return;
+    }
+
+    setCameraReady(false);
+    setCameraFacing((currentFacing) => (currentFacing === 'back' ? 'front' : 'back'));
+  };
+
   if (!permission) {
     return <View className="flex-1 bg-black" />;
   }
@@ -90,43 +107,58 @@ export default function CheckinCameraCapture({
 
   return (
     <View className="flex-1 bg-black">
-      <CameraView ref={cameraRef} style={StyleSheet.absoluteFillObject} facing="back">
-        <View style={styles.overlay}>
-          <View className="px-5 pt-14">
-            <View className="flex-row items-center justify-between">
-              <TouchableOpacity
-                onPress={onClose}
-                disabled={isBusy}
-                className="h-10 w-10 items-center justify-center rounded-full bg-black/40">
-                <Ionicons name="close" size={26} color="white" />
-              </TouchableOpacity>
+      <CameraView
+        ref={cameraRef}
+        style={StyleSheet.absoluteFillObject}
+        facing={cameraFacing}
+        onCameraReady={() => setCameraReady(true)}
+      />
+      <View style={styles.overlay}>
+        <View className="px-5 pt-14">
+          <View className="flex-row items-center">
+            <TouchableOpacity
+              onPress={onClose}
+              disabled={isBusy}
+              className="h-10 w-10 items-center justify-center rounded-full bg-black/40">
+              <Ionicons name="close" size={26} color="white" />
+            </TouchableOpacity>
 
-              <Text className="text-base font-semibold text-white">Check in</Text>
-
-              <TouchableOpacity
-                onPress={handlePickImage}
-                disabled={isBusy}
-                className="h-10 w-10 items-center justify-center rounded-full bg-black/40">
-                <Ionicons name="image" size={22} color="white" />
-              </TouchableOpacity>
+            <View className="mx-3 flex-1">
+              <Text
+                className="text-center text-base font-semibold leading-5 text-white"
+                numberOfLines={2}>
+                Checking in at: {pointName}
+              </Text>
             </View>
-          </View>
 
-          <View className="flex-1 items-center justify-center px-6">
-            {/*<View className="h-64 w-64 rounded-2xl border-2 border-green-500" />*/}
-            <Text className="mt-4 text-center text-sm font-semibold text-white">
-              Take a photo to complete check-in
-            </Text>
+            <TouchableOpacity
+              onPress={handlePickImage}
+              disabled={isBusy}
+              className="h-10 w-10 items-center justify-center rounded-full bg-black/40">
+              <Ionicons name="image" size={22} color="white" />
+            </TouchableOpacity>
           </View>
         </View>
-      </CameraView>
+      </View>
+
+      <CheckinCameraCenterHint />
 
       <View className="absolute bottom-9 left-0 right-0 items-center">
+        <View className="flex-row items-center gap-4">
+          <TouchableOpacity
+            style={[styles.captureButton, isBusy ? styles.captureButtonDisabled : null]}
+            onPress={handleTakePicture}
+            disabled={isBusy || !cameraReady}>
+            <CameraIcon size={32} color="white" />
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View className="absolute bottom-9 right-4 items-center">
         <TouchableOpacity
-          style={[styles.captureButton, isBusy ? styles.captureButtonDisabled : null]}
-          onPress={handleTakePicture}
-          disabled={isBusy}>
-          <View style={styles.captureButtonInner} />
+          onPress={handleToggleCameraFacing}
+          disabled={isBusy}
+          className="h-14 w-14 items-center justify-center rounded-full bg-black/40">
+          <Ionicons name="camera-reverse" size={24} color="white" />
         </TouchableOpacity>
       </View>
     </View>
@@ -137,6 +169,11 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.45)',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   captureButton: {
     width: 74,
@@ -150,11 +187,5 @@ const styles = StyleSheet.create({
   },
   captureButtonDisabled: {
     opacity: 0.6,
-  },
-  captureButtonInner: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: 'white',
   },
 });

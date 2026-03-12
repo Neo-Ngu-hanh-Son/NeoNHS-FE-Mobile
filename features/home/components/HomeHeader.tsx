@@ -24,10 +24,9 @@ export default function HomeHeader({
       {/* Logo */}
       <View className="flex-row items-center gap-2">
         <View
-          className="w-7 h-7 rounded-md items-center justify-center"
-          style={{ backgroundColor: theme.primary }}
+          className="w-9 h-9 rounded-full items-center justify-center border border-black elevation-md"
         >
-          <Ionicons name="home" size={16} color={theme.primaryForeground} />
+          <Image source={require('@/assets/images/NeoNHSLogo.png')} className="w-9 h-9 object-cover" />
         </View>
         <Text className="text-xl font-bold" style={{ color: theme.primary }}>
           NeoNHS

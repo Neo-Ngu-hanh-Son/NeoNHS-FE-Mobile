@@ -14,18 +14,16 @@ import PointDetailScreen from '@/features/point/screens/PointDetailScreen';
 import PointMapSelectionScreen from '@/features/discover/screens/PointMapSelectionScreen';
 import ActiveNavigationScreen from '@/features/discover/screens/ActiveNavigationScreen';
 import ArrivalConfirmationScreen from '@/features/discover/screens/ArrivalConfirmationScreen';
-import AudioGuideScreen from '@/features/discover/screens/AudioGuideScreen';
 import EventDetailScreen from '@/features/event/screens/EventDetailScreen';
 import { WorkshopListScreen, WorkshopDetailScreen } from '@/features/workshops/screens';
 import BlogListScreen from '@/features/blog/screens/BlogListScreen';
 import BlogDetailsScreen from '@/features/blog/screens/BlogDetailsScreen';
-import TestWebViewScreen from '@/features/panorama/screens/PanoramaScreen';
 import { MainStackParamList } from './NavigationParamTypes';
 import PanoramaScreen from '@/features/panorama/screens/PanoramaScreen';
 import PointHistoryAudioScreen from '@/features/point/screens/PointHistoryAudioScreen';
 import CheckinCameraScreen from '@/features/map/screens/CheckinCameraScreen';
 import CheckinCompleteScreen from '@/features/map/screens/CheckinCompleteScreen';
-import { Text } from '@/components/ui/text';
+import CheckinGalleryScreen from '@/features/profile/screens/CheckinGalleryScreen';
 
 const Stack = createStackNavigator<MainStackParamList>();
 
@@ -97,12 +95,6 @@ export default function MainNavigator() {
       />
 
       <Stack.Screen
-        name="AudioGuide"
-        component={AudioGuideScreen}
-        options={{ headerShown: false }}
-      />
-
-      <Stack.Screen
         name="PointHistoryAudio"
         component={PointHistoryAudioScreen}
         options={{
@@ -142,6 +134,11 @@ export default function MainNavigator() {
       <Stack.Screen
         name="CheckinComplete"
         component={CheckinCompleteScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CheckinGallery"
+        component={CheckinGalleryScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

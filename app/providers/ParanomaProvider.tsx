@@ -1,7 +1,4 @@
-import React, { createContext, useContext, useRef, useState, useEffect, ReactNode } from 'react';
-import { WebView } from 'react-native-webview';
-import { View, StyleSheet } from 'react-native';
-import { panoramaService } from '@/features/panorama/services/panoramaService';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import DynamicPanorama from '@/features/panorama/components/DynamicPanorama';
 
 type PanoramaContextType = {

@@ -1,31 +1,49 @@
-import { apiClient, ApiResponse, endpoints } from "@/services/api";
-import { MapPointCheckin } from "../types";
-import { mapConstants } from "../mapConstants";
-import { UserCheckinRequest } from "@/features/map/types";
+import { apiClient, ApiResponse, endpoints } from '@/services/api';
+import { MapPointCheckin, UserCheckinRequest, UserCheckinResultResponse } from '../types';
+import { mapConstants } from '../mapConstants';
+
+type MultipartCheckinImage = {
+  uri: string;
+  name: string;
+  type: string;
+};
 
 const checkinServices = {
-  checkIn: async (pointId: string, payload?: { imageUrl?: string }) => {
-    return await apiClient.post(endpoints.map.checkIn(pointId), payload);
-  },
+  uploadCheckinImage: async (image: MultipartCheckinImage) => {
+    const formData = new FormData();
+    formData.append('imageFile', image as unknown as Blob);
 
-  userCheckIn: async (payload: UserCheckinRequest) => {
-    return await apiClient.post(endpoints.map.userCheckIn(), payload, {
+    return await apiClient.post<string>(endpoints.utilities.uploadImage(), formData, {
       requiresAuth: true,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
   },
 
-  getNearbyCheckIns: async (lat: number, lng: number, metersRadius?: number):
-    Promise<ApiResponse<MapPointCheckin[]>> => {
+  userCheckIn: async (payload: UserCheckinRequest) => {
+    return await apiClient.post<UserCheckinResultResponse>(endpoints.map.userCheckIn(), payload, {
+      requiresAuth: true,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  },
+
+  getNearbyCheckIns: async (
+    lat: number,
+    lng: number,
+    metersRadius?: number
+  ): Promise<ApiResponse<MapPointCheckin[]>> => {
     if (!metersRadius) {
       metersRadius = mapConstants.fetchingCheckinParameters;
     }
     const queryParams: Record<string, number> = { latitude: lat, longitude: lng, metersRadius };
     return await apiClient.get(endpoints.map.getNearbyCheckIns(), {
-      requiresAuth: false,
+      requiresAuth: true,
       params: queryParams,
     });
   },
-
 };
 
 export default checkinServices;

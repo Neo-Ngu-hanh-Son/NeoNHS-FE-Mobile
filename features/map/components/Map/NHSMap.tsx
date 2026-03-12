@@ -208,6 +208,13 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
               parseFloatOrDefault(checkin.longitude, -1) !== -1
           )
           .map((checkin) => {
+            const isUserCheckedIn = checkin.isUserCheckedIn ?? false;
+            logger.debug(`Checkin point ${checkin.name} isUserCheckedIn: ${isUserCheckedIn}`);
+            let pointType = checkin.type ?? 'CHECKIN';
+            if (isUserCheckedIn) {
+              pointType = 'USER_CHECKIN';
+            }
+
             const checkinAsPoint: MapPoint = {
               id: checkin.id,
               name: checkin.name,
@@ -215,7 +222,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
               thumbnailUrl: checkin.thumbnailUrl,
               latitude: checkin.latitude,
               longitude: checkin.longitude,
-              type: checkin.type ?? 'CHECKIN',
+              type: pointType,
               attractionId: parentPoint.id,
               panoramaImageUrl: checkin.panoramaImageUrl,
               defaultYaw: checkin.defaultYaw,
@@ -240,19 +247,11 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
                 />
               </Marker>
             );
-
           })
       );
 
       return [...parentMarkers, ...checkinMarkers];
     }, [isMapReady, mapPoints, shouldDisplayMarkerName, selectedPointId, onMarkerPress]);
-
-    useFocusEffect(
-      useCallback(() => {
-        setMapKey((prev) => prev + 1);
-        logger.info('Refresing map screen: ', mapKey + 1);
-      }, [])
-    );
 
     return (
       <View style={[styles.container, { borderColor: theme.border, borderWidth: 1 }]}>
@@ -264,7 +263,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           initialRegion={MAP_CENTER}
           // clusterColor={theme.primary}
           // radius={10}
-          mapType="satellite"
+          mapType="standard"
           showsUserLocation={false} // We use custom marker
           showsMyLocationButton={false} // We use custom button
           onRegionChangeComplete={handleRegionChangeComplete}

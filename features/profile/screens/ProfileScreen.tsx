@@ -17,6 +17,7 @@ import type {
   RootStackParamList,
   TabsStackParamList,
 } from '@/app/navigations/NavigationParamTypes';
+import { userService } from '../services/userService';
 
 type ProfileNavigationProp = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Profile'>,
@@ -36,7 +37,6 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
     const fetchProfile = async () => {
       if (isAuthenticated) {
         try {
-          const { userService } = require('../services/userService');
           const response = await userService.getProfile();
           if (response.success && response.data) {
             updateUser(response.data);
@@ -181,11 +181,14 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
               onPress={() => navigation.navigate('Main', { screen: 'KycVerification' })}
               activeOpacity={0.7}>
               <View style={styles.kycCardLeft}>
-                <View style={[styles.kycIconCircle, { backgroundColor: THEME.light.primary + '15' }]}>
+                <View
+                  style={[styles.kycIconCircle, { backgroundColor: THEME.light.primary + '15' }]}>
                   <MaterialIcons name="verified-user" size={24} color={THEME.light.primary} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.cardTitle, { color: theme.foreground }]}>Verify Account</Text>
+                  <Text style={[styles.cardTitle, { color: theme.foreground }]}>
+                    Verify Account
+                  </Text>
                   <Text style={[styles.cardDesc, { color: theme.mutedForeground }]}>
                     Verify your identity with CCCD for payback
                   </Text>
@@ -194,13 +197,16 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
               <MaterialIcons name="chevron-right" size={22} color={theme.primary} />
             </TouchableOpacity>
           ) : (
-            <View style={[styles.kycCard, { backgroundColor: '#22C55E10', borderColor: '#22C55E' }]}>
+            <View
+              style={[styles.kycCard, { backgroundColor: '#22C55E10', borderColor: '#22C55E' }]}>
               <View style={styles.kycCardLeft}>
                 <View style={[styles.kycIconCircle, { backgroundColor: '#22C55E20' }]}>
                   <MaterialIcons name="check-circle" size={24} color="#22C55E" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.cardTitle, { color: theme.foreground }]}>Account Verified</Text>
+                  <Text style={[styles.cardTitle, { color: theme.foreground }]}>
+                    Account Verified
+                  </Text>
                   <Text style={[styles.cardDesc, { color: '#22C55E' }]}>
                     Your identity has been verified
                   </Text>
@@ -209,7 +215,6 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
               <MaterialIcons name="verified" size={22} color="#22C55E" />
             </View>
           )}
-
 
           {/* Admin/Vendor Actions */}
           {(user.role === 'ADMIN' || user.role === 'VENDOR') && (
@@ -232,7 +237,9 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
             <ActionCard
               title="Withdraw Money"
               desc="Transfer your balance to your bank account"
-              rightIcon={<MaterialIcons name="account-balance-wallet" size={20} color={theme.primary} />}
+              rightIcon={
+                <MaterialIcons name="account-balance-wallet" size={20} color={theme.primary} />
+              }
               onPress={() => navigation.navigate('Main', { screen: 'Withdraw' })}
             />
           </View>
@@ -244,19 +251,25 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
             onPress={() => navigation.navigate('Main', { screen: 'TransactionHistory' })}
           />
           <ActionCard
+            title="Check-in Photos"
+            desc="Browse all your check-in images grouped by destination or date"
+            rightIcon={<Ionicons name="images-outline" size={20} color={theme.primary} />}
+            onPress={() => navigation.navigate('Main', { screen: 'CheckinGallery' })}
+          />
+          <ActionCard
             title="Payment Method"
             desc="Save your preferred payment method for smoother transactions"
-            onPress={() => { }}
+            onPress={() => {}}
           />
           <ActionCard
             title="Coupon & Voucher"
             desc="Claim vouchers and discounts for reduced prices or free shipping"
-            onPress={() => { }}
+            onPress={() => {}}
           />
           <ActionCard
             title="Support Center"
             desc="Find the best answer to your question"
-            onPress={() => { }}
+            onPress={() => {}}
           />
 
           <View style={styles.settingsSection}>
@@ -292,7 +305,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
                     <Ionicons name="chevron-forward" size={16} color={theme.mutedForeground} />
                   </View>
                 }
-                onPress={() => { }}
+                onPress={() => {}}
               />
             </View>
           </View>

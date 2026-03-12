@@ -3,6 +3,7 @@ import { discoverEndpoints } from './discover.api';
 import { eventEndpoints } from './events.api';
 import { blogEndpoints } from './blog.api';
 import { workshopEndpoints } from './workshops.api';
+import { uploadImageToCloudinary } from '@/services/cloudinary';
 
 /**
  * Authentication Endpoints
@@ -26,6 +27,7 @@ export const authEndpoints = {
  */
 export const userEndpoints = {
   getProfile: () => `users/profile`,
+  getMyCheckinGallery: () => `users/check-ins/images`,
   updateProfile: (id: string | number) => `users/update-profile/${id}`,
   changePassword: () => `auth/change-password`,
   getUserById: (id: string | number) => `users/${id}`,
@@ -72,6 +74,12 @@ export const paymentEndpoints = {
   verifyPayment: (orderCode: string | number) => `payment/success?orderCode=${orderCode}`,
 } as const;
 
+export const utilitiesEndpoints = {
+  uploadImage: () => `upload/image`,
+  uploadVideo: () => `upload/video`,
+  uploadImages: () => `upload/images`,
+} as const;
+
 /**
  * All Endpoints (for easy access)
  */
@@ -88,4 +96,5 @@ export const endpoints = {
   events: eventEndpoints,
   blog: blogEndpoints,
   workshops: workshopEndpoints,
+  utilities: utilitiesEndpoints,
 } as const;
