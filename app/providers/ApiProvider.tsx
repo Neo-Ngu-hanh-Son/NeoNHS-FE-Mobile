@@ -15,6 +15,7 @@ export default function ApiProvider({ children }: { children: ReactNode }) {
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
   // const API_URL = 'https://fwbgft4w-8080.asse.devtunnels.ms/api';
+  console.log('API_URL', API_URL);
   /**
    * Handle token refresh request
    * Called by API client when a 401 is received
