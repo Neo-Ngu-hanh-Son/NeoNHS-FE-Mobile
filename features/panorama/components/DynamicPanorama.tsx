@@ -31,11 +31,11 @@ export default function DynamicPanorama({ pointId, isOpen, onBack }: Props) {
 
   useEffect(() => {
     if (!isWebViewReady || !webViewRef.current) {
-      logger.warn('[DynamicPanorama] WebView is not ready yet');
+      logger.warn('[DynamicPanorama] WebView is not ready yet, skipping postMessage');
       return;
     }
     if (!pointId) {
-      logger.warn('[DynamicPanorama] No pointId provided to DynamicPanorama');
+      logger.warn('[DynamicPanorama] Webview ready, not point id present to send');
       return;
     }
 
@@ -47,6 +47,20 @@ export default function DynamicPanorama({ pointId, isOpen, onBack }: Props) {
       })
     );
   }, [pointId, isWebViewReady]);
+
+  function triggerWebViewNormally() {
+    if (!webViewRef.current) {
+      logger.warn('[DynamicPanorama] Cannot trigger WebView, ref is null');
+      return;
+    }
+    logger.info('[DynamicPanorama] Triggering WebView with normal postMessage');
+    webViewRef.current.postMessage(
+      JSON.stringify({
+        type: 'SET_PLACE_ID',
+        payload: pointId,
+      })
+    );
+  }
 
   const FE_URL = panoramaService.getPanoramaFrontEndUrl();
   if (!FE_URL && isOpen) {

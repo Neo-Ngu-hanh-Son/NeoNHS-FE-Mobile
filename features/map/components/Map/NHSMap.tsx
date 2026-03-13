@@ -209,7 +209,6 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           )
           .map((checkin) => {
             const isUserCheckedIn = checkin.isUserCheckedIn ?? false;
-            logger.debug(`Checkin point ${checkin.name} isUserCheckedIn: ${isUserCheckedIn}`);
             let pointType = checkin.type ?? 'CHECKIN';
             if (isUserCheckedIn) {
               pointType = 'USER_CHECKIN';
@@ -264,7 +263,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           // clusterColor={theme.primary}
           // radius={10}
           mapType="standard"
-          showsUserLocation={false} // We use custom marker
+          showsUserLocation={true} // We use custom marker
           showsMyLocationButton={false} // We use custom button
           onRegionChangeComplete={handleRegionChangeComplete}
           onMapReady={() => {
@@ -276,13 +275,13 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           {memoizedRoutes}
           {memoizedMarkers}
 
-          {userLocation && (
+          {/* {userLocation && (
             <UserLocationMarker
               location={userLocation}
               showAccuracyCircle={true}
               showHeading={true}
             />
-          )}
+          )} */}
         </MapView>
 
         <View style={[styles.followButtonContainer, { backgroundColor: theme.background }]}>

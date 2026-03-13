@@ -22,7 +22,7 @@ import {
 } from '../components';
 import { useQuery } from '@tanstack/react-query';
 import { logger } from '@/utils/logger';
-import { usePanorama } from '@/app/providers/ParanomaProvider';
+import { usePanorama } from '@/app/providers/PanoramaProvider';
 
 type Props = CompositeScreenProps<
   StackScreenProps<MainStackParamList, 'PointDetail'>,

@@ -6,7 +6,7 @@ import MainNavigator from './MainNavigator';
 import type { RootStackParamList } from './NavigationParamTypes';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { NAV_THEME } from '@/lib/theme';
-import { PanoramaProvider } from '../providers/ParanomaProvider';
+import { PanoramaProvider } from '../providers/PanoramaProvider';
 
 const Stack = createStackNavigator<RootStackParamList>();
 

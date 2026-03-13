@@ -261,68 +261,38 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
     logger.info('Location tracking stopped');
   }, []);
 
-  const syncNearbyGeofences = async (latitude: number, longitude: number) => {
-    let nearbyPoints: MapPointCheckin[] = [];
-    try {
-      nearbyPoints = (
-        await checkinServices.getNearbyCheckIns(
-          latitude,
-          longitude,
-          mapConstants.checkinPointDetectRadiusMeters
-        )
-      ).data;
-      const regions = nearbyPoints.map((point) => ({
-        identifier: point.id, // Your UUID from backend
-        latitude: point.latitude,
-        longitude: point.longitude,
-        radius: mapConstants.checkinPointDetectRadiusMeters,
-        notifyOnEnter: true,
-        notifyOnExit: false,
-      }));
+  const syncNearbyGeofences = useCallback(
+    async (latitude: number, longitude: number) => {
+      try {
+        const nearbyPoints = (
+          await checkinServices.getNearbyCheckIns(
+            latitude,
+            longitude,
+            mapConstants.checkinPointDetectRadiusMeters
+          )
+        ).data;
 
-      let gateKeep = false;
+        logger.debug('Check-in points near user: ' + nearbyPoints.length);
 
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== 'granted') {
-        logger.warn(
-          'Notifications permission not granted, geofencing notifications may not work properly'
-        );
+        return nearbyPoints;
+
+      } catch (err) {
+        logger.error('Failed to sync geofences', err);
+        return [];
       }
-      const { status: notificationStatus } = await Location.requestBackgroundPermissionsAsync();
-      if (notificationStatus !== 'granted') {
-        logger.warn('Background location permission not granted, stopping geofencing');
-        gateKeep = true;
-      }
+    },
+    []
+  );
 
-      const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
-      if (backgroundStatus !== 'granted') {
-        logger.warn('Background location permission not granted, stopping geofencing');
-        gateKeep = true;
-      }
-
-      if (regions.length > 0 && !gateKeep) {
-        // This make it so that the app only send one notification.
-        await Location.startGeofencingAsync(GEOFENCING_TASK, [regions[0]]);
-      }
-    } catch (err) {
-      logger.error('Failed to sync geofences', err);
-      return [];
-    } finally {
-      // Still return the nearby points even if geofencing setup fails
-      logger.debug('Check-in points near user: ' + nearbyPoints.length);
-      return nearbyPoints;
-    }
-  };
-
-  const calculateDistance = (
-    point1: { latitude: number; longitude: number },
-    point2: { latitude: number; longitude: number }
-  ) => {
-    return geolib.getDistance(
-      { latitude: point1.latitude, longitude: point1.longitude },
-      { latitude: point2.latitude, longitude: point2.longitude }
-    );
-  };
+  const calculateDistance = useCallback(
+    (
+      point1: { latitude: number; longitude: number },
+      point2: { latitude: number; longitude: number }
+    ) => {
+      return geolib.getDistance(point1, point2);
+    },
+    []
+  );
 
   // Check permission on mount
   useEffect(() => {

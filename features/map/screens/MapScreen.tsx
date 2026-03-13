@@ -11,7 +11,7 @@ import { useModal } from '@/app/providers/ModalProvider';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { LocationPermissionBanner } from '../components/UserLocation';
 import { mapData } from '../data';
-import { CompositeScreenProps } from '@react-navigation/native';
+import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
 import { ScreenLayout } from '@/components/common/ScreenLayout';
 import { useQuery } from '@tanstack/react-query';
 import CheckinCameraButton from '../components/Camera/CheckinCameraButton';
@@ -70,6 +70,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     data: mapPoints = mapData.mapPoints,
     isError: isMapPointsError,
     isLoading: isMapPointsLoading,
+    refetch: refetchMapPoints,
   } = useQuery({
     queryKey: ['mapPoints'],
     queryFn: async () => {
@@ -77,6 +78,11 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
       return res.data as MapPoint[];
     },
   });
+
+  // useFocusEffect(() => {
+  //   // Refetch map points whenever screen is focused, to get latest check-in statuses
+  //   refetchMapPoints();
+  // })
 
   const activePoint = useCheckinProximity(userLocation, checkinPoints, 20);
 
