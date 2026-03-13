@@ -233,13 +233,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
       );
     }
 
-    if (activeTab === 'Workshops') {
-      return (
-        <WorkshopListContent
-          onNavigateToDetail={(id) => navigation.navigate('WorkshopDetail', { workshopId: id })}
-        />
-      );
-    }
+
 
     if (activeTab === 'Points') {
       const data = filteredAttractions;
@@ -437,7 +431,17 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
 
     return null;
   };
-
+  if (activeTab === "Workshops") {
+    return (
+      <SafeAreaView>
+        {renderHeader()}
+        {renderTabs()}
+        <WorkshopListContent
+          onNavigateToDetail={(id) => navigation.navigate('WorkshopDetail', { workshopId: id })}
+        />
+      </SafeAreaView>
+    );
+  }
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
       {renderHeader()}

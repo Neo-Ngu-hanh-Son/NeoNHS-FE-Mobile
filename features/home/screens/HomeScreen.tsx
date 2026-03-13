@@ -110,6 +110,8 @@ export default function HomeScreen({ navigation }: HomeScreen) {
     navigation.navigate('Main', { screen: 'AllDestinations', params: {} });
   }
 
+  const FE_URL = process.env.EXPO_PUBLIC_FE_URL;
+  console.log('FE_URL main screen', FE_URL);
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
       <ScrollView

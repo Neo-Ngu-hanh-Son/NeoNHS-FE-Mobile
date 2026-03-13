@@ -18,6 +18,7 @@ export const panoramaService = {
 
   getPanoramaFrontEndUrl: () => {
     const FE_URL = process.env.EXPO_PUBLIC_FE_URL;
+    console.log('FE_URL', FE_URL);
     if (!FE_URL) {
       logger.error('[panoramaService] FE_URL is not defined in environment variables');
       return null;
