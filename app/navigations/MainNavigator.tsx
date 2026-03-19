@@ -16,6 +16,7 @@ import ActiveNavigationScreen from '@/features/discover/screens/ActiveNavigation
 import ArrivalConfirmationScreen from '@/features/discover/screens/ArrivalConfirmationScreen';
 import EventDetailScreen from '@/features/event/screens/EventDetailScreen';
 import { WorkshopListScreen, WorkshopDetailScreen } from '@/features/workshops/screens';
+import WorkshopAllReviewsScreen from '@/features/workshops/screens/WorkshopAllReviewsScreen';
 import BlogListScreen from '@/features/blog/screens/BlogListScreen';
 import BlogDetailsScreen from '@/features/blog/screens/BlogDetailsScreen';
 import { MainStackParamList } from './NavigationParamTypes';
@@ -117,6 +118,11 @@ export default function MainNavigator() {
       <Stack.Screen
         name="WorkshopDetail"
         component={WorkshopDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="WorkshopAllReviews"
+        component={WorkshopAllReviewsScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen name="BlogList" component={BlogListScreen} options={{ headerShown: false }} />

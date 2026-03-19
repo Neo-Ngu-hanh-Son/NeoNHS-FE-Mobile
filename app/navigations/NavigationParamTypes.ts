@@ -86,6 +86,12 @@ export type EventRoutes = {
 export type WorkshopRoutes = {
   WorkshopList: undefined;
   WorkshopDetail: { workshopId: string };
+  WorkshopAllReviews: {
+    workshopId: string;
+    workshopName: string;
+    averageRating: number;
+    totalRatings: number;
+  };
 };
 
 /* Checkout */

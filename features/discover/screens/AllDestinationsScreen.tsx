@@ -171,28 +171,41 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
   };
 
   const renderTabs = () => (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
-      className="py-3">
-      {(['Points', 'Workshops', 'Events', 'Blogs'] as CategoryType[]).map((tab) => (
-        <TouchableOpacity
-          key={tab}
-          onPress={() => {
-            setActiveTab(tab);
-            if (tab !== 'Points') setSelectedAttractionId(undefined);
-          }}
-          className={`rounded-2xl border px-5 py-2.5 ${activeTab === tab ? 'border-primary bg-primary' : 'bg-transparent'}`}
-          style={activeTab !== tab ? { borderColor: theme.border } : undefined}>
-          <Text
-            className={`text-sm font-bold ${activeTab === tab ? 'text-white' : ''}`}
-            style={activeTab !== tab ? { color: theme.mutedForeground } : undefined}>
-            {tab}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
+    <View style={{ paddingVertical: 12 }}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 16, gap: 8, alignItems: "center" }}>
+        {(['Points', 'Workshops', 'Events', 'Blogs'] as CategoryType[]).map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            onPress={() => {
+              setActiveTab(tab);
+              if (tab !== 'Points') setSelectedAttractionId(undefined);
+            }}
+            style={[
+              {
+                paddingHorizontal: 20,
+                paddingVertical: 10,
+                borderRadius: 16,
+                borderWidth: 1,
+              },
+              activeTab === tab
+                ? { backgroundColor: theme.primary, borderColor: theme.primary }
+                : { backgroundColor: "transparent", borderColor: theme.border },
+            ]}>
+            <Text
+              style={{
+                fontSize: 14,
+                fontWeight: "700",
+                color: activeTab === tab ? "#fff" : theme.mutedForeground,
+              }}>
+              {tab}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
   );
 
   const renderSearchAndFilter = () => {
@@ -433,7 +446,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
   };
   if (activeTab === "Workshops") {
     return (
-      <SafeAreaView>
+      <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
         {renderHeader()}
         {renderTabs()}
         <WorkshopListContent
