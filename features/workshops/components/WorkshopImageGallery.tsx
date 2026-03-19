@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { View, Image, FlatList, Dimensions } from "react-native";
 
 import { WorkshopImageResponse } from "../types";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const MAX_HEIGHT = 360;
+const MIN_HEIGHT = 200;
 
 interface WorkshopImageGalleryProps {
   images: WorkshopImageResponse[];
@@ -17,8 +19,26 @@ export default function WorkshopImageGallery({
   mutedColor,
 }: WorkshopImageGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [imageHeight, setImageHeight] = useState(280);
 
   const imageList = images.map((img) => img.imageUrl);
+
+  const onFirstImageLoad = useCallback(() => {
+    if (imageList.length === 0) return;
+    Image.getSize(
+      imageList[0],
+      (width, height) => {
+        const ratio = height / width;
+        const calculated = Math.round(SCREEN_WIDTH * ratio);
+        setImageHeight(Math.max(MIN_HEIGHT, Math.min(calculated, MAX_HEIGHT)));
+      },
+      () => setImageHeight(280),
+    );
+  }, [imageList]);
+
+  React.useEffect(() => {
+    onFirstImageLoad();
+  }, [onFirstImageLoad]);
 
   if (imageList.length === 0) return null;
 
@@ -37,8 +57,11 @@ export default function WorkshopImageGallery({
         renderItem={({ item }) => (
           <Image
             source={{ uri: item }}
-            style={{ width: SCREEN_WIDTH, height: 280 }}
-            className="object-cover"
+            style={{
+              width: SCREEN_WIDTH,
+              height: imageHeight,
+            }}
+            resizeMode="contain"
           />
         )}
       />

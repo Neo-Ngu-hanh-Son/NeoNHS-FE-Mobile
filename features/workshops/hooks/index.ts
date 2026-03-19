@@ -3,3 +3,7 @@ export { useWorkshopDetail } from './useWorkshopDetail';
 export { useWorkshopSessions } from './useWorkshopSessions';
 export { useWorkshopTags } from './useWorkshopTags';
 export { useWorkshopSearch } from './useWorkshopSearch';
+export { useWorkshopReviews } from './useWorkshopReviews';
+export { useCreateWorkshopReview } from './useCreateWorkshopReview';
+export { useUpdateWorkshopReview } from './useUpdateWorkshopReview';
+export type { ReviewSortKey } from './useWorkshopReviews';

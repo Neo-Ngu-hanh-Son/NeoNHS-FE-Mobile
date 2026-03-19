@@ -14,7 +14,7 @@ import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
-import { WorkshopImageGallery, WorkshopInfoSection, WorkshopSessionList } from '../components';
+import { WorkshopImageGallery, WorkshopInfoSection, WorkshopSessionList, WorkshopDetailReviews } from '../components';
 import { useWorkshopDetail } from '../hooks/useWorkshopDetail';
 import { useWorkshopSessions } from '../hooks/useWorkshopSessions';
 
@@ -176,26 +176,22 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
                 </Text>
               )}
 
-              {/* What's included */}
-              <Text
-                className="mb-3 mt-6 text-xs font-bold uppercase tracking-wider"
-                style={{ color: theme.mutedForeground }}>
-                What's included
-              </Text>
-              <View className="gap-2.5">
-                {[
-                  { icon: 'checkmark-circle' as const, text: 'All materials and equipment' },
-                  { icon: 'checkmark-circle' as const, text: 'Expert instructor guidance' },
-                  { icon: 'checkmark-circle' as const, text: 'Refreshments provided' },
-                  { icon: 'checkmark-circle' as const, text: 'Certificate of completion' },
-                ].map((item, idx) => (
-                  <View key={idx} className="flex-row items-center gap-2.5">
-                    <Ionicons name={item.icon} size={18} color={theme.primary} />
-                    <Text className="text-sm" style={{ color: theme.foreground }}>
-                      {item.text}
-                    </Text>
-                  </View>
-                ))}
+              {/* Reviews */}
+              <View className="mt-6">
+                <WorkshopDetailReviews
+                  workshopId={workshopId}
+                  workshopName={workshop.name}
+                  averageRating={workshop.averageRating}
+                  totalRatings={workshop.totalRatings}
+                  onViewAll={() =>
+                    navigation.navigate('WorkshopAllReviews', {
+                      workshopId,
+                      workshopName: workshop.name,
+                      averageRating: workshop.averageRating,
+                      totalRatings: workshop.totalRatings,
+                    })
+                  }
+                />
               </View>
             </View>
           ) : (

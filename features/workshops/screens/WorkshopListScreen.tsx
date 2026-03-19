@@ -432,9 +432,9 @@ export function WorkshopListContent({ onNavigateToDetail }: WorkshopListContentP
 
   // ── Footer (load-more spinner) ───────────────────────────────────────
   const renderFooter = () => {
-    if (!isFetchingNextPage) return <View className="pb-10" />;
+    if (!isFetchingNextPage) return <View style={{ height: 120 }} />;
     return (
-      <View className="py-6 items-center pb-10">
+      <View className="py-6 items-center" style={{ paddingBottom: 120 }}>
         <ActivityIndicator size="small" color={theme.primary} />
       </View>
     );
