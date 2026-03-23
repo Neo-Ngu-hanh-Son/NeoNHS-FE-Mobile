@@ -421,8 +421,8 @@ export default function KycVerificationScreen({ navigation }: Props) {
                         />
                         <View style={styles.reviewCardInfo}>
                             <Text style={[styles.reviewCardLabel, { color: theme.foreground }]}>{step.title}</Text>
-                            <TouchableOpacity onPress={() => handleRetake(step.key)}>
-                                <Text style={{ color: theme.primary, fontSize: 12, fontWeight: '600' }}>Retake</Text>
+                            <TouchableOpacity onPress={() => handleRetake(step.key)} disabled={isSubmitting}>
+                                <Text style={{ color: isSubmitting ? theme.mutedForeground : theme.primary, fontSize: 12, fontWeight: '600' }}>Retake</Text>
                             </TouchableOpacity>
                         </View>
                     </View>

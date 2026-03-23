@@ -1,6 +1,7 @@
 import React from "react";
-import { View, TouchableOpacity } from "react-native";
+import { View, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { cartService } from "../../cart/services/cartService";
 
 import { Text } from "@/components/ui/text";
 import { WorkshopSessionResponse } from "../types";
@@ -32,6 +33,45 @@ export default function WorkshopSessionCard({ session, theme }: WorkshopSessionC
     (session.currentEnrolled / session.maxParticipants) * 100,
     100
   );
+
+  const [modalVisible, setModalVisible] = React.useState(false);
+  const [quantity, setQuantity] = React.useState("1");
+  const [isAdding, setIsAdding] = React.useState(false);
+
+  const handleOpenModal = () => {
+    setQuantity("1");
+    setModalVisible(true);
+  };
+
+  const handleAddToCart = async () => {
+    const qty = parseInt(quantity);
+    if (isNaN(qty) || qty <= 0) {
+      Alert.alert("Invalid Quantity", "Please enter a valid quantity greater than 0.");
+      return;
+    }
+
+    if (qty > session.availableSlots) {
+      Alert.alert("Quantity Exceeded", `Only ${session.availableSlots} spots left.`);
+      return;
+    }
+
+    setIsAdding(true);
+    try {
+      const response = await cartService.addWorkshopSessionToCart(session.id, qty);
+      if (response && response.success) {
+        Alert.alert("Success", "Session added to cart successfully", [
+          { text: "OK", onPress: () => setModalVisible(false) }
+        ]);
+      } else {
+        // Fallback for custom backend wrappers
+        Alert.alert("Error", response?.message || "Failed to add to cart");
+      }
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "An error occurred");
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
   return (
     <View
@@ -108,6 +148,7 @@ export default function WorkshopSessionCard({ session, theme }: WorkshopSessionC
         }}
         disabled={isFull}
         activeOpacity={0.7}
+        onPress={handleOpenModal}
       >
         <Ionicons
           name={isFull ? "close-circle-outline" : "bookmark-outline"}
@@ -121,6 +162,75 @@ export default function WorkshopSessionCard({ session, theme }: WorkshopSessionC
           {isFull ? "Fully Booked" : "Book This Session"}
         </Text>
       </TouchableOpacity>
+
+      {/* Add to Cart Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <View style={{ width: "85%", backgroundColor: theme.card, borderRadius: 20, padding: 20, alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4, elevation: 5 }}>
+            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 15, color: theme.foreground, textAlign: 'center' }}>
+              Book Session
+            </Text>
+            
+            <Text style={{ fontSize: 14, color: theme.mutedForeground, marginBottom: 15, textAlign: 'center' }}>
+              {formatShortDate(session.startTime)} at {formatTime(session.startTime)}
+            </Text>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
+              <Text style={{ fontSize: 16, color: theme.foreground, marginRight: 10 }}>Quantity:</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', borderColor: theme.border, borderWidth: 1, borderRadius: 8 }}>
+                <TouchableOpacity
+                  onPress={() => setQuantity(prev => Math.max(1, parseInt(prev || "0") - 1).toString())}
+                  style={{ padding: 10 }}
+                >
+                  <Ionicons name="remove" size={20} color={theme.foreground} />
+                </TouchableOpacity>
+                <TextInput
+                  style={{ width: 50, textAlign: 'center', color: theme.foreground, fontSize: 16, padding: 5 }}
+                  keyboardType="numeric"
+                  value={quantity}
+                  onChangeText={setQuantity}
+                />
+                <TouchableOpacity
+                  onPress={() => setQuantity(prev => (parseInt(prev || "0") + 1).toString())}
+                  style={{ padding: 10 }}
+                >
+                  <Ionicons name="add" size={20} color={theme.foreground} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={{ width: '100%', gap: 10 }}>
+              <TouchableOpacity
+                style={{ backgroundColor: theme.primary, padding: 12, borderRadius: 10, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' }}
+                onPress={handleAddToCart}
+                disabled={isAdding}
+              >
+                {isAdding ? (
+                  <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
+                ) : (
+                  <Ionicons name="cart" size={20} color="#fff" style={{ marginRight: 8 }} />
+                )}
+                <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 16 }}>
+                  {isAdding ? "Adding..." : "Add to Cart"}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{ backgroundColor: 'transparent', padding: 12, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: theme.border }}
+                onPress={() => setModalVisible(false)}
+                disabled={isAdding}
+              >
+                <Text style={{ color: theme.foreground, fontWeight: "bold" }}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

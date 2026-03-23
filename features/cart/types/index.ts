@@ -5,6 +5,12 @@ export interface CartItem {
     quantity: number;
     ticketCatalogId: string;
     totalPrice: number;
+    // Event info (for event tickets)
+    eventId?: string;
+    eventName?: string;
+    // Workshop info (for workshop sessions)
+    workshopSessionId?: string;
+    workshopName?: string;
 }
 
 export interface Cart {
