@@ -1,9 +1,8 @@
 import React from 'react';
 import { Pressable, StyleSheet, ActivityIndicator } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
-import { logger } from '@/utils/logger';
 
 interface FollowUserButtonProps {
   /** Callback when button is pressed */
@@ -63,7 +62,8 @@ export default function FollowUserButton({
         },
       ]}
       onPress={onPress}
-      disabled={isLoading || !hasLocation}>
+      disabled={isLoading}
+    >
       {isLoading ? (
         <ActivityIndicator size="small" color="#4285F4" />
       ) : (

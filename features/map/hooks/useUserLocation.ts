@@ -1,10 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import * as Location from 'expo-location';
-import * as Notifications from 'expo-notifications';
 import { logger } from '@/utils/logger';
 import checkinServices from '../services/checkinServices';
-import { mapConstants } from '../mapConstants';
-import { MapPointCheckin } from '../types';
+import { MapPointCheckin, mapConstants } from '../types';
 import { LatLng } from 'react-native-maps';
 import * as geolib from 'geolib';
 
@@ -81,7 +79,7 @@ const DEFAULT_OPTIONS: UseUserLocationOptions = {
  * ```
  */
 export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLocationReturn {
-  const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
+  const mergedOptions = useMemo(() => ({ ...DEFAULT_OPTIONS, ...options }), [options]);
 
   const [location, setLocation] = useState<UserLocation | null>(null);
   const [previousLocation, setPreviousLocation] = useState<UserLocation | null>(null);
@@ -127,14 +125,14 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
       }
 
       // Additionally request to send notification for geofencing if permission is granted (Optional)
-      if (granted) {
-        const { status: notificationStatus } = await Location.requestBackgroundPermissionsAsync();
-        if (notificationStatus !== 'granted') {
-          logger.warn(
-            'Background location permission not granted, geofencing notifications may not work properly'
-          );
-        }
-      }
+      // if (granted) {
+      //   const { status: notificationStatus } = await Location.requestBackgroundPermissionsAsync();
+      //   if (notificationStatus !== 'granted') {
+      //     logger.warn(
+      //       'Background location permission not granted, geofencing notifications may not work properly'
+      //     );
+      //   }
+      // }
 
       return granted;
     } catch (err) {

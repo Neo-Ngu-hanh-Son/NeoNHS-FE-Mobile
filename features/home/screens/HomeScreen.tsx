@@ -1,4 +1,4 @@
-import { ScrollView, View, RefreshControl, Pressable } from 'react-native';
+import { ScrollView, View, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useCallback } from 'react';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -18,6 +18,7 @@ import useGuides from '../hooks/useGuides';
 import useOverviews from '../hooks/useOverviews';
 import useHomeEvents from '../hooks/useHomeEvents';
 import useHomeDestinations from '../hooks/useHomeDestinations';
+import useHomeWorkshops from '../hooks/useHomeWorkshops';
 import useFeaturedBlog from '../hooks/useFeaturedBlog';
 import { HomeHeader, SearchBar } from '../components';
 import {
@@ -27,14 +28,15 @@ import {
   AboutNHSSection,
   LatestBlogsSection,
   UpcomingEventsSection,
+  UpcomingWorkshopsSection,
   MustSeePlacesSection,
 } from '../components/sections';
 
-type HomeScreen = CompositeScreenProps<
+type HomeScreenProps = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Home'>,
   StackScreenProps<RootStackParamList>
 >;
-export default function HomeScreen({ navigation }: HomeScreen) {
+export default function HomeScreen({ navigation }: HomeScreenProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const { user } = useAuth();
@@ -43,20 +45,26 @@ export default function HomeScreen({ navigation }: HomeScreen) {
 
   const {
     data: featuredBlog,
-    isError: isFeaturedBlogError,
     isLoading: isFeaturedBlogLoading,
-    error: featuredBlogError,
+    isError: isFeaturedBlogError,
     refetch: refetchFeaturedBlog,
   } = useFeaturedBlog();
-  const { data: guides, isLoading: guidesLoading, refetch: refetchGuides } = useGuides();
+  const {
+    data: guides,
+    isLoading: guidesLoading,
+    isError: guidesError,
+    refetch: refetchGuides,
+  } = useGuides();
   const {
     data: overviews,
     isLoading: overviewsLoading,
+    isError: overviewsError,
     refetch: refetchOverviews,
   } = useOverviews();
   const {
     blogs,
     loading: blogsLoading,
+    error: blogsError,
     refresh: refetchBlogs,
   } = useBlogList({
     size: 6,
@@ -64,11 +72,19 @@ export default function HomeScreen({ navigation }: HomeScreen) {
   const {
     data: homeEvents,
     isLoading: homeEventsLoading,
+    isError: homeEventsError,
     refetch: refetchHomeEvents,
   } = useHomeEvents();
   const {
+    data: homeWorkshops,
+    isLoading: homeWorkshopsLoading,
+    isError: homeWorkshopsError,
+    refetch: refetchHomeWorkshops,
+  } = useHomeWorkshops();
+  const {
     data: destinations,
     isLoading: destinationsLoading,
+    isError: destinationsError,
     refetch: refetchDestinations,
   } = useHomeDestinations();
 
@@ -81,6 +97,7 @@ export default function HomeScreen({ navigation }: HomeScreen) {
       refetchGuides(),
       refetchOverviews(),
       refetchHomeEvents(),
+      refetchHomeWorkshops(),
       refetchDestinations(),
     ]).finally(() => {
       setRefreshing(false);
@@ -91,6 +108,7 @@ export default function HomeScreen({ navigation }: HomeScreen) {
     refetchGuides,
     refetchOverviews,
     refetchHomeEvents,
+    refetchHomeWorkshops,
     refetchDestinations,
   ]);
 
@@ -110,8 +128,6 @@ export default function HomeScreen({ navigation }: HomeScreen) {
     navigation.navigate('Main', { screen: 'AllDestinations', params: {} });
   }
 
-  const FE_URL = process.env.EXPO_PUBLIC_FE_URL;
-  console.log('FE_URL main screen', FE_URL);
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
       <ScrollView
@@ -143,18 +159,32 @@ export default function HomeScreen({ navigation }: HomeScreen) {
         <FeaturedSection
           loading={isFeaturedBlogLoading}
           featuredBlog={featuredBlog}
-          error={featuredBlogError}
+          error={isFeaturedBlogError}
         />
 
-        <KnowBeforeYouGoSection guides={guides ?? []} loading={guidesLoading} />
+        <KnowBeforeYouGoSection guides={guides ?? []} loading={guidesLoading} error={guidesError} />
 
-        <AboutNHSSection overviews={overviews ?? []} loading={overviewsLoading} />
+        <AboutNHSSection overviews={overviews ?? []} loading={overviewsLoading} error={overviewsError} />
 
-        <LatestBlogsSection blogs={blogs ?? []} loading={blogsLoading} />
+        <LatestBlogsSection blogs={blogs ?? []} loading={blogsLoading} error={Boolean(blogsError)} />
 
-        <UpcomingEventsSection events={homeEvents ?? []} loading={homeEventsLoading} />
+        <UpcomingEventsSection
+          events={homeEvents ?? []}
+          loading={homeEventsLoading}
+          error={homeEventsError}
+        />
 
-        <MustSeePlacesSection destinations={destinations ?? []} loading={destinationsLoading} />
+        <UpcomingWorkshopsSection
+          workshops={homeWorkshops ?? []}
+          loading={homeWorkshopsLoading}
+          error={homeWorkshopsError}
+        />
+
+        <MustSeePlacesSection
+          destinations={destinations ?? []}
+          loading={destinationsLoading}
+          error={destinationsError}
+        />
 
         {/* Explore All Destinations Link */}
         <View className="mt-4 px-4">

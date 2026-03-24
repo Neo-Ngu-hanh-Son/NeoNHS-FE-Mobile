@@ -1,6 +1,6 @@
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { panoramaService } from '../services/panoramaService';
 import { ScreenLayout } from '@/components/common/ScreenLayout';
 import { ActivityIndicator, View, Text, StyleSheet } from 'react-native';
@@ -8,14 +8,21 @@ import { WebView } from 'react-native-webview';
 import { logger } from '@/utils/logger';
 import { StatusBar } from 'expo-status-bar';
 
-type Props = { pointId: string; isOpen: boolean; onBack: () => void };
+type Props = {
+  pointId: string;
+  isOpen: boolean;
+  onBack: () => void;
+  onOpen?: () => void;
+  retryToken?: number;
+};
 
-export default function DynamicPanorama({ pointId, isOpen, onBack }: Props) {
+export default function DynamicPanorama({ pointId, isOpen, onBack, onOpen, retryToken = 0 }: Props) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const [isWebViewReady, setIsWebViewReady] = useState(false);
 
   const webViewRef = useRef<WebView>(null);
+  const lastDeliveredKeyRef = useRef<string | null>(null);
 
   // If WebView encounters an error, we can try to reload it after a short delay
   const [hasError, setHasError] = useState(false);
@@ -30,12 +37,27 @@ export default function DynamicPanorama({ pointId, isOpen, onBack }: Props) {
   }, [hasError]);
 
   useEffect(() => {
+    if (!isOpen || !pointId) {
+      lastDeliveredKeyRef.current = null;
+    }
+  }, [isOpen, pointId]);
+
+  const trySendPointId = useCallback(() => {
+    if (!isOpen) {
+      return;
+    }
     if (!isWebViewReady || !webViewRef.current) {
       logger.warn('[DynamicPanorama] WebView is not ready yet, skipping postMessage');
       return;
     }
     if (!pointId) {
       logger.warn('[DynamicPanorama] Webview ready, not point id present to send');
+      return;
+    }
+
+    const deliveryKey = `${pointId}`;
+    if (lastDeliveredKeyRef.current === deliveryKey) {
+      logger.debug('[DynamicPanorama] Duplicate message suppressed for current pointId');
       return;
     }
 
@@ -46,21 +68,12 @@ export default function DynamicPanorama({ pointId, isOpen, onBack }: Props) {
         payload: pointId,
       })
     );
-  }, [pointId, isWebViewReady]);
+    lastDeliveredKeyRef.current = deliveryKey;
+  }, [isOpen, isWebViewReady, pointId]);
 
-  function triggerWebViewNormally() {
-    if (!webViewRef.current) {
-      logger.warn('[DynamicPanorama] Cannot trigger WebView, ref is null');
-      return;
-    }
-    logger.info('[DynamicPanorama] Triggering WebView with normal postMessage');
-    webViewRef.current.postMessage(
-      JSON.stringify({
-        type: 'SET_PLACE_ID',
-        payload: pointId,
-      })
-    );
-  }
+  useEffect(() => {
+    trySendPointId();
+  }, [retryToken, trySendPointId]);
 
   const FE_URL = panoramaService.getPanoramaFrontEndUrl();
   if (!FE_URL && isOpen) {
@@ -94,7 +107,7 @@ export default function DynamicPanorama({ pointId, isOpen, onBack }: Props) {
           setIsWebViewReady(true);
         }}
         onError={(error) => {
-          logger.error('[DynamicPanorama] Webview error: ' + error);
+          logger.error('[DynamicPanorama] Webview error: ' + error.nativeEvent.description);
           setHasError(true);
         }}
         bounces={false} // iOS bounce

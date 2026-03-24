@@ -15,6 +15,7 @@ interface UseBlogListReturn {
   page: number;
   totalPages: number;
   loading: boolean;
+  error: string | null;
   fetchBlogs: () => Promise<void>;
   loadMore: () => void;
   refresh: () => Promise<void>;
@@ -33,6 +34,7 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const isFetchingRef = useRef(false);
 
@@ -45,6 +47,7 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
       isFetchingRef.current = true;
 
       setLoading(true);
+      setError(null);
       try {
         const pageData = await blogService.getBlogs({
           page: targetPage,
@@ -69,6 +72,7 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
         setTotalPages(pageData.totalPages);
       } catch (error) {
         logger.error('[useBlogList] Failed to fetch blogs:', error);
+        setError('Failed to fetch latest blogs.');
       } finally {
         isFetchingRef.current = false;
         setLoading(false);
@@ -138,6 +142,7 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
     page,
     totalPages,
     loading,
+    error,
     fetchBlogs,
     loadMore,
     refresh,

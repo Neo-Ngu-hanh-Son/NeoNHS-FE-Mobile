@@ -2,152 +2,111 @@
 
 ## Snapshot
 
-- **Project**: Expo + React Native + TypeScript mobile app
-- **Entry point**: `index.tsx` -> `app/App.tsx`
-- **Architecture**: Feature-first modules under `features/*` + shared app layers
-- **Styling**: NativeWind + shared UI primitives in `components/ui/*`
-- **Navigation**: React Navigation stacks/tabs configured in `app/navigations/*`
-- **API**: Shared Axios client in `services/api/client.ts` with endpoint builders under `services/api/endpoints/*`
+- Project: Expo + React Native + TypeScript
+- Entry point: `index.tsx` -> `app/App.tsx`
+- Source files indexed: 255 (under `app`, `components`, `features`, `services`, `hooks`, `utils`, `lib`, `types`)
+- Architecture: feature-first + shared app layers
+- Styling: NativeWind (`className`) + shared primitives in `components/ui`
+- API: shared client in `services/api/client.ts` + endpoint builders in `services/api/endpoints`
 
----
+## Run and Quality Commands
 
-## Startup & Runtime Flow
+- Install: `npm install`
+- Dev server: `npm run dev`
+- Android: `npm run android`
+- iOS: `npm run ios`
+- Type check: `npm run typecheck`
+- Lint: `npm run lint`
+- Tests (watch): `npm test`
+- Tests (single run): `npx jest --watchAll=false`
 
-1. `index.tsx` bootstraps the app.
-2. `app/App.tsx` mounts provider composition from `app/providers/Providers.tsx`.
-3. Providers compose app-wide concerns (safe area, theme, auth, api wiring, loading/modal).
-4. `RootNavigator` renders auth/main route containers and downstream navigators.
-5. Feature screens call feature services, which use shared `apiClient`.
+## Runtime Flow
 
----
+1. `index.tsx` boots app.
+2. `app/App.tsx` mounts `app/providers/Providers.tsx`.
+3. Provider stack composes global app state and services.
+4. Navigation starts in `app/navigations/RootNavigator.tsx`.
+5. Screens call feature hooks/services; services call shared `apiClient`.
 
 ## Top-Level Map
 
-- `app.config.js` — Expo app configuration
-- `index.tsx` — application entrypoint
-- `app/` — app shell (root app, navigation, providers)
-- `features/` — domain modules (auth, discover, event, map, etc.)
-- `components/` — shared cross-feature components + UI primitives
-- `services/` — shared services (`api/`, `cloudinary.ts`)
-- `hooks/` — shared hooks (`useApi.ts`)
-- `utils/` — shared utilities (storage, constants, logger, date)
-- `lib/` — theme and shared library helpers
-- `types/` — shared type definitions
-- `docs/` — architecture and usage docs
-- `__tests__/`, `__mocks__/` — testing support
-- `android/` — native Android project
+- `app/`: app shell (navigators, providers)
+- `features/`: feature modules (auth, map, home, event, profile, ...)
+- `components/`: shared UI and composed common components
+- `services/`: shared services (`api`, `cloudinary`)
+- `hooks/`: shared hooks (`useApi`)
+- `utils/`: constants, logger, date, storage
+- `lib/`: theme and helper utilities
+- `types/`: shared TS types
+- `docs/`: architecture and usage guides
 
----
+## App Layer Details
 
-## Core App Layer (`app/`)
+### Navigation (`app/navigations`)
 
-### `app/App.tsx`
+- `NavigationParamTypes.ts`: route param source of truth
+- `AuthNavigator.tsx`: auth stack screens
+- `TabsNavigator.tsx`: main tab routes
+- `MainNavigator.tsx`: stack over tabs + detail flows
+- `RootNavigator.tsx`: root container for `Auth` and `Main`
 
-Root app component.
+### Providers (`app/providers`)
 
-### `app/navigations/`
+- `Providers.tsx`: provider composition root
+- `ThemeProvider.tsx`: theme and dark mode class toggle
+- `GoogleLoginProvider.tsx`: Google auth integration
+- `ModalProvider.tsx`: modal state host
+- `LoadingProvider.tsx`: global loading overlay state
+- `AuthProvider` (in feature auth) + `ApiProvider.tsx`: auth state and API auth wiring
 
-- `NavigationParamTypes.ts` — typed route params (source of truth)
-- `RootNavigator.tsx` — root-level route composition
-- `AuthNavigator.tsx` — authentication flow stack
-- `TabsNavigator.tsx` — bottom tab navigation
-- `MainNavigator.tsx` — stack flows layered over tab routes
+## Feature Inventory
 
-### `app/providers/`
+Feature file counts (indexed files under each `features/<name>`):
 
-- `Providers.tsx` — provider composition root
-- `ThemeProvider.tsx` — theme mode + persistence integration
-- `GoogleLoginProvider.tsx` — Google auth provider setup
-- `ModalProvider.tsx` — modal host/state
-- `LoadingProvider.tsx` — global loading overlay state
-- `ApiProvider.tsx` — API client auth token/refresh/logout wiring
+- `auth`: 14
+- `blog`: 20
+- `bookings`: 2
+- `cart`: 6
+- `discover`: 9
+- `event`: 14
+- `home`: 31
+- `map`: 37
+- `panorama`: 4
+- `point`: 19
+- `profile`: 17
+- `workshops`: 22
 
----
+## Key Feature Anchors
 
-## Feature Modules (`features/`)
+- Auth state and token lifecycle: `features/auth/context/AuthContext.tsx`
+- Map flows (camera, check-in, location): `features/map/`
+- Home composition patterns: `features/home/components/sections/`
+- Event detail/catalog patterns: `features/event/`
+- Profile account/history flows: `features/profile/screens/`
 
-Each feature generally follows this pattern:
+## Shared Layer Anchors
 
-- `screens/` — route-level UI
-- `components/` — feature-specific presentational pieces
-- `services/` — feature API wrappers / domain service logic
-- `hooks/` — feature hooks
-- `types.ts` or `types/` — feature types
-- `index.ts` — barrel exports (where present)
+- API client and transforms: `services/api/client.ts`
+- Endpoint builders: `services/api/endpoints/`
+- Query client setup: `services/api/tanstack/queryClient.ts`
+- Shared hook wrapper: `hooks/useApi.ts`
+- Theme tokens: `lib/theme.ts`
+- Storage/constants/logger: `utils/storage.ts`, `utils/constants.ts`, `utils/logger.ts`
+- UI primitives: `components/ui/`
 
-### Current feature directories
+## Conventions That Matter
 
-- `features/auth/` — auth context, screens, service layer
-- `features/blog/` — blog module (components/hooks/screens/services/styles/types)
-- `features/bookings/` — bookings screens
-- `features/cart/` — cart screens/services/types
-- `features/discover/` — discover screens/services
-- `features/event/` — event module (components/screens/services/types/utils)
-- `features/home/` — home UI/screens/services
-- `features/map/` — map module (components, data, screens, services, hooks)
-- `features/profile/` — profile screens/services/types
+- Keep feature logic inside feature folders.
+- No direct API calls inside components.
+- Flow should be: Screen -> feature hook -> feature service -> shared api client.
+- Use alias imports (`@/...`) instead of deep relative paths.
+- Update navigation param types before wiring new screens.
+- Prefer NativeWind classes and shared UI primitives over ad-hoc styles.
 
----
+## Documentation Pointers
 
-## Shared Components (`components/`)
-
-- `components/ui/` — reusable UI primitives (`button`, `input`, `text`, `card`, `select`, etc.)
-- `components/Buttons/` — shared button variants
-- `components/Loader/` — loading overlay/components
-- `components/Navigator/` — navigation helper UI
-- `components/common/` — generic reusable components
-
----
-
-## Shared Services & Utilities
-
-### `services/api/`
-
-- `client.ts` — Axios wrapper + interceptors + request helpers
-- `types.ts` — API response/error typing
-- `endpoints/` — endpoint builder groups
-- `common/` — shared API helpers
-- `examples.ts` — usage examples
-- `index.ts` — API module exports
-
-### Other shared services
-
-- `services/cloudinary.ts` — Cloudinary-related helpers
-
-### Utility layer
-
-- `utils/constants.ts` — constants and storage keys
-- `utils/storage.ts` — persistence wrappers
-- `utils/logger.ts` — app logging helper
-- `utils/date.ts` — date helpers
-
-### Library layer
-
-- `lib/theme.ts` — theme tokens + navigation theme mapping
-- `global.css` — CSS variables for NativeWind theming
-
----
-
-## Testing & Quality
-
-- `__tests__/` — Jest tests
-- `__mocks__/` — global and test mocks
-- `jest.setup.ts`, `jest.env.mocks.ts` — Jest runtime setup
-- `coverage/` — generated coverage output
-
-Useful scripts (from `package.json`):
-
-- `npm run dev` — Expo dev server with cache clear
-- `npm run android` / `npm run ios` — platform launch
-- `npm run typecheck` — TypeScript checks
-- `npm test` — Jest
-
----
-
-## Developer Notes
-
-- Prefer import alias paths (`@/...`) over deep relative paths.
-- Keep API access inside feature services; delegate HTTP to `services/api/client.ts`.
-- For public endpoints, pass `{ requiresAuth: false }` where applicable.
-- Update `app/navigations/NavigationParamTypes.ts` first when adding screens.
-- Use shared theme tokens/primitives instead of ad-hoc styling.
+- API usage: `docs/API_CLIENT.md`
+- Auth system: `docs/AUTH_SYSTEM.md`
+- Navigation guide: `docs/NAVIGATION_GUIDE.md`
+- Folder structure: `docs/FOLDER_STRUCTURE.md`
+- Environment setup: `docs/ENVIRONMENT_SETUP.md`

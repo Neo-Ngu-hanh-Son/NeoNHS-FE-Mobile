@@ -1,8 +1,8 @@
 import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { CommonActions, CompositeScreenProps } from '@react-navigation/native';
-import { useCallback, useEffect } from 'react';
+import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 import type { StackScreenProps } from '@react-navigation/stack';
 
 import { Text } from '@/components/ui/text';
@@ -13,7 +13,6 @@ import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { logger } from '@/utils/logger';
 import type {
-  MainStackParamList,
   RootStackParamList,
   TabsStackParamList,
 } from '@/app/navigations/NavigationParamTypes';
@@ -33,26 +32,26 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
     navigation.navigate('Auth', { screen: 'Login' });
   };
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (isAuthenticated) {
-        try {
-          const response = await userService.getProfile();
-          if (response.success && response.data) {
-            updateUser(response.data);
-          }
-        } catch (error) {
-          logger.error('Fetch profile error:', error);
-        }
+  const fetchProfile = useCallback(async () => {
+    if (!isAuthenticated) {
+      return;
+    }
+
+    try {
+      const response = await userService.getProfile();
+      if (response.success && response.data) {
+        updateUser(response.data);
       }
-    };
+    } catch (error) {
+      logger.error('Fetch profile error:', error);
+    }
+  }, [isAuthenticated, updateUser]);
 
-    const unsubscribe = navigation.addListener('focus', () => {
+  useFocusEffect(
+    useCallback(() => {
       fetchProfile();
-    });
-
-    return unsubscribe;
-  }, [navigation, isAuthenticated]);
+    }, [fetchProfile])
+  );
 
   const handleLogout = () => {
     Alert.alert('Sign Out', 'Are you sure?', [
@@ -169,7 +168,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
               </View>
               <View>
                 <Text style={styles.pointsLabel}>Your Points</Text>
-                <Text style={styles.pointsValue}>6000</Text>
+                <Text style={styles.pointsValue}>{(user.userPoint ?? 0).toLocaleString('en-US')}</Text>
               </View>
             </View>
           </View>
@@ -259,17 +258,17 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
           <ActionCard
             title="Payment Method"
             desc="Save your preferred payment method for smoother transactions"
-            onPress={() => {}}
+            onPress={() => { }}
           />
           <ActionCard
             title="Coupon & Voucher"
             desc="Claim vouchers and discounts for reduced prices or free shipping"
-            onPress={() => {}}
+            onPress={() => { }}
           />
           <ActionCard
             title="Support Center"
             desc="Find the best answer to your question"
-            onPress={() => {}}
+            onPress={() => { }}
           />
 
           <View style={styles.settingsSection}>
@@ -305,7 +304,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
                     <Ionicons name="chevron-forward" size={16} color={theme.mutedForeground} />
                   </View>
                 }
-                onPress={() => {}}
+                onPress={() => { }}
               />
             </View>
           </View>

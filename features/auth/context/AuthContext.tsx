@@ -4,6 +4,7 @@ import React, {
   useCallback,
   useReducer,
   useEffect,
+  useRef,
   ReactNode,
 } from 'react';
 import type { AuthContextValue, AuthState, LoginCredentials, RegisterData, User } from '../types';
@@ -88,6 +89,11 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
+  const userRef = useRef<User | null>(null);
+
+  useEffect(() => {
+    userRef.current = state.user;
+  }, [state.user]);
 
   /**
    * Initialize auth state from storage
@@ -266,16 +272,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [logout]
   );
 
-  const updateUser = useCallback(
-    (userData: Partial<User>) => {
-      dispatch({ type: 'UPDATE_USER', payload: userData });
-      // Also update storage
-      if (state.user) {
-        storage.setUserData({ ...state.user, ...userData });
-      }
-    },
-    [state.user]
-  );
+  const updateUser = useCallback((userData: Partial<User>) => {
+    dispatch({ type: 'UPDATE_USER', payload: userData });
+
+    const currentUser = userRef.current;
+    if (currentUser) {
+      storage.setUserData({ ...currentUser, ...userData });
+    }
+  }, []);
 
   // Initialize auth on mount
   useEffect(() => {

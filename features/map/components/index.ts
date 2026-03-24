@@ -13,3 +13,6 @@ export { UserLocationMarker, FollowUserButton, LocationPermissionBanner } from '
 
 // Point detail modal
 export { default as PointDetailModal } from './PointDetailModal/PointDetailModal';
+
+// Navigation guidance overlay
+export { default as NavigationGuideOverlay } from './NavigationGuideOverlay';

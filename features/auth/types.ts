@@ -12,6 +12,7 @@ export interface UserInfo {
     email: string;
     phoneNumber: string | null;
     avatarUrl: string | null;
+    userPoint?: number;
     role: UserRole;
     isActive: boolean;
     isVerified: boolean;

@@ -6,10 +6,12 @@ import type { EventResponse } from '@/features/event/types';
 import { RootStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import ExperienceCard from '../ExperienceCard';
 import SectionHeader from '../SectionHeader';
+import SectionStateMessage from './SectionStateMessage';
 
 type Props = {
   events: EventResponse[];
   loading: boolean;
+  error?: boolean;
 };
 
 type HomeScreenProps = CompositeScreenProps<
@@ -17,7 +19,7 @@ type HomeScreenProps = CompositeScreenProps<
   StackScreenProps<RootStackParamList>
 >;
 
-export default function UpcomingEventsSection({ events, loading }: Props) {
+export default function UpcomingEventsSection({ events, loading, error }: Props) {
   const { navigate } = useNavigation<HomeScreenProps['navigation']>();
 
   function handleSeeMoreExperiences(): void {
@@ -28,8 +30,25 @@ export default function UpcomingEventsSection({ events, loading }: Props) {
     navigate('Main', { screen: 'EventDetail', params: { eventId: id } });
   }
 
-  if (events == null || events.length === 0) {
-    return null;
+  if (error) {
+    return (
+      <View className="mb-4">
+        <SectionHeader title="Upcoming events" showSeeAll onSeeAllPress={handleSeeMoreExperiences} />
+        <SectionStateMessage
+          tone="error"
+          message="Failed to fetch upcoming events. Please pull to refresh."
+        />
+      </View>
+    );
+  }
+
+  if (!loading && (events == null || events.length === 0)) {
+    return (
+      <View className="mb-4">
+        <SectionHeader title="Upcoming events" showSeeAll onSeeAllPress={handleSeeMoreExperiences} />
+        <SectionStateMessage message="No upcoming events found." />
+      </View>
+    );
   }
 
   return (

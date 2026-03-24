@@ -10,18 +10,20 @@ import React, {
   useMemo,
 } from 'react';
 import { MapPoint } from '../..';
-import { Marker, Polyline, PROVIDER_GOOGLE, Region } from 'react-native-maps';
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { MAP_CENTER } from '../../data';
 // import MapView from 'react-native-map-clustering';
-import MapView from 'react-native-maps';
 import { renderRoutes } from '../../data/mapDataOptimized';
 import MarkerVisual from '../Marker/MarkerVisual';
 import { logger } from '@/utils/logger';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { UserLocation } from '../../hooks/useUserLocation';
 import { UserLocationMarker, FollowUserButton } from '../UserLocation';
-import { useFocusEffect } from '@react-navigation/native';
-import { parseFloatOrDefault } from '@/utils/parseNumber';
+import { MapPointCheckin, mapConstants, PolylineCoordinate } from '../../types';
+import { hasCheckinPointsChanged } from '../../helpers';
+import { useCheckinProximity } from '../../hooks/useCheckinProximity';
+import { useIsFocused } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 type NHSMapProps = {
   onMarkerPress?: (point: MapPoint) => void;
@@ -29,7 +31,18 @@ type NHSMapProps = {
   onMapPress?: () => void;
   mapPoints?: MapPoint[];
   userLocation?: UserLocation | null;
+  previousLocation?: UserLocation | null;
+  calculateDistance?: (
+    point1: { latitude: number; longitude: number },
+    point2: { latitude: number; longitude: number }
+  ) => number;
+  syncNearbyGeofences?: (latitude: number, longitude: number) => Promise<MapPointCheckin[]>;
+  onActiveCheckinPointChange?: (point: MapPointCheckin | null) => void;
   isLocationLoading?: boolean;
+  startTrackingCallback?: () => void;
+  onMapReadyCallback?: () => void;
+  navigationPolylineCoordinates?: PolylineCoordinate[];
+  isGuidanceMode?: boolean;
 };
 
 export interface NHSMapRef {
@@ -38,26 +51,56 @@ export interface NHSMapRef {
     coordinate: { latitude: number; longitude: number; latDelta?: number; lngDelta?: number },
     duration?: number
   ) => void;
+  fitToCoordinates: (
+    coordinates: { latitude: number; longitude: number }[],
+    edgePadding?: { top: number; right: number; bottom: number; left: number },
+    animated?: boolean
+  ) => void;
   setFollowUser: (follow: boolean) => void;
   isFollowingUser: () => boolean;
   setZoom: (zoom: number) => void;
+  reloadMap: () => void;
 }
 
 const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
-  ({ onMarkerPress, mapPoints, userLocation, isLocationLoading = false, selectedPointId }, ref) => {
+  (
+    {
+      onMarkerPress,
+      mapPoints,
+      userLocation,
+      previousLocation,
+      calculateDistance,
+      syncNearbyGeofences,
+      onActiveCheckinPointChange,
+      isLocationLoading = false,
+      selectedPointId,
+      startTrackingCallback,
+      onMapReadyCallback,
+      navigationPolylineCoordinates,
+      isGuidanceMode = false,
+    },
+    ref
+  ) => {
     const { isDarkColorScheme } = useTheme();
     const theme = isDarkColorScheme ? THEME.dark : THEME.light;
     const [shouldDisplayMarkerName, setShouldDisplayMarkerName] = useState(false);
     const [isMapReady, setIsMapReady] = useState(false);
     const [isFollowingUser, setIsFollowingUser] = useState(false);
     const [mapKey, setMapKey] = useState(0);
-
+    const [checkinPoints, setCheckinPoints] = useState<MapPointCheckin[]>([]);
+    const isSyncingNearbyCheckinsRef = useRef(false);
     const mapZoomRef = useRef({
       latitudeDelta: MAP_CENTER.latitudeDelta,
       longitudeDelta: MAP_CENTER.longitudeDelta,
     });
     const mapRef = useRef<MapView>(null);
     const currentRegionRef = useRef<Region>(MAP_CENTER);
+    const onMarkerPressRef = useRef(onMarkerPress); // Store in ref to avoid re-creating handlers and causing re-renders
+    const isFocused = useIsFocused();
+
+    useEffect(() => {
+      onMarkerPressRef.current = onMarkerPress;
+    }, [onMarkerPress]);
 
     // Expose methods to parent via ref
     useImperativeHandle(ref, () => ({
@@ -77,6 +120,20 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           duration
         );
       },
+      fitToCoordinates: (
+        coordinates: { latitude: number; longitude: number }[],
+        edgePadding = { top: 120, right: 64, bottom: 160, left: 64 },
+        animated = true
+      ) => {
+        if (coordinates.length < 2) {
+          return;
+        }
+
+        mapRef.current?.fitToCoordinates(coordinates, {
+          edgePadding,
+          animated,
+        });
+      },
       setFollowUser: (follow: boolean) => {
         setIsFollowingUser(follow);
       },
@@ -94,6 +151,9 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           500
         );
       },
+      reloadMap: () => {
+        handleReloadMap();
+      }
     }));
 
     const handleRegionChangeComplete = useCallback((region: Region) => {
@@ -122,6 +182,8 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
      */
     const handleFollowUserToggle = useCallback(() => {
       const newFollowState = !isFollowingUser;
+      console.log('Follow user toggle, new state:', newFollowState);
+      startTrackingCallback?.();
       setIsFollowingUser(newFollowState);
 
       // If enabling follow mode, immediately pan to user location
@@ -139,13 +201,80 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       } else {
         logger.info('Follow mode disabled');
       }
-    }, [isFollowingUser, userLocation]);
+    }, [isFollowingUser, userLocation, startTrackingCallback]);
+
+    const handleReloadMap = useCallback(() => {
+      logger.info('[NHSMap] Map reload triggered');
+      setIsMapReady(false);
+      setIsFollowingUser(false);
+      setMapKey((prev) => prev + 1);
+    }, []);
+
+    const activeCheckinPoint = useCheckinProximity(userLocation ?? null, checkinPoints, 20);
+
+    useEffect(() => {
+      onActiveCheckinPointChange?.(activeCheckinPoint);
+    }, [activeCheckinPoint, onActiveCheckinPointChange]);
+
+    useEffect(() => {
+      let isCancelled = false;
+
+      const syncCheckinPoints = async () => {
+        if (!userLocation || !syncNearbyGeofences || !calculateDistance) {
+          return;
+        }
+        if (isSyncingNearbyCheckinsRef.current) {
+          return;
+        }
+
+        const previousCoords = {
+          latitude: previousLocation?.latitude ?? userLocation.latitude,
+          longitude: previousLocation?.longitude ?? userLocation.longitude,
+        };
+        const distanceMoved = calculateDistance(
+          { latitude: userLocation.latitude, longitude: userLocation.longitude },
+          { latitude: previousCoords.latitude, longitude: previousCoords.longitude }
+        );
+
+        if (distanceMoved <= mapConstants.distanceMoveBeforeRefetchMeters && previousLocation) {
+          return;
+        }
+
+        isSyncingNearbyCheckinsRef.current = true;
+
+        try {
+          const nearbyCheckinPoints = await syncNearbyGeofences(
+            userLocation.latitude,
+            userLocation.longitude
+          );
+
+          if (!isCancelled) {
+            setCheckinPoints((currentPoints) =>
+              hasCheckinPointsChanged(currentPoints, nearbyCheckinPoints)
+                ? nearbyCheckinPoints
+                : currentPoints
+            );
+          }
+        } catch (error) {
+          logger.error('[NHSMap] Error occurred while syncing nearby checkins:', error);
+        } finally {
+          isSyncingNearbyCheckinsRef.current = false;
+        }
+      };
+
+      syncCheckinPoints();
+
+      return () => {
+        isCancelled = true;
+      };
+    }, [userLocation, previousLocation, syncNearbyGeofences, calculateDistance]);
 
     /**
      * Effect to auto-pan to user location when following
      * Triggers whenever user location updates while in follow mode
      */
     useEffect(() => {
+      if (!isFocused) return;
       if (isMapReady && isFollowingUser && userLocation && mapRef.current) {
         mapRef.current.animateToRegion(
           {
@@ -157,7 +286,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           300 // Smooth animation
         );
       }
-    }, [isMapReady, isFollowingUser, userLocation]);
+    }, [isMapReady, isFollowingUser, userLocation, isFocused]);
 
     // 1. Memoize the routes (since they never change)
     const memoizedRoutes = useMemo(() => {
@@ -171,6 +300,27 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       ));
     }, []); // Empty array because renderRoutes is static imported data
 
+    const memoizedNavigationRoute = useMemo(() => {
+      if (!navigationPolylineCoordinates || navigationPolylineCoordinates.length < 2) {
+        return null;
+      }
+
+      // Get the time as the key (This is make sure that navigation polyline changed => this re-run, key changed => re-render with new polyline)
+      let currentTime = new Date().getTime();
+
+      return (
+        <Polyline
+          key={`${currentTime}`}
+          coordinates={navigationPolylineCoordinates}
+          strokeColor={theme.primary}
+          strokeWidth={6}
+          lineCap="round"
+          lineJoin="round"
+          zIndex={40}
+        />
+      );
+    }, [navigationPolylineCoordinates, theme.primary]);
+
     // 2. Memoize the map points
     const memoizedMarkers = useMemo(() => {
       if (!isMapReady || !mapPoints) return null;
@@ -178,18 +328,18 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       const parentMarkers = mapPoints
         .filter(
           (poi) =>
-            parseFloatOrDefault(poi.latitude, -1) !== -1 &&
-            parseFloatOrDefault(poi.longitude, -1) !== -1
+            poi.latitude !== -1 &&
+            poi.longitude !== -1
         )
         .map((poi) => (
           <Marker
             key={poi.id}
             coordinate={{
-              latitude: parseFloatOrDefault(poi.latitude, 0),
-              longitude: parseFloatOrDefault(poi.longitude, 0),
+              latitude: poi.latitude,
+              longitude: poi.longitude
             }}
             onPress={() => {
-              onMarkerPress?.(poi);
+              onMarkerPressRef.current?.(poi);
             }}>
             <MarkerVisual
               point={poi}
@@ -204,8 +354,8 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           .filter(
             (checkin) =>
               checkin.isActive !== false &&
-              parseFloatOrDefault(checkin.latitude, -1) !== -1 &&
-              parseFloatOrDefault(checkin.longitude, -1) !== -1
+              checkin.latitude !== -1 &&
+              checkin.longitude !== -1
           )
           .map((checkin) => {
             const isUserCheckedIn = checkin.isUserCheckedIn ?? false;
@@ -232,12 +382,12 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
               <Marker
                 key={`checkin-${checkin.id}`}
                 coordinate={{
-                  latitude: parseFloatOrDefault(checkin.latitude, 0),
-                  longitude: parseFloatOrDefault(checkin.longitude, 0),
+                  latitude: checkin.latitude,
+                  longitude: checkin.longitude,
                 }}
                 zIndex={30}
                 onPress={() => {
-                  onMarkerPress?.(checkinAsPoint);
+                  onMarkerPressRef.current?.(checkinAsPoint);
                 }}>
                 <MarkerVisual
                   point={checkinAsPoint}
@@ -250,7 +400,9 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       );
 
       return [...parentMarkers, ...checkinMarkers];
-    }, [isMapReady, mapPoints, shouldDisplayMarkerName, selectedPointId, onMarkerPress]);
+    }, [isMapReady, mapPoints, shouldDisplayMarkerName, selectedPointId]);
+
+    console.log('NHSMap rendered');
 
     return (
       <View style={[styles.container, { borderColor: theme.border, borderWidth: 1 }]}>
@@ -263,34 +415,60 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           // clusterColor={theme.primary}
           // radius={10}
           mapType="standard"
-          showsUserLocation={true} // We use custom marker
+          showsUserLocation={false}
           showsMyLocationButton={false} // We use custom button
           onRegionChangeComplete={handleRegionChangeComplete}
           onMapReady={() => {
             setIsMapReady(true);
+            onMapReadyCallback?.();
           }}
           onPanDrag={handleMapInteraction} // Detect when user drags the map
           customMapStyle={[]}>
-          {/* Markers */}
+          {/* Polylines */}
           {memoizedRoutes}
+          {memoizedNavigationRoute}
+
+          {/* Markers */}
           {memoizedMarkers}
 
-          {/* {userLocation && (
+          {userLocation && (
             <UserLocationMarker
               location={userLocation}
               showAccuracyCircle={true}
               showHeading={true}
             />
-          )} */}
+          )}
         </MapView>
 
-        <View style={[styles.followButtonContainer, { backgroundColor: theme.background }]}>
+        <View
+          style={[
+            styles.followButtonContainer,
+            { backgroundColor: theme.background },
+            isGuidanceMode ? { bottom: 104 } : { bottom: 24 },
+          ]}>
           <FollowUserButton
             onPress={handleFollowUserToggle}
             isLoading={isLocationLoading}
             hasLocation={!!userLocation}
             isFollowing={isFollowingUser}
           />
+        </View>
+
+        <View
+          style={[
+            styles.reloadButtonContainer,
+            { backgroundColor: theme.background },
+            isGuidanceMode ? { bottom: 160 } : { top: 16 },
+          ]}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Reload map"
+            activeOpacity={0.8}
+            onPress={handleReloadMap}
+            style={[styles.reloadButton, { borderColor: theme.border }]}
+          >
+            <Ionicons name="reload" size={20} color={theme.foreground} />
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -311,10 +489,28 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 24,
     right: 16,
-    padding: 6,
     borderRadius: 12,
     elevation: 4,
-    zIndex: 10,
+    zIndex: 20,
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reloadButtonContainer: {
+    position: 'absolute',
+    right: 16,
+    borderRadius: 20,
+    elevation: 4,
+    zIndex: 20,
+  },
+  reloadButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
   },
 });
 

@@ -7,11 +7,12 @@ import type { BlogResponse } from '@/features/blog/types';
 import SectionHeader from '../SectionHeader';
 import FeaturedCard from '../FeaturedEventCard';
 import BlogCardSkeleton from '@/components/common/BlogCardSkeleton';
+import SectionStateMessage from './SectionStateMessage';
 
 type Props = {
-  featuredBlog: BlogResponse | undefined;
+  featuredBlog: BlogResponse | null | undefined;
   loading: boolean;
-  error?: Error | null;
+  error?: boolean;
 };
 
 type HomeScreenProps = CompositeScreenProps<
@@ -30,20 +31,32 @@ export default function FeaturedSection({ featuredBlog, loading, error }: Props)
     navigate('Main', { screen: 'BlogDetails', params: { blogId: featuredBlog.id } });
   }
 
-  if (error && !featuredBlog) {
+  if (error) {
     return (
-      <View>
+      <View className="mb-4">
         <SectionHeader title="Featured" />
-        <Text className="text-red-500">Failed to load featured blog.</Text>
+        <SectionStateMessage
+          tone="error"
+          message="Failed to fetch featured content. Please pull to refresh."
+        />
       </View>
     );
   }
 
-  if (loading || !featuredBlog) {
+  if (loading) {
     return (
-      <View>
+      <View className="mb-4">
         <SectionHeader title="Featured" />
         <BlogCardSkeleton horizontal />
+      </View>
+    );
+  }
+
+  if (!featuredBlog) {
+    return (
+      <View className="mb-4">
+        <SectionHeader title="Featured" />
+        <SectionStateMessage message="No featured content found." />
       </View>
     );
   }

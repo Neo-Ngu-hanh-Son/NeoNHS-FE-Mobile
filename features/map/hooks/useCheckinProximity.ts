@@ -1,32 +1,34 @@
 import { useMemo } from 'react';
 import { getDistance } from 'geolib';
 import { UserLocation } from './useUserLocation';
-import { MapPointCheckin } from '../types';
-import { mapConstants } from '../mapConstants';
-import { logger } from '@/utils/logger';
+import { MapPointCheckin, mapConstants } from '../types';
 
 export const useCheckinProximity = (
   userLocation: UserLocation | null,
   points: MapPointCheckin[] | null,
-  thresholdMeters: number | undefined
+  thresholdMeters?: number
 ): MapPointCheckin | null => {
   return useMemo(() => {
     if (!userLocation || !points || points.length === 0) return null;
+
     const threshold = thresholdMeters ?? mapConstants.checkinPointDetectRadiusMeters;
 
-    // Find the closest point (backend already remove the point that user checkedin.)
-    const closest = points
-      .map((point) => ({
-        ...point,
-        distance: getDistance(
-          { latitude: userLocation.latitude, longitude: userLocation.longitude },
-          { latitude: point.latitude, longitude: point.longitude }
-        ),
-      }))
-      .sort((a, b) => a.distance - b.distance)[0];
+    let closest: MapPointCheckin | null = null;
+    let closestDistance = Infinity;
 
-    // If the closest point is within the threshold, return it.
-    if (closest && closest.distance <= threshold) {
+    for (const point of points) {
+      const distance = getDistance(
+        { latitude: userLocation.latitude, longitude: userLocation.longitude },
+        { latitude: point.latitude, longitude: point.longitude }
+      );
+
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closest = point;
+      }
+    }
+
+    if (closest && closestDistance <= threshold) {
       return closest;
     }
 

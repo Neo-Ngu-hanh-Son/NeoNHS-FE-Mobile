@@ -1,24 +1,22 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { View } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { MainStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { logger } from '@/utils/logger';
 import { MapPoint, MapPointCheckin } from '../types';
 import MapPointDetailModal from '../components/PointDetailModal/PointDetailModal';
 import NHSMap, { NHSMapRef } from '../components/Map/NHSMap';
+import NavigationGuideOverlay from '../components/NavigationGuideOverlay';
 import { mapService } from '../services/mapServices';
 import { useModal } from '@/app/providers/ModalProvider';
-import { useUserLocation } from '../hooks/useUserLocation';
+import { useMapNavigationGuidance, useUserLocation } from '../hooks';
 import { LocationPermissionBanner } from '../components/UserLocation';
 import { mapData } from '../data';
-import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
+import { CompositeScreenProps, useIsFocused } from '@react-navigation/native';
 import { ScreenLayout } from '@/components/common/ScreenLayout';
 import { useQuery } from '@tanstack/react-query';
 import CheckinCameraButton from '../components/Camera/CheckinCameraButton';
-import { useCheckinProximity } from '../hooks/useCheckinProximity';
 import { parseFloatOrDefault } from '@/utils/parseNumber';
 import { useAuth } from '@/features/auth/context/AuthContext';
-import FullScreenLoader from '@/components/Loader/FullScreenLoader';
 
 type MapScreenProps = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Map'>,
@@ -27,26 +25,18 @@ type MapScreenProps = CompositeScreenProps<
 export default function MapScreen({ navigation, route }: MapScreenProps) {
   const { isAuthenticated } = useAuth();
   const initialPointId = route.params?.pointId;
-  const [showBackButton, setShowBackButton] = useState(!!initialPointId);
-  const isSyncingNearbyCheckinsRef = useRef(false);
-
-  // Sync showBackButton when navigating to this tab with a new pointId
-  // (useState only captures the value on first mount, but this tab persists)
-  useEffect(() => {
-    if (initialPointId) {
-      setShowBackButton(true);
-    }
-  }, [initialPointId]);
+  const targetNavigationPointId = route.params?.targetNavigationPointId;
+  const isFocused = useIsFocused();
 
   // Map state
   const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const mapRef = useRef<NHSMapRef>(null);
-  const [checkinPoints, setCheckinPoints] = useState<MapPointCheckin[]>([]);
+  const [activePoint, setActivePoint] = useState<MapPointCheckin | null>(null);
+
 
   // Modal helpers
   const { alert } = useModal();
-
   // User location tracking - auto-start on mount
   const {
     location: userLocation,
@@ -61,30 +51,19 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     calculateDistance,
     syncNearbyGeofences,
   } = useUserLocation({
-    autoStart: true, // Auto-start location tracking when entering map screen
+    autoStart: false,
     updateInterval: 3000,
     distanceInterval: 5,
   });
 
-  const {
-    data: mapPoints = mapData.mapPoints,
-    isError: isMapPointsError,
-    isLoading: isMapPointsLoading,
-    refetch: refetchMapPoints,
-  } = useQuery({
+  const { data: mapPoints = mapData.mapPoints, isError: isMapPointsError } = useQuery({
     queryKey: ['mapPoints'],
     queryFn: async () => {
       const res = await mapService.getMapPoints();
       return res.data as MapPoint[];
     },
+    // enabled: isFocused,
   });
-
-  // useFocusEffect(() => {
-  //   // Refetch map points whenever screen is focused, to get latest check-in statuses
-  //   refetchMapPoints();
-  // })
-
-  const activePoint = useCheckinProximity(userLocation, checkinPoints, 20);
 
   if (isMapPointsError) {
     logger.error('[MapScreen] Failed to fetch map points, using default map points.');
@@ -114,6 +93,31 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
       }, 500);
     }
   }, [initialPointId, mapPoints]);
+
+  const clearTargetNavigationParam = useCallback(() => {
+    navigation.setParams({ targetNavigationPointId: undefined });
+  }, [navigation]);
+
+  const {
+    isGuidanceMode,
+    isDirectionsLoading,
+    isDirectionsReady,
+    directionError,
+    routeSummary,
+    navigationPolylineCoordinates,
+    onMapReady,
+    handleExitGuidance,
+    navigationEndpoints,
+  } = useMapNavigationGuidance({
+    targetNavigationPointId,
+    mapPoints,
+    userLocation,
+    permissionStatus,
+    isTracking,
+    startTracking,
+    alert,
+    clearTargetNavigationParam,
+  });
 
   // Cleanup location tracking on unmount
   useEffect(() => {
@@ -170,74 +174,10 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     }
   }, [requestPermission, startTracking]);
 
-  // Checkin point detections - sync nearby geofences whenever location changes
+  // Auto request permission on mount if not granted or denied
   useEffect(() => {
-    let isCancelled = false;
-
-    const hasCheckinPointsChanged = (
-      current: MapPointCheckin[],
-      next: MapPointCheckin[]
-    ): boolean => {
-      if (current.length !== next.length) return true;
-
-      for (let i = 0; i < current.length; i += 1) {
-        if (current[i].id !== next[i].id) {
-          return true;
-        }
-      }
-
-      return false;
-    };
-
-    const checkinDetection = async () => {
-      if (!userLocation || isSyncingNearbyCheckinsRef.current) {
-        return;
-      }
-
-      // Only call backend when user moved at least 30m, or at first location update.
-      const previousCoords = {
-        latitude: previousLocation?.latitude ?? userLocation.latitude,
-        longitude: previousLocation?.longitude ?? userLocation.longitude,
-      };
-      const distanceMoved = calculateDistance(
-        { latitude: userLocation.latitude, longitude: userLocation.longitude },
-        { latitude: previousCoords.latitude, longitude: previousCoords.longitude }
-      );
-
-      if (distanceMoved <= 30 && previousLocation) {
-        return;
-      }
-
-      isSyncingNearbyCheckinsRef.current = true;
-
-      try {
-        const nearbyCheckinPoints = await syncNearbyGeofences(
-          userLocation.latitude,
-          userLocation.longitude
-        );
-
-        if (!isCancelled) {
-          setCheckinPoints((currentPoints) =>
-            hasCheckinPointsChanged(currentPoints, nearbyCheckinPoints)
-              ? nearbyCheckinPoints
-              : currentPoints
-          );
-        }
-      } catch (e) {
-        logger.error('[MapScreen] Error occurred while syncing nearby checkins:', e);
-      } finally {
-        isSyncingNearbyCheckinsRef.current = false;
-      }
-    };
-
-    checkinDetection();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [userLocation, previousLocation, calculateDistance, syncNearbyGeofences]);
-
-  const isMapBootstrapping = isMapPointsLoading || (isLocationLoading && !userLocation);
+    requestPermission();
+  }, []);
 
   const handleOpenCheckinCamera = useCallback(() => {
     if (!isAuthenticated) {
@@ -251,8 +191,36 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     });
   }, [activePoint, isAuthenticated, navigation]);
 
+  useEffect(() => {
+    if (!isGuidanceMode || !targetNavigationPointId || !isDirectionsReady || !navigationEndpoints) {
+      return;
+    }
+
+    mapRef.current?.fitToCoordinates(
+      [navigationEndpoints.origin, navigationEndpoints.destination],
+      {
+        top: 160,
+        right: 64,
+        bottom: 180,
+        left: 64,
+      },
+      true
+    );
+
+  }, [isGuidanceMode, targetNavigationPointId, isDirectionsReady, navigationEndpoints, mapRef]);
+
+  if (!isFocused) {
+    console.log('MapScreen is not focused, skipping render');
+    return null;
+  }
+
+  function onNavigationExit(): void {
+    handleExitGuidance();
+    mapRef.current?.reloadMap();
+  }
+
   return (
-    <ScreenLayout showBackButton={showBackButton}>
+    <ScreenLayout showBackButton={false}>
       {/* Permission banner - shows when permission needed or error */}
       <LocationPermissionBanner
         permissionStatus={permissionStatus}
@@ -267,22 +235,44 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
         selectedPointId={selectedPoint?.id ?? ''}
         mapPoints={mapPoints}
         userLocation={userLocation}
+        previousLocation={previousLocation}
+        calculateDistance={calculateDistance}
+        syncNearbyGeofences={syncNearbyGeofences}
+        onActiveCheckinPointChange={setActivePoint}
         isLocationLoading={isLocationLoading}
+        startTrackingCallback={startTracking}
+        onMapReadyCallback={onMapReady}
+        navigationPolylineCoordinates={isGuidanceMode ? navigationPolylineCoordinates : []}
+        isGuidanceMode={isGuidanceMode}
+      />
+
+      <NavigationGuideOverlay
+        visible={isGuidanceMode}
+        isLoading={isDirectionsLoading}
+        isReady={isDirectionsReady}
+        errorMessage={directionError}
+        durationText={routeSummary?.durationText}
+        distanceText={routeSummary?.distanceText}
+        onExit={onNavigationExit}
       />
 
       {/* Point detail modal */}
-      <MapPointDetailModal
-        point={selectedPoint}
-        visible={modalVisible}
-        onClose={handleCloseModal}
-        onViewDetails={handleNavigate}
-      />
-      <CheckinCameraButton
-        onOpenCamera={handleOpenCheckinCamera}
-        isSugestingCheckin={activePoint != null}
-      />
+      {!isGuidanceMode ? (
+        <>
+          <MapPointDetailModal
+            point={selectedPoint}
+            visible={modalVisible}
+            onClose={handleCloseModal}
+            onViewDetails={handleNavigate}
+          />
+          <CheckinCameraButton
+            onOpenCamera={handleOpenCheckinCamera}
+            isSugestingCheckin={activePoint != null}
+          />
+        </>
+      ) : null}
 
-      {isMapBootstrapping ? (
+      {/* {isMapBootstrapping ? (
         <View
           pointerEvents="none"
           style={{
@@ -298,7 +288,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
             message={isMapPointsLoading ? 'Loading map points...' : 'Acquiring your location...'}
           />
         </View>
-      ) : null}
+      ) : null} */}
     </ScreenLayout>
   );
 }

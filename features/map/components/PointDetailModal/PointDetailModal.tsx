@@ -78,39 +78,23 @@ export default function MapPointDetailModal({
   const detailRows = [
     ...(isEvent || isWorkshop
       ? [
-          { label: 'Start time', value: formatDateTime(point.startTime) },
-          { label: 'End time', value: formatDateTime(point.endTime) },
-          {
-            label: 'Participants',
-            value: formatParticipants(point.currentEnrolled, point.maxParticipants),
-          },
-        ]
+        { label: 'Start time', value: formatDateTime(point.startTime) },
+        { label: 'End time', value: formatDateTime(point.endTime) },
+        {
+          label: 'Participants',
+          value: formatParticipants(point.currentEnrolled, point.maxParticipants),
+        },
+      ]
       : []),
     ...(isWorkshop
       ? [
-          {
-            label: 'Organizer',
-            value: point.workshopOrganizerName || 'N/A',
-          },
-        ]
+        {
+          label: 'Organizer',
+          value: point.workshopOrganizerName || 'N/A',
+        },
+      ]
       : []),
   ];
-
-  const primaryActionLabel = isEvent
-    ? 'View event'
-    : isWorkshop
-      ? 'View workshop'
-      : isCheckin
-        ? 'Open parent point'
-        : 'Guide me there';
-
-  const secondaryActionLabel = isEvent
-    ? 'Event details'
-    : isWorkshop
-      ? 'Workshop details'
-      : isCheckin
-        ? 'Check-in details'
-        : 'View details';
 
   return (
     <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>

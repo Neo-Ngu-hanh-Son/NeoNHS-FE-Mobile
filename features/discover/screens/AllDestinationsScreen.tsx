@@ -13,31 +13,16 @@ import { useAttractions } from '../hooks/useAttractions';
 import { usePointsByAttraction } from '../hooks/usePointsByAttraction';
 import { useAllEvents } from '../../event/hooks/useAllEvents';
 import { WorkshopListContent } from '../../workshops/screens';
+import { useBlogList } from '@/features/blog';
+import type { Blog } from '@/features/blog/types';
+import { useQueryClient } from '@tanstack/react-query';
 
 type Props = StackScreenProps<MainStackParamList, 'AllDestinations'>;
 
 type CategoryType = 'Points' | 'Workshops' | 'Events' | 'Blogs';
 
-const BLOGS = [
-  {
-    id: 'b1',
-    title: 'Top 5 Views in Marble Mountains',
-    author: 'Alex J.',
-    date: 'Jan 15',
-    image:
-      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=500&auto=format&fit=crop',
-  },
-  {
-    id: 'b2',
-    title: 'A Spiritual Journey to Linh Ung',
-    author: 'Maria K.',
-    date: 'Feb 2',
-    image:
-      'https://images.unsplash.com/photo-1528127269322-539801943592?w=500&auto=format&fit=crop',
-  },
-];
-
 export default function AllDestinationsScreen({ navigation, route }: Props) {
+  const queryClient = useQueryClient();
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const [activeTab, setActiveTab] = useState<CategoryType>(route.params?.initialTab || 'Points');
@@ -62,11 +47,19 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
   } = usePointsByAttraction(selectedAttractionId);
 
   const { data: events, isLoading: eventsLoading, refetch: refetchEvents } = useAllEvents();
+  const { blogs, loading: blogsLoading, fetchBlogs, refresh: refetchBlogs } = useBlogList({
+    size: 20,
+  });
+
+  useEffect(() => {
+    fetchBlogs();
+  }, [fetchBlogs]);
 
   const loading =
     (activeTab === 'Points' &&
       (attractionsLoading || (selectedAttractionId ? pointsLoading : false))) ||
-    (activeTab === 'Events' && eventsLoading);
+    (activeTab === 'Events' && eventsLoading) ||
+    (activeTab === 'Blogs' && blogsLoading);
 
   useEffect(() => {
     if (route.params?.selectedAttractionId) {
@@ -86,8 +79,18 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
       refetchAttractions(),
       ...(selectedAttractionId ? [refetchPoints()] : []),
       refetchEvents(),
+      refetchBlogs(),
+      queryClient.refetchQueries({ queryKey: ['workshop-search'] }),
+      queryClient.refetchQueries({ queryKey: ['workshop-tags'] }),
     ]).finally(() => setRefreshing(false));
-  }, [refetchAttractions, refetchPoints, refetchEvents, selectedAttractionId]);
+  }, [
+    queryClient,
+    refetchAttractions,
+    refetchPoints,
+    refetchEvents,
+    refetchBlogs,
+    selectedAttractionId,
+  ]);
 
   useEffect(() => {
     setSearchQuery('');
@@ -116,12 +119,15 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
   }, [attractions, points, selectedAttractionId, searchQuery]);
 
   const filteredBlogs = useMemo(() => {
-    if (!searchQuery.trim()) return BLOGS;
+    if (!searchQuery.trim()) return blogs;
     const q = searchQuery.toLowerCase();
-    return BLOGS.filter(
-      (b) => b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q)
+    return blogs.filter(
+      (b: Blog) =>
+        b.title.toLowerCase().includes(q) ||
+        (b.summary?.toLowerCase().includes(q) ?? false) ||
+        (b.user?.fullname?.toLowerCase().includes(q) ?? false)
     );
-  }, [searchQuery]);
+  }, [blogs, searchQuery]);
 
   const renderHeader = () => {
     let title = 'Discover';
@@ -171,28 +177,33 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
   };
 
   const renderTabs = () => (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
-      className="py-3">
-      {(['Points', 'Workshops', 'Events', 'Blogs'] as CategoryType[]).map((tab) => (
-        <TouchableOpacity
-          key={tab}
-          onPress={() => {
-            setActiveTab(tab);
-            if (tab !== 'Points') setSelectedAttractionId(undefined);
-          }}
-          className={`rounded-2xl border px-5 py-2.5 ${activeTab === tab ? 'border-primary bg-primary' : 'bg-transparent'}`}
-          style={activeTab !== tab ? { borderColor: theme.border } : undefined}>
-          <Text
-            className={`text-sm font-bold ${activeTab === tab ? 'text-white' : ''}`}
-            style={activeTab !== tab ? { color: theme.mutedForeground } : undefined}>
-            {tab}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
+    <View className="py-3">
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          gap: 8,
+          alignItems: 'center',
+        }}>
+        {(['Points', 'Workshops', 'Events', 'Blogs'] as CategoryType[]).map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            onPress={() => {
+              setActiveTab(tab);
+              if (tab !== 'Points') setSelectedAttractionId(undefined);
+            }}
+            className={`h-10 items-center justify-center rounded-2xl border px-5 ${activeTab === tab ? 'border-primary bg-primary' : 'bg-transparent'}`}
+            style={activeTab !== tab ? { borderColor: theme.border } : undefined}>
+            <Text
+              className={`text-sm font-bold ${activeTab === tab ? 'text-white' : ''}`}
+              style={activeTab !== tab ? { color: theme.mutedForeground } : undefined}>
+              {tab}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
   );
 
   const renderSearchAndFilter = () => {
@@ -248,7 +259,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
         );
       }
       return (
-        <View className="space-y-4 px-4 pb-10">
+        <View className="px-4 pb-10 pt-2">
           {data.map((item) => (
             <TouchableOpacity
               key={item.id}
@@ -259,7 +270,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
                   navigation.navigate('PointDetail', { pointId: item.id });
                 }
               }}
-              className="flex-row items-center gap-4 rounded-2xl border p-3"
+              className="mb-3 flex-row items-center gap-4 rounded-2xl border p-3"
               style={{ backgroundColor: theme.card, borderColor: theme.border }}>
               <Image
                 source={{ uri: (item as any).thumbnailUrl || (item as any).image || undefined }}
@@ -323,12 +334,12 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
         );
       }
       return (
-        <View className="space-y-4 px-4 pb-10">
+        <View className="px-4 pb-10 pt-2">
           {data.map((item) => (
             <TouchableOpacity
               key={item.id}
               onPress={() => navigation.navigate('EventDetail', { eventId: item.id })}
-              className="flex-row items-center gap-4 rounded-2xl border p-3"
+              className="mb-3 flex-row items-center gap-4 rounded-2xl border p-3"
               style={{ backgroundColor: theme.card, borderColor: theme.border }}>
               <Image
                 source={{ uri: item.thumbnailUrl || undefined }}
@@ -402,23 +413,43 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
         );
       }
       return (
-        <View className="space-y-4 px-4 pb-10">
+        <View className="px-4 pb-10 pt-2">
           {data.map((item) => (
             <TouchableOpacity
               key={item.id}
-              className="flex-row items-center gap-4 rounded-2xl border p-3"
+              onPress={() => navigation.navigate('BlogDetails', { blogId: item.id })}
+              className="mb-3 flex-row items-center gap-4 rounded-2xl border p-3"
               style={{ backgroundColor: theme.card, borderColor: theme.border }}>
-              <Image source={{ uri: item.image }} className="h-24 w-24 rounded-2xl object-cover" />
+              <Image
+                source={{ uri: item.thumbnailUrl || item.bannerUrl || undefined }}
+                className="h-24 w-24 rounded-2xl object-cover"
+              />
               <View className="flex-1">
                 <Text className="text-lg font-bold" style={{ color: theme.foreground }}>
                   {item.title}
                 </Text>
+                {item.summary && (
+                  <Text
+                    className="mt-1 text-xs"
+                    numberOfLines={2}
+                    style={{ color: theme.mutedForeground }}>
+                    {item.summary}
+                  </Text>
+                )}
                 <View className="mt-1 flex-row items-center gap-2">
                   <Text className="text-xs font-semibold" style={{ color: theme.primary }}>
-                    {item.author}
+                    {item.user?.fullname || 'NeoNHS'}
                   </Text>
                   <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-                    • {item.date}
+                    •{' '}
+                    {new Date(item.publishedAt || item.createdAt || Date.now()).toLocaleDateString(
+                      'vi-VN',
+                      {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                      }
+                    )}
                   </Text>
                 </View>
               </View>
@@ -431,9 +462,9 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
 
     return null;
   };
-  if (activeTab === "Workshops") {
+  if (activeTab === 'Workshops') {
     return (
-      <SafeAreaView>
+      <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
         {renderHeader()}
         {renderTabs()}
         <WorkshopListContent

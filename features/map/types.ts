@@ -1,4 +1,5 @@
 import { GeofencingEventType, LocationRegion } from 'expo-location';
+import { LatLng } from 'react-native-maps';
 
 export type POIType =
   | 'PAGODA'
@@ -139,3 +140,75 @@ export type UserCheckinResultResponse = {
   earnedPoints: number;
   userTotalPoints: number;
 };
+
+export const mapConstants = {
+  checkinPointDetectRadiusMeters: 20, // Radius to detect nearby check-in points
+  fetchingCheckinParameters: 100, // Default radius for fetching nearby check-in points
+  distanceMoveBeforeRefetchMeters: 30,
+}
+
+// Route types for Google Maps Directions API
+export type TravelMode = 'DRIVE' | 'WALK' | 'BICYCLE' | 'TWO_WHEELER';
+
+export type GoogleLatLng = {
+  latitude: number;
+  longitude: number;
+};
+
+export type DirectionsRequestBody = {
+  origin: { location: { latLng: GoogleLatLng } };
+  destination: { location: { latLng: GoogleLatLng } };
+  travelMode: TravelMode;
+  computeAlternativeRoutes: boolean;
+  routeModifiers: {
+    avoidTolls: boolean;
+    avoidHighways: boolean;
+    avoidFerries: boolean;
+  };
+  languageCode: string;
+  units: 'METRIC';
+  routingPreference?: 'TRAFFIC_AWARE';
+};
+
+export type PolylineCoordinate = LatLng;
+
+// Maneuver types used by Google to help you choose icons (Left turn, Right turn, etc.)
+export type Maneuver =
+  | 'MANEUVER_UNSPECIFIED' | 'DEPART' | 'TURN_LEFT' | 'TURN_RIGHT'
+  | 'TURN_SLIGHT_LEFT' | 'TURN_SLIGHT_RIGHT' | 'TURN_SHARP_LEFT'
+  | 'TURN_SHARP_RIGHT' | 'UTURN_LEFT' | 'UTURN_RIGHT' | 'STRAIGHT'
+  | 'RAMP_LEFT' | 'RAMP_RIGHT' | 'MERGE' | 'FORK_LEFT' | 'FORK_RIGHT'
+  | 'FERRY' | 'ROUNDABOUT_LEFT' | 'ROUNDABOUT_RIGHT' | 'NAME_CHANGE';
+
+
+export interface RouteResponse {
+  routes: Route[];
+}
+
+export interface Route {
+  legs: Leg[];
+  polyline: {
+    encodedPolyline: string; // The polyline for the ENTIRE trip
+  };
+}
+
+export interface Leg {
+  startLocation: { latLng: LatLng };
+  endLocation: { latLng: LatLng };
+  steps: Step[];
+}
+
+export interface Step {
+  polyline: {
+    encodedPolyline: string; // The polyline for just this specific step
+  };
+  navigationInstruction: {
+    maneuver: Maneuver;
+    instructions: string; // e.g., "Turn right at The Dreamers"
+  };
+  localizedValues: {
+    distance: { text: string };       // e.g., "0.3 km"
+    staticDuration: { text: string }; // e.g., "1 min"
+  };
+  travelMode: TravelMode;
+}
