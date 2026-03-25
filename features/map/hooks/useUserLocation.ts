@@ -302,7 +302,7 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
     if (mergedOptions.autoStart) {
       startTracking();
     }
-  }, [mergedOptions.autoStart]); // Intentionally only run on mount
+  }, []); // Intentionally only run on mount
 
   // Cleanup on unmount
   useEffect(() => {

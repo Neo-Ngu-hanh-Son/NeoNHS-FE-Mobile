@@ -22,6 +22,7 @@ import { UserLocationMarker, FollowUserButton } from '../UserLocation';
 import { MapPointCheckin, mapConstants, PolylineCoordinate } from '../../types';
 import { hasCheckinPointsChanged } from '../../helpers';
 import { useCheckinProximity } from '../../hooks/useCheckinProximity';
+import type { MapMarkerFilters } from '../../hooks';
 import { useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -43,6 +44,7 @@ type NHSMapProps = {
   onMapReadyCallback?: () => void;
   navigationPolylineCoordinates?: PolylineCoordinate[];
   isGuidanceMode?: boolean;
+  markerFilters?: MapMarkerFilters;
 };
 
 export interface NHSMapRef {
@@ -78,6 +80,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       onMapReadyCallback,
       navigationPolylineCoordinates,
       isGuidanceMode = false,
+      markerFilters,
     },
     ref
   ) => {
@@ -321,6 +324,39 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       );
     }, [navigationPolylineCoordinates, theme.primary]);
 
+    const effectiveMarkerFilters = useMemo<MapMarkerFilters>(() => {
+      return (
+        markerFilters ?? {
+          showAll: true,
+          showCheckin: false,
+          showWorkshop: false,
+          showEvent: false,
+          showPlaces: false,
+        }
+      );
+    }, [markerFilters]);
+
+    const shouldShowParentPoint = useCallback(
+      (point: MapPoint) => {
+        if (effectiveMarkerFilters.showAll) {
+          return true;
+        }
+
+        const isWorkshop = point.type === 'WORKSHOP';
+        const isEvent = point.type === 'EVENT';
+        const isCheckin = point.type === 'CHECKIN' || point.type === 'USER_CHECKIN';
+        const isPlace = !isWorkshop && !isEvent && !isCheckin;
+
+        return (
+          (effectiveMarkerFilters.showWorkshop && isWorkshop) ||
+          (effectiveMarkerFilters.showEvent && isEvent) ||
+          (effectiveMarkerFilters.showCheckin && isCheckin) ||
+          (effectiveMarkerFilters.showPlaces && isPlace)
+        );
+      },
+      [effectiveMarkerFilters]
+    );
+
     // 2. Memoize the map points
     const memoizedMarkers = useMemo(() => {
       if (!isMapReady || !mapPoints) return null;
@@ -329,7 +365,8 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
         .filter(
           (poi) =>
             poi.latitude !== -1 &&
-            poi.longitude !== -1
+            poi.longitude !== -1 &&
+            shouldShowParentPoint(poi)
         )
         .map((poi) => (
           <Marker
@@ -349,58 +386,63 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           </Marker>
         ));
 
-      const checkinMarkers = mapPoints.flatMap((parentPoint) =>
-        (parentPoint.checkinPoints ?? [])
-          .filter(
-            (checkin) =>
-              checkin.isActive !== false &&
-              checkin.latitude !== -1 &&
-              checkin.longitude !== -1
-          )
-          .map((checkin) => {
-            const isUserCheckedIn = checkin.isUserCheckedIn ?? false;
-            let pointType = checkin.type ?? 'CHECKIN';
-            if (isUserCheckedIn) {
-              pointType = 'USER_CHECKIN';
-            }
+      const canShowCheckinMarkers =
+        effectiveMarkerFilters.showAll || effectiveMarkerFilters.showCheckin;
 
-            const checkinAsPoint: MapPoint = {
-              id: checkin.id,
-              name: checkin.name,
-              description: checkin.description,
-              thumbnailUrl: checkin.thumbnailUrl,
-              latitude: checkin.latitude,
-              longitude: checkin.longitude,
-              type: pointType,
-              attractionId: parentPoint.id,
-              panoramaImageUrl: checkin.panoramaImageUrl,
-              defaultYaw: checkin.defaultYaw,
-              defaultPitch: checkin.defaultPitch,
-            };
+      const checkinMarkers = canShowCheckinMarkers
+        ? mapPoints.flatMap((parentPoint) =>
+          (parentPoint.checkinPoints ?? [])
+            .filter(
+              (checkin) =>
+                checkin.isActive !== false &&
+                checkin.latitude !== -1 &&
+                checkin.longitude !== -1
+            )
+            .map((checkin) => {
+              const isUserCheckedIn = checkin.isUserCheckedIn ?? false;
+              let pointType = checkin.type ?? 'CHECKIN';
+              if (isUserCheckedIn) {
+                pointType = 'USER_CHECKIN';
+              }
 
-            return (
-              <Marker
-                key={`checkin-${checkin.id}`}
-                coordinate={{
-                  latitude: checkin.latitude,
-                  longitude: checkin.longitude,
-                }}
-                zIndex={30}
-                onPress={() => {
-                  onMarkerPressRef.current?.(checkinAsPoint);
-                }}>
-                <MarkerVisual
-                  point={checkinAsPoint}
-                  showName={shouldDisplayMarkerName}
-                  isSelected={selectedPointId === checkin.id}
-                />
-              </Marker>
-            );
-          })
-      );
+              const checkinAsPoint: MapPoint = {
+                id: checkin.id,
+                name: checkin.name,
+                description: checkin.description,
+                thumbnailUrl: checkin.thumbnailUrl,
+                latitude: checkin.latitude,
+                longitude: checkin.longitude,
+                type: pointType,
+                attractionId: parentPoint.id,
+                panoramaImageUrl: checkin.panoramaImageUrl,
+                defaultYaw: checkin.defaultYaw,
+                defaultPitch: checkin.defaultPitch,
+              };
+
+              return (
+                <Marker
+                  key={`checkin-${checkin.id}`}
+                  coordinate={{
+                    latitude: checkin.latitude,
+                    longitude: checkin.longitude,
+                  }}
+                  zIndex={30}
+                  onPress={() => {
+                    onMarkerPressRef.current?.(checkinAsPoint);
+                  }}>
+                  <MarkerVisual
+                    point={checkinAsPoint}
+                    showName={shouldDisplayMarkerName}
+                    isSelected={selectedPointId === checkin.id}
+                  />
+                </Marker>
+              );
+            })
+        )
+        : [];
 
       return [...parentMarkers, ...checkinMarkers];
-    }, [isMapReady, mapPoints, shouldDisplayMarkerName, selectedPointId]);
+    }, [isMapReady, mapPoints, shouldDisplayMarkerName, selectedPointId, shouldShowParentPoint, effectiveMarkerFilters.showAll, effectiveMarkerFilters.showCheckin]);
 
     console.log('NHSMap rendered');
 

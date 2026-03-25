@@ -6,9 +6,10 @@ import { MapPoint, MapPointCheckin } from '../types';
 import MapPointDetailModal from '../components/PointDetailModal/PointDetailModal';
 import NHSMap, { NHSMapRef } from '../components/Map/NHSMap';
 import NavigationGuideOverlay from '../components/NavigationGuideOverlay';
+import { MapMarkerFilterBar } from '../components';
 import { mapService } from '../services/mapServices';
 import { useModal } from '@/app/providers/ModalProvider';
-import { useMapNavigationGuidance, useUserLocation } from '../hooks';
+import { useMapMarkerFilters, useMapNavigationGuidance, useUserLocation } from '../hooks';
 import { LocationPermissionBanner } from '../components/UserLocation';
 import { mapData } from '../data';
 import { CompositeScreenProps, useIsFocused } from '@react-navigation/native';
@@ -17,6 +18,7 @@ import { useQuery } from '@tanstack/react-query';
 import CheckinCameraButton from '../components/Camera/CheckinCameraButton';
 import { parseFloatOrDefault } from '@/utils/parseNumber';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type MapScreenProps = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Map'>,
@@ -33,6 +35,9 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
   const [modalVisible, setModalVisible] = useState(false);
   const mapRef = useRef<NHSMapRef>(null);
   const [activePoint, setActivePoint] = useState<MapPointCheckin | null>(null);
+  const insets = useSafeAreaInsets();
+
+  const { filters: markerFilters, setShowAll, toggleFilter } = useMapMarkerFilters();
 
 
   // Modal helpers
@@ -177,7 +182,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
   // Auto request permission on mount if not granted or denied
   useEffect(() => {
     requestPermission();
-  }, []);
+  }, [requestPermission]);
 
   const handleOpenCheckinCamera = useCallback(() => {
     if (!isAuthenticated) {
@@ -244,7 +249,17 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
         onMapReadyCallback={onMapReady}
         navigationPolylineCoordinates={isGuidanceMode ? navigationPolylineCoordinates : []}
         isGuidanceMode={isGuidanceMode}
+        markerFilters={markerFilters}
       />
+
+      {!isGuidanceMode ? (
+        <MapMarkerFilterBar
+          filters={markerFilters}
+          onToggleShowAll={() => setShowAll(true)}
+          onToggleFilter={toggleFilter}
+          topInset={insets.top}
+        />
+      ) : null}
 
       <NavigationGuideOverlay
         visible={isGuidanceMode}
