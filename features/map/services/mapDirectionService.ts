@@ -85,7 +85,7 @@ export const mapDirectionService = {
         },
       });
 
-      logger.debug('[mapDirectionService] Directions API fetched');
+      logger.debug('[mapDirectionService] Directions API fetched: ', response.data);
       return response;
     } catch (error) {
       logger.error('[mapDirectionService] Network error while fetching directions', error);

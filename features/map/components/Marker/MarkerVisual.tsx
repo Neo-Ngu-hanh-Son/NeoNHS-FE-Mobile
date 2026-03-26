@@ -25,6 +25,7 @@ export default function MarkerVisual({ point, showName, isSelected = false }: Ma
               backgroundColor: style.bg,
               borderColor: isSelected ? '#FFFFFF' : style.border,
               borderWidth: isSelected ? 3 : 2,
+              transform: [{ scale: isSelected ? 1.2 : 1 }],
             },
           ]}>
           <MaterialCommunityIcons name={style.icon} size={16} color="#fff" />

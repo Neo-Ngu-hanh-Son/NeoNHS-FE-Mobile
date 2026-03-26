@@ -4,9 +4,7 @@ import { logger } from '@/utils/logger';
 import checkinServices from '../services/checkinServices';
 import { MapPointCheckin, mapConstants } from '../types';
 import { LatLng } from 'react-native-maps';
-import * as geolib from 'geolib';
-
-const GEOFENCING_TASK = 'CHECKIN_GEOFENCE_TASK';
+import * as turf from '@turf/turf';
 
 /**
  * User location data structure
@@ -45,8 +43,6 @@ export interface UseUserLocationReturn {
   getCurrentLocation: () => Promise<UserLocation | null>;
   /** Synchronize nearby geofences so that user will get a notification when entering/exiting */
   syncNearbyGeofences: (latitude: number, longitude: number) => Promise<MapPointCheckin[]>;
-  /** Calculate distance in meters between two points */
-  calculateDistance: (point1: LatLng, point2: LatLng) => number;
 }
 
 export interface UseUserLocationOptions {
@@ -266,7 +262,7 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
           await checkinServices.getNearbyCheckIns(
             latitude,
             longitude,
-            mapConstants.checkinPointDetectRadiusMeters
+            mapConstants.CHECKINPOINT_DETECT_RADIUS_M
           )
         ).data;
 
@@ -278,16 +274,6 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
         logger.error('Failed to sync geofences', err);
         return [];
       }
-    },
-    []
-  );
-
-  const calculateDistance = useCallback(
-    (
-      point1: { latitude: number; longitude: number },
-      point2: { latitude: number; longitude: number }
-    ) => {
-      return geolib.getDistance(point1, point2);
     },
     []
   );
@@ -326,7 +312,6 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
     requestPermission,
     getCurrentLocation,
     syncNearbyGeofences,
-    calculateDistance,
   };
 }
 

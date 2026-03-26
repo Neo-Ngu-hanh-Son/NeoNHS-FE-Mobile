@@ -1,6 +1,20 @@
 import { GeofencingEventType, LocationRegion } from 'expo-location';
 import { LatLng } from 'react-native-maps';
 
+/**
+ * ===== MAP CONSTANTS =====
+ */
+export const mapConstants = {
+  CHECKINPOINT_DETECT_RADIUS_M: 20, // Radius to detect nearby check-in points (UI)
+  FETCH_CHECKIN_RADIUS_M: 100, // Default radius for fetching nearby check-in points (For proximity check)
+  DISTANCE_LIMIT_BEFORE_REFETCH_M: 30,
+  // Radius to consider user is "on" the step for navigation guidance
+  STEP_RADIUS_M: 10,
+}
+
+/**
+ * ===== Types related to Map Points, Attractions, Check-ins, etc. =====
+ */
 export type POIType =
   | 'PAGODA'
   | 'CAVE'
@@ -141,13 +155,9 @@ export type UserCheckinResultResponse = {
   userTotalPoints: number;
 };
 
-export const mapConstants = {
-  checkinPointDetectRadiusMeters: 20, // Radius to detect nearby check-in points
-  fetchingCheckinParameters: 100, // Default radius for fetching nearby check-in points
-  distanceMoveBeforeRefetchMeters: 30,
-}
-
-// Route types for Google Maps Directions API
+/**
+ * ====== Types related to Directions & Navigation (Google Maps API) ======
+ */
 export type TravelMode = 'DRIVE' | 'WALK' | 'BICYCLE' | 'TWO_WHEELER';
 
 export type GoogleLatLng = {
@@ -193,6 +203,8 @@ export interface Route {
 }
 
 export interface Leg {
+  distanceMeters?: number;
+  duration?: string;
   startLocation: { latLng: LatLng };
   endLocation: { latLng: LatLng };
   steps: Step[];
@@ -202,6 +214,8 @@ export interface Step {
   polyline: {
     encodedPolyline: string; // The polyline for just this specific step
   };
+  startLocation: { latLng: LatLng };
+  endLocation: { latLng: LatLng };
   navigationInstruction: {
     maneuver: Maneuver;
     instructions: string; // e.g., "Turn right at The Dreamers"
@@ -211,4 +225,14 @@ export interface Step {
     staticDuration: { text: string }; // e.g., "1 min"
   };
   travelMode: TravelMode;
+}
+
+
+/**
+ * Custom types for quick retrival when working with the hook
+ */
+export type NavigationStep = {
+  previousStep: Step | null;
+  currentStep: Step | null;
+  nextStep: Step | null;
 }

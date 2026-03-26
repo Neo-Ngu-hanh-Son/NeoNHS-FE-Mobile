@@ -25,6 +25,7 @@ import { useCheckinProximity } from '../../hooks/useCheckinProximity';
 import type { MapMarkerFilters } from '../../hooks';
 import { useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { distanceUtils } from '@/utils/distanceUtils';
 
 type NHSMapProps = {
   onMarkerPress?: (point: MapPoint) => void;
@@ -33,10 +34,6 @@ type NHSMapProps = {
   mapPoints?: MapPoint[];
   userLocation?: UserLocation | null;
   previousLocation?: UserLocation | null;
-  calculateDistance?: (
-    point1: { latitude: number; longitude: number },
-    point2: { latitude: number; longitude: number }
-  ) => number;
   syncNearbyGeofences?: (latitude: number, longitude: number) => Promise<MapPointCheckin[]>;
   onActiveCheckinPointChange?: (point: MapPointCheckin | null) => void;
   isLocationLoading?: boolean;
@@ -71,7 +68,6 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       mapPoints,
       userLocation,
       previousLocation,
-      calculateDistance,
       syncNearbyGeofences,
       onActiveCheckinPointChange,
       isLocationLoading = false,
@@ -99,11 +95,16 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
     const mapRef = useRef<MapView>(null);
     const currentRegionRef = useRef<Region>(MAP_CENTER);
     const onMarkerPressRef = useRef(onMarkerPress); // Store in ref to avoid re-creating handlers and causing re-renders
+    const isGuidanceModeRef = useRef(isGuidanceMode);
     const isFocused = useIsFocused();
 
     useEffect(() => {
       onMarkerPressRef.current = onMarkerPress;
     }, [onMarkerPress]);
+
+    useEffect(() => {
+      isGuidanceModeRef.current = isGuidanceMode;
+    }, [isGuidanceMode]);
 
     // Expose methods to parent via ref
     useImperativeHandle(ref, () => ({
@@ -213,7 +214,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       setMapKey((prev) => prev + 1);
     }, []);
 
-    const activeCheckinPoint = useCheckinProximity(userLocation ?? null, checkinPoints, 20);
+    const activeCheckinPoint = useCheckinProximity(userLocation ?? null, checkinPoints, mapConstants.CHECKINPOINT_DETECT_RADIUS_M);
 
     useEffect(() => {
       onActiveCheckinPointChange?.(activeCheckinPoint);
@@ -223,7 +224,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       let isCancelled = false;
 
       const syncCheckinPoints = async () => {
-        if (!userLocation || !syncNearbyGeofences || !calculateDistance) {
+        if (!userLocation || !syncNearbyGeofences) {
           return;
         }
         if (isSyncingNearbyCheckinsRef.current) {
@@ -234,12 +235,12 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           latitude: previousLocation?.latitude ?? userLocation.latitude,
           longitude: previousLocation?.longitude ?? userLocation.longitude,
         };
-        const distanceMoved = calculateDistance(
+        const distanceMoved = distanceUtils.calculateDistance(
           { latitude: userLocation.latitude, longitude: userLocation.longitude },
           { latitude: previousCoords.latitude, longitude: previousCoords.longitude }
         );
 
-        if (distanceMoved <= mapConstants.distanceMoveBeforeRefetchMeters && previousLocation) {
+        if (distanceMoved <= mapConstants.DISTANCE_LIMIT_BEFORE_REFETCH_M && previousLocation) {
           return;
         }
 
@@ -270,7 +271,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       return () => {
         isCancelled = true;
       };
-    }, [userLocation, previousLocation, syncNearbyGeofences, calculateDistance]);
+    }, [userLocation, previousLocation, syncNearbyGeofences]);
 
     /**
      * Effect to auto-pan to user location when following
@@ -308,12 +309,8 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
         return null;
       }
 
-      // Get the time as the key (This is make sure that navigation polyline changed => this re-run, key changed => re-render with new polyline)
-      let currentTime = new Date().getTime();
-
       return (
         <Polyline
-          key={`${currentTime}`}
           coordinates={navigationPolylineCoordinates}
           strokeColor={theme.primary}
           strokeWidth={6}
@@ -376,6 +373,9 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
               longitude: poi.longitude
             }}
             onPress={() => {
+              if (isGuidanceModeRef.current) {
+                return;
+              }
               onMarkerPressRef.current?.(poi);
             }}>
             <MarkerVisual
@@ -419,6 +419,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
                 defaultPitch: checkin.defaultPitch,
               };
 
+              // TODO: Optimize this by not making the whole marker arrays re-render on just a selected point
               return (
                 <Marker
                   key={`checkin-${checkin.id}`}
@@ -428,6 +429,9 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
                   }}
                   zIndex={30}
                   onPress={() => {
+                    if (isGuidanceModeRef.current) {
+                      return;
+                    }
                     onMarkerPressRef.current?.(checkinAsPoint);
                   }}>
                   <MarkerVisual

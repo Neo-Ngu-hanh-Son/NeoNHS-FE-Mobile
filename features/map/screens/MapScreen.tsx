@@ -53,7 +53,6 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     startTracking,
     stopTracking,
     requestPermission,
-    calculateDistance,
     syncNearbyGeofences,
   } = useUserLocation({
     autoStart: false,
@@ -108,7 +107,13 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     isDirectionsLoading,
     isDirectionsReady,
     directionError,
-    routeSummary,
+    tripDurationText,
+    tripDistanceText,
+    currentManeuver,
+    currentInstructionText,
+    currentStepDurationText,
+    currentStepDistanceText,
+    currentStepProgressText,
     navigationPolylineCoordinates,
     onMapReady,
     handleExitGuidance,
@@ -196,6 +201,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     });
   }, [activePoint, isAuthenticated, navigation]);
 
+  // Auto fit the screen to the full route when directions are ready
   useEffect(() => {
     if (!isGuidanceMode || !targetNavigationPointId || !isDirectionsReady || !navigationEndpoints) {
       return;
@@ -241,7 +247,6 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
         mapPoints={mapPoints}
         userLocation={userLocation}
         previousLocation={previousLocation}
-        calculateDistance={calculateDistance}
         syncNearbyGeofences={syncNearbyGeofences}
         onActiveCheckinPointChange={setActivePoint}
         isLocationLoading={isLocationLoading}
@@ -266,8 +271,13 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
         isLoading={isDirectionsLoading}
         isReady={isDirectionsReady}
         errorMessage={directionError}
-        durationText={routeSummary?.durationText}
-        distanceText={routeSummary?.distanceText}
+        durationText={tripDurationText}
+        distanceText={tripDistanceText}
+        currentManeuver={currentManeuver}
+        currentInstructionText={currentInstructionText}
+        currentStepDurationText={currentStepDurationText}
+        currentStepDistanceText={currentStepDistanceText}
+        currentStepProgressText={currentStepProgressText}
         onExit={onNavigationExit}
       />
 

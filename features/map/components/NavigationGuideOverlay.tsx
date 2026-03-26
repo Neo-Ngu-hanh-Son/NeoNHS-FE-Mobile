@@ -5,6 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
+import { getManeuverPresentation } from '../helpers';
+import { Maneuver } from '../types';
 
 type NavigationGuideOverlayProps = {
   visible: boolean;
@@ -13,6 +15,11 @@ type NavigationGuideOverlayProps = {
   errorMessage?: string | null;
   durationText?: string;
   distanceText?: string;
+  currentManeuver?: Maneuver | null;
+  currentInstructionText?: string;
+  currentStepDurationText?: string;
+  currentStepDistanceText?: string;
+  currentStepProgressText?: string;
   onExit: () => void;
 };
 
@@ -23,6 +30,11 @@ export default function NavigationGuideOverlay({
   errorMessage,
   durationText,
   distanceText,
+  currentManeuver,
+  currentInstructionText,
+  currentStepDurationText,
+  currentStepDistanceText,
+  currentStepProgressText,
   onExit,
 }: NavigationGuideOverlayProps) {
   const { isDarkColorScheme } = useTheme();
@@ -41,6 +53,16 @@ export default function NavigationGuideOverlay({
         ? 'Follow the route on the map'
         : 'Unable to load route guidance');
 
+  const hasActiveInstruction = isReady && !!currentInstructionText;
+  const maneuverPresentation = getManeuverPresentation(currentManeuver);
+  const topCardTitle = hasActiveInstruction ? currentInstructionText : statusTitle;
+
+  let topCardSubtitle = statusSubtitle;
+  if (hasActiveInstruction) {
+    const stepMeta = [currentStepProgressText, currentStepDistanceText, currentStepDurationText].filter(Boolean);
+    topCardSubtitle = `${maneuverPresentation.label}${stepMeta.length > 0 ? ` · ${stepMeta.join(' · ')}` : ''}`;
+  }
+
   return (
     <>
       <SafeAreaView pointerEvents="box-none" className="absolute left-0 right-0 top-0 px-3" edges={['top']}>
@@ -54,12 +76,16 @@ export default function NavigationGuideOverlay({
               {isLoading ? (
                 <ActivityIndicator color="#ffffff" size="small" />
               ) : (
-                <Ionicons name={isReady ? 'navigate' : 'warning-outline'} size={20} color="#ffffff" />
+                <Ionicons
+                  name={(hasActiveInstruction ? maneuverPresentation.iconName : isReady ? 'navigate' : 'warning-outline') as React.ComponentProps<typeof Ionicons>['name']}
+                  size={20}
+                  color="#ffffff"
+                />
               )}
             </View>
             <View className="flex-1">
-              <Text className="text-base font-bold text-white">{statusTitle}</Text>
-              <Text className="text-xs text-white/90">{statusSubtitle}</Text>
+              <Text className="text-base font-bold text-white">{topCardTitle}</Text>
+              <Text className="text-xs text-white/90">{topCardSubtitle}</Text>
             </View>
           </View>
         </View>

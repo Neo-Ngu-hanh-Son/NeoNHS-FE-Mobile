@@ -36,7 +36,7 @@ const checkinServices = {
     metersRadius?: number
   ): Promise<ApiResponse<MapPointCheckin[]>> => {
     if (!metersRadius) {
-      metersRadius = mapConstants.fetchingCheckinParameters;
+      metersRadius = mapConstants.FETCH_CHECKIN_RADIUS_M;
     }
     const queryParams: Record<string, number> = { latitude: lat, longitude: lng, metersRadius };
     const result = await apiClient.get<MapPointCheckin[]>(endpoints.map.getNearbyCheckIns(), {
