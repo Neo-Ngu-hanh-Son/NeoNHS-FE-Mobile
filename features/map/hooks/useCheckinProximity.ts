@@ -4,7 +4,7 @@ import { MapPointCheckin, mapConstants } from '../types';
 import * as turf from '@turf/turf';
 
 export const useCheckinProximity = (
-  userLocation: UserLocation | null,
+  userLocation: UserLocation | null | undefined,
   points: MapPointCheckin[] | null,
   thresholdMeters?: number
 ): MapPointCheckin | null => {

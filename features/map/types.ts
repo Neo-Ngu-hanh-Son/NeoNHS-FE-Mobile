@@ -7,7 +7,7 @@ import { LatLng } from 'react-native-maps';
 export const mapConstants = {
   CHECKINPOINT_DETECT_RADIUS_M: 20, // Radius to detect nearby check-in points (UI)
   FETCH_CHECKIN_RADIUS_M: 100, // Default radius for fetching nearby check-in points (For proximity check)
-  DISTANCE_LIMIT_BEFORE_REFETCH_M: 30,
+  DISTANCE_LIMIT_BEFORE_REFETCH_M: 20,
   // Radius to consider user is "on" the step for navigation guidance
   STEP_RADIUS_M: 10,
 }

@@ -87,6 +87,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
     const [isFollowingUser, setIsFollowingUser] = useState(false);
     const [mapKey, setMapKey] = useState(0);
     const [checkinPoints, setCheckinPoints] = useState<MapPointCheckin[]>([]);
+
     const isSyncingNearbyCheckinsRef = useRef(false);
     const mapZoomRef = useRef({
       latitudeDelta: MAP_CENTER.latitudeDelta,
@@ -97,6 +98,9 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
     const onMarkerPressRef = useRef(onMarkerPress); // Store in ref to avoid re-creating handlers and causing re-renders
     const isGuidanceModeRef = useRef(isGuidanceMode);
     const isFocused = useIsFocused();
+
+    const activeCheckinPoint = useCheckinProximity(userLocation, checkinPoints,
+      mapConstants.CHECKINPOINT_DETECT_RADIUS_M);
 
     useEffect(() => {
       onMarkerPressRef.current = onMarkerPress;
@@ -171,19 +175,12 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       mapZoomRef.current.longitudeDelta = region.longitudeDelta;
     }, []);
 
-    /**
-     * Handle map press/drag - disable follow mode when user interacts with map
-     */
     const handleMapInteraction = useCallback(() => {
       if (isFollowingUser) {
-        logger.info('User interacted with map, disabling follow mode');
         setIsFollowingUser(false);
       }
     }, [isFollowingUser]);
 
-    /**
-     * Handle follow user button press - toggle follow mode
-     */
     const handleFollowUserToggle = useCallback(() => {
       const newFollowState = !isFollowingUser;
       console.log('Follow user toggle, new state:', newFollowState);
@@ -213,8 +210,6 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       setIsFollowingUser(false);
       setMapKey((prev) => prev + 1);
     }, []);
-
-    const activeCheckinPoint = useCheckinProximity(userLocation ?? null, checkinPoints, mapConstants.CHECKINPOINT_DETECT_RADIUS_M);
 
     useEffect(() => {
       onActiveCheckinPointChange?.(activeCheckinPoint);

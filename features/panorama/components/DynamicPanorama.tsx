@@ -7,6 +7,9 @@ import { ActivityIndicator, View, Text, StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { logger } from '@/utils/logger';
 import { StatusBar } from 'expo-status-bar';
+import { Button } from '@/components/ui/button';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Props = {
   pointId: string;
@@ -16,31 +19,29 @@ type Props = {
   retryToken?: number;
 };
 
-export default function DynamicPanorama({ pointId, isOpen, onBack, onOpen, retryToken = 0 }: Props) {
+export default function DynamicPanorama({
+  pointId,
+  isOpen,
+  onBack,
+  onOpen,
+  retryToken = 0,
+}: Props) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const insets = useSafeAreaInsets();
   const [isWebViewReady, setIsWebViewReady] = useState(false);
 
   const webViewRef = useRef<WebView>(null);
-  const lastDeliveredKeyRef = useRef<string | null>(null);
 
   // If WebView encounters an error, we can try to reload it after a short delay
   const [hasError, setHasError] = useState(false);
   useEffect(() => {
     if (!hasError) return;
-
     const timeout = setTimeout(() => {
       webViewRef.current?.reload();
     }, 3000);
-
     return () => clearTimeout(timeout);
   }, [hasError]);
-
-  useEffect(() => {
-    if (!isOpen || !pointId) {
-      lastDeliveredKeyRef.current = null;
-    }
-  }, [isOpen, pointId]);
 
   const trySendPointId = useCallback(() => {
     if (!isOpen) {
@@ -55,30 +56,52 @@ export default function DynamicPanorama({ pointId, isOpen, onBack, onOpen, retry
       return;
     }
 
-    const deliveryKey = `${pointId}`;
-    if (lastDeliveredKeyRef.current === deliveryKey) {
-      logger.debug('[DynamicPanorama] Duplicate message suppressed for current pointId');
-      return;
-    }
+    const currentWebView = webViewRef.current;
 
-    logger.info(`[DynamicPanorama] Sending pointId ${pointId} to WebView`);
-    webViewRef.current.postMessage(
-      JSON.stringify({
-        type: 'SET_PLACE_ID',
-        payload: pointId,
-      })
-    );
-    lastDeliveredKeyRef.current = deliveryKey;
+    // Delay for 1 second to ensure WebView is fully ready to receive messages, especially after reloads
+    return setTimeout(() => {
+      currentWebView.postMessage(
+        JSON.stringify({
+          type: 'SET_PLACE_ID',
+          payload: pointId,
+        })
+      );
+    }, 1000)
   }, [isOpen, isWebViewReady, pointId]);
 
   useEffect(() => {
-    trySendPointId();
+    const timeoutId = trySendPointId();
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [retryToken, trySendPointId]);
 
   const FE_URL = panoramaService.getPanoramaFrontEndUrl();
   if (!FE_URL && isOpen) {
     logger.error('[DynamicPanorama] Panorama front-end URL is not defined');
   }
+
+  const handleReloadWebView = useCallback(() => {
+    setHasError(false);
+    setIsWebViewReady(false);
+    logger.info('[DynamicPanorama] Reloading WebView by user action');
+    webViewRef.current?.reload();
+  }, []);
+
+  // On ready, try to send the postMessage immediately
+  useEffect(() => {
+    let timeoutId = null;
+    if (isWebViewReady && pointId) {
+      timeoutId = trySendPointId();
+    }
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [isWebViewReady, trySendPointId, pointId]);
 
   return (
     <ScreenLayout
@@ -96,6 +119,23 @@ export default function DynamicPanorama({ pointId, isOpen, onBack, onOpen, retry
       }}>
       {/* Set the status bar to black */}
       <StatusBar style="auto" />
+      <Button
+        className="transition-all duration-200 active:scale-95 active:bg-secondary/80 dark:active:bg-secondary/30"
+        variant="outline"
+        size="icon"
+        style={[
+          styles.reloadButton,
+          {
+            top: insets.top + 12,
+            borderColor: theme.border,
+          },
+        ]}
+        onPress={handleReloadWebView}
+        accessibilityLabel="Reload panorama"
+        accessibilityRole="button">
+        <Ionicons name="reload" size={20} color={theme.foreground} />
+      </Button>
+
       <WebView
         ref={webViewRef}
         source={{ uri: FE_URL ?? '' }}
@@ -143,5 +183,15 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 12,
+  },
+  reloadButton: {
+    position: 'absolute',
+    right: 16,
+    zIndex: 999,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
 });
