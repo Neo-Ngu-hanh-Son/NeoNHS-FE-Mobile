@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { CompositeScreenProps } from '@react-navigation/native';
+import { CommonActions, CompositeScreenProps } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { Text } from '@/components/ui/text';
 import { Separator } from '@/components/ui/separator';
@@ -15,11 +15,8 @@ import AppLink from '@/components/Navigator/AppLink';
 import LoginForm from '../components/LoginForm';
 import {
   GoogleSignin,
-  isErrorWithCode,
-  statusCodes,
 } from '@react-native-google-signin/google-signin';
 import { logger } from '@/utils/logger';
-import LoadingOverlay from '@/components/Loader/LoadingOverlay';
 
 type LoginScreenProps = CompositeScreenProps<
   StackScreenProps<AuthStackParamList, 'Login'>,
@@ -35,10 +32,17 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const handleLogin = async (email: string, password: string) => {
     try {
       await login({ email: email.trim(), password });
-      navigation.replace('Main', {
-        screen: 'Tabs',
-        params: { screen: 'Home' },
-      });
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [
+            {
+              name: 'Main',
+              params: { screen: 'Tabs', params: { screen: 'Home' } },
+            },
+          ],
+        })
+      );
     } catch (error) {
       const errorMessage = (error as Error).message || '';
       logger.error('[LoginScreen] Login failed:', errorMessage);
@@ -84,7 +88,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       }
 
       await loginWithGoogle(idToken);
-      navigation.replace('Main', {
+      navigation.navigate('Main', {
         screen: 'Tabs',
         params: { screen: 'Home' },
       });
@@ -135,7 +139,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         {/* Register Link */}
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: theme.mutedForeground }]}>
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
           </Text>
           <AppLink screen="Register" params={{}}>
             Sign Up

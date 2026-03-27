@@ -22,7 +22,6 @@ type HomeScreenProps = CompositeScreenProps<
 
 export default function LatestBlogsSection({ blogs, loading, error }: Props) {
   const { navigate } = useNavigation<HomeScreenProps['navigation']>();
-  logger.debug('Rendering LatestBlogsSection with blogs:', blogs.length, 'loading:', loading, 'error:', error);
   function handleViewAllBlogs(): void {
     navigate('Main', { screen: 'BlogList' });
   }

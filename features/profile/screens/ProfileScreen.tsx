@@ -2,7 +2,7 @@ import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
+import { memo, useCallback, useEffect, useRef } from 'react';
 import type { StackScreenProps } from '@react-navigation/stack';
 
 import { Text } from '@/components/ui/text';
@@ -17,16 +17,43 @@ import type {
   TabsStackParamList,
 } from '@/app/navigations/NavigationParamTypes';
 import { userService } from '../services/userService';
+import type { User } from '@/features/auth/types';
+import ActionCard from '../components/ActionCard';
 
 type ProfileNavigationProp = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Profile'>,
   StackScreenProps<RootStackParamList>
 >;
 
+
+
+const hasProfileChanged = (currentUser: User | null, nextProfile: Partial<User>) => {
+  if (!currentUser) {
+    return true;
+  }
+
+  return (
+    currentUser.fullname !== nextProfile.fullname ||
+    currentUser.avatarUrl !== nextProfile.avatarUrl ||
+    currentUser.userPoint !== nextProfile.userPoint ||
+    currentUser.kycVerified !== nextProfile.kycVerified ||
+    currentUser.phoneNumber !== nextProfile.phoneNumber ||
+    currentUser.email !== nextProfile.email ||
+    currentUser.role !== nextProfile.role
+  );
+};
+
+
+
 export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
   const { user, isAuthenticated, logout, updateUser } = useAuth();
   const { isDarkColorScheme, toggleColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const userRef = useRef(user);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   const handleLogin = () => {
     navigation.navigate('Auth', { screen: 'Login' });
@@ -40,7 +67,9 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
     try {
       const response = await userService.getProfile();
       if (response.success && response.data) {
-        updateUser(response.data);
+        if (hasProfileChanged(userRef.current ?? null, response.data)) {
+          updateUser(response.data);
+        }
       }
     } catch (error) {
       logger.error('Fetch profile error:', error);
@@ -74,21 +103,6 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
   const handleEditProfile = () => {
     navigation.navigate('Main', { screen: 'UpdateAccount' });
   };
-
-  const ActionCard = ({ title, desc, onPress, rightIcon }: any) => (
-    <TouchableOpacity
-      style={[styles.actionCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-      onPress={onPress}
-      activeOpacity={0.7}>
-      <View style={styles.actionCardHeader}>
-        <Text style={[styles.cardTitle, { color: theme.foreground }]}>{title}</Text>
-        {rightIcon || <Text className="text-xs font-medium text-primary">See all</Text>}
-      </View>
-      <Text style={[styles.cardDesc, { color: theme.mutedForeground }]} numberOfLines={2}>
-        {desc}
-      </Text>
-    </TouchableOpacity>
-  );
 
   if (!isAuthenticated || !user) {
     return (
@@ -225,6 +239,10 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
                 title="Verify Ticket"
                 desc="Scan QR code to verify customer tickets"
                 rightIcon={<MaterialIcons name="qr-code-scanner" size={20} color={theme.primary} />}
+                themeCard={theme.card}
+                themeBorder={theme.border}
+                themeForeground={theme.foreground}
+                themeMutedForeground={theme.mutedForeground}
                 onPress={() => navigation.navigate('Main', { screen: 'TicketVerification' })}
               />
             </View>
@@ -239,6 +257,10 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
               rightIcon={
                 <MaterialIcons name="account-balance-wallet" size={20} color={theme.primary} />
               }
+              themeCard={theme.card}
+              themeBorder={theme.border}
+              themeForeground={theme.foreground}
+              themeMutedForeground={theme.mutedForeground}
               onPress={() => navigation.navigate('Main', { screen: 'Withdraw' })}
             />
           </View>
@@ -247,27 +269,47 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
           <ActionCard
             title="Your Order"
             desc="View your order and transaction history here"
+            themeCard={theme.card}
+            themeBorder={theme.border}
+            themeForeground={theme.foreground}
+            themeMutedForeground={theme.mutedForeground}
             onPress={() => navigation.navigate('Main', { screen: 'TransactionHistory' })}
           />
           <ActionCard
             title="Check-in Photos"
             desc="Browse all your check-in images grouped by destination or date"
             rightIcon={<Ionicons name="images-outline" size={20} color={theme.primary} />}
+            themeCard={theme.card}
+            themeBorder={theme.border}
+            themeForeground={theme.foreground}
+            themeMutedForeground={theme.mutedForeground}
             onPress={() => navigation.navigate('Main', { screen: 'CheckinGallery' })}
           />
           <ActionCard
             title="Payment Method"
             desc="Save your preferred payment method for smoother transactions"
+            themeCard={theme.card}
+            themeBorder={theme.border}
+            themeForeground={theme.foreground}
+            themeMutedForeground={theme.mutedForeground}
             onPress={() => { }}
           />
           <ActionCard
             title="Coupon & Voucher"
             desc="Claim vouchers and discounts for reduced prices or free shipping"
+            themeCard={theme.card}
+            themeBorder={theme.border}
+            themeForeground={theme.foreground}
+            themeMutedForeground={theme.mutedForeground}
             onPress={() => { }}
           />
           <ActionCard
             title="Support Center"
             desc="Find the best answer to your question"
+            themeCard={theme.card}
+            themeBorder={theme.border}
+            themeForeground={theme.foreground}
+            themeMutedForeground={theme.mutedForeground}
             onPress={() => { }}
           />
 
@@ -279,6 +321,10 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
               rightIcon={
                 <Ionicons name="chevron-forward" size={16} color={theme.mutedForeground} />
               }
+              themeCard={theme.card}
+              themeBorder={theme.border}
+              themeForeground={theme.foreground}
+              themeMutedForeground={theme.mutedForeground}
               onPress={() => navigation.navigate('Main', { screen: 'ChangePassword' })}
             />
           </View>
@@ -290,6 +336,10 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
               title="Dark Mode"
               desc="Toggle between light and dark visual themes"
               rightIcon={<Switch checked={isDarkColorScheme} onCheckedChange={toggleColorScheme} />}
+              themeCard={theme.card}
+              themeBorder={theme.border}
+              themeForeground={theme.foreground}
+              themeMutedForeground={theme.mutedForeground}
             />
 
             <View style={{ marginTop: 12 }}>
@@ -304,6 +354,10 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
                     <Ionicons name="chevron-forward" size={16} color={theme.mutedForeground} />
                   </View>
                 }
+                themeCard={theme.card}
+                themeBorder={theme.border}
+                themeForeground={theme.foreground}
+                themeMutedForeground={theme.mutedForeground}
                 onPress={() => { }}
               />
             </View>

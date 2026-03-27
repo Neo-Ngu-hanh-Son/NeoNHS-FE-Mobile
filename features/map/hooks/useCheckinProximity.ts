@@ -35,3 +35,5 @@ export const useCheckinProximity = (
     return null;
   }, [userLocation, points, thresholdMeters]);
 };
+
+
