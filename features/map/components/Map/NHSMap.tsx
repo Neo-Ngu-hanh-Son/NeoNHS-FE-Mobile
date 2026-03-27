@@ -19,13 +19,14 @@ import { logger } from '@/utils/logger';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { UserLocation } from '../../hooks/useUserLocation';
 import { UserLocationMarker, FollowUserButton } from '../UserLocation';
-import { MapPointCheckin, mapConstants, PolylineCoordinate } from '../../types';
+import { MapPointCheckin, PolylineCoordinate } from '../../types';
 import { hasCheckinPointsChanged } from '../../helpers';
 import { useCheckinProximity } from '../../hooks/useCheckinProximity';
 import type { MapMarkerFilters } from '../../hooks';
 import { useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { distanceUtils } from '@/utils/distanceUtils';
+import MAP_CONSTANTS from '../../constants';
 
 type NHSMapProps = {
   onMarkerPress?: (point: MapPoint) => void;
@@ -100,7 +101,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
     const isFocused = useIsFocused();
 
     const activeCheckinPoint = useCheckinProximity(userLocation, checkinPoints,
-      mapConstants.CHECKINPOINT_DETECT_RADIUS_M);
+      MAP_CONSTANTS.CHECKINPOINT_DETECT_RADIUS_M);
 
     useEffect(() => {
       onMarkerPressRef.current = onMarkerPress;
@@ -235,7 +236,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           { latitude: previousCoords.latitude, longitude: previousCoords.longitude }
         );
 
-        if (distanceMoved <= mapConstants.DISTANCE_LIMIT_BEFORE_REFETCH_M && previousLocation) {
+        if (distanceMoved <= MAP_CONSTANTS.DISTANCE_LIMIT_BEFORE_REFETCH_M && previousLocation) {
           return;
         }
 
@@ -376,7 +377,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
             <MarkerVisual
               point={poi}
               showName={shouldDisplayMarkerName}
-              isSelected={selectedPointId === poi.id}
+            // isSelected={selectedPointId === poi.id}
             />
           </Marker>
         ));
@@ -432,7 +433,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
                   <MarkerVisual
                     point={checkinAsPoint}
                     showName={shouldDisplayMarkerName}
-                    isSelected={selectedPointId === checkin.id}
+                  // isSelected={selectedPointId === checkin.id}
                   />
                 </Marker>
               );
@@ -441,7 +442,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
         : [];
 
       return [...parentMarkers, ...checkinMarkers];
-    }, [isMapReady, mapPoints, shouldDisplayMarkerName, selectedPointId, shouldShowParentPoint, effectiveMarkerFilters.showAll, effectiveMarkerFilters.showCheckin]);
+    }, [isMapReady, mapPoints, shouldDisplayMarkerName, shouldShowParentPoint, effectiveMarkerFilters.showAll, effectiveMarkerFilters.showCheckin]);
 
     console.log('NHSMap rendered');
 

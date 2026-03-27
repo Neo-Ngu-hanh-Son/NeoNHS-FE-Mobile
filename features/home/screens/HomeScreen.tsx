@@ -1,6 +1,6 @@
 import { ScrollView, View, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { StackScreenProps } from '@react-navigation/stack';
 import { CompositeScreenProps } from '@react-navigation/native';
 
@@ -42,6 +42,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const { user } = useAuth();
 
   const [refreshing, setRefreshing] = useState(false);
+  const hasRequestedInitialBlogsRef = useRef(false);
 
   const {
     data: featuredBlog,
@@ -111,6 +112,16 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     refetchHomeWorkshops,
     refetchDestinations,
   ]);
+
+  // Because useBlogList does not fetch on mount, we need to trigger the initial fetch manually
+  useEffect(() => {
+    if (hasRequestedInitialBlogsRef.current) {
+      logger.debug('Initial blogs already fetched, skipping fetch on mount');
+      return;
+    }
+    refetchBlogs();
+    hasRequestedInitialBlogsRef.current = true;
+  }, [refetchBlogs]);
 
   function handleNotificationPress(): void {
     logger.info('Notifications pressed on Home');

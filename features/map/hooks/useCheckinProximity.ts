@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { UserLocation } from './useUserLocation';
-import { MapPointCheckin, mapConstants } from '../types';
+import { MapPointCheckin } from '../types';
 import * as turf from '@turf/turf';
+import MAP_CONSTANTS from '../constants';
 
 export const useCheckinProximity = (
   userLocation: UserLocation | null | undefined,
@@ -11,7 +12,7 @@ export const useCheckinProximity = (
   return useMemo(() => {
     if (!userLocation || !points || points.length === 0) return null;
 
-    const threshold = thresholdMeters ?? mapConstants.CHECKINPOINT_DETECT_RADIUS_M;
+    const threshold = thresholdMeters ?? MAP_CONSTANTS.CHECKINPOINT_DETECT_RADIUS_M;
 
     let closest: MapPointCheckin | null = null;
     let closestDistance = Infinity;

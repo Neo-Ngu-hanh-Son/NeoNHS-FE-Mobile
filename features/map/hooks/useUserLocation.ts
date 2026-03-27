@@ -2,9 +2,8 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import * as Location from 'expo-location';
 import { logger } from '@/utils/logger';
 import checkinServices from '../services/checkinServices';
-import { MapPointCheckin, mapConstants } from '../types';
-import { LatLng } from 'react-native-maps';
-import * as turf from '@turf/turf';
+import { MapPointCheckin } from '../types';
+import MAP_CONSTANTS from '../constants';
 
 /**
  * User location data structure
@@ -262,7 +261,7 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
           await checkinServices.getNearbyCheckIns(
             latitude,
             longitude,
-            mapConstants.CHECKINPOINT_DETECT_RADIUS_M
+            MAP_CONSTANTS.CHECKINPOINT_DETECT_RADIUS_M
           )
         ).data;
 
