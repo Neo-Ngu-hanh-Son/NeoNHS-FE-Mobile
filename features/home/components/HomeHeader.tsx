@@ -4,6 +4,7 @@ import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { THEME } from "@/lib/theme";
+import { SmartImage } from "@/components/ui/smart-image";
 
 type HomeHeaderProps = {
   onNotificationPress?: () => void;
@@ -18,6 +19,7 @@ export default function HomeHeader({
 }: HomeHeaderProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const normalizedUserAvatar = userAvatar?.trim();
 
   return (
     <View className="flex-row items-center justify-between px-4 py-3">
@@ -49,8 +51,8 @@ export default function HomeHeader({
           className="w-9 h-9 rounded-full items-center justify-center overflow-hidden"
           style={{ backgroundColor: theme.primary }}
         >
-          {userAvatar ? (
-            <Image source={{ uri: userAvatar }} className="w-full h-full" />
+          {normalizedUserAvatar ? (
+            <SmartImage uri={normalizedUserAvatar} className="w-full h-full" />
           ) : (
             <Ionicons name="person" size={18} color={theme.primaryForeground} />
           )}

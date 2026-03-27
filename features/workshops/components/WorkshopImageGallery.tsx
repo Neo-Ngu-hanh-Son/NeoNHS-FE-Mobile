@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, Image, FlatList, Dimensions } from "react-native";
+import { View, FlatList, Dimensions } from "react-native";
 
 import { WorkshopImageResponse } from "../types";
+import { SmartImage } from "@/components/ui/smart-image";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -35,8 +36,8 @@ export default function WorkshopImageGallery({
           setActiveIndex(idx);
         }}
         renderItem={({ item }) => (
-          <Image
-            source={{ uri: item }}
+          <SmartImage
+            uri={item}
             style={{ width: SCREEN_WIDTH, height: 280 }}
             className="object-cover"
           />

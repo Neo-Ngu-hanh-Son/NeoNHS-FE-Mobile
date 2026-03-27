@@ -1,10 +1,11 @@
 import React from "react";
-import { View, Image, TouchableOpacity } from "react-native";
+import { View, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { Text } from "@/components/ui/text";
 import { WorkshopTemplateResponse } from "../types";
 import { formatPrice, formatDuration } from "../utils/helpers";
+import { SmartImage } from "@/components/ui/smart-image";
 
 interface ThemeColors {
   foreground: string;
@@ -34,8 +35,8 @@ export default function WorkshopCard({ workshop, theme, onPress }: WorkshopCardP
       {/* Image */}
       <View className="h-48 relative">
         {thumbnail ? (
-          <Image
-            source={{ uri: thumbnail.imageUrl }}
+          <SmartImage
+            uri={thumbnail.imageUrl}
             className="w-full h-full"
             style={{ resizeMode: "cover" }}
           />
@@ -80,7 +81,7 @@ export default function WorkshopCard({ workshop, theme, onPress }: WorkshopCardP
                 style={{ backgroundColor: tag.tagColor + "15" }}
               >
                 {tag.iconUrl && (
-                  <Image source={{ uri: tag.iconUrl }} className="w-3 h-3 rounded-full" />
+                  <SmartImage uri={tag.iconUrl} className="w-3 h-3 rounded-full" />
                 )}
                 <Text className="text-[10px] font-bold" style={{ color: tag.tagColor }}>
                   {tag.name}

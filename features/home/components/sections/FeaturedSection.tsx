@@ -68,7 +68,7 @@ export default function FeaturedSection({ featuredBlog, loading, error }: Props)
         tag={featuredBlog.blogCategory?.name || 'General'}
         title={featuredBlog.title}
         description={featuredBlog.summary || ''}
-        imageUrl={featuredBlog.thumbnailUrl || ''}
+        imageUrl={featuredBlog.thumbnailUrl ?? featuredBlog.bannerUrl}
         onPress={handleHeroPress}
       />
     </View>

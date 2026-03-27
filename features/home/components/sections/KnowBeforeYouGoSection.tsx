@@ -64,7 +64,7 @@ export default function KnowBeforeYouGoSection({ guides, loading, error }: Props
               key={guide.id}
               title={guide.title}
               description={guide.summary ?? ''}
-              imageUrl={guide.thumbnailUrl ?? guide.bannerUrl ?? ''}
+              imageUrl={guide.thumbnailUrl ?? guide.bannerUrl}
               onPress={() => handleGuidePress(guide.id)}
             />
           ))}

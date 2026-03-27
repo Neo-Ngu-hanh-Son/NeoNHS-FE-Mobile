@@ -5,7 +5,6 @@ import {
   FlatList,
   TouchableOpacity,
   TextInput,
-  Image,
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
@@ -21,6 +20,7 @@ import { WorkshopTemplateResponse, WorkshopSearchParams } from "../types";
 import { useWorkshopSearch } from "../hooks/useWorkshopSearch";
 import { useWorkshopTags } from "../hooks/useWorkshopTags";
 import { formatPrice, formatDuration } from "../utils/helpers";
+import { SmartImage } from "@/components/ui/smart-image";
 
 type SortOption = {
   label: string;
@@ -201,10 +201,7 @@ export function WorkshopListContent({ onNavigateToDetail }: WorkshopListContentP
                   onPress={() => setSelectedTag(selectedTag === tag.id ? null : tag.id)}
                 >
                   {tag.iconUrl && (
-                    <Image
-                      source={{ uri: tag.iconUrl }}
-                      className="w-3.5 h-3.5 rounded-full"
-                    />
+                    <SmartImage uri={tag.iconUrl} className="w-3.5 h-3.5 rounded-full" />
                   )}
                   <Text
                     className="text-xs font-bold"
@@ -300,8 +297,8 @@ export function WorkshopListContent({ onNavigateToDetail }: WorkshopListContentP
         >
           <View className="relative">
             {thumbnail ? (
-              <Image
-                source={{ uri: thumbnail.imageUrl }}
+              <SmartImage
+                uri={thumbnail.imageUrl}
                 className="w-24 h-24 rounded-2xl"
                 style={{ resizeMode: "cover" }}
               />

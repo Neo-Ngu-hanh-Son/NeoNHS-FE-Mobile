@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { CommonActions, CompositeScreenProps } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -88,10 +87,17 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       }
 
       await loginWithGoogle(idToken);
-      navigation.navigate('Main', {
-        screen: 'Tabs',
-        params: { screen: 'Home' },
-      });
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [
+            {
+              name: 'Main',
+              params: { screen: 'Tabs', params: { screen: 'Home' } },
+            },
+          ],
+        })
+      );
     } catch (error) {
       logger.error('[LoginScreen] Google login failed:', error);
       alert('Google Login Failed', 'Unable to sign in with Google. Please try again.');

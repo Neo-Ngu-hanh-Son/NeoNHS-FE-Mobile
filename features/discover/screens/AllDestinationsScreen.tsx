@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { View, ScrollView, TouchableOpacity, TextInput, Image, RefreshControl } from 'react-native';
+import { View, ScrollView, TouchableOpacity, TextInput, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -16,6 +16,7 @@ import { WorkshopListContent } from '../../workshops/screens';
 import { useBlogList } from '@/features/blog';
 import type { Blog } from '@/features/blog/types';
 import { useQueryClient } from '@tanstack/react-query';
+import { SmartImage } from '@/components/ui/smart-image';
 
 type Props = StackScreenProps<MainStackParamList, 'AllDestinations'>;
 
@@ -272,8 +273,8 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
               }}
               className="mb-3 flex-row items-center gap-4 rounded-2xl border p-3"
               style={{ backgroundColor: theme.card, borderColor: theme.border }}>
-              <Image
-                source={{ uri: (item as any).thumbnailUrl || (item as any).image || undefined }}
+              <SmartImage
+                uri={(item as any).thumbnailUrl || (item as any).image}
                 className="h-24 w-24 rounded-2xl object-cover"
               />
               <View className="flex-1">
@@ -341,10 +342,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
               onPress={() => navigation.navigate('EventDetail', { eventId: item.id })}
               className="mb-3 flex-row items-center gap-4 rounded-2xl border p-3"
               style={{ backgroundColor: theme.card, borderColor: theme.border }}>
-              <Image
-                source={{ uri: item.thumbnailUrl || undefined }}
-                className="h-24 w-24 rounded-2xl object-cover"
-              />
+              <SmartImage uri={item.thumbnailUrl} className="h-24 w-24 rounded-2xl object-cover" />
               <View className="flex-1">
                 <Text className="text-lg font-bold" style={{ color: theme.foreground }}>
                   {item.name}
@@ -420,8 +418,8 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
               onPress={() => navigation.navigate('BlogDetails', { blogId: item.id })}
               className="mb-3 flex-row items-center gap-4 rounded-2xl border p-3"
               style={{ backgroundColor: theme.card, borderColor: theme.border }}>
-              <Image
-                source={{ uri: item.thumbnailUrl || item.bannerUrl || undefined }}
+              <SmartImage
+                uri={item.thumbnailUrl || item.bannerUrl}
                 className="h-24 w-24 rounded-2xl object-cover"
               />
               <View className="flex-1">

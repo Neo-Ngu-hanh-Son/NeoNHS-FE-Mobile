@@ -1,16 +1,17 @@
-import { View, Image, TouchableOpacity } from "react-native";
+import { View, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Text } from "@/components/ui/text";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { THEME } from "@/lib/theme";
+import { SmartImage } from "@/components/ui/smart-image";
 
 type AboutCardProps = {
   tag?: string;
   title: string;
   description: string;
-  imageUrl: string;
+  imageUrl?: string | null;
   linkText?: string;
   onPress?: () => void;
 };
@@ -29,8 +30,8 @@ export default function AboutCard({
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
       <Card className="flex-row mx-4 p-0 gap-0 overflow-hidden">
-        <Image
-          source={{ uri: imageUrl }}
+        <SmartImage
+          uri={imageUrl}
           className="w-28 h-36"
           style={{ backgroundColor: theme.muted }}
         />

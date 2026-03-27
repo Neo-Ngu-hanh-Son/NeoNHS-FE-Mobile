@@ -12,6 +12,7 @@ import { useAuth } from '@/features/auth/context/AuthContext';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { logger } from '@/utils/logger';
+import { perfMonitor } from '@/utils/perfMonitor';
 import type {
   RootStackParamList,
   TabsStackParamList,
@@ -25,6 +26,7 @@ type ProfileNavigationProp = CompositeScreenProps<
   StackScreenProps<RootStackParamList>
 >;
 
+const PROFILE_REFRESH_COOLDOWN_MS = 30_000;
 
 
 const hasProfileChanged = (currentUser: User | null, nextProfile: Partial<User>) => {
@@ -46,10 +48,14 @@ const hasProfileChanged = (currentUser: User | null, nextProfile: Partial<User>)
 
 
 export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
+  perfMonitor.markRender('Profile');
+
   const { user, isAuthenticated, logout, updateUser } = useAuth();
   const { isDarkColorScheme, toggleColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const userRef = useRef(user);
+  const isFetchingProfileRef = useRef(false);
+  const lastFetchAtRef = useRef(0);
 
   useEffect(() => {
     userRef.current = user;
@@ -64,21 +70,40 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
       return;
     }
 
+    const now = Date.now();
+    if (now - lastFetchAtRef.current < PROFILE_REFRESH_COOLDOWN_MS) {
+      return;
+    }
+    if (isFetchingProfileRef.current) {
+      return;
+    }
+
     try {
+      isFetchingProfileRef.current = true;
       const response = await userService.getProfile();
       if (response.success && response.data) {
         if (hasProfileChanged(userRef.current ?? null, response.data)) {
           updateUser(response.data);
         }
       }
+      lastFetchAtRef.current = Date.now();
     } catch (error) {
       logger.error('Fetch profile error:', error);
+    } finally {
+      isFetchingProfileRef.current = false;
     }
   }, [isAuthenticated, updateUser]);
 
   useFocusEffect(
     useCallback(() => {
+      perfMonitor.markFocus('Profile');
+      perfMonitor.logSnapshot('focus:Profile');
       fetchProfile();
+
+      return () => {
+        perfMonitor.markBlur('Profile');
+        perfMonitor.logSnapshot('blur:Profile');
+      };
     }, [fetchProfile])
   );
 

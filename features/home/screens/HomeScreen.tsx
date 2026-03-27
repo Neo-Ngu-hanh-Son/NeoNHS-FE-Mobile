@@ -1,8 +1,8 @@
 import { ScrollView, View, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { StackScreenProps } from '@react-navigation/stack';
-import { CompositeScreenProps } from '@react-navigation/native';
+import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
 
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { Ionicons } from '@expo/vector-icons';
 import { logger } from '@/utils/logger';
+import { perfMonitor } from '@/utils/perfMonitor';
 
 import { useBlogList } from '@/features/blog';
 import useGuides from '../hooks/useGuides';
@@ -37,12 +38,13 @@ type HomeScreenProps = CompositeScreenProps<
   StackScreenProps<RootStackParamList>
 >;
 export default function HomeScreen({ navigation }: HomeScreenProps) {
+  perfMonitor.markRender('Home');
+
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const { user } = useAuth();
 
   const [refreshing, setRefreshing] = useState(false);
-  const hasRequestedInitialBlogsRef = useRef(false);
 
   const {
     data: featuredBlog,
@@ -69,6 +71,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     refresh: refetchBlogs,
   } = useBlogList({
     size: 6,
+    autoFetch: true,
   });
   const {
     data: homeEvents,
@@ -113,15 +116,17 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     refetchDestinations,
   ]);
 
-  // Because useBlogList does not fetch on mount, we need to trigger the initial fetch manually
-  useEffect(() => {
-    if (hasRequestedInitialBlogsRef.current) {
-      logger.debug('Initial blogs already fetched, skipping fetch on mount');
-      return;
-    }
-    refetchBlogs();
-    hasRequestedInitialBlogsRef.current = true;
-  }, [refetchBlogs]);
+  useFocusEffect(
+    useCallback(() => {
+      perfMonitor.markFocus('Home');
+      perfMonitor.logSnapshot('focus:Home');
+
+      return () => {
+        perfMonitor.markBlur('Home');
+        perfMonitor.logSnapshot('blur:Home');
+      };
+    }, [])
+  );
 
   function handleNotificationPress(): void {
     logger.info('Notifications pressed on Home');
@@ -145,6 +150,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 32 }}
         showsVerticalScrollIndicator={false}
+        bounces={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

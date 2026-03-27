@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { StackScreenProps } from '@react-navigation/stack';
 import { MainStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { logger } from '@/utils/logger';
@@ -12,19 +12,23 @@ import { useModal } from '@/app/providers/ModalProvider';
 import { useMapMarkerFilters, useMapNavigationGuidance, useUserLocation } from '../hooks';
 import { LocationPermissionBanner } from '../components/UserLocation';
 import { mapData } from '../data';
-import { CompositeScreenProps, useIsFocused } from '@react-navigation/native';
+import { CompositeScreenProps, useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { ScreenLayout } from '@/components/common/ScreenLayout';
 import { useQuery } from '@tanstack/react-query';
 import CheckinCameraButton from '../components/Camera/CheckinCameraButton';
 import { parseFloatOrDefault } from '@/utils/parseNumber';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { perfMonitor } from '@/utils/perfMonitor';
+import MAP_CONSTANTS from '../constants';
 
 type MapScreenProps = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Map'>,
   StackScreenProps<MainStackParamList>
 >;
 export default function MapScreen({ navigation, route }: MapScreenProps) {
+  perfMonitor.markRender('Map');
+
   const { isAuthenticated } = useAuth();
   const initialPointId = route.params?.pointId;
   const targetNavigationPointId = route.params?.targetNavigationPointId;
@@ -42,6 +46,15 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
 
   // Modal helpers
   const { alert } = useModal();
+  const userLocationOptions = useMemo(
+    () => ({
+      autoStart: false,
+      updateInterval: MAP_CONSTANTS.UPDATE_USER_LOCATION_THROTTLE_MS,
+      distanceInterval: 5,
+    }),
+    []
+  );
+
   // User location tracking - auto-start on mount
   const {
     location: userLocation,
@@ -54,11 +67,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     stopTracking,
     requestPermission,
     syncNearbyGeofences,
-  } = useUserLocation({
-    autoStart: false,
-    updateInterval: 3000,
-    distanceInterval: 5,
-  });
+  } = useUserLocation(userLocationOptions);
 
   const { data: mapPoints = mapData.mapPoints, isError: isMapPointsError } = useQuery({
     queryKey: ['mapPoints'],
@@ -66,8 +75,20 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
       const res = await mapService.getMapPoints();
       return res.data as MapPoint[];
     },
-    // enabled: isFocused,
+    enabled: isFocused,
   });
+
+  useFocusEffect(
+    useCallback(() => {
+      perfMonitor.markFocus('Map');
+      perfMonitor.logSnapshot('focus:Map');
+
+      return () => {
+        perfMonitor.markBlur('Map');
+        perfMonitor.logSnapshot('blur:Map');
+      };
+    }, [])
+  );
 
   if (isMapPointsError) {
     logger.error('[MapScreen] Failed to fetch map points, using default map points.');
@@ -137,6 +158,12 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
       }
     };
   }, [isTracking, stopTracking]);
+
+  useEffect(() => {
+    if (!isFocused && isTracking) {
+      stopTracking();
+    }
+  }, [isFocused, isTracking, stopTracking]);
 
   const handleMarkerPress = useCallback((point: MapPoint) => {
     setSelectedPoint(point);
@@ -221,7 +248,6 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
   }, [isGuidanceMode, targetNavigationPointId, isDirectionsReady, navigationEndpoints, mapRef]);
 
   if (!isFocused) {
-    console.log('MapScreen is not focused, skipping render');
     return null;
   }
 

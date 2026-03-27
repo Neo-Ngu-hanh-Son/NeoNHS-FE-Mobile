@@ -184,7 +184,6 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
 
     const handleFollowUserToggle = useCallback(() => {
       const newFollowState = !isFollowingUser;
-      console.log('Follow user toggle, new state:', newFollowState);
       startTrackingCallback?.();
       setIsFollowingUser(newFollowState);
 
@@ -443,8 +442,6 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
 
       return [...parentMarkers, ...checkinMarkers];
     }, [isMapReady, mapPoints, shouldDisplayMarkerName, shouldShowParentPoint, effectiveMarkerFilters.showAll, effectiveMarkerFilters.showCheckin]);
-
-    console.log('NHSMap rendered');
 
     return (
       <View style={[styles.container, { borderColor: theme.border, borderWidth: 1 }]}>

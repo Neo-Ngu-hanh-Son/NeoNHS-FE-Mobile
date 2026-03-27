@@ -56,7 +56,7 @@ export default function AboutNHSSection({ overviews, loading, error }: Props) {
             key={overview.id}
             title={overview.title}
             description={overview.summary ?? ''}
-            imageUrl={overview.thumbnailUrl ?? overview.bannerUrl ?? ''}
+            imageUrl={overview.thumbnailUrl ?? overview.bannerUrl}
             linkText="Learn More"
             onPress={() => handleHighlightPress(overview.id)}
           />

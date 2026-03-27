@@ -74,7 +74,7 @@ export default function MustSeePlacesSection({ destinations, loading, error }: P
           <PlaceCard
             key={place.id}
             name={place.name}
-            imageUrl={place.thumbnailUrl ?? ''}
+            imageUrl={place.thumbnailUrl}
             onPress={() => handlePlacePress(place.id)}
           />
         ))}

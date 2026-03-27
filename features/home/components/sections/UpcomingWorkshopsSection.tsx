@@ -101,7 +101,7 @@ export default function UpcomingWorkshopsSection({ workshops, loading, error }: 
               key={workshop.id}
               title={workshop.name}
               tag="Workshop"
-              imageUrl={thumbnail?.imageUrl ?? ''}
+              imageUrl={thumbnail?.imageUrl}
               onPress={() => handleWorkshopPress(workshop.id)}
             />
           );

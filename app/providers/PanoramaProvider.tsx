@@ -4,6 +4,7 @@ import DynamicPanorama from '@/features/panorama/components/DynamicPanorama';
 type PanoramaContextType = {
   openPanorama: (pointId: string) => void;
   closePanorama: () => void;
+  preloadPanorama: (pointId: string) => void;
   seedPointId: (pointId: string) => void;
   resendPanoramaMessage: () => void;
 };
@@ -11,11 +12,13 @@ type PanoramaContextType = {
 const PanoramaContext = createContext<PanoramaContextType | null>(null);
 
 export function PanoramaProvider({ children }: { children: ReactNode }) {
+  const [shouldMountPanorama, setShouldMountPanorama] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [currentPointId, setCurrentPointId] = useState<string | null>(null);
   const [messageRetryToken, setMessageRetryToken] = useState(0);
 
   const openPanorama = (pointId: string) => {
+    setShouldMountPanorama(true);
     setIsVisible(true);
     setCurrentPointId(""); // Do this so that when we open the panorama with the same pointId again, it will trigger a change in DynamicPanorama and thus reload the WebView
     setCurrentPointId(pointId);
@@ -23,6 +26,11 @@ export function PanoramaProvider({ children }: { children: ReactNode }) {
 
   const closePanorama = () => {
     setIsVisible(false);
+  };
+
+  const preloadPanorama = (pointId: string) => {
+    setShouldMountPanorama(true);
+    setCurrentPointId(pointId);
   };
 
   const seedPointId = (pointId: string) => {
@@ -35,15 +43,17 @@ export function PanoramaProvider({ children }: { children: ReactNode }) {
 
   return (
     <PanoramaContext.Provider
-      value={{ openPanorama, closePanorama, seedPointId, resendPanoramaMessage }}>
+      value={{ openPanorama, closePanorama, preloadPanorama, seedPointId, resendPanoramaMessage }}>
       {children}
 
-      <DynamicPanorama
-        pointId={currentPointId ?? ''}
-        isOpen={isVisible}
-        onBack={closePanorama}
-        retryToken={messageRetryToken}
-      />
+      {shouldMountPanorama ? (
+        <DynamicPanorama
+          pointId={currentPointId ?? ''}
+          isOpen={isVisible}
+          onBack={closePanorama}
+          retryToken={messageRetryToken}
+        />
+      ) : null}
     </PanoramaContext.Provider>
   );
 }

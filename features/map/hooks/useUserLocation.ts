@@ -58,7 +58,7 @@ export interface UseUserLocationOptions {
 const DEFAULT_OPTIONS: UseUserLocationOptions = {
   autoStart: false,
   accuracy: Location.Accuracy.High,
-  updateInterval: 3000,
+  updateInterval: MAP_CONSTANTS.UPDATE_USER_LOCATION_THROTTLE_MS,
   distanceInterval: 5,
 };
 
@@ -246,12 +246,19 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
    * Stop location tracking
    */
   const stopTracking = useCallback((): void => {
+    const hadSubscription = locationSubscription.current != null;
+
     if (locationSubscription.current) {
       locationSubscription.current.remove();
       locationSubscription.current = null;
     }
-    setIsTracking(false);
-    logger.info('Location tracking stopped');
+
+    setIsTracking((wasTracking) => {
+      if (wasTracking || hadSubscription) {
+        logger.info('Location tracking stopped');
+      }
+      return false;
+    });
   }, []);
 
   const syncNearbyGeofences = useCallback(
@@ -285,9 +292,9 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
   // Auto-start tracking if enabled
   useEffect(() => {
     if (mergedOptions.autoStart) {
-      startTracking();
+      void startTracking();
     }
-  }, []); // Intentionally only run on mount
+  }, [mergedOptions.autoStart, startTracking]);
 
   // Cleanup on unmount
   useEffect(() => {

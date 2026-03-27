@@ -1,15 +1,16 @@
-import { View, Image, Pressable } from 'react-native';
+import { View, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
+import { SmartImage } from '@/components/ui/smart-image';
 
 type HighlightCardProps = {
   title: string;
   description: string;
-  imageUrl: string;
+  imageUrl?: string | null;
   linkText?: string;
   onPress?: () => void;
 };
@@ -30,8 +31,8 @@ export default function HighlightCard({
       android_ripple={{ color: 'rgba(0,0,0,0.12)', foreground: true }}
       className="elevation-sm mx-4 overflow-hidden rounded-xl active:opacity-90">
       <Card className="flex-row gap-0 overflow-hidden p-0">
-        <Image
-          source={{ uri: imageUrl }}
+        <SmartImage
+          uri={imageUrl}
           className="h-32 w-28"
           style={{ backgroundColor: theme.muted }}
         />

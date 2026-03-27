@@ -8,6 +8,7 @@ interface UseBlogListOptions {
   size?: number;
   search?: string;
   filters?: BlogFilters;
+  autoFetch?: boolean;
 }
 
 interface UseBlogListReturn {
@@ -25,7 +26,7 @@ interface UseBlogListReturn {
 const DEFAULT_PAGE_SIZE = 10;
 
 export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn {
-  const { size = DEFAULT_PAGE_SIZE, search, filters } = options;
+  const { size = DEFAULT_PAGE_SIZE, search, filters, autoFetch = false } = options;
 
   const normalizedSearch = search?.trim() || undefined;
   const activeFilters = filters ?? BLOG_DEFAULT_FILTERS;
@@ -33,7 +34,7 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(autoFetch);
   const [error, setError] = useState<string | null>(null);
 
   const isFetchingRef = useRef(false);
@@ -94,6 +95,12 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
       replace: true,
     });
   }, [requestPage]);
+
+  useEffect(() => {
+    if (autoFetch) {
+      void fetchBlogs();
+    }
+  }, [autoFetch, fetchBlogs]);
 
   const loadMore = useCallback(() => {
     if (loading || isFetchingRef.current) {

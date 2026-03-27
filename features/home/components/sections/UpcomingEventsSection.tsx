@@ -63,7 +63,7 @@ export default function UpcomingEventsSection({ events, loading, error }: Props)
             key={event.id}
             title={event.name}
             tag="Event"
-            imageUrl={event.thumbnailUrl ?? ''}
+            imageUrl={event.thumbnailUrl}
             onPress={() => handleExperiencePress(event.id)}
           />
         ))}

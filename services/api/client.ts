@@ -21,6 +21,7 @@ import {
 } from "./types";
 import { API_CONFIG } from "@/utils/constants";
 import { logger } from "@/utils/logger";
+import { perfMonitor } from "@/utils/perfMonitor";
 
 class ApiClient {
   private axiosInstance: AxiosInstance;
@@ -65,8 +66,19 @@ class ApiClient {
     // Request interceptor - Add auth token
     this.axiosInstance.interceptors.request.use(
       async (config) => {
+        const rawUrl = String(config.url ?? '');
+        const hasAbsoluteUrl = /^https?:\/\//i.test(rawUrl);
+        const normalizedBase = String(config.baseURL ?? '').replace(/\/+$/, '');
+        const normalizedPath = rawUrl.replace(/^\/+/, '');
+        const requestUrl = hasAbsoluteUrl
+          ? rawUrl
+          : normalizedBase && normalizedPath
+            ? `${normalizedBase}/${normalizedPath}`
+            : normalizedBase || `/${normalizedPath}` || '/';
+
         // Log the request config
         logger.debug(`[ApiClient] ${config.method?.toUpperCase()} ${config.baseURL}/${config.url}`);
+        perfMonitor.trackApiRequest(config.method, requestUrl);
 
         // Guard against invalid pagination sent by callers.
         if (config.params && typeof config.params === 'object' && 'page' in config.params) {

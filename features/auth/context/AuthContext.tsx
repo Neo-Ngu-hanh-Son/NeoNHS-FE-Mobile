@@ -5,6 +5,7 @@ import React, {
   useReducer,
   useEffect,
   useRef,
+  useMemo,
   ReactNode,
 } from 'react';
 import type { AuthContextValue, AuthState, LoginCredentials, RegisterData, User } from '../types';
@@ -164,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const loginWithGoogle = async (idToken: string) => {
+  const loginWithGoogle = useCallback(async (idToken: string) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
 
@@ -197,7 +198,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const apiError = error as ApiError;
       throw new Error(apiError.message || 'Google login failed');
     }
-  };
+  }, []);
 
   const register = useCallback(async (data: RegisterData) => {
     try {
@@ -286,15 +287,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializeAuth();
   }, [initializeAuth]);
 
-  const value: AuthContextValue = {
-    ...state,
-    login,
-    register,
-    logout,
-    refreshAuth,
-    updateUser,
-    loginWithGoogle,
-  };
+  const value: AuthContextValue = useMemo(
+    () => ({
+      ...state,
+      login,
+      register,
+      logout,
+      refreshAuth,
+      updateUser,
+      loginWithGoogle,
+    }),
+    [state, login, register, logout, refreshAuth, updateUser, loginWithGoogle]
+  );
 
   return (
     <AuthContext.Provider value={value}>

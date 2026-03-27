@@ -1,10 +1,11 @@
-import { View, ImageBackground, TouchableOpacity } from "react-native";
+import { View, TouchableOpacity } from "react-native";
 import { Text } from "@/components/ui/text";
 import { LinearGradient } from "expo-linear-gradient";
+import { SmartImageBackground } from "@/components/ui/smart-image";
 
 type PlaceCardProps = {
   name: string;
-  imageUrl: string;
+  imageUrl?: string | null;
   onPress?: () => void;
 };
 
@@ -19,8 +20,8 @@ export default function PlaceCard({
       activeOpacity={0.9}
       className="w-36 h-44 rounded-xl overflow-hidden mr-3"
     >
-      <ImageBackground
-        source={{ uri: imageUrl }}
+      <SmartImageBackground
+        uri={imageUrl}
         className="flex-1"
         imageStyle={{ borderRadius: 12 }}
       >
@@ -32,7 +33,7 @@ export default function PlaceCard({
             {name}
           </Text>
         </LinearGradient>
-      </ImageBackground>
+      </SmartImageBackground>
     </TouchableOpacity>
   );
 }

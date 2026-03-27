@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Share } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { CompositeScreenProps } from '@react-navigation/native';
@@ -33,7 +33,11 @@ export default function PointDetailScreen({ navigation, route }: Props) {
   const { pointId } = route.params;
   const [isFavorite, setIsFavorite] = useState(false);
   const [isReadMore, setIsReadMore] = useState(false);
-  const { openPanorama, resendPanoramaMessage } = usePanorama();
+  const { openPanorama, preloadPanorama, resendPanoramaMessage } = usePanorama();
+
+  useEffect(() => {
+    preloadPanorama(pointId);
+  }, [pointId, preloadPanorama]);
 
   const {
     data: point,

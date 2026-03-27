@@ -2,7 +2,6 @@ import {
   View,
   ScrollView,
   RefreshControl,
-  Image,
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
@@ -15,12 +14,14 @@ import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { MainStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
-import { CompositeScreenProps } from '@react-navigation/native';
+import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { useAttractions } from '../hooks/useAttractions';
 import { useEvents } from '../../event/hooks/useEvents';
 import { EventStatus } from '../../event/types';
 import { useWorkshopTemplates } from '../../workshops/hooks/useWorkshopTemplates';
+import { perfMonitor } from '@/utils/perfMonitor';
+import { SmartImage } from '@/components/ui/smart-image';
 
 type DiscoverScreenProps = CompositeScreenProps<
   BottomTabScreenProps<TabsStackParamList, 'Discover'>,
@@ -88,6 +89,8 @@ function getStatusColor(status: string): string {
 }
 
 export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
+  perfMonitor.markRender('Discover');
+
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
@@ -125,6 +128,18 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
     setRefreshing(true);
     Promise.allSettled([refetchAttractions(), refetchEvents(), refetchWorkshops()]).finally(() => setRefreshing(false));
   }, [refetchAttractions, refetchEvents, refetchWorkshops]);
+
+  useFocusEffect(
+    useCallback(() => {
+      perfMonitor.markFocus('Discover');
+      perfMonitor.logSnapshot('focus:Discover');
+
+      return () => {
+        perfMonitor.markBlur('Discover');
+        perfMonitor.logSnapshot('blur:Discover');
+      };
+    }, [])
+  );
 
   const renderHeader = () => (
     <View className="sticky top-0 bg-white/80 px-5 pb-1 pt-6 backdrop-blur-md dark:bg-slate-900/80">
@@ -192,8 +207,8 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
                   })
                 }>
                 <View className="relative h-48">
-                  <Image
-                    source={{ uri: attr.thumbnailUrl || (attr as any).image }}
+                  <SmartImage
+                    uri={attr.thumbnailUrl || (attr as any).image}
                     className="h-full w-full object-cover"
                   />
                   <View className="absolute right-3 top-3 flex-row items-center gap-1 rounded-lg bg-white/90 px-2 py-1 dark:bg-slate-900/90">
@@ -252,12 +267,7 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
                   className="w-44"
                   onPress={() => navigation.navigate('WorkshopDetail', { workshopId: workshop.id })}>
                   <View className="relative mb-2 h-44 w-44 overflow-hidden rounded-2xl">
-                    {thumb && (
-                      <Image
-                        source={{ uri: thumb.imageUrl }}
-                        className="h-full w-full object-cover"
-                      />
-                    )}
+                    <SmartImage uri={thumb?.imageUrl} className="h-full w-full object-cover" />
                     {tagName ? (
                       <View
                         className="absolute bottom-3 left-3 rounded px-2 py-0.5"
@@ -321,10 +331,7 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
                   style={{ backgroundColor: theme.card, borderColor: theme.border }}
                   onPress={() => navigation.navigate('EventDetail', { eventId: event.id })}>
                   <View className="relative h-36">
-                    <Image
-                      source={{ uri: event.thumbnailUrl || undefined }}
-                      className="h-full w-full object-cover"
-                    />
+                    <SmartImage uri={event.thumbnailUrl} className="h-full w-full object-cover" />
                     {/* Date badge */}
                     <View className="absolute left-3 top-3 min-w-[45px] items-center rounded-xl bg-white p-1.5 shadow-lg dark:bg-slate-900">
                       <Text className="mb-1 text-[10px] font-bold uppercase leading-none text-red-500">
@@ -411,8 +418,8 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
           contentContainerStyle={{ paddingHorizontal: 20, gap: 16 }}>
           {BLOGS.map((blog) => (
             <TouchableOpacity key={blog.id} className="w-80">
-              <Image
-                source={{ uri: blog.image }}
+              <SmartImage
+                uri={blog.image}
                 className="mb-3 h-44 w-full rounded-2xl object-cover shadow-sm"
               />
               <Text

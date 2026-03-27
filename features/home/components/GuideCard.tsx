@@ -1,8 +1,9 @@
-import { View, Image, Dimensions, StyleSheet, Pressable } from 'react-native';
+import { View, Dimensions, StyleSheet, Pressable } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { logger } from '@/utils/logger';
+import { SmartImage } from '@/components/ui/smart-image';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH * 0.8;
@@ -11,7 +12,7 @@ const CARD_HEIGHT = 220;
 type GuideCardProps = {
   title: string;
   description: string;
-  imageUrl: string;
+  imageUrl?: string | null;
   onPress?: () => void;
 };
 
@@ -33,8 +34,8 @@ export default function GuideCard({ title, description, imageUrl, onPress }: Gui
           },
         ]}>
         <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: imageUrl }}
+          <SmartImage
+            uri={imageUrl}
             style={[styles.image, { backgroundColor: theme.muted }]}
             resizeMode="cover"
           />

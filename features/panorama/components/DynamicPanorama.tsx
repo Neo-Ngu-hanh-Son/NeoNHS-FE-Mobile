@@ -78,8 +78,10 @@ export default function DynamicPanorama({
     };
   }, [retryToken, trySendPointId]);
 
-  const FE_URL = panoramaService.getPanoramaFrontEndUrl();
-  if (!FE_URL && isOpen) {
+  const FE_URL = panoramaService.getPanoramaFrontEndUrl()?.trim();
+  const hasPanoramaUrl = Boolean(FE_URL);
+
+  if (!hasPanoramaUrl && isOpen) {
     logger.error('[DynamicPanorama] Panorama front-end URL is not defined');
   }
 
@@ -136,35 +138,39 @@ export default function DynamicPanorama({
         <Ionicons name="reload" size={20} color={theme.foreground} />
       </Button>
 
-      <WebView
-        ref={webViewRef}
-        source={{ uri: FE_URL ?? '' }}
-        style={styles.webview}
-        startInLoadingState
-        onLoadStart={() => logger.debug('[DynamicPanorama] WebView loading started')}
-        onLoadEnd={() => {
-          logger.debug('[DynamicPanorama] WebView loading ended');
-          setIsWebViewReady(true);
-        }}
-        onError={(error) => {
-          logger.error('[DynamicPanorama] Webview error: ' + error.nativeEvent.description);
-          setHasError(true);
-        }}
-        bounces={false} // iOS bounce
-        overScrollMode="never" // Android glow
-        userAgent={'NeoNHS-Mobile'}
-        renderLoading={() => (
-          <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
-            <ActivityIndicator size="large" color={theme.primary} />
-            <Text style={[styles.loadingText, { color: theme.mutedForeground }]}>
-              Loading panorama...
-            </Text>
-          </View>
-        )}
-        androidLayerType="hardware"
-        decelerationRate={0.998}
-        webviewDebuggingEnabled={true}
-      />
+      {hasPanoramaUrl ? (
+        <WebView
+          ref={webViewRef}
+          source={{ uri: FE_URL! }}
+          style={styles.webview}
+          startInLoadingState
+          onLoadStart={() => logger.debug('[DynamicPanorama] WebView loading started')}
+          onLoadEnd={() => {
+            logger.debug('[DynamicPanorama] WebView loading ended');
+            setIsWebViewReady(true);
+          }}
+          onError={(error) => {
+            logger.error('[DynamicPanorama] Webview error: ' + error.nativeEvent.description);
+            setHasError(true);
+          }}
+          bounces={false} // iOS bounce
+          overScrollMode="never" // Android glow
+          userAgent={'NeoNHS-Mobile'}
+          renderLoading={() => (
+            <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
+              <ActivityIndicator size="large" color={theme.primary} />
+              <Text style={[styles.loadingText, { color: theme.mutedForeground }]}>
+                Loading panorama...
+              </Text>
+            </View>
+          )}
+          androidLayerType="hardware"
+          decelerationRate={0.998}
+          webviewDebuggingEnabled={true}
+        />
+      ) : (
+        <View style={[styles.loadingContainer, { backgroundColor: theme.background }]} />
+      )}
     </ScreenLayout>
   );
 }
