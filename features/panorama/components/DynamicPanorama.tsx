@@ -44,15 +44,15 @@ export default function DynamicPanorama({
   }, [hasError]);
 
   const trySendPointId = useCallback(() => {
-    if (!isOpen) {
-      return;
-    }
+    // if (!isOpen) {
+    //   return;
+    // }
     if (!isWebViewReady || !webViewRef.current) {
       logger.warn('[DynamicPanorama] WebView is not ready yet, skipping postMessage');
       return;
     }
     if (!pointId) {
-      logger.warn('[DynamicPanorama] Webview ready, not point id present to send');
+      logger.warn('[DynamicPanorama] Webview ready, no point id present to send');
       return;
     }
 
@@ -60,6 +60,7 @@ export default function DynamicPanorama({
 
     // Delay for 1 second to ensure WebView is fully ready to receive messages, especially after reloads
     return setTimeout(() => {
+      logger.info(`[DynamicPanorama] Sending pointId ${pointId} to WebView`);
       currentWebView.postMessage(
         JSON.stringify({
           type: 'SET_PLACE_ID',
@@ -67,7 +68,7 @@ export default function DynamicPanorama({
         })
       );
     }, 1000)
-  }, [isOpen, isWebViewReady, pointId]);
+  }, [isWebViewReady, pointId]);
 
   useEffect(() => {
     const timeoutId = trySendPointId();

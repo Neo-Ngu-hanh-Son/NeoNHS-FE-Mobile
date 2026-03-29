@@ -1,4 +1,3 @@
-import { createStackNavigator } from '@react-navigation/stack';
 import TabsNavigator from './TabsNavigator';
 import UpdateAccountScreen from '@/features/profile/screens/UpdateAccountScreen';
 import ChangePasswordScreen from '@/features/profile/screens/ChangePasswordScreen';
@@ -24,13 +23,18 @@ import PointHistoryAudioScreen from '@/features/point/screens/PointHistoryAudioS
 import CheckinCameraScreen from '@/features/map/screens/CheckinCameraScreen';
 import CheckinCompleteScreen from '@/features/map/screens/CheckinCompleteScreen';
 import CheckinGalleryScreen from '@/features/profile/screens/CheckinGalleryScreen';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-const Stack = createStackNavigator<MainStackParamList>();
+const Stack = createNativeStackNavigator<MainStackParamList>();
 
 export default function MainNavigator() {
   return (
     <Stack.Navigator screenOptions={{ animation: 'slide_from_right' }}>
-      <Stack.Screen name="Tabs" component={TabsNavigator} options={{ headerShown: false }} />
+      <Stack.Screen
+        name="Tabs"
+        component={TabsNavigator}
+        options={{ headerShown: false, animationTypeForReplace: 'pop' }}
+      />
       <Stack.Screen
         name="UpdateAccount"
         component={UpdateAccountScreen}

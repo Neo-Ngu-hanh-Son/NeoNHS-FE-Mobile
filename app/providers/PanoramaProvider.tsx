@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import DynamicPanorama from '@/features/panorama/components/DynamicPanorama';
+import { logger } from '@/utils/logger';
 
 type PanoramaContextType = {
   openPanorama: (pointId: string) => void;
@@ -31,6 +32,7 @@ export function PanoramaProvider({ children }: { children: ReactNode }) {
   const preloadPanorama = (pointId: string) => {
     setShouldMountPanorama(true);
     setCurrentPointId(pointId);
+    logger.info(`[PanoramaProvider] Preloading panorama for pointId ${pointId}`);
   };
 
   const seedPointId = (pointId: string) => {

@@ -2,7 +2,7 @@ import { ScrollView, View, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useCallback } from 'react';
 import { StackScreenProps } from '@react-navigation/stack';
-import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
+import { CompositeScreenProps } from '@react-navigation/native';
 
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { Ionicons } from '@expo/vector-icons';
 import { logger } from '@/utils/logger';
-import { perfMonitor } from '@/utils/perfMonitor';
 
 import { useBlogList } from '@/features/blog';
 import useGuides from '../hooks/useGuides';
@@ -38,8 +37,6 @@ type HomeScreenProps = CompositeScreenProps<
   StackScreenProps<RootStackParamList>
 >;
 export default function HomeScreen({ navigation }: HomeScreenProps) {
-  perfMonitor.markRender('Home');
-
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const { user } = useAuth();
@@ -116,18 +113,6 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     refetchDestinations,
   ]);
 
-  useFocusEffect(
-    useCallback(() => {
-      perfMonitor.markFocus('Home');
-      perfMonitor.logSnapshot('focus:Home');
-
-      return () => {
-        perfMonitor.markBlur('Home');
-        perfMonitor.logSnapshot('blur:Home');
-      };
-    }, [])
-  );
-
   function handleNotificationPress(): void {
     logger.info('Notifications pressed on Home');
   }
@@ -181,9 +166,17 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
         <KnowBeforeYouGoSection guides={guides ?? []} loading={guidesLoading} error={guidesError} />
 
-        <AboutNHSSection overviews={overviews ?? []} loading={overviewsLoading} error={overviewsError} />
+        <AboutNHSSection
+          overviews={overviews ?? []}
+          loading={overviewsLoading}
+          error={overviewsError}
+        />
 
-        <LatestBlogsSection blogs={blogs ?? []} loading={blogsLoading} error={Boolean(blogsError)} />
+        <LatestBlogsSection
+          blogs={blogs ?? []}
+          loading={blogsLoading}
+          error={Boolean(blogsError)}
+        />
 
         <UpcomingEventsSection
           events={homeEvents ?? []}

@@ -100,6 +100,19 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
     const isGuidanceModeRef = useRef(isGuidanceMode);
     const isFocused = useIsFocused();
 
+    // Only purpose is to hope that the marker itself render correctly
+    const [trackChanges, setTrackChanges] = useState(true);
+
+    useEffect(() => {
+      if (isMapReady) {
+        const timeout = setTimeout(() => {
+          setTrackChanges(false);
+        }, 500);
+
+        return () => clearTimeout(timeout);
+      }
+    }, [isMapReady, shouldDisplayMarkerName]);
+
     const activeCheckinPoint = useCheckinProximity(userLocation, checkinPoints,
       MAP_CONSTANTS.CHECKINPOINT_DETECT_RADIUS_M);
 
@@ -363,6 +376,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
         .map((poi) => (
           <Marker
             key={poi.id}
+            tracksViewChanges={trackChanges}
             coordinate={{
               latitude: poi.latitude,
               longitude: poi.longitude
@@ -374,6 +388,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
               onMarkerPressRef.current?.(poi);
             }}>
             <MarkerVisual
+              key={`${poi.id}-${shouldDisplayMarkerName}`}
               point={poi}
               showName={shouldDisplayMarkerName}
             // isSelected={selectedPointId === poi.id}
@@ -417,6 +432,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
               // TODO: Optimize this by not making the whole marker arrays re-render on just a selected point
               return (
                 <Marker
+                  tracksViewChanges={trackChanges}
                   key={`checkin-${checkin.id}`}
                   coordinate={{
                     latitude: checkin.latitude,
@@ -430,6 +446,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
                     onMarkerPressRef.current?.(checkinAsPoint);
                   }}>
                   <MarkerVisual
+                    key={`${checkin.id}-${shouldDisplayMarkerName}`}
                     point={checkinAsPoint}
                     showName={shouldDisplayMarkerName}
                   // isSelected={selectedPointId === checkin.id}
@@ -441,7 +458,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
         : [];
 
       return [...parentMarkers, ...checkinMarkers];
-    }, [isMapReady, mapPoints, shouldDisplayMarkerName, shouldShowParentPoint, effectiveMarkerFilters.showAll, effectiveMarkerFilters.showCheckin]);
+    }, [isMapReady, mapPoints, shouldDisplayMarkerName, shouldShowParentPoint, effectiveMarkerFilters.showAll, effectiveMarkerFilters.showCheckin, trackChanges]);
 
     return (
       <View style={[styles.container, { borderColor: theme.border, borderWidth: 1 }]}>

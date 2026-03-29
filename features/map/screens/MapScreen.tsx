@@ -12,14 +12,13 @@ import { useModal } from '@/app/providers/ModalProvider';
 import { useMapMarkerFilters, useMapNavigationGuidance, useUserLocation } from '../hooks';
 import { LocationPermissionBanner } from '../components/UserLocation';
 import { mapData } from '../data';
-import { CompositeScreenProps, useFocusEffect, useIsFocused } from '@react-navigation/native';
+import { CompositeScreenProps, useIsFocused } from '@react-navigation/native';
 import { ScreenLayout } from '@/components/common/ScreenLayout';
 import { useQuery } from '@tanstack/react-query';
 import CheckinCameraButton from '../components/Camera/CheckinCameraButton';
 import { parseFloatOrDefault } from '@/utils/parseNumber';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { perfMonitor } from '@/utils/perfMonitor';
 import MAP_CONSTANTS from '../constants';
 
 type MapScreenProps = CompositeScreenProps<
@@ -27,8 +26,6 @@ type MapScreenProps = CompositeScreenProps<
   StackScreenProps<MainStackParamList>
 >;
 export default function MapScreen({ navigation, route }: MapScreenProps) {
-  perfMonitor.markRender('Map');
-
   const { isAuthenticated } = useAuth();
   const initialPointId = route.params?.pointId;
   const targetNavigationPointId = route.params?.targetNavigationPointId;
@@ -42,7 +39,6 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
   const insets = useSafeAreaInsets();
 
   const { filters: markerFilters, setShowAll, toggleFilter } = useMapMarkerFilters();
-
 
   // Modal helpers
   const { alert } = useModal();
@@ -77,18 +73,6 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     },
     enabled: isFocused,
   });
-
-  useFocusEffect(
-    useCallback(() => {
-      perfMonitor.markFocus('Map');
-      perfMonitor.logSnapshot('focus:Map');
-
-      return () => {
-        perfMonitor.markBlur('Map');
-        perfMonitor.logSnapshot('blur:Map');
-      };
-    }, [])
-  );
 
   if (isMapPointsError) {
     logger.error('[MapScreen] Failed to fetch map points, using default map points.');
@@ -244,7 +228,6 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
       },
       true
     );
-
   }, [isGuidanceMode, targetNavigationPointId, isDirectionsReady, navigationEndpoints, mapRef]);
 
   if (!isFocused) {

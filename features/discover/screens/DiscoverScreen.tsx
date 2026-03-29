@@ -1,10 +1,4 @@
-import {
-  View,
-  ScrollView,
-  RefreshControl,
-  TouchableOpacity,
-  Dimensions,
-} from 'react-native';
+import { View, ScrollView, RefreshControl, TouchableOpacity, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useCallback } from 'react';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,13 +8,12 @@ import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { MainStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
-import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
+import { CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { useAttractions } from '../hooks/useAttractions';
 import { useEvents } from '../../event/hooks/useEvents';
 import { EventStatus } from '../../event/types';
 import { useWorkshopTemplates } from '../../workshops/hooks/useWorkshopTemplates';
-import { perfMonitor } from '@/utils/perfMonitor';
 import { SmartImage } from '@/components/ui/smart-image';
 
 type DiscoverScreenProps = CompositeScreenProps<
@@ -89,8 +82,6 @@ function getStatusColor(status: string): string {
 }
 
 export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
-  perfMonitor.markRender('Discover');
-
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
@@ -126,20 +117,10 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    Promise.allSettled([refetchAttractions(), refetchEvents(), refetchWorkshops()]).finally(() => setRefreshing(false));
+    Promise.allSettled([refetchAttractions(), refetchEvents(), refetchWorkshops()]).finally(() =>
+      setRefreshing(false)
+    );
   }, [refetchAttractions, refetchEvents, refetchWorkshops]);
-
-  useFocusEffect(
-    useCallback(() => {
-      perfMonitor.markFocus('Discover');
-      perfMonitor.logSnapshot('focus:Discover');
-
-      return () => {
-        perfMonitor.markBlur('Discover');
-        perfMonitor.logSnapshot('blur:Discover');
-      };
-    }, [])
-  );
 
   const renderHeader = () => (
     <View className="sticky top-0 bg-white/80 px-5 pb-1 pt-6 backdrop-blur-md dark:bg-slate-900/80">
@@ -265,7 +246,9 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
                 <TouchableOpacity
                   key={workshop.id}
                   className="w-44"
-                  onPress={() => navigation.navigate('WorkshopDetail', { workshopId: workshop.id })}>
+                  onPress={() =>
+                    navigation.navigate('WorkshopDetail', { workshopId: workshop.id })
+                  }>
                   <View className="relative mb-2 h-44 w-44 overflow-hidden rounded-2xl">
                     <SmartImage uri={thumb?.imageUrl} className="h-full w-full object-cover" />
                     {tagName ? (

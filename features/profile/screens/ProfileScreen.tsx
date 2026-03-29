@@ -2,7 +2,7 @@ import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
-import { memo, useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import type { StackScreenProps } from '@react-navigation/stack';
 
 import { Text } from '@/components/ui/text';
@@ -12,7 +12,6 @@ import { useAuth } from '@/features/auth/context/AuthContext';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { logger } from '@/utils/logger';
-import { perfMonitor } from '@/utils/perfMonitor';
 import type {
   RootStackParamList,
   TabsStackParamList,
@@ -27,7 +26,6 @@ type ProfileNavigationProp = CompositeScreenProps<
 >;
 
 const PROFILE_REFRESH_COOLDOWN_MS = 30_000;
-
 
 const hasProfileChanged = (currentUser: User | null, nextProfile: Partial<User>) => {
   if (!currentUser) {
@@ -45,11 +43,7 @@ const hasProfileChanged = (currentUser: User | null, nextProfile: Partial<User>)
   );
 };
 
-
-
 export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
-  perfMonitor.markRender('Profile');
-
   const { user, isAuthenticated, logout, updateUser } = useAuth();
   const { isDarkColorScheme, toggleColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
@@ -62,7 +56,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
   }, [user]);
 
   const handleLogin = () => {
-    navigation.navigate('Auth', { screen: 'Login' });
+    navigation.replace('Auth', { screen: 'Login' });
   };
 
   const fetchProfile = useCallback(async () => {
@@ -96,14 +90,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
 
   useFocusEffect(
     useCallback(() => {
-      perfMonitor.markFocus('Profile');
-      perfMonitor.logSnapshot('focus:Profile');
       fetchProfile();
-
-      return () => {
-        perfMonitor.markBlur('Profile');
-        perfMonitor.logSnapshot('blur:Profile');
-      };
     }, [fetchProfile])
   );
 
@@ -207,7 +194,9 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
               </View>
               <View>
                 <Text style={styles.pointsLabel}>Your Points</Text>
-                <Text style={styles.pointsValue}>{(user.userPoint ?? 0).toLocaleString('en-US')}</Text>
+                <Text style={styles.pointsValue}>
+                  {(user.userPoint ?? 0).toLocaleString('en-US')}
+                </Text>
               </View>
             </View>
           </View>
@@ -317,7 +306,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
             themeBorder={theme.border}
             themeForeground={theme.foreground}
             themeMutedForeground={theme.mutedForeground}
-            onPress={() => { }}
+            onPress={() => {}}
           />
           <ActionCard
             title="Coupon & Voucher"
@@ -326,7 +315,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
             themeBorder={theme.border}
             themeForeground={theme.foreground}
             themeMutedForeground={theme.mutedForeground}
-            onPress={() => { }}
+            onPress={() => {}}
           />
           <ActionCard
             title="Support Center"
@@ -335,7 +324,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
             themeBorder={theme.border}
             themeForeground={theme.foreground}
             themeMutedForeground={theme.mutedForeground}
-            onPress={() => { }}
+            onPress={() => {}}
           />
 
           <View style={styles.settingsSection}>
@@ -383,7 +372,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
                 themeBorder={theme.border}
                 themeForeground={theme.foreground}
                 themeMutedForeground={theme.mutedForeground}
-                onPress={() => { }}
+                onPress={() => {}}
               />
             </View>
           </View>
