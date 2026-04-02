@@ -25,6 +25,7 @@ import PointHistoryAudioScreen from '@/features/point/screens/PointHistoryAudioS
 import CheckinCameraScreen from '@/features/map/screens/CheckinCameraScreen';
 import CheckinCompleteScreen from '@/features/map/screens/CheckinCompleteScreen';
 import CheckinGalleryScreen from '@/features/profile/screens/CheckinGalleryScreen';
+import ChatScreen from '@/features/chat/screens/ChatScreen';
 
 const Stack = createStackNavigator<MainStackParamList>();
 
@@ -145,6 +146,11 @@ export default function MainNavigator() {
       <Stack.Screen
         name="CheckinGallery"
         component={CheckinGalleryScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ChatRoom"
+        component={ChatScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

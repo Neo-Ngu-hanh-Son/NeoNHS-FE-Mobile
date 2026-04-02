@@ -8,6 +8,7 @@ import { MapScreen } from '@/features/map/screens';
 import { BookingsScreen } from '@/features/bookings/screens';
 import ProfileScreen from '@/features/profile/screens/ProfileScreen';
 import CartListScreen from '@/features/cart/screens/CartListScreen';
+import ChatRoomListScreen from '@/features/chat/screens/ChatRoomListScreen';
 
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
@@ -103,6 +104,16 @@ export default function TabsNavigator() {
           title: 'My Cart',
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? 'cart' : 'cart-outline'} color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Chat"
+        component={ChatRoomListScreen}
+        options={{
+          title: 'Chat',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'chatbubble' : 'chatbubble-outline'} color={color} size={size} />
           ),
         }}
       />
