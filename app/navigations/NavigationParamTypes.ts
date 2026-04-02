@@ -24,6 +24,7 @@ export type TabsStackParamList = {
   Bookings: undefined;
   Profile: undefined;
   TestCart: undefined;
+  Chat: undefined;
 };
 
 /* ============================================================
@@ -105,6 +106,11 @@ export type CheckoutRoutes = {
   };
 };
 
+/* Chat */
+export type ChatRoutes = {
+  ChatRoom: { roomId: string };
+};
+
 /* ============================================================
    MAIN STACK (MERGED)
    ============================================================ */
@@ -122,7 +128,9 @@ export type MainStackParamList = BaseMainRoutes &
   EventRoutes &
   WorkshopRoutes &
   CheckoutRoutes &
-  BlogRoutes;
+  BlogRoutes &
+  ChatRoutes;
+
 
 /* ============================================================
    ROOT STACK
