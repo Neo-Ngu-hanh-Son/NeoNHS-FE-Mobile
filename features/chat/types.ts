@@ -13,6 +13,8 @@ export interface ChatRoom {
   lastMessageAt: string | null;
   lastMessagePreview: string | null;
   lastMessageSenderId: string | null;
+  /** Present when the API includes per-room unread counts */
+  unreadCount?: number;
 }
 
 export interface ChatMessage {

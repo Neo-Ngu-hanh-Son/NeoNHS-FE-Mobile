@@ -45,7 +45,7 @@ export default function ChatScreen({ route, navigation }: any) {
   const { user } = useAuth();
   const currentUserId = user?.id?.toString() || "";
 
-  const { rooms, messagesByRoom, setMessagesByRoom, sendMessage: sendWsMessage } = useChatContext();
+  const { rooms, messagesByRoom, setMessagesByRoom, sendMessage: sendWsMessage, setActiveRoomId } = useChatContext();
 
   const [messageText, setMessageText] = useState("");
 
@@ -59,6 +59,8 @@ export default function ChatScreen({ route, navigation }: any) {
   // Fetch History on Mount
   useEffect(() => {
     if (!roomId) return;
+
+    setActiveRoomId(roomId);
 
     const fetchHistory = async () => {
       try {
@@ -84,6 +86,10 @@ export default function ChatScreen({ route, navigation }: any) {
       }
     };
     fetchHistory();
+
+    return () => {
+      setActiveRoomId(null);
+    };
   }, [roomId]);
 
   const handleSend = () => {
@@ -162,14 +168,14 @@ export default function ChatScreen({ route, navigation }: any) {
             const prevMsg = messages[index + 1];
             const nextMsg = messages[index - 1];
 
-            // Show timestamp if gap with older message is > 30 mins
+            // Show timestamp if gap with older message is > 10 mins
             let showTs = true;
             if (prevMsg) {
               showTs = shouldShowTimestamp(item.timestamp, prevMsg.timestamp);
             }
 
             // Show avatar next to this message if the chronologically newer message
-            // is from a DIFFERENT sender OR if the time gap starts a new block (>30 mins)
+            // is from a DIFFERENT sender OR if the time gap starts a new block (>10 mins)
             let showAvatar = true;
             if (nextMsg) {
               if (

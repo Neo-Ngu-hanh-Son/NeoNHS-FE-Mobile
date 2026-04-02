@@ -24,6 +24,7 @@ export function ChatRoomItem({ room, onPress }: ChatRoomItemProps) {
   const displayAvatar = displayParticipant?.avatarUrl;
   
   const formattedTime = formatChatRoomTime(room.lastMessageAt);
+  const unreadCount = room.unreadCount ?? 0;
 
   return (
     <TouchableOpacity
@@ -44,6 +45,25 @@ export function ChatRoomItem({ room, onPress }: ChatRoomItemProps) {
             style={{ backgroundColor: theme.muted }}
           >
             <Ionicons name="person" size={24} color={theme.mutedForeground} />
+          </View>
+        )}
+        {/* Same badge pattern as FloatingChatButton (totalUnreadCount) — per-room unread */}
+        {unreadCount > 0 && (
+          <View
+            className="absolute -top-1 -right-1 items-center justify-center"
+            style={{
+              backgroundColor: "red",
+              minWidth: 22,
+              height: 22,
+              borderRadius: 11,
+              paddingHorizontal: 4,
+              borderWidth: 2,
+              borderColor: theme.background,
+            }}
+          >
+            <Text className="text-white text-xs font-bold" style={{ fontSize: 10 }}>
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </Text>
           </View>
         )}
       </View>

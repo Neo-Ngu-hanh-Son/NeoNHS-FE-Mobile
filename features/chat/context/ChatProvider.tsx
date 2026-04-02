@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useRef } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef, useMemo } from "react";
 import { ChatMessage, ChatRoomWithDetails } from "../types";
 import { ChatRestService, ChatWebSocketService } from "../services/chatApiService";
 import { useAuth } from "@/features/auth/context/AuthContext";
@@ -13,6 +13,9 @@ interface ChatContextValue {
   sendMessage: (roomId: string, content: string) => void;
   messagesByRoom: Record<string, ChatMessage[]>;
   setMessagesByRoom: React.Dispatch<React.SetStateAction<Record<string, ChatMessage[]>>>;
+  totalUnreadCount: number;
+  setActiveRoomId: (id: string | null) => void;
+  resetUnreadCount: (roomId: string) => void;
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -28,6 +31,22 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoadingRooms, setIsLoadingRooms] = useState(true);
   
   const wsServiceRef = useRef<ChatWebSocketService | null>(null);
+  const activeRoomIdRef = useRef<string | null>(null);
+
+  const totalUnreadCount = useMemo(() => {
+    return rooms.reduce((acc, room) => acc + (room.unreadCount || 0), 0);
+  }, [rooms]);
+
+  const setActiveRoomId = (id: string | null) => {
+    activeRoomIdRef.current = id;
+    if (id) {
+      resetUnreadCount(id);
+    }
+  };
+
+  const resetUnreadCount = (roomId: string) => {
+    setRooms(prev => prev.map(r => r.id === roomId ? { ...r, unreadCount: 0 } : r));
+  };
 
   // 1. Initial Load & WS Connection
   useEffect(() => {
@@ -61,7 +80,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
             return {
               ...room,
               otherParticipant,
-              unreadCount: 0
+              unreadCount: room.unreadCount ?? 0,
             };
           })
         );
@@ -97,11 +116,13 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       setRooms(prevRooms => {
         let updatedRooms = prevRooms.map(room => {
           if (room.id === message.chatRoomId) {
+            const isRead = activeRoomIdRef.current === room.id || message.senderId === currentUserId;
             return {
               ...room,
               lastMessagePreview: message.content,
               lastMessageAt: message.timestamp,
               lastMessageSenderId: message.senderId,
+              unreadCount: isRead ? room.unreadCount : (room.unreadCount || 0) + 1,
             };
           }
           return room;
@@ -142,7 +163,10 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       isConnected,
       sendMessage,
       messagesByRoom,
-      setMessagesByRoom
+      setMessagesByRoom,
+      totalUnreadCount,
+      setActiveRoomId,
+      resetUnreadCount
     }}>
       {children}
     </ChatContext.Provider>
