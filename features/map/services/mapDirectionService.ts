@@ -57,6 +57,7 @@ const ROUTES_FIELD_MASK = [
   'routes.legs.steps.travelMode',
   'routes.legs.steps.startLocation',
   'routes.legs.steps.endLocation',
+  'routes.legs.steps.distanceMeters',
 ].join(',');
 
 export const mapDirectionService = {
@@ -84,8 +85,6 @@ export const mapDirectionService = {
           'X-Goog-FieldMask': ROUTES_FIELD_MASK,
         },
       });
-
-      logger.debug('[mapDirectionService] Directions API fetched: ', response.data);
       return response;
     } catch (error) {
       logger.error('[mapDirectionService] Network error while fetching directions', error);

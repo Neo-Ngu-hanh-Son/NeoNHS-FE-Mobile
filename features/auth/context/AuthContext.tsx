@@ -91,10 +91,14 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
   const userRef = useRef<User | null>(null);
+  const refreshTokenRef = useRef<string | null>(null);
+  const logoutRef = useRef<(() => Promise<void>) | undefined>(undefined);
 
+  // Keep refs in sync with state so stable callbacks can read latest values
   useEffect(() => {
     userRef.current = state.user;
-  }, [state.user]);
+    refreshTokenRef.current = state.refreshToken;
+  }, [state.user, state.refreshToken]);
 
   /**
    * Initialize auth state from storage
@@ -233,7 +237,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     try {
       try {
-        authService.logout((await storage.getRefreshToken()) || state.refreshToken || '');
+        // Read from ref so this callback has zero reactive deps (stable reference)
+        authService.logout((await storage.getRefreshToken()) || refreshTokenRef.current || '');
       } catch (error) {
         logger.warn('Logout API call failed:', error);
       }
@@ -246,6 +251,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'LOGOUT' });
     }
   }, []);
+
+  // Keep the ref current so refreshAuth can call logout without depending on it
+  useEffect(() => {
+    logoutRef.current = logout;
+  }, [logout]);
 
   /**
    * Refresh authentication tokens
@@ -267,10 +277,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       } catch (error) {
         logger.error('Token refresh failed:', error);
-        await logout();
+        // Use ref to avoid depending on `logout` (keeps this callback stable)
+        await logoutRef.current?.();
       }
     },
-    [logout]
+    []
   );
 
   const updateUser = useCallback((userData: Partial<User>) => {
@@ -287,9 +298,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializeAuth();
   }, [initializeAuth]);
 
+  // Memoize with individual primitive deps so the context value only changes
+  // when actual data changes — not on every `isLoading` toggle during init.
   const value: AuthContextValue = useMemo(
     () => ({
-      ...state,
+      user: state.user,
+      accessToken: state.accessToken,
+      refreshToken: state.refreshToken,
+      isAuthenticated: state.isAuthenticated,
+      isLoading: state.isLoading,
+      isInitialized: state.isInitialized,
       login,
       register,
       logout,
@@ -297,7 +315,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       updateUser,
       loginWithGoogle,
     }),
-    [state, login, register, logout, refreshAuth, updateUser, loginWithGoogle]
+    [
+      state.user,
+      state.accessToken,
+      state.refreshToken,
+      state.isAuthenticated,
+      state.isLoading,
+      state.isInitialized,
+      login,
+      register,
+      logout,
+      refreshAuth,
+      updateUser,
+      loginWithGoogle,
+    ]
   );
 
   return (

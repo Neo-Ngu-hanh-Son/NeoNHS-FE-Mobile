@@ -16,6 +16,7 @@ import {
   GoogleSignin,
 } from '@react-native-google-signin/google-signin';
 import { logger } from '@/utils/logger';
+import { useRef, useState } from 'react';
 
 type LoginScreenProps = CompositeScreenProps<
   StackScreenProps<AuthStackParamList, 'Login'>,
@@ -23,13 +24,22 @@ type LoginScreenProps = CompositeScreenProps<
 >;
 
 export default function LoginScreen({ navigation }: LoginScreenProps) {
-  const { login, loginWithGoogle, isLoading } = useAuth();
+  const { login, loginWithGoogle} = useAuth();
+  const [loading, setLoading] = useState(false);
+  const loginingRef = useRef(false);
+
   const { isDarkColorScheme } = useTheme();
   const { alert } = useModal();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
   const handleLogin = async (email: string, password: string) => {
+    if (loginingRef.current) {
+      logger.error('[LoginScreen] Login already in progress. Please wait.');
+      return;
+    }
     try {
+      loginingRef.current = true;
+      setLoading(true);
       await login({ email: email.trim(), password });
       navigation.dispatch(
         CommonActions.reset({
@@ -68,11 +78,19 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       }
 
       alert('Login Failed', errorMessage || 'Unable to sign in. Please try again.');
+    } finally {
+      loginingRef.current = false;
+      setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
+    if (loginingRef.current) {
+      logger.error('[LoginScreen] Another login with Google is already in progress. Please wait.');
+      return;
+    }
     try {
+      loginingRef.current = true;
       await GoogleSignin.hasPlayServices();
 
       // Sign out first to force account chooser to appear
@@ -101,12 +119,14 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     } catch (error) {
       logger.error('[LoginScreen] Google login failed:', error);
       alert('Google Login Failed', 'Unable to sign in with Google. Please try again.');
+    } finally {
+      loginingRef.current = false;
     }
   };
 
   return (
     <AuthLayout
-      isLoading={isLoading}
+      isLoading={loading}
       imageSource={{
         uri: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
       }}>
@@ -119,7 +139,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           </Text>
         </View>
 
-        <LoginForm onSubmit={handleLogin} isLoading={isLoading} />
+        <LoginForm onSubmit={handleLogin} isLoading={loading} />
 
         {/* Divider */}
         <View style={styles.dividerContainer}>

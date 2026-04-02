@@ -1,13 +1,15 @@
 import React, { ReactNode } from 'react';
-import {
-  Image,
-  ImageBackground,
-  type ImageBackgroundProps,
-  type ImageProps,
-  type ImageSourcePropType,
-} from 'react-native';
+import { Image, type ImageProps, type ImageSource } from 'expo-image';
+import { ImageBackground, type ImageBackgroundProps, type ImageSourcePropType } from 'react-native';
+import { cssInterop } from 'nativewind';
 
 const DEFAULT_FALLBACK_SOURCE = require('@/assets/images/placeholder.jpg');
+
+cssInterop(Image, {
+  className: {
+    target: 'style',
+  },
+});
 
 function normalizeUri(uri?: string | null): string | null {
   if (typeof uri !== 'string') {
@@ -20,18 +22,37 @@ function normalizeUri(uri?: string | null): string | null {
 
 type SmartImageProps = Omit<ImageProps, 'source'> & {
   uri?: string | null;
-  fallbackSource?: ImageSourcePropType;
+  fallbackSource?: ImageSource;
+  className?: string;
 };
 
+/**
+ * SmartImage — uses expo-image for network images (memory+disk caching,
+ * efficient GIF/WebP decoding, crossfade transitions).
+ * Falls back to a local placeholder when no valid URI is provided.
+ */
 export function SmartImage({
   uri,
   fallbackSource = DEFAULT_FALLBACK_SOURCE,
+  style,
+  className,
   ...props
 }: SmartImageProps) {
   const resolvedUri = normalizeUri(uri);
   const source = resolvedUri ? { uri: resolvedUri } : fallbackSource;
 
-  return <Image source={source} {...props} />;
+  return (
+    <Image
+      source={source}
+      className={className}
+      style={style}
+      cachePolicy="memory-disk"
+      recyclingKey={resolvedUri ?? undefined}
+      transition={200}
+      contentFit="cover"
+      {...props}
+    />
+  );
 }
 
 type SmartImageBackgroundProps = Omit<ImageBackgroundProps, 'source'> & {
@@ -40,6 +61,11 @@ type SmartImageBackgroundProps = Omit<ImageBackgroundProps, 'source'> & {
   children?: ReactNode;
 };
 
+/**
+ * SmartImageBackground — still uses RN ImageBackground since expo-image
+ * doesn't expose an ImageBackground equivalent. Network images here
+ * still benefit from RN's built-in caching.
+ */
 export function SmartImageBackground({
   uri,
   fallbackSource = DEFAULT_FALLBACK_SOURCE,

@@ -79,12 +79,12 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
   const [location, setLocation] = useState<UserLocation | null>(null);
   const [previousLocation, setPreviousLocation] = useState<UserLocation | null>(null);
   const [isTracking, setIsTracking] = useState(false);
-  const [permissionStatus, setPermissionStatus] =
-    useState<LocationPermissionStatus>('undetermined');
+  const [permissionStatus, setPermissionStatus] = useState<LocationPermissionStatus>('undetermined');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const locationSubscription = useRef<Location.LocationSubscription | null>(null);
+  const isTrackingRef = useRef(false);
 
   /**
    * Check current permission status
@@ -118,17 +118,6 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
       if (!granted) {
         setError('Location permission denied');
       }
-
-      // Additionally request to send notification for geofencing if permission is granted (Optional)
-      // if (granted) {
-      //   const { status: notificationStatus } = await Location.requestBackgroundPermissionsAsync();
-      //   if (notificationStatus !== 'granted') {
-      //     logger.warn(
-      //       'Background location permission not granted, geofencing notifications may not work properly'
-      //     );
-      //   }
-      // }
-
       return granted;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to request permission';
@@ -186,7 +175,9 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
    * Start continuous location tracking
    */
   const startTracking = useCallback(async (): Promise<void> => {
-    if (isTracking) {
+    // Read from ref so this callback doesn't depend on isTracking state
+    // (which would make its identity change on every tracking toggle)
+    if (isTrackingRef.current) {
       logger.info('Location tracking already active');
       return;
     }
@@ -231,6 +222,7 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
         }
       );
 
+      isTrackingRef.current = true;
       setIsTracking(true);
       logger.info('Location tracking started');
     } catch (err) {
@@ -240,7 +232,7 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
     } finally {
       setIsLoading(false);
     }
-  }, [isTracking, checkPermission, requestPermission, mergedOptions]);
+  }, [checkPermission, requestPermission, mergedOptions]);
 
   /**
    * Stop location tracking
@@ -253,6 +245,7 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
       locationSubscription.current = null;
     }
 
+    isTrackingRef.current = false;
     setIsTracking((wasTracking) => {
       if (wasTracking || hadSubscription) {
         logger.info('Location tracking stopped');
@@ -261,40 +254,37 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
     });
   }, []);
 
-  const syncNearbyGeofences = useCallback(
-    async (latitude: number, longitude: number) => {
-      try {
-        const nearbyPoints = (
-          await checkinServices.getNearbyCheckIns(
-            latitude,
-            longitude,
-            MAP_CONSTANTS.CHECKINPOINT_DETECT_RADIUS_M
-          )
-        ).data;
+  const syncNearbyGeofences = useCallback(async (latitude: number, longitude: number) => {
+    try {
+      const nearbyPoints = (
+        await checkinServices.getNearbyCheckIns(latitude, longitude, MAP_CONSTANTS.CHECKINPOINT_DETECT_RADIUS_M)
+      ).data;
 
-        logger.debug('Check-in points near user: ' + nearbyPoints.length);
+      logger.debug('Check-in points near user: ' + nearbyPoints.length);
 
-        return nearbyPoints;
-
-      } catch (err) {
-        logger.error('Failed to sync geofences', err);
-        return [];
-      }
-    },
-    []
-  );
+      return nearbyPoints;
+    } catch (err) {
+      logger.error('Failed to sync geofences', err);
+      return [];
+    }
+  }, []);
 
   // Check permission on mount
   useEffect(() => {
     checkPermission();
   }, [checkPermission]);
 
-  // Auto-start tracking if enabled
+  // Auto-start tracking if enabled (on mount only)
+  const startTrackingRef = useRef(startTracking);
+  useEffect(() => {
+    startTrackingRef.current = startTracking;
+  }, [startTracking]);
+
   useEffect(() => {
     if (mergedOptions.autoStart) {
-      void startTracking();
+      void startTrackingRef.current();
     }
-  }, [mergedOptions.autoStart, startTracking]);
+  }, [mergedOptions.autoStart]);
 
   // Cleanup on unmount
   useEffect(() => {

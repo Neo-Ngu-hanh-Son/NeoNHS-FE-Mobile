@@ -200,6 +200,7 @@ export interface Leg {
 }
 
 export interface Step {
+  distanceMeters?: number;
   polyline: {
     encodedPolyline: string; // The polyline for just this specific step
   };
@@ -225,3 +226,26 @@ export type NavigationStep = {
   currentStep: Step | null;
   nextStep: Step | null;
 }
+
+export type CurrentNavigationStepData = {
+  tripDistanceText: string | undefined;
+  tripDurationText: string | undefined;
+  currentManeuver: Maneuver | null;
+  currentInstructionText: string | undefined;
+  currentStepDistanceText: string | undefined;
+  currentStepDurationText: string | undefined;
+  currentStepProgressText: string | undefined;
+}
+
+export type TripMetadata = {
+  tripTotalDistanceText: string | undefined;
+  tripTotalDurationText: string | undefined;
+
+  tripRemainingDistanceText: string | undefined;
+  tripRemainingDurationText: string | undefined;
+
+  tripRemainingDistance: number | undefined; // in meters
+  tripRemainingDuration: number | undefined; // in seconds
+};
+
+

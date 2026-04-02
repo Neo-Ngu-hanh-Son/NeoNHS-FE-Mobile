@@ -1,14 +1,6 @@
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
-import React, {
-  useCallback,
-  useImperativeHandle,
-  useRef,
-  useState,
-  forwardRef,
-  useEffect,
-  useMemo,
-} from 'react';
+import React, { useCallback, useImperativeHandle, useRef, useState, forwardRef, useEffect, useMemo } from 'react';
 import { MapPoint } from '../..';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { MAP_CENTER } from '../../data';
@@ -113,16 +105,11 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       }
     }, [isMapReady, shouldDisplayMarkerName]);
 
-    const activeCheckinPoint = useCheckinProximity(userLocation, checkinPoints,
-      MAP_CONSTANTS.CHECKINPOINT_DETECT_RADIUS_M);
-
-    useEffect(() => {
-      onMarkerPressRef.current = onMarkerPress;
-    }, [onMarkerPress]);
-
-    useEffect(() => {
-      isGuidanceModeRef.current = isGuidanceMode;
-    }, [isGuidanceMode]);
+    const activeCheckinPoint = useCheckinProximity(
+      userLocation,
+      checkinPoints,
+      MAP_CONSTANTS.CHECKINPOINT_DETECT_RADIUS_M
+    );
 
     // Expose methods to parent via ref
     useImperativeHandle(ref, () => ({
@@ -175,7 +162,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       },
       reloadMap: () => {
         handleReloadMap();
-      }
+      },
     }));
 
     const handleRegionChangeComplete = useCallback((region: Region) => {
@@ -255,16 +242,11 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
         isSyncingNearbyCheckinsRef.current = true;
 
         try {
-          const nearbyCheckinPoints = await syncNearbyGeofences(
-            userLocation.latitude,
-            userLocation.longitude
-          );
+          const nearbyCheckinPoints = await syncNearbyGeofences(userLocation.latitude, userLocation.longitude);
 
           if (!isCancelled) {
             setCheckinPoints((currentPoints) =>
-              hasCheckinPointsChanged(currentPoints, nearbyCheckinPoints)
-                ? nearbyCheckinPoints
-                : currentPoints
+              hasCheckinPointsChanged(currentPoints, nearbyCheckinPoints) ? nearbyCheckinPoints : currentPoints
             );
           }
         } catch (error) {
@@ -303,12 +285,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
     // 1. Memoize the routes (since they never change)
     const memoizedRoutes = useMemo(() => {
       return renderRoutes.map((line) => (
-        <Polyline
-          key={line.id}
-          coordinates={line.coordinates}
-          strokeColor="#fafafa50"
-          strokeWidth={8}
-        />
+        <Polyline key={line.id} coordinates={line.coordinates} strokeColor="#fafafa50" strokeWidth={8} />
       ));
     }, []); // Empty array because renderRoutes is static imported data
 
@@ -367,19 +344,14 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       if (!isMapReady || !mapPoints) return null;
 
       const parentMarkers = mapPoints
-        .filter(
-          (poi) =>
-            poi.latitude !== -1 &&
-            poi.longitude !== -1 &&
-            shouldShowParentPoint(poi)
-        )
+        .filter((poi) => poi.latitude !== -1 && poi.longitude !== -1 && shouldShowParentPoint(poi))
         .map((poi) => (
           <Marker
             key={poi.id}
-            tracksViewChanges={trackChanges}
+            tracksViewChanges={true}
             coordinate={{
               latitude: poi.latitude,
-              longitude: poi.longitude
+              longitude: poi.longitude,
             }}
             onPress={() => {
               if (isGuidanceModeRef.current) {
@@ -388,77 +360,77 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
               onMarkerPressRef.current?.(poi);
             }}>
             <MarkerVisual
-              key={`${poi.id}-${shouldDisplayMarkerName}`}
               point={poi}
               showName={shouldDisplayMarkerName}
-            // isSelected={selectedPointId === poi.id}
+              // isSelected={selectedPointId === poi.id}
             />
           </Marker>
         ));
 
-      const canShowCheckinMarkers =
-        effectiveMarkerFilters.showAll || effectiveMarkerFilters.showCheckin;
+      const canShowCheckinMarkers = effectiveMarkerFilters.showAll || effectiveMarkerFilters.showCheckin;
 
       const checkinMarkers = canShowCheckinMarkers
         ? mapPoints.flatMap((parentPoint) =>
-          (parentPoint.checkinPoints ?? [])
-            .filter(
-              (checkin) =>
-                checkin.isActive !== false &&
-                checkin.latitude !== -1 &&
-                checkin.longitude !== -1
-            )
-            .map((checkin) => {
-              const isUserCheckedIn = checkin.isUserCheckedIn ?? false;
-              let pointType = checkin.type ?? 'CHECKIN';
-              if (isUserCheckedIn) {
-                pointType = 'USER_CHECKIN';
-              }
+            (parentPoint.checkinPoints ?? [])
+              .filter((checkin) => checkin.isActive !== false && checkin.latitude !== -1 && checkin.longitude !== -1)
+              .map((checkin) => {
+                const isUserCheckedIn = checkin.isUserCheckedIn ?? false;
+                let pointType = checkin.type ?? 'CHECKIN';
+                if (isUserCheckedIn) {
+                  pointType = 'USER_CHECKIN';
+                }
 
-              const checkinAsPoint: MapPoint = {
-                id: checkin.id,
-                name: checkin.name,
-                description: checkin.description,
-                thumbnailUrl: checkin.thumbnailUrl,
-                latitude: checkin.latitude,
-                longitude: checkin.longitude,
-                type: pointType,
-                attractionId: parentPoint.id,
-                panoramaImageUrl: checkin.panoramaImageUrl,
-                defaultYaw: checkin.defaultYaw,
-                defaultPitch: checkin.defaultPitch,
-              };
+                const checkinAsPoint: MapPoint = {
+                  id: checkin.id,
+                  name: checkin.name,
+                  description: checkin.description,
+                  thumbnailUrl: checkin.thumbnailUrl,
+                  latitude: checkin.latitude,
+                  longitude: checkin.longitude,
+                  type: pointType,
+                  attractionId: parentPoint.id,
+                  panoramaImageUrl: checkin.panoramaImageUrl,
+                  defaultYaw: checkin.defaultYaw,
+                  defaultPitch: checkin.defaultPitch,
+                };
 
-              // TODO: Optimize this by not making the whole marker arrays re-render on just a selected point
-              return (
-                <Marker
-                  tracksViewChanges={trackChanges}
-                  key={`checkin-${checkin.id}`}
-                  coordinate={{
-                    latitude: checkin.latitude,
-                    longitude: checkin.longitude,
-                  }}
-                  zIndex={30}
-                  onPress={() => {
-                    if (isGuidanceModeRef.current) {
-                      return;
-                    }
-                    onMarkerPressRef.current?.(checkinAsPoint);
-                  }}>
-                  <MarkerVisual
-                    key={`${checkin.id}-${shouldDisplayMarkerName}`}
-                    point={checkinAsPoint}
-                    showName={shouldDisplayMarkerName}
-                  // isSelected={selectedPointId === checkin.id}
-                  />
-                </Marker>
-              );
-            })
-        )
+                // TODO: Optimize this by not making the whole marker arrays re-render on just a selected point
+                return (
+                  <Marker
+                    tracksViewChanges={true}
+                    key={`checkin-${checkin.id}`}
+                    coordinate={{
+                      latitude: checkin.latitude,
+                      longitude: checkin.longitude,
+                    }}
+                    zIndex={30}
+                    onPress={() => {
+                      if (isGuidanceModeRef.current) {
+                        return;
+                      }
+                      onMarkerPressRef.current?.(checkinAsPoint);
+                    }}>
+                    <MarkerVisual
+                      point={checkinAsPoint}
+                      showName={shouldDisplayMarkerName}
+                      // isSelected={selectedPointId === checkin.id}
+                    />
+                  </Marker>
+                );
+              })
+          )
         : [];
 
       return [...parentMarkers, ...checkinMarkers];
-    }, [isMapReady, mapPoints, shouldDisplayMarkerName, shouldShowParentPoint, effectiveMarkerFilters.showAll, effectiveMarkerFilters.showCheckin, trackChanges]);
+    }, [
+      isMapReady,
+      mapPoints,
+      shouldDisplayMarkerName,
+      shouldShowParentPoint,
+      effectiveMarkerFilters.showAll,
+      effectiveMarkerFilters.showCheckin,
+      // trackChanges,
+    ]);
 
     return (
       <View style={[styles.container, { borderColor: theme.border, borderWidth: 1 }]}>
@@ -479,7 +451,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
             onMapReadyCallback?.();
           }}
           onPanDrag={handleMapInteraction} // Detect when user drags the map
-          customMapStyle={[]}>
+          customMapStyle={MAP_CONSTANTS.GOOGLE_MAP_STYLE}>
           {/* Polylines */}
           {memoizedRoutes}
           {memoizedNavigationRoute}
@@ -487,13 +459,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           {/* Markers */}
           {memoizedMarkers}
 
-          {userLocation && (
-            <UserLocationMarker
-              location={userLocation}
-              showAccuracyCircle={true}
-              showHeading={true}
-            />
-          )}
+          {userLocation && <UserLocationMarker location={userLocation} showAccuracyCircle={true} showHeading={true} />}
         </MapView>
 
         <View
@@ -521,8 +487,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
             accessibilityLabel="Reload map"
             activeOpacity={0.8}
             onPress={handleReloadMap}
-            style={[styles.reloadButton, { borderColor: theme.border }]}
-          >
+            style={[styles.reloadButton, { borderColor: theme.border }]}>
             <Ionicons name="reload" size={20} color={theme.foreground} />
           </TouchableOpacity>
         </View>

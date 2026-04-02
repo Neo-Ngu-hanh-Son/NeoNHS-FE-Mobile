@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
-import { Image, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { Text } from '@/components/ui/text';
+import { SmartImage } from '@/components/ui/smart-image';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { MainStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
@@ -89,11 +90,7 @@ export default function PointHistoryAudioScreen({ route }: Props) {
       {/* Transcript (word flow) */}
       <View className="mt-5 rounded-2xl border border-border bg-card p-5">
         {selectedAudio.metadata.coverImage ? (
-          <Image
-            source={{ uri: selectedAudio.metadata.coverImage }}
-            className="mb-4 h-40 w-full rounded-xl"
-            resizeMode="cover"
-          />
+          <SmartImage uri={selectedAudio.metadata.coverImage} className="mb-4 h-40 w-full rounded-xl" />
         ) : null}
 
         <View className="mb-3 flex-col items-start justify-start gap-2">

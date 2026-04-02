@@ -2,49 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { parseFloatOrDefault } from '@/utils/parseNumber';
 import { logger } from '@/utils/logger';
 import { mapDirectionService } from '../services/mapDirectionService';
-import { decodeRoutePolyline } from '../helpers';
-import {
-  Maneuver,
-  MapPoint,
-  NavigationStep,
-  PolylineCoordinate,
-  RouteResponse,
-  Step,
-} from '../types';
+import { decodeRoutePolyline, formatDistanceText, formatDurationText } from '../helpers';
+import { CurrentNavigationStepData, MapPoint, NavigationStep, PolylineCoordinate, RouteResponse, Step } from '../types';
 import type { LocationPermissionStatus, UserLocation } from './useUserLocation';
 import { distanceUtils } from '@/utils/distanceUtils';
 
-const formatDurationText = (duration?: string): string | undefined => {
-  if (!duration) {
-    return undefined;
-  }
-
-  const seconds = Number.parseInt(duration.replace('s', ''), 10);
-  if (!Number.isFinite(seconds) || seconds <= 0) {
-    return undefined;
-  }
-
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.max(1, Math.round((seconds % 3600) / 60));
-
-  if (hours > 0) {
-    return `${hours} hr ${minutes} min`;
-  }
-
-  return `${minutes} min`;
-};
-
-const formatDistanceText = (distanceMeters?: number): string | undefined => {
-  if (typeof distanceMeters !== 'number' || distanceMeters <= 0) {
-    return undefined;
-  }
-
-  if (distanceMeters < 1000) {
-    return `${Math.round(distanceMeters)} m`;
-  }
-
-  return `${(distanceMeters / 1000).toFixed(1)} km`;
-};
 
 type UseMapNavigationGuidanceParams = {
   targetNavigationPointId?: string;
@@ -63,13 +25,6 @@ type UseMapNavigationGuidanceReturn = {
   isDirectionsReady: boolean;
   directionError: string | null;
   routeSummary: RouteResponse | null;
-  tripDurationText?: string;
-  tripDistanceText?: string;
-  currentManeuver: Maneuver | null;
-  currentInstructionText?: string;
-  currentStepDurationText?: string;
-  currentStepDistanceText?: string;
-  currentStepProgressText?: string;
   navigationPolylineCoordinates: PolylineCoordinate[];
   onMapReady: () => void;
   handleExitGuidance: () => void;
@@ -77,6 +32,8 @@ type UseMapNavigationGuidanceReturn = {
     origin: PolylineCoordinate;
     destination: PolylineCoordinate;
   } | null;
+  isUserArrived: boolean;
+  currentNavigationStepData: CurrentNavigationStepData;
 };
 
 export function useMapNavigationGuidance({
@@ -99,13 +56,13 @@ export function useMapNavigationGuidance({
   const [steps, setSteps] = useState<Step[]>([]);
   const [navigationStep, setNavigationStep] = useState<NavigationStep | null>(null);
   const [currentUserStepIndex, setCurrentUserStepIndex] = useState(0);
-  const [navigationPolylineCoordinates, setNavigationPolylineCoordinates] = useState<
-    PolylineCoordinate[]
-  >([]);
+  const [navigationPolylineCoordinates, setNavigationPolylineCoordinates] = useState<PolylineCoordinate[]>([]);
   const [navigationEndpoints, setNavigationEndpoints] = useState<{
     origin: PolylineCoordinate;
     destination: PolylineCoordinate;
   } | null>(null);
+
+  const [isUserArrived, setIsUserArrived] = useState(false);
 
   const fetchedNavigationTargetRef = useRef<string | null>(null);
   const directionsInFlightTargetRef = useRef<string | null>(null);
@@ -156,6 +113,17 @@ export function useMapNavigationGuidance({
     return { targetId: targetNavigationPointId };
   }, [isGuidanceMode, targetNavigationPointId, permissionStatus, userLocation, isTracking]);
 
+  const handleExitGuidance = useCallback(() => {
+    setIsUserArrived(false);
+    setIsGuidanceMode(false);
+    resetDirectionState();
+    resetDirectionRefs();
+    clearTargetNavigationParam();
+  }, [clearTargetNavigationParam, resetDirectionRefs, resetDirectionState]);
+
+  /**
+   * Use effect to reset navigation states
+   */
   useEffect(() => {
     if (!targetNavigationPointId) {
       setIsGuidanceMode(false);
@@ -169,6 +137,9 @@ export function useMapNavigationGuidance({
     resetDirectionState();
   }, [targetNavigationPointId, resetDirectionRefs, resetDirectionState]);
 
+  /**
+   * Use effect to start tracking user location if guidance mode is initiated and tracking hasn't started yet
+   */
   useEffect(() => {
     const trackingStartContext = getTrackingStartContext();
     if (!trackingStartContext) {
@@ -178,6 +149,9 @@ export function useMapNavigationGuidance({
     startTracking();
   }, [getTrackingStartContext, startTracking]);
 
+  /**
+   * Use effect to fetch navigation directions when guidance mode is initiated and a target navigation point is set
+   */
   useEffect(() => {
     const directionsFetchContext = getDirectionsFetchContext();
     if (!directionsFetchContext) {
@@ -252,7 +226,6 @@ export function useMapNavigationGuidance({
 
         if (!isCancelled) {
           const nextSteps = leg?.steps ?? [];
-
           setNavigationPolylineCoordinates(decodedCoordinates);
           setNavigationEndpoints({
             origin: routeOrigin,
@@ -260,7 +233,6 @@ export function useMapNavigationGuidance({
           });
           setRouteSummary(response.data);
           setIsDirectionsReady(decodedCoordinates.length > 1);
-          fetchedNavigationTargetRef.current = targetId;
           setCurrentUserStepIndex(0);
           setNavigationStep({
             previousStep: null,
@@ -268,6 +240,8 @@ export function useMapNavigationGuidance({
             nextStep: nextSteps[1] ?? null,
           });
           setSteps(nextSteps);
+
+          fetchedNavigationTargetRef.current = targetId;
         }
       } catch (error) {
         logger.error('[useMapNavigationGuidance] Failed to fetch navigation directions', error);
@@ -296,6 +270,9 @@ export function useMapNavigationGuidance({
     };
   }, [getDirectionsFetchContext, mapPoints, alert]);
 
+  /**
+   * This effect watches for changes in the user's location and updates the current navigation step accordingly.
+   */
   useEffect(() => {
     if (!isGuidanceMode || !userLocation || steps.length === 0) {
       return;
@@ -324,30 +301,47 @@ export function useMapNavigationGuidance({
     });
   }, [currentUserStepIndex, isGuidanceMode, steps, userLocation]);
 
+  /**
+   * Handle watch current user location to determine if has arrived at destination.
+   */
+  useEffect(() => {
+    if (!isGuidanceMode || !userLocation || !navigationEndpoints || isUserArrived) {
+      return;
+    }
+
+    const hasArrived = distanceUtils.hasUserArrivedAtDestination(
+      {
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+      },
+      navigationEndpoints.destination
+    );
+
+    if (hasArrived) {
+      setIsUserArrived(true);
+    }
+  }, [isGuidanceMode, navigationEndpoints, userLocation, isUserArrived]);
+
   const onMapReady = useCallback(() => {
     setIsMapReady(true);
   }, []);
-
-  const handleExitGuidance = useCallback(() => {
-    setIsGuidanceMode(false);
-    resetDirectionState();
-    resetDirectionRefs();
-    clearTargetNavigationParam();
-  }, [clearTargetNavigationParam, resetDirectionRefs, resetDirectionState]);
 
   const firstLeg = routeSummary?.routes?.[0]?.legs?.[0];
   const totalSteps = steps.length;
   const currentStep = navigationStep?.currentStep ?? null;
   const currentIndex = totalSteps > 0 ? Math.min(currentUserStepIndex, totalSteps - 1) : 0;
 
-  const tripDistanceText = formatDistanceText(firstLeg?.distanceMeters);
-  const tripDurationText = formatDurationText(firstLeg?.duration);
+  const currentNavigationStepData: CurrentNavigationStepData = {
+    // Trip is the overall summary of the entire route (How many are left)
+    tripDistanceText: formatDistanceText(firstLeg?.distanceMeters),
+    tripDurationText: formatDurationText(firstLeg?.duration),
 
-  const currentManeuver = currentStep?.navigationInstruction?.maneuver ?? null;
-  const currentInstructionText = currentStep?.navigationInstruction?.instructions;
-  const currentStepDistanceText = currentStep?.localizedValues?.distance?.text;
-  const currentStepDurationText = currentStep?.localizedValues?.staticDuration?.text;
-  const currentStepProgressText = totalSteps > 0 ? `Step ${currentIndex + 1} of ${totalSteps}` : undefined;
+    currentManeuver: currentStep?.navigationInstruction?.maneuver ?? null,
+    currentInstructionText: currentStep?.navigationInstruction?.instructions,
+    currentStepDistanceText: currentStep?.localizedValues?.distance?.text,
+    currentStepDurationText: currentStep?.localizedValues?.staticDuration?.text,
+    currentStepProgressText: totalSteps > 0 ? `Step ${currentIndex + 1} of ${totalSteps}` : undefined,
+  };
 
   return {
     isGuidanceMode,
@@ -355,16 +349,11 @@ export function useMapNavigationGuidance({
     isDirectionsReady,
     directionError,
     routeSummary,
-    tripDurationText,
-    tripDistanceText,
-    currentManeuver,
-    currentInstructionText,
-    currentStepDurationText,
-    currentStepDistanceText,
-    currentStepProgressText,
     navigationPolylineCoordinates,
     onMapReady,
     handleExitGuidance,
     navigationEndpoints,
+    isUserArrived,
+    currentNavigationStepData,
   };
 }

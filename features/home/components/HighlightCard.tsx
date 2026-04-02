@@ -1,4 +1,4 @@
-import { View, Pressable } from 'react-native';
+import { View, Pressable, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
 import { Card } from '@/components/ui/card';
@@ -31,11 +31,7 @@ export default function HighlightCard({
       android_ripple={{ color: 'rgba(0,0,0,0.12)', foreground: true }}
       className="elevation-sm mx-4 overflow-hidden rounded-xl active:opacity-90">
       <Card className="flex-row gap-0 overflow-hidden p-0">
-        <SmartImage
-          uri={imageUrl}
-          className="h-32 w-28"
-          style={{ backgroundColor: theme.muted }}
-        />
+        <SmartImage uri={imageUrl} className="h-32 w-28" style={{ backgroundColor: theme.muted }} contentFit="cover" />
         <View className="flex-1 justify-center p-3">
           <Text className="mb-1 text-base font-bold" numberOfLines={1}>
             {title}

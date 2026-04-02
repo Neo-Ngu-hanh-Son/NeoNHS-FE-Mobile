@@ -5,46 +5,26 @@ import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
-import { getManeuverPresentation } from '../helpers';
-import { Maneuver } from '../types';
+import { getManeuverPresentation } from '../../helpers';
+import type { NavigationGuideOverlayProps } from './types';
 
-type NavigationGuideOverlayProps = {
-  visible: boolean;
-  isLoading: boolean;
-  isReady: boolean;
-  errorMessage?: string | null;
-  durationText?: string;
-  distanceText?: string;
-  currentManeuver?: Maneuver | null;
-  currentInstructionText?: string;
-  currentStepDurationText?: string;
-  currentStepDistanceText?: string;
-  currentStepProgressText?: string;
-  onExit: () => void;
-};
+type ActiveNavigationOverlayProps = Omit<NavigationGuideOverlayProps, 'visible' | 'isUserArrived'>;
 
-export default function NavigationGuideOverlay({
-  visible,
+export default function ActiveNavigationOverlay({
   isLoading,
   isReady,
   errorMessage,
-  durationText,
-  distanceText,
-  currentManeuver,
-  currentInstructionText,
-  currentStepDurationText,
-  currentStepDistanceText,
-  currentStepProgressText,
+  currentNavigationStepData,
   onExit,
-}: NavigationGuideOverlayProps) {
+}: ActiveNavigationOverlayProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
-  if (!visible) {
-    return null;
-  }
-
-  const statusTitle = isLoading ? 'Preparing route...' : isReady ? 'Route ready' : 'Navigation unavailable';
+  const statusTitle = isLoading
+    ? 'Preparing route...'
+    : isReady
+      ? 'Route ready'
+      : 'Navigation unavailable';
   const statusSubtitle =
     errorMessage ??
     (isLoading
@@ -53,18 +33,25 @@ export default function NavigationGuideOverlay({
         ? 'Follow the route on the map'
         : 'Unable to load route guidance');
 
-  const hasActiveInstruction = isReady && !!currentInstructionText;
-  const maneuverPresentation = getManeuverPresentation(currentManeuver);
-  const topCardTitle = hasActiveInstruction ? currentInstructionText : statusTitle;
+  const hasActiveInstruction = isReady && !!currentNavigationStepData?.currentInstructionText;
+  const maneuverPresentation = getManeuverPresentation(currentNavigationStepData?.currentManeuver);
+  const topCardTitle = hasActiveInstruction
+    ? currentNavigationStepData?.currentInstructionText
+    : statusTitle;
 
   let topCardSubtitle = statusSubtitle;
   if (hasActiveInstruction) {
-    const stepMeta = [currentStepProgressText, currentStepDistanceText, currentStepDurationText].filter(Boolean);
+    const stepMeta = [
+      currentNavigationStepData?.currentStepProgressText,
+      currentNavigationStepData?.currentStepDistanceText,
+      currentNavigationStepData?.currentStepDurationText,
+    ].filter(Boolean);
     topCardSubtitle = `${maneuverPresentation.label}${stepMeta.length > 0 ? ` · ${stepMeta.join(' · ')}` : ''}`;
   }
 
   return (
     <>
+      {/* ── Top card: current instruction / status ── */}
       <SafeAreaView pointerEvents="box-none" className="absolute left-0 right-0 top-0 px-3" edges={['top']}>
         <View
           className="rounded-3xl px-4 py-3"
@@ -77,7 +64,13 @@ export default function NavigationGuideOverlay({
                 <ActivityIndicator color="#ffffff" size="small" />
               ) : (
                 <Ionicons
-                  name={(hasActiveInstruction ? maneuverPresentation.iconName : isReady ? 'navigate' : 'warning-outline') as React.ComponentProps<typeof Ionicons>['name']}
+                  name={
+                    (hasActiveInstruction
+                      ? maneuverPresentation.iconName
+                      : isReady
+                        ? 'navigate'
+                        : 'warning-outline') as React.ComponentProps<typeof Ionicons>['name']
+                  }
                   size={20}
                   color="#ffffff"
                 />
@@ -91,6 +84,7 @@ export default function NavigationGuideOverlay({
         </View>
       </SafeAreaView>
 
+      {/* ── Bottom card: trip summary + exit ── */}
       <View pointerEvents="box-none" className="absolute bottom-4 left-0 right-0 px-3">
         <View
           className="rounded-3xl px-4 py-3"
@@ -100,8 +94,8 @@ export default function NavigationGuideOverlay({
           <View className="flex-row items-center justify-between gap-3">
             <View className="flex-1">
               <Text className="text-base font-bold text-white">
-                {durationText ?? (isLoading ? 'Calculating...' : 'Navigation')}
-                {distanceText ? ` (${distanceText})` : ''}
+                {currentNavigationStepData?.tripDurationText ?? (isLoading ? 'Calculating...' : 'Navigation')}
+                {currentNavigationStepData?.tripDistanceText ? ` (${currentNavigationStepData?.tripDistanceText})` : ''}
               </Text>
               <Text className="text-xs text-white/80">
                 {isReady ? 'Walking to destination' : isLoading ? 'Please wait while route loads' : 'No active route'}
@@ -122,6 +116,7 @@ export default function NavigationGuideOverlay({
         </View>
       </View>
 
+      {/* ── Inline error banner ── */}
       {!isLoading && errorMessage ? (
         <View
           pointerEvents="none"

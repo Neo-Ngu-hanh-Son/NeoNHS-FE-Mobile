@@ -1,11 +1,9 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { View, Image, StyleSheet, ViewStyle, StyleProp, Dimensions } from 'react-native';
-import { ImageSourcePropType } from 'react-native';
+import { View, Image, StyleSheet, ViewStyle, StyleProp, Dimensions, ImageSourcePropType } from 'react-native';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
-import LoadingOverlay from '@/components/Loader/LoadingOverlay';
 
 type AuthLayoutProps = {
   isLoading?: boolean;

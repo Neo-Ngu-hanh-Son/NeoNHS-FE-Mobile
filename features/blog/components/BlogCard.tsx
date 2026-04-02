@@ -29,7 +29,7 @@ function BlogCardComponent({ blog, onPress }: BlogCardProps) {
     <Pressable onPress={() => onPress?.(blog)} accessibilityRole="button">
       <Card className="mb-3 gap-0 overflow-hidden border-border py-0">
         <View className="flex-row">
-          <SmartImage uri={blog.thumbnailUrl} className="h-32 w-28 bg-muted" resizeMode="cover" />
+          <SmartImage uri={blog.thumbnailUrl} className="h-32 w-28 bg-muted" contentFit="cover" />
 
           <View className="flex-1 px-3 py-2">
             <Text className="text-base font-semibold text-foreground" numberOfLines={2}>

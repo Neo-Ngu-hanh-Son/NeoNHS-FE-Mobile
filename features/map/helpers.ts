@@ -72,3 +72,36 @@ export const getManeuverPresentation = (maneuver?: Maneuver | null): ManeuverPre
       return { iconName: 'navigate', label: 'Continue' };
   }
 };
+
+
+export const formatDurationText = (duration?: string): string | undefined => {
+  if (!duration) {
+    return undefined;
+  }
+
+  const seconds = Number.parseInt(duration.replace('s', ''), 10);
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    return undefined;
+  }
+
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.max(1, Math.round((seconds % 3600) / 60));
+
+  if (hours > 0) {
+    return `${hours} hr ${minutes} min`;
+  }
+
+  return `${minutes} min`;
+};
+
+export const formatDistanceText = (distanceMeters?: number): string | undefined => {
+  if (typeof distanceMeters !== 'number' || distanceMeters <= 0) {
+    return undefined;
+  }
+
+  if (distanceMeters < 1000) {
+    return `${Math.round(distanceMeters)} m`;
+  }
+
+  return `${(distanceMeters / 1000).toFixed(1)} km`;
+};

@@ -34,24 +34,14 @@ export default function GuideCard({ title, description, imageUrl, onPress }: Gui
           },
         ]}>
         <View style={styles.imageContainer}>
-          <SmartImage
-            uri={imageUrl}
-            style={[styles.image, { backgroundColor: theme.muted }]}
-            resizeMode="cover"
-          />
+          <SmartImage uri={imageUrl} style={[styles.image, { backgroundColor: theme.muted }]} contentFit="cover" />
         </View>
 
         <View style={styles.textContainer}>
-          <Text
-            className="text-base font-bold leading-5"
-            style={{ color: theme.foreground }}
-            numberOfLines={2}>
+          <Text className="text-base font-bold leading-5" style={{ color: theme.foreground }} numberOfLines={2}>
             {title}
           </Text>
-          <Text
-            className="mt-1 text-sm leading-5"
-            style={{ color: theme.mutedForeground }}
-            numberOfLines={3}>
+          <Text className="mt-1 text-sm leading-5" style={{ color: theme.mutedForeground }} numberOfLines={3}>
             {description}
           </Text>
         </View>

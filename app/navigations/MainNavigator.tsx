@@ -35,68 +35,20 @@ export default function MainNavigator() {
         component={TabsNavigator}
         options={{ headerShown: false, animationTypeForReplace: 'pop' }}
       />
-      <Stack.Screen
-        name="UpdateAccount"
-        component={UpdateAccountScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="ChangePassword"
-        component={ChangePasswordScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="KycVerification"
-        component={KycVerificationScreen}
-        options={{ headerShown: false }}
-      />
+      <Stack.Screen name="UpdateAccount" component={UpdateAccountScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="KycVerification" component={KycVerificationScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Withdraw" component={WithdrawScreen} options={{ headerShown: false }} />
-      <Stack.Screen
-        name="TransactionHistory"
-        component={TransactionHistoryScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="TransactionDetails"
-        component={TransactionDetailsScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="TicketVerification"
-        component={TicketVerificationScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="PreCheckout"
-        component={PreCheckoutScreen}
-        options={{ headerShown: false }}
-      />
+      <Stack.Screen name="TransactionHistory" component={TransactionHistoryScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="TransactionDetails" component={TransactionDetailsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="TicketVerification" component={TicketVerificationScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="PreCheckout" component={PreCheckoutScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Payment" component={PaymentScreen} options={{ headerShown: false }} />
-      <Stack.Screen
-        name="AllDestinations"
-        component={AllDestinationsScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="PointDetail"
-        component={PointDetailScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="PointMapSelection"
-        component={PointMapSelectionScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="ActiveNavigation"
-        component={ActiveNavigationScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="ArrivalConfirmation"
-        component={ArrivalConfirmationScreen}
-        options={{ headerShown: false }}
-      />
+      <Stack.Screen name="AllDestinations" component={AllDestinationsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="PointDetail" component={PointDetailScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="PointMapSelection" component={PointMapSelectionScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="ActiveNavigation" component={ActiveNavigationScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="ArrivalConfirmation" component={ArrivalConfirmationScreen} options={{ headerShown: false }} />
 
       <Stack.Screen
         name="PointHistoryAudio"
@@ -108,43 +60,15 @@ export default function MainNavigator() {
         }}
       />
 
-      <Stack.Screen
-        name="EventDetail"
-        component={EventDetailScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="WorkshopList"
-        component={WorkshopListScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="WorkshopDetail"
-        component={WorkshopDetailScreen}
-        options={{ headerShown: false }}
-      />
+      <Stack.Screen name="EventDetail" component={EventDetailScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="WorkshopList" component={WorkshopListScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="WorkshopDetail" component={WorkshopDetailScreen} options={{ headerShown: false }} />
       <Stack.Screen name="BlogList" component={BlogListScreen} options={{ headerShown: false }} />
-      <Stack.Screen
-        name="BlogDetails"
-        component={BlogDetailsScreen}
-        options={{ headerShown: false }}
-      />
+      <Stack.Screen name="BlogDetails" component={BlogDetailsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Panorama" component={PanoramaScreen} options={{ headerShown: false }} />
-      <Stack.Screen
-        name="CheckinCamera"
-        component={CheckinCameraScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="CheckinComplete"
-        component={CheckinCompleteScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="CheckinGallery"
-        component={CheckinGalleryScreen}
-        options={{ headerShown: false }}
-      />
+      <Stack.Screen name="CheckinCamera" component={CheckinCameraScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CheckinComplete" component={CheckinCompleteScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CheckinGallery" component={CheckinGalleryScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }

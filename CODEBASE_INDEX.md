@@ -1,112 +1,212 @@
-# NeoNHS Mobile Codebase Index
+# NeoNHS Mobile - Codebase Index
+
+> Last updated: 2026-04-02
+> Stack: Expo 54, React Native 0.81, TypeScript 5.9, NativeWind 4, React Navigation 7, TanStack Query 5
+> Architecture: Feature-first mobile app with shared app shell
+
+---
 
 ## Snapshot
 
-- Project: Expo + React Native + TypeScript
-- Entry point: `index.tsx` -> `app/App.tsx`
-- Source files indexed: 255 (under `app`, `components`, `features`, `services`, `hooks`, `utils`, `lib`, `types`)
-- Architecture: feature-first + shared app layers
-- Styling: NativeWind (`className`) + shared primitives in `components/ui`
-- API: shared client in `services/api/client.ts` + endpoint builders in `services/api/endpoints`
+- Total indexed source files (`app`, `components`, `features`, `hooks`, `lib`, `services`, `types`, `utils`): **267**
+- Top-level source distribution:
+  - `features`: 205
+  - `components`: 25
+  - `app`: 13
+  - `services`: 13
+  - `utils`: 6
+  - `hooks`: 2
+  - `lib`: 2
+  - `types`: 1
 
-## Run and Quality Commands
+## Quick Commands
 
-- Install: `npm install`
-- Dev server: `npm run dev`
-- Android: `npm run android`
-- iOS: `npm run ios`
-- Type check: `npm run typecheck`
-- Lint: `npm run lint`
-- Tests (watch): `npm test`
-- Tests (single run): `npx jest --watchAll=false`
+| Command                     | Purpose                  |
+| --------------------------- | ------------------------ |
+| `npm install`               | Install dependencies     |
+| `npm run dev`               | Start Expo Dev Client    |
+| `npm run android`           | Run Android native build |
+| `npm run ios`               | Run iOS native build     |
+| `npm run typecheck`         | Run TypeScript check     |
+| `npm run lint`              | Run Expo lint            |
+| `npm test`                  | Run Jest in watch mode   |
+| `npx jest --watchAll=false` | One-off Jest run         |
 
-## Runtime Flow
+---
 
-1. `index.tsx` boots app.
-2. `app/App.tsx` mounts `app/providers/Providers.tsx`.
-3. Provider stack composes global app state and services.
-4. Navigation starts in `app/navigations/RootNavigator.tsx`.
-5. Screens call feature hooks/services; services call shared `apiClient`.
+## Runtime Boot Flow
 
-## Top-Level Map
+```text
+index.tsx
+  -> app/App.tsx
+       -> Providers
+            -> SafeAreaProvider
+            -> QueryClientProvider
+            -> ThemeProvider
+            -> GoogleLoginProvider
+            -> ModalProvider
+            -> LoadingProvider
+            -> AuthProvider
+            -> ApiProvider
+       -> ThemedStatusBar
+       -> RootNavigator
+            -> NavigationContainer
+            -> PanoramaProvider
+            -> Root Stack (Main, Auth)
+       -> PortalHost
+```
 
-- `app/`: app shell (navigators, providers)
-- `features/`: feature modules (auth, map, home, event, profile, ...)
-- `components/`: shared UI and composed common components
-- `services/`: shared services (`api`, `cloudinary`)
-- `hooks/`: shared hooks (`useApi`)
-- `utils/`: constants, logger, date, storage
-- `lib/`: theme and helper utilities
-- `types/`: shared TS types
-- `docs/`: architecture and usage guides
+Notes:
 
-## App Layer Details
+- Query cache is persisted with MMKV through `persistQueryClient` in `services/api/tanstack/queryClient.ts`.
+- Auth + API wiring is centralized in `features/auth/context/AuthContext.tsx` and `app/providers/ApiProvider.tsx`.
 
-### Navigation (`app/navigations`)
+---
 
-- `NavigationParamTypes.ts`: route param source of truth
-- `AuthNavigator.tsx`: auth stack screens
-- `TabsNavigator.tsx`: main tab routes
-- `MainNavigator.tsx`: stack over tabs + detail flows
-- `RootNavigator.tsx`: root container for `Auth` and `Main`
+## Navigation Map
 
-### Providers (`app/providers`)
+Type source of truth: `app/navigations/NavigationParamTypes.ts`
 
-- `Providers.tsx`: provider composition root
-- `ThemeProvider.tsx`: theme and dark mode class toggle
-- `GoogleLoginProvider.tsx`: Google auth integration
-- `ModalProvider.tsx`: modal state host
-- `LoadingProvider.tsx`: global loading overlay state
-- `AuthProvider` (in feature auth) + `ApiProvider.tsx`: auth state and API auth wiring
+### Root Stack
+
+- `Main` -> `MainNavigator`
+- `Auth` -> `AuthNavigator`
+
+### Auth Stack
+
+- `Login`
+- `Register`
+- `ForgotPassword`
+- `EnterOtp` (`{ email: string }`)
+- `ForgotPasswordOtp` (`{ email: string }`)
+- `VerifyEmail` (`{ email?: string; fromRegister?: boolean }`)
+
+### Tabs Stack
+
+- `Home`
+- `Discover`
+- `Map` (`{ pointId?, targetNavigationPointId?, userCheckedInPointId? } | undefined`)
+- `Bookings`
+- `Profile`
+- `TestCart`
+
+### Main Stack (registered)
+
+- `Tabs`
+- `UpdateAccount`
+- `ChangePassword`
+- `KycVerification`
+- `Withdraw`
+- `TransactionHistory`
+- `TransactionDetails` (`{ transactionId: string }`)
+- `TicketVerification`
+- `PreCheckout` (`{ selectedIds: string[] }`)
+- `Payment` (`{ cartItemIds: string[]; voucherIds: string[]; amount: number; orderCode: string }`)
+- `AllDestinations`
+- `PointDetail`
+- `PointMapSelection`
+- `ActiveNavigation`
+- `ArrivalConfirmation`
+- `PointHistoryAudio`
+- `EventDetail`
+- `WorkshopList`
+- `WorkshopDetail`
+- `BlogList`
+- `BlogDetails`
+- `Panorama`
+- `CheckinCamera`
+- `CheckinComplete`
+- `CheckinGallery`
+
+Note: `AudioGuide` exists in route types but is not currently registered in `MainNavigator.tsx`.
+
+---
+
+## Top-Level Modules
+
+- `app/`: App shell (`App.tsx`), navigation, global providers
+- `components/`: Shared UI and primitives (`components/ui/*`, loaders, shared layouts)
+- `features/`: Domain modules (auth, map, home, profile, etc.)
+- `services/`: Shared integrations (`services/api/*`, `services/cloudinary.ts`)
+- `hooks/`: Shared hooks (`useApi`, barrel index)
+- `lib/`: Theme and utility helpers (`theme.ts`, `utils.ts`)
+- `types/`: Shared cross-feature types (`common.ts`)
+- `utils/`: constants, logging, formatting, storage helpers
+
+---
 
 ## Feature Inventory
 
-Feature file counts (indexed files under each `features/<name>`):
+File counts shown are source files within each feature folder.
 
-- `auth`: 14
-- `blog`: 20
-- `bookings`: 2
-- `cart`: 6
-- `discover`: 9
-- `event`: 14
-- `home`: 31
-- `map`: 37
-- `panorama`: 4
-- `point`: 19
-- `profile`: 17
-- `workshops`: 22
+| Feature              | Files | Primary Responsibilities                                                     |
+| -------------------- | ----: | ---------------------------------------------------------------------------- |
+| `features/map`       |    45 | Map rendering, clustering, filters, user location, check-in flow, directions |
+| `features/home`      |    32 | Home dashboard sections, overview data, featured content                     |
+| `features/workshops` |    22 | Workshop list/detail/session browsing and APIs                               |
+| `features/blog`      |    20 | Blog list/detail, filtering, HTML rendering                                  |
+| `features/point`     |    19 | Point detail pages and history-audio playback UI                             |
+| `features/profile`   |    18 | Account management, KYC, transactions, gallery                               |
+| `features/auth`      |    14 | Authentication screens, auth context, auth services                          |
+| `features/event`     |    14 | Event detail and ticket catalog querying                                     |
+| `features/discover`  |     9 | Destination browsing and navigation setup screens                            |
+| `features/cart`      |     6 | Cart list, pre-checkout, payment flow                                        |
+| `features/panorama`  |     4 | Panorama rendering and panorama API service                                  |
+| `features/bookings`  |     2 | Bookings placeholder screen                                                  |
 
-## Key Feature Anchors
+---
 
-- Auth state and token lifecycle: `features/auth/context/AuthContext.tsx`
-- Map flows (camera, check-in, location): `features/map/`
-- Home composition patterns: `features/home/components/sections/`
-- Event detail/catalog patterns: `features/event/`
-- Profile account/history flows: `features/profile/screens/`
+## API Layer Index
 
-## Shared Layer Anchors
+### Core
 
-- API client and transforms: `services/api/client.ts`
-- Endpoint builders: `services/api/endpoints/`
-- Query client setup: `services/api/tanstack/queryClient.ts`
-- Shared hook wrapper: `hooks/useApi.ts`
-- Theme tokens: `lib/theme.ts`
-- Storage/constants/logger: `utils/storage.ts`, `utils/constants.ts`, `utils/logger.ts`
-- UI primitives: `components/ui/`
+- `services/api/client.ts`: Axios wrapper with token injection, refresh retry, response transformation, error normalization
+- `services/api/types.ts`: `ApiResponse`, `ApiError`, paging and request config types
+- `services/api/index.ts`: central exports
 
-## Conventions That Matter
+### Endpoint Builders
 
-- Keep feature logic inside feature folders.
-- No direct API calls inside components.
-- Flow should be: Screen -> feature hook -> feature service -> shared api client.
-- Use alias imports (`@/...`) instead of deep relative paths.
-- Update navigation param types before wiring new screens.
-- Prefer NativeWind classes and shared UI primitives over ad-hoc styles.
+- `services/api/endpoints/endpoints.ts`: aggregates endpoint groups
+- Group files:
+  - `map.api.ts`
+  - `discover.api.ts`
+  - `events.api.ts`
+  - `blog.api.ts`
+  - `workshops.api.ts`
 
-## Documentation Pointers
+### Other Shared Services
 
-- API usage: `docs/API_CLIENT.md`
-- Auth system: `docs/AUTH_SYSTEM.md`
-- Navigation guide: `docs/NAVIGATION_GUIDE.md`
-- Folder structure: `docs/FOLDER_STRUCTURE.md`
-- Environment setup: `docs/ENVIRONMENT_SETUP.md`
+- `services/cloudinary.ts`: image/video upload helpers
+- `services/api/common/statsService.ts`: shared stats requests
+
+---
+
+## Shared UI Index
+
+- Buttons: `components/Buttons/*`
+- Layout/skeleton utilities: `components/common/*`
+- Loading states: `components/Loader/*`
+- Navigation helper: `components/Navigator/AppLink.tsx`
+- Primitives: `components/ui/*`
+  - includes `button`, `input`, `card`, `text`, `switch`, `checkbox`, `radio-group`, `select`, `separator`, `skeleton`, `smart-image`
+
+---
+
+## State, Theme, and Storage
+
+- Theme system: `app/providers/ThemeProvider.tsx`, `lib/theme.ts`, `global.css`
+- Auth state: `features/auth/context/AuthContext.tsx`
+- API wiring for auth/refresh/logout: `app/providers/ApiProvider.tsx`
+- Query caching: `services/api/tanstack/queryClient.ts`
+- Persistent key/value storage: `utils/storage.ts`
+
+---
+
+## Project Conventions (Enforced by Current Structure)
+
+1. Feature-first separation (`features/<feature>/screens|hooks|services|components|types`)
+2. API flow should remain: screen -> feature hook -> feature service -> shared `apiClient`
+3. Public endpoints must explicitly pass `requiresAuth: false`
+4. Navigation changes must start in `NavigationParamTypes.ts`
+5. Prefer alias imports (`@/...`) over deep relative imports
+6. Prefer NativeWind `className` + shared primitives before ad-hoc styles

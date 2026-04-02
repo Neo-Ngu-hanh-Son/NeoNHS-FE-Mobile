@@ -5,7 +5,7 @@ import { logger } from '@/utils/logger';
 import { MapPoint, MapPointCheckin } from '../types';
 import MapPointDetailModal from '../components/PointDetailModal/PointDetailModal';
 import NHSMap, { NHSMapRef } from '../components/Map/NHSMap';
-import NavigationGuideOverlay from '../components/NavigationGuideOverlay';
+import NavigationGuideOverlay from '../components/Navigation/NavigationGuideOverlay';
 import { MapMarkerFilterBar } from '../components';
 import { mapService } from '../services/mapServices';
 import { useModal } from '@/app/providers/ModalProvider';
@@ -29,9 +29,10 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
   const { isAuthenticated } = useAuth();
   const initialPointId = route.params?.pointId;
   const targetNavigationPointId = route.params?.targetNavigationPointId;
+  const userCheckedInPointId = route.params?.userCheckedInPointId;
   const isFocused = useIsFocused();
 
-  // Map state
+  // Map states
   const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const mapRef = useRef<NHSMapRef>(null);
@@ -42,9 +43,10 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
 
   // Modal helpers
   const { alert } = useModal();
+
   const userLocationOptions = useMemo(
     () => ({
-      autoStart: false,
+      autoStart: true,
       updateInterval: MAP_CONSTANTS.UPDATE_USER_LOCATION_THROTTLE_MS,
       distanceInterval: 5,
     }),
@@ -71,7 +73,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
       const res = await mapService.getMapPoints();
       return res.data as MapPoint[];
     },
-    enabled: isFocused,
+    enabled: true,
   });
 
   if (isMapPointsError) {
@@ -112,17 +114,12 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     isDirectionsLoading,
     isDirectionsReady,
     directionError,
-    tripDurationText,
-    tripDistanceText,
-    currentManeuver,
-    currentInstructionText,
-    currentStepDurationText,
-    currentStepDistanceText,
-    currentStepProgressText,
     navigationPolylineCoordinates,
     onMapReady,
     handleExitGuidance,
     navigationEndpoints,
+    isUserArrived,
+    currentNavigationStepData,
   } = useMapNavigationGuidance({
     targetNavigationPointId,
     mapPoints,
@@ -134,20 +131,19 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     clearTargetNavigationParam,
   });
 
-  // Cleanup location tracking on unmount
+  // Use a ref so the cleanup/effect can read the latest tracking state
+  // without depending on it (which would cause the infinite loop).
+  const isTrackingRef = useRef(isTracking);
   useEffect(() => {
-    return () => {
-      if (isTracking) {
-        stopTracking();
-      }
-    };
-  }, [isTracking, stopTracking]);
+    isTrackingRef.current = isTracking;
+  }, [isTracking]);
 
+  // Stop tracking when screen loses focus; restart is handled by autoStart on re-focus
   useEffect(() => {
-    if (!isFocused && isTracking) {
+    if (!isFocused && isTrackingRef.current) {
       stopTracking();
     }
-  }, [isFocused, isTracking, stopTracking]);
+  }, [isFocused, stopTracking]);
 
   const handleMarkerPress = useCallback((point: MapPoint) => {
     setSelectedPoint(point);
@@ -230,10 +226,6 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     );
   }, [isGuidanceMode, targetNavigationPointId, isDirectionsReady, navigationEndpoints, mapRef]);
 
-  if (!isFocused) {
-    return null;
-  }
-
   function onNavigationExit(): void {
     handleExitGuidance();
     mapRef.current?.reloadMap();
@@ -242,11 +234,13 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
   return (
     <ScreenLayout showBackButton={false}>
       {/* Permission banner - shows when permission needed or error */}
-      <LocationPermissionBanner
+      {/*
+  <LocationPermissionBanner
         permissionStatus={permissionStatus}
         onRequestPermission={handleRequestPermission}
         error={locationError}
       />
+        */}
 
       {/* Main map */}
       <NHSMap
@@ -280,14 +274,9 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
         isLoading={isDirectionsLoading}
         isReady={isDirectionsReady}
         errorMessage={directionError}
-        durationText={tripDurationText}
-        distanceText={tripDistanceText}
-        currentManeuver={currentManeuver}
-        currentInstructionText={currentInstructionText}
-        currentStepDurationText={currentStepDurationText}
-        currentStepDistanceText={currentStepDistanceText}
-        currentStepProgressText={currentStepProgressText}
         onExit={onNavigationExit}
+        currentNavigationStepData={currentNavigationStepData}
+        isUserArrived={isUserArrived}
       />
 
       {/* Point detail modal */}
@@ -299,30 +288,9 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
             onClose={handleCloseModal}
             onViewDetails={handleNavigate}
           />
-          <CheckinCameraButton
-            onOpenCamera={handleOpenCheckinCamera}
-            isSugestingCheckin={activePoint != null}
-          />
+          <CheckinCameraButton onOpenCamera={handleOpenCheckinCamera} isSugestingCheckin={activePoint != null} />
         </>
       ) : null}
-
-      {/* {isMapBootstrapping ? (
-        <View
-          pointerEvents="none"
-          style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0,
-            zIndex: 999,
-          }}>
-          <FullScreenLoader
-            hideBack
-            message={isMapPointsLoading ? 'Loading map points...' : 'Acquiring your location...'}
-          />
-        </View>
-      ) : null} */}
     </ScreenLayout>
   );
 }
