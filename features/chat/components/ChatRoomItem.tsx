@@ -20,7 +20,7 @@ export function ChatRoomItem({ room, onPress }: ChatRoomItemProps) {
   // Decide what to display for the room's avatar and name.
   // Real implementation might compute this based on participants list filtering out MOCK_CURRENT_USER_ID
   const displayParticipant = room.otherParticipant;
-  const displayName = room.name || displayParticipant?.fullname || "Unknown Chat";
+  const displayName = displayParticipant?.fullname || room.name || "Unknown Chat";
   const displayAvatar = displayParticipant?.avatarUrl;
   
   const formattedTime = formatChatRoomTime(room.lastMessageAt);

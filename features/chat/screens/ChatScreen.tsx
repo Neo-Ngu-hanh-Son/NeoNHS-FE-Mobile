@@ -16,51 +16,81 @@ import { useTheme } from "@/app/providers/ThemeProvider";
 import { THEME } from "@/lib/theme";
 
 import { ChatMessageBubble } from "../components/ChatMessageBubble";
-import {
-  MOCK_CURRENT_USER_ID,
-  MOCK_ROOMS,
-  MOCK_MESSAGES_ROOM_1,
-} from "../data/mockChatData";
 import { formatChatMessageTime, shouldShowTimestamp } from "../utils/helpers";
 import { ChatMessage } from "../types";
+import { useAuth } from "@/features/auth/context/AuthContext";
+import { useChatContext } from "../context/ChatProvider";
+import { ChatRestService } from "../services/chatApiService";
+
+/** Maps backend role strings to user-facing labels (Admin, Vendor, Tourist). */
+function formatParticipantRole(role?: string): string {
+  if (!role) return "";
+  switch (role.toUpperCase()) {
+    case "ADMIN":
+      return "Admin";
+    case "VENDOR":
+      return "Vendor";
+    case "TOURIST":
+      return "Tourist";
+    default:
+      return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+  }
+}
 
 export default function ChatScreen({ route, navigation }: any) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
-  const [messageText, setMessageText] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const roomId = route.params?.roomId;
+  const { user } = useAuth();
+  const currentUserId = user?.id?.toString() || "";
 
-  // Mock fetching room details
-  // const roomId = route.params?.roomId || MOCK_ROOMS[0].id;
-  const room = MOCK_ROOMS[0]; // hardcoded for demo, normally find by roomId
+  const { rooms, messagesByRoom, setMessagesByRoom, sendMessage: sendWsMessage } = useChatContext();
+
+  const [messageText, setMessageText] = useState("");
+
+  const room = rooms.find(r => r.id === roomId);
   const displayParticipant = room?.otherParticipant;
-  const displayName = room?.name || displayParticipant?.fullname || "Chat";
+  const displayName = displayParticipant?.fullname || room?.name || "Chat";
   const displayAvatar = displayParticipant?.avatarUrl;
 
-  // Load mock data on mount
+  const messages = messagesByRoom[roomId] || [];
+
+  // Fetch History on Mount
   useEffect(() => {
-    // Invert the array for FlatList inverted=true (newest first)
-    const sorted = [...MOCK_MESSAGES_ROOM_1].sort(
-      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
-    setMessages(sorted);
-  }, []);
+    if (!roomId) return;
+
+    const fetchHistory = async () => {
+      try {
+        const page = await ChatRestService.getRoomMessages(roomId, 0, 50);
+        const historyMsgs = page.content;
+
+        setMessagesByRoom((prev) => {
+          const current = prev[roomId] || [];
+          // Deduplicate by ID
+          const msgMap = new Map<string, ChatMessage>();
+          historyMsgs.forEach(m => msgMap.set(m.id, m));
+          current.forEach(m => msgMap.set(m.id, m));
+
+          // Sort inverted (newest first)
+          const merged = Array.from(msgMap.values()).sort(
+            (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+          );
+
+          return { ...prev, [roomId]: merged };
+        });
+      } catch (e) {
+        console.error("Failed to load history", e);
+      }
+    };
+    fetchHistory();
+  }, [roomId]);
 
   const handleSend = () => {
-    if (!messageText.trim()) return;
+    if (!messageText.trim() || !roomId) return;
 
-    const newMessage: ChatMessage = {
-      id: "msg-" + Date.now(),
-      chatRoomId: room.id,
-      senderId: MOCK_CURRENT_USER_ID,
-      content: messageText.trim(),
-      timestamp: new Date().toISOString(),
-      status: "SENT",
-    };
-
-    // Prepend to inverted list
-    setMessages([newMessage, ...messages]);
+    // STOMP transmit
+    sendWsMessage(roomId, messageText.trim());
     setMessageText("");
   };
 
@@ -93,7 +123,7 @@ export default function ChatScreen({ route, navigation }: any) {
           </Text>
           {displayParticipant && (
             <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-              {displayParticipant.role === "VENDOR" ? "Vendor" : "Tourist"}
+              {formatParticipantRole(displayParticipant.role)}
             </Text>
           )}
         </View>
@@ -124,7 +154,7 @@ export default function ChatScreen({ route, navigation }: any) {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingVertical: 16 }}
           renderItem={({ item, index }) => {
-            const isMine = item.senderId === MOCK_CURRENT_USER_ID;
+            const isMine = item.senderId === currentUserId;
 
             // In inverted list:
             // index + 1 is the chronologically PREVIOUS message (older)

@@ -8,23 +8,24 @@ import { useTheme } from "@/app/providers/ThemeProvider";
 import { THEME } from "@/lib/theme";
 
 import { ChatRoomItem } from "../components/ChatRoomItem";
-import { MOCK_ROOMS } from "../data/mockChatData";
+import { useChatContext } from "../context/ChatProvider";
 
 export default function ChatRoomListScreen({ navigation }: any) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   
+  const { rooms, isLoadingRooms } = useChatContext();
   const [searchQuery, setSearchQuery] = useState("");
 
   // Filter mock rooms by search query (name or fullname of the other participant)
   const filteredRooms = useMemo(() => {
-    if (!searchQuery.trim()) return MOCK_ROOMS;
+    if (!searchQuery.trim()) return rooms;
     
-    return MOCK_ROOMS.filter(r => {
-      const displayName = r.name || r.otherParticipant?.fullname || "";
+    return rooms.filter(r => {
+      const displayName = r.otherParticipant?.fullname || r.name || "";
       return displayName.toLowerCase().includes(searchQuery.toLowerCase());
     });
-  }, [searchQuery]);
+  }, [searchQuery, rooms]);
 
   const renderHeader = () => (
     <View className="px-4 py-3">
