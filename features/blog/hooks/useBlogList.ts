@@ -8,6 +8,7 @@ interface UseBlogListOptions {
   size?: number;
   search?: string;
   filters?: BlogFilters;
+  autoFetch?: boolean;
 }
 
 interface UseBlogListReturn {
@@ -15,6 +16,7 @@ interface UseBlogListReturn {
   page: number;
   totalPages: number;
   loading: boolean;
+  error: string | null;
   fetchBlogs: () => Promise<void>;
   loadMore: () => void;
   refresh: () => Promise<void>;
@@ -24,7 +26,7 @@ interface UseBlogListReturn {
 const DEFAULT_PAGE_SIZE = 10;
 
 export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn {
-  const { size = DEFAULT_PAGE_SIZE, search, filters } = options;
+  const { size = DEFAULT_PAGE_SIZE, search, filters, autoFetch = false } = options;
 
   const normalizedSearch = search?.trim() || undefined;
   const activeFilters = filters ?? BLOG_DEFAULT_FILTERS;
@@ -32,7 +34,8 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(autoFetch);
+  const [error, setError] = useState<string | null>(null);
 
   const isFetchingRef = useRef(false);
 
@@ -45,6 +48,7 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
       isFetchingRef.current = true;
 
       setLoading(true);
+      setError(null);
       try {
         const pageData = await blogService.getBlogs({
           page: targetPage,
@@ -69,6 +73,7 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
         setTotalPages(pageData.totalPages);
       } catch (error) {
         logger.error('[useBlogList] Failed to fetch blogs:', error);
+        setError('Failed to fetch latest blogs.');
       } finally {
         isFetchingRef.current = false;
         setLoading(false);
@@ -90,6 +95,12 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
       replace: true,
     });
   }, [requestPage]);
+
+  useEffect(() => {
+    if (autoFetch) {
+      void fetchBlogs();
+    }
+  }, [autoFetch, fetchBlogs]);
 
   const loadMore = useCallback(() => {
     if (loading || isFetchingRef.current) {
@@ -138,6 +149,7 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
     page,
     totalPages,
     loading,
+    error,
     fetchBlogs,
     loadMore,
     refresh,

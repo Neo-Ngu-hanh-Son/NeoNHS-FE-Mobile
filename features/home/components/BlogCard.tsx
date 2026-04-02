@@ -1,5 +1,6 @@
-import { View, Image, Pressable, Dimensions, StyleSheet } from 'react-native';
+import { View, Pressable, Dimensions, StyleSheet } from 'react-native';
 import { Text } from '@/components/ui/text';
+import { SmartImage } from '@/components/ui/smart-image';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import type { BlogResponse } from '@/features/blog/types/blog';
@@ -43,20 +44,13 @@ export default function BlogCard({ blog, onPress }: BlogCardProps) {
         elevation: 3,
       }}>
       {coverImage ? (
-        <Image
-          source={{ uri: coverImage }}
-          style={[styles.image, { backgroundColor: theme.muted }]}
-          resizeMode="cover"
-        />
+        <SmartImage uri={coverImage} style={[styles.image, { backgroundColor: theme.muted }]} />
       ) : (
         <View style={[styles.image, { backgroundColor: theme.muted }]} />
       )}
 
       <View style={styles.content}>
-        <Text
-          className="text-base font-bold leading-5"
-          style={{ color: theme.foreground }}
-          numberOfLines={2}>
+        <Text className="text-base font-bold leading-5" style={{ color: theme.foreground }} numberOfLines={2}>
           {blog.title}
         </Text>
         <View className="mt-1 flex-row items-center gap-1">
@@ -75,9 +69,7 @@ export default function BlogCard({ blog, onPress }: BlogCardProps) {
           )}
         </View>
         {categoryName ? (
-          <View
-            className="mt-2 self-start rounded-full px-2 py-0.5"
-            style={{ backgroundColor: `${theme.primary}15` }}>
+          <View className="mt-2 self-start rounded-full px-2 py-0.5" style={{ backgroundColor: `${theme.primary}15` }}>
             <Text className="text-xs font-medium" style={{ color: theme.primary }}>
               {categoryName}
             </Text>

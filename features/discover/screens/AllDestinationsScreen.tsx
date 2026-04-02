@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { View, ScrollView, TouchableOpacity, TextInput, Image, RefreshControl } from 'react-native';
+import { View, ScrollView, TouchableOpacity, TextInput, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -13,31 +13,17 @@ import { useAttractions } from '../hooks/useAttractions';
 import { usePointsByAttraction } from '../hooks/usePointsByAttraction';
 import { useAllEvents } from '../../event/hooks/useAllEvents';
 import { WorkshopListContent } from '../../workshops/screens';
+import { useBlogList } from '@/features/blog';
+import type { Blog } from '@/features/blog/types';
+import { useQueryClient } from '@tanstack/react-query';
+import { SmartImage } from '@/components/ui/smart-image';
 
 type Props = StackScreenProps<MainStackParamList, 'AllDestinations'>;
 
 type CategoryType = 'Points' | 'Workshops' | 'Events' | 'Blogs';
 
-const BLOGS = [
-  {
-    id: 'b1',
-    title: 'Top 5 Views in Marble Mountains',
-    author: 'Alex J.',
-    date: 'Jan 15',
-    image:
-      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=500&auto=format&fit=crop',
-  },
-  {
-    id: 'b2',
-    title: 'A Spiritual Journey to Linh Ung',
-    author: 'Maria K.',
-    date: 'Feb 2',
-    image:
-      'https://images.unsplash.com/photo-1528127269322-539801943592?w=500&auto=format&fit=crop',
-  },
-];
-
 export default function AllDestinationsScreen({ navigation, route }: Props) {
+  const queryClient = useQueryClient();
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const [activeTab, setActiveTab] = useState<CategoryType>(route.params?.initialTab || 'Points');
@@ -49,11 +35,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
 
   const [searchQuery, setSearchQuery] = useState('');
 
-  const {
-    data: attractions,
-    isLoading: attractionsLoading,
-    refetch: refetchAttractions,
-  } = useAttractions();
+  const { data: attractions, isLoading: attractionsLoading, refetch: refetchAttractions } = useAttractions();
 
   const {
     data: points,
@@ -62,11 +44,23 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
   } = usePointsByAttraction(selectedAttractionId);
 
   const { data: events, isLoading: eventsLoading, refetch: refetchEvents } = useAllEvents();
+  const {
+    blogs,
+    loading: blogsLoading,
+    fetchBlogs,
+    refresh: refetchBlogs,
+  } = useBlogList({
+    size: 20,
+  });
+
+  useEffect(() => {
+    fetchBlogs();
+  }, [fetchBlogs]);
 
   const loading =
-    (activeTab === 'Points' &&
-      (attractionsLoading || (selectedAttractionId ? pointsLoading : false))) ||
-    (activeTab === 'Events' && eventsLoading);
+    (activeTab === 'Points' && (attractionsLoading || (selectedAttractionId ? pointsLoading : false))) ||
+    (activeTab === 'Events' && eventsLoading) ||
+    (activeTab === 'Blogs' && blogsLoading);
 
   useEffect(() => {
     if (route.params?.selectedAttractionId) {
@@ -86,8 +80,11 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
       refetchAttractions(),
       ...(selectedAttractionId ? [refetchPoints()] : []),
       refetchEvents(),
+      refetchBlogs(),
+      queryClient.refetchQueries({ queryKey: ['workshop-search'] }),
+      queryClient.refetchQueries({ queryKey: ['workshop-tags'] }),
     ]).finally(() => setRefreshing(false));
-  }, [refetchAttractions, refetchPoints, refetchEvents, selectedAttractionId]);
+  }, [queryClient, refetchAttractions, refetchPoints, refetchEvents, refetchBlogs, selectedAttractionId]);
 
   useEffect(() => {
     setSearchQuery('');
@@ -98,9 +95,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
     if (!searchQuery.trim()) return evts;
     const q = searchQuery.toLowerCase();
     return evts.filter(
-      (e) =>
-        e.name.toLowerCase().includes(q) ||
-        (e.locationName && e.locationName.toLowerCase().includes(q))
+      (e) => e.name.toLowerCase().includes(q) || (e.locationName && e.locationName.toLowerCase().includes(q))
     );
   }, [events, searchQuery]);
 
@@ -116,12 +111,15 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
   }, [attractions, points, selectedAttractionId, searchQuery]);
 
   const filteredBlogs = useMemo(() => {
-    if (!searchQuery.trim()) return BLOGS;
+    if (!searchQuery.trim()) return blogs;
     const q = searchQuery.toLowerCase();
-    return BLOGS.filter(
-      (b) => b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q)
+    return blogs.filter(
+      (b: Blog) =>
+        b.title.toLowerCase().includes(q) ||
+        (b.summary?.toLowerCase().includes(q) ?? false) ||
+        (b.user?.fullname?.toLowerCase().includes(q) ?? false)
     );
-  }, [searchQuery]);
+  }, [blogs, searchQuery]);
 
   const renderHeader = () => {
     let title = 'Discover';
@@ -147,9 +145,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
         break;
     }
     return (
-      <View
-        className="flex-row items-center justify-between border-b px-4 py-3"
-        style={{ borderColor: theme.border }}>
+      <View className="flex-row items-center justify-between border-b px-4 py-3" style={{ borderColor: theme.border }}>
         <View className="flex-1 flex-row items-center">
           <TouchableOpacity
             onPress={() => {
@@ -175,7 +171,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16, gap: 8, alignItems: "center" }}>
+        contentContainerStyle={{ paddingHorizontal: 16, gap: 8, alignItems: 'center' }}>
         {(['Points', 'Workshops', 'Events', 'Blogs'] as CategoryType[]).map((tab) => (
           <TouchableOpacity
             key={tab}
@@ -192,13 +188,13 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
               },
               activeTab === tab
                 ? { backgroundColor: theme.primary, borderColor: theme.primary }
-                : { backgroundColor: "transparent", borderColor: theme.border },
+                : { backgroundColor: 'transparent', borderColor: theme.border },
             ]}>
             <Text
               style={{
                 fontSize: 14,
-                fontWeight: "700",
-                color: activeTab === tab ? "#fff" : theme.mutedForeground,
+                fontWeight: '700',
+                color: activeTab === tab ? '#fff' : theme.mutedForeground,
               }}>
               {tab}
             </Text>
@@ -246,8 +242,6 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
       );
     }
 
-
-
     if (activeTab === 'Points') {
       const data = filteredAttractions;
       if (data.length === 0) {
@@ -261,7 +255,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
         );
       }
       return (
-        <View className="space-y-4 px-4 pb-10">
+        <View className="px-4 pb-10 pt-2">
           {data.map((item) => (
             <TouchableOpacity
               key={item.id}
@@ -272,10 +266,10 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
                   navigation.navigate('PointDetail', { pointId: item.id });
                 }
               }}
-              className="flex-row items-center gap-4 rounded-2xl border p-3"
+              className="mb-3 flex-row items-center gap-4 rounded-2xl border p-3"
               style={{ backgroundColor: theme.card, borderColor: theme.border }}>
-              <Image
-                source={{ uri: (item as any).thumbnailUrl || (item as any).image || undefined }}
+              <SmartImage
+                uri={(item as any).thumbnailUrl || (item as any).image}
                 className="h-24 w-24 rounded-2xl object-cover"
               />
               <View className="flex-1">
@@ -304,9 +298,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
                 {selectedAttractionId && (
                   <View className="mt-1 flex-row items-center gap-2">
                     <View className="flex-row items-center gap-1 rounded-lg bg-primary/10 px-2 py-0.5">
-                      <Text className="text-[10px] font-bold uppercase text-primary">
-                        {(item as MapPoint).type}
-                      </Text>
+                      <Text className="text-[10px] font-bold uppercase text-primary">{(item as MapPoint).type}</Text>
                     </View>
                     {(item as MapPoint).estTimeSpent && (
                       <Text className="text-sm" style={{ color: theme.mutedForeground }}>
@@ -336,17 +328,14 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
         );
       }
       return (
-        <View className="space-y-4 px-4 pb-10">
+        <View className="px-4 pb-10 pt-2">
           {data.map((item) => (
             <TouchableOpacity
               key={item.id}
               onPress={() => navigation.navigate('EventDetail', { eventId: item.id })}
-              className="flex-row items-center gap-4 rounded-2xl border p-3"
+              className="mb-3 flex-row items-center gap-4 rounded-2xl border p-3"
               style={{ backgroundColor: theme.card, borderColor: theme.border }}>
-              <Image
-                source={{ uri: item.thumbnailUrl || undefined }}
-                className="h-24 w-24 rounded-2xl object-cover"
-              />
+              <SmartImage uri={item.thumbnailUrl} className="h-24 w-24 rounded-2xl object-cover" />
               <View className="flex-1">
                 <Text className="text-lg font-bold" style={{ color: theme.foreground }}>
                   {item.name}
@@ -415,23 +404,34 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
         );
       }
       return (
-        <View className="space-y-4 px-4 pb-10">
+        <View className="px-4 pb-10 pt-2">
           {data.map((item) => (
             <TouchableOpacity
               key={item.id}
-              className="flex-row items-center gap-4 rounded-2xl border p-3"
+              onPress={() => navigation.navigate('BlogDetails', { blogId: item.id })}
+              className="mb-3 flex-row items-center gap-4 rounded-2xl border p-3"
               style={{ backgroundColor: theme.card, borderColor: theme.border }}>
-              <Image source={{ uri: item.image }} className="h-24 w-24 rounded-2xl object-cover" />
+              <SmartImage uri={item.thumbnailUrl || item.bannerUrl} className="h-24 w-24 rounded-2xl object-cover" />
               <View className="flex-1">
                 <Text className="text-lg font-bold" style={{ color: theme.foreground }}>
                   {item.title}
                 </Text>
+                {item.summary && (
+                  <Text className="mt-1 text-xs" numberOfLines={2} style={{ color: theme.mutedForeground }}>
+                    {item.summary}
+                  </Text>
+                )}
                 <View className="mt-1 flex-row items-center gap-2">
                   <Text className="text-xs font-semibold" style={{ color: theme.primary }}>
-                    {item.author}
+                    {item.user?.fullname || 'NeoNHS'}
                   </Text>
                   <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-                    • {item.date}
+                    •{' '}
+                    {new Date(item.publishedAt || item.createdAt || Date.now()).toLocaleDateString('vi-VN', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
                   </Text>
                 </View>
               </View>
@@ -444,14 +444,12 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
 
     return null;
   };
-  if (activeTab === "Workshops") {
+  if (activeTab === 'Workshops') {
     return (
       <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
         {renderHeader()}
         {renderTabs()}
-        <WorkshopListContent
-          onNavigateToDetail={(id) => navigation.navigate('WorkshopDetail', { workshopId: id })}
-        />
+        <WorkshopListContent onNavigateToDetail={(id) => navigation.navigate('WorkshopDetail', { workshopId: id })} />
       </SafeAreaView>
     );
   }

@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
     gap: 4,
-    width: 100,
+    maxWidth: 130,
   },
   typeBadgeText: {
     color: 'white',

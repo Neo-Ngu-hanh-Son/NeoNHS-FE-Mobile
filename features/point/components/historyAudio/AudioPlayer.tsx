@@ -30,14 +30,49 @@ export default function AudioPlayer({ audioUrl, onActiveIndexChange, audio }: Au
   });
   const status = useAudioPlayerStatus(player);
 
+  const isReleasedPlayerError = useCallback((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    return (
+      message.includes('Cannot use shared object that was already released') ||
+      message.includes('cannot be cast to type expo.modules.audio.AudioPlayer')
+    );
+  }, []);
+
+  const runPlayerSafely = useCallback(
+    (action: () => void, context: string) => {
+      try {
+        action();
+      } catch (error) {
+        if (isReleasedPlayerError(error)) {
+          logger.debug(`AudioPlayer: Skip '${context}' because player is already released`);
+          return;
+        }
+        logger.error(`AudioPlayer: Failed to run '${context}'`, error);
+      }
+    },
+    [isReleasedPlayerError]
+  );
+
+  const runPlayerSafelyAsync = useCallback(
+    async (action: () => Promise<void>, context: string) => {
+      try {
+        await action();
+      } catch (error) {
+        if (isReleasedPlayerError(error)) {
+          logger.debug(`AudioPlayer: Skip '${context}' because player is already released`);
+          return;
+        }
+        logger.error(`AudioPlayer: Failed to run '${context}'`, error);
+      }
+    },
+    [isReleasedPlayerError]
+  );
+
   const [playbackSpeed, setPlaybackSpeed] = useState('1x');
   const isReady = Boolean(audioUrl) && status.isLoaded;
   const isPlaying = status.playing;
 
-  const position = useMemo(
-    () => Math.round((status.currentTime || 0) * 1000),
-    [status.currentTime]
-  );
+  const position = useMemo(() => Math.round((status.currentTime || 0) * 1000), [status.currentTime]);
   const duration = useMemo(() => Math.round((status.duration || 0) * 1000), [status.duration]);
   const lockScreenMetadata = useMemo(
     () => ({
@@ -81,27 +116,27 @@ export default function AudioPlayer({ audioUrl, onActiveIndexChange, audio }: Au
     if (!isReady) return;
 
     if (status.playing) {
-      player.setActiveForLockScreen(true, lockScreenMetadata);
+      runPlayerSafely(() => player.setActiveForLockScreen(true, lockScreenMetadata), 'setActiveForLockScreen(true)');
     } else {
-      player.setActiveForLockScreen(false);
+      runPlayerSafely(() => player.setActiveForLockScreen(false), 'setActiveForLockScreen(false)');
     }
-  }, [audioUrl, isReady, status.playing, player, lockScreenMetadata]);
+  }, [audioUrl, isReady, status.playing, player, lockScreenMetadata, runPlayerSafely]);
 
   // Release lock screen controls when a track completes.
   useEffect(() => {
     if (status.didJustFinish) {
-      player.setActiveForLockScreen(false);
+      runPlayerSafely(() => player.setActiveForLockScreen(false), 'clear lock screen on finish');
     }
-  }, [status.didJustFinish, player]);
+  }, [status.didJustFinish, player, runPlayerSafely]);
 
   // Pause and clear lock-screen controls when leaving this screen.
   useFocusEffect(
     useCallback(() => {
       return () => {
-        player.pause();
-        player.setActiveForLockScreen(false);
+        runPlayerSafely(() => player.pause(), 'pause on screen blur');
+        runPlayerSafely(() => player.setActiveForLockScreen(false), 'clear lock screen on screen blur');
       };
-    }, [player])
+    }, [player, runPlayerSafely])
   );
 
   // ─── Controls ───
@@ -109,11 +144,14 @@ export default function AudioPlayer({ audioUrl, onActiveIndexChange, audio }: Au
     if (!isReady) return;
 
     if (isPlaying) {
-      player.pause();
-      player.setActiveForLockScreen(false);
+      runPlayerSafely(() => player.pause(), 'pause');
+      runPlayerSafely(() => player.setActiveForLockScreen(false), 'clear lock screen on pause');
     } else {
-      player.setActiveForLockScreen(true, lockScreenMetadata);
-      player.play();
+      runPlayerSafely(
+        () => player.setActiveForLockScreen(true, lockScreenMetadata),
+        'set lock screen metadata on play'
+      );
+      runPlayerSafely(() => player.play(), 'play');
     }
   };
 
@@ -121,12 +159,12 @@ export default function AudioPlayer({ audioUrl, onActiveIndexChange, audio }: Au
     if (!isReady) return;
 
     const newPosition = Math.max(0, Math.min(position + amount, duration));
-    await player.seekTo(newPosition / 1000);
+    await runPlayerSafelyAsync(() => player.seekTo(newPosition / 1000), 'skip seek');
   };
 
   const handleSeek = async (positionMillis: number) => {
     if (!isReady) return;
-    await player.seekTo(positionMillis / 1000);
+    await runPlayerSafelyAsync(() => player.seekTo(positionMillis / 1000), 'manual seek');
   };
 
   const handleSpeedChange = async () => {
@@ -140,7 +178,9 @@ export default function AudioPlayer({ audioUrl, onActiveIndexChange, audio }: Au
 
     const next = nextSpeedMap[playbackSpeed];
     setPlaybackSpeed(next.label);
-    player.playbackRate = next.value;
+    runPlayerSafely(() => {
+      player.playbackRate = next.value;
+    }, 'set playback rate');
   };
 
   return (

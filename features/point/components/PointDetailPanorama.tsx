@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Image, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
+import { SmartImage } from '@/components/ui/smart-image';
 import { MapPoint } from '../../map/types';
 
 type PointDetailPanoramaProps = {
@@ -19,11 +20,7 @@ export function PointDetailPanorama({ point, onOpenPanorama }: PointDetailPanora
         onPress={onOpenPanorama}
         className="relative h-48 overflow-hidden rounded-2xl border border-border"
         activeOpacity={0.8}>
-        <Image
-          source={{ uri: point.panoramaImageUrl }}
-          className="h-full w-full"
-          resizeMode="cover"
-        />
+        <SmartImage uri={point.panoramaImageUrl} className="h-full w-full" />
         {/* Overlay with 360 icon */}
         <View className="absolute inset-0 items-center justify-center bg-black/25">
           <View className="h-16 w-16 items-center justify-center rounded-full border-2 border-white/80 bg-primary/90">

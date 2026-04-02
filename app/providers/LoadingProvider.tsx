@@ -1,5 +1,5 @@
 import LoadingOverlay from '@/components/Loader/LoadingOverlay';
-import { createContext, ReactNode, useContext, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from 'react';
 
 interface LoadingModalContextValue {
   setLoading: (loading: boolean) => void;
@@ -11,10 +11,15 @@ const LoadingModalContext = createContext<LoadingModalContextValue | undefined>(
 export default function LoadingProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
 
-  const value = {
-    setLoading,
-    isLoading: () => loading,
-  };
+  const isLoadingCb = useCallback(() => loading, [loading]);
+
+  const value = useMemo(
+    () => ({
+      setLoading,
+      isLoading: isLoadingCb,
+    }),
+    [isLoadingCb]
+  );
   return (
     <LoadingModalContext.Provider value={value}>
       {children}

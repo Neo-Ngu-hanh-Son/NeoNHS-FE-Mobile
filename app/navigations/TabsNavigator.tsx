@@ -29,6 +29,7 @@ export default function TabsNavigator() {
         headerShown: false,
         tabBarActiveTintColor: theme.primary,
         tabBarInactiveTintColor: theme.mutedForeground,
+        freezeOnBlur: true,
         tabBarStyle: {
           backgroundColor: theme.card,
           borderTopColor: theme.border,
