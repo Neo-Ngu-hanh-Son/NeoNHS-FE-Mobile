@@ -1,14 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Image,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -16,6 +7,7 @@ import { GestureViewer, useGestureViewerState } from 'react-native-gesture-image
 
 import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { Text } from '@/components/ui/text';
+import { SmartImage } from '@/components/ui/smart-image';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { useUserCheckinGallery } from '@/features/profile/hooks/useUserCheckinGallery';
@@ -110,18 +102,14 @@ export default function CheckinGalleryScreen({ navigation }: CheckinGalleryScree
         {rows.map((row, rowIndex) => (
           <View key={`${section.title}-${rowIndex}`} style={styles.gridRow}>
             {row.map((image) => (
-              <Pressable
-                key={image.id}
-                style={styles.gridItem}
-                onPress={() => openViewer(image)}
-              >
-                <Image source={{ uri: image.imageUrl }} style={styles.gridImage} resizeMode="cover" />
+              <Pressable key={image.id} style={styles.gridItem} onPress={() => openViewer(image)}>
+                <SmartImage uri={image.imageUrl} style={styles.gridImage} />
               </Pressable>
             ))}
             {row.length < GRID_COLUMN_COUNT
               ? Array.from({ length: GRID_COLUMN_COUNT - row.length }).map((_, emptyIndex) => (
-                <View key={`${section.title}-${rowIndex}-empty-${emptyIndex}`} style={styles.gridItem} />
-              ))
+                  <View key={`${section.title}-${rowIndex}-empty-${emptyIndex}`} style={styles.gridItem} />
+                ))
               : null}
           </View>
         ))}
@@ -150,8 +138,7 @@ export default function CheckinGalleryScreen({ navigation }: CheckinGalleryScree
               borderColor: theme.border,
             },
           ]}
-          onPress={() => setGroupingMode('date')}
-        >
+          onPress={() => setGroupingMode('date')}>
           <Text style={{ color: groupingMode === 'date' ? 'white' : theme.foreground }}>Group by Date</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -162,8 +149,7 @@ export default function CheckinGalleryScreen({ navigation }: CheckinGalleryScree
               borderColor: theme.border,
             },
           ]}
-          onPress={() => setGroupingMode('destination')}
-        >
+          onPress={() => setGroupingMode('destination')}>
           <Text style={{ color: groupingMode === 'destination' ? 'white' : theme.foreground }}>
             Group by Destination
           </Text>
@@ -173,10 +159,7 @@ export default function CheckinGalleryScreen({ navigation }: CheckinGalleryScree
       {!isLoading && isError ? (
         <View style={styles.centerState}>
           <Text className="mb-3 text-sm text-foreground">Failed to load check-in photos.</Text>
-          <TouchableOpacity
-            style={[styles.retryButton, { backgroundColor: theme.primary }]}
-            onPress={() => refetch()}
-          >
+          <TouchableOpacity style={[styles.retryButton, { backgroundColor: theme.primary }]} onPress={() => refetch()}>
             <Text style={{ color: 'white' }}>Try Again</Text>
           </TouchableOpacity>
         </View>
@@ -199,13 +182,7 @@ export default function CheckinGalleryScreen({ navigation }: CheckinGalleryScree
           data={images}
           initialIndex={selectedIndex}
           ListComponent={ScrollView}
-          renderItem={(item) => (
-            <Image
-              source={{ uri: item.imageUrl }}
-              style={styles.viewerImage}
-              resizeMode="contain"
-            />
-          )}
+          renderItem={(item) => <SmartImage uri={item.imageUrl} style={styles.viewerImage} contentFit="contain" />}
           onDismiss={() => setViewerVisible(false)}
           renderContainer={(children, helpers) => (
             <View style={styles.viewerContainer}>
@@ -220,9 +197,7 @@ export default function CheckinGalleryScreen({ navigation }: CheckinGalleryScree
                   <Text className="text-base font-semibold text-white">
                     {activeViewerImage.caption || 'No caption'}
                   </Text>
-                  <Text className="mt-1 text-xs text-white/80">
-                    {formatDateTime(activeViewerImage.takenAt)}
-                  </Text>
+                  <Text className="mt-1 text-xs text-white/80">{formatDateTime(activeViewerImage.takenAt)}</Text>
                   <Text className="mt-1 text-xs text-white/80">
                     {activeViewerImage.parentPointName ||
                       activeViewerImage.destinationName ||

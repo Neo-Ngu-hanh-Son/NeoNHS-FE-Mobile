@@ -4,4 +4,5 @@ export { default as KnowBeforeYouGoSection } from './KnowBeforeYouGoSection';
 export { default as AboutNHSSection } from './AboutNHSSection';
 export { default as LatestBlogsSection } from './LatestBlogsSection';
 export { default as UpcomingEventsSection } from './UpcomingEventsSection';
+export { default as UpcomingWorkshopsSection } from './UpcomingWorkshopsSection';
 export { default as MustSeePlacesSection } from './MustSeePlacesSection';

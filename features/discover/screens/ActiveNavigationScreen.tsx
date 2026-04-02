@@ -1,5 +1,5 @@
 import React from "react";
-import { View, TouchableOpacity, Image, Dimensions } from "react-native";
+import { View, TouchableOpacity, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { StackScreenProps } from "@react-navigation/stack";
@@ -10,6 +10,7 @@ import { THEME } from "@/lib/theme";
 import { MainStackParamList } from "@/app/navigations/NavigationParamTypes";
 import { discoverService } from "../services/discoverServices";
 import { MapPoint } from "../../map/types";
+import { SmartImage } from "@/components/ui/smart-image";
 
 const { width, height } = Dimensions.get("window");
 
@@ -52,8 +53,8 @@ export default function ActiveNavigationScreen({ navigation, route }: Props) {
         <View className="flex-1" style={{ backgroundColor: theme.background }}>
             {/* Map Background Placeholder */}
             <View className="absolute inset-0 bg-slate-100 dark:bg-slate-900">
-                <Image
-                    source={{ uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuBZZUY6Flmba_HEvAt4ainR9mU1Ih15CJYknjySCAY6HXreso2wZR4ulo-6AMHb7ZNGvHf3VSESxWVXMS5FcMwZtcrzfAfGnjVhV4WobVpcH1DN7XlsW948gScKtZF3ojUDUjCecJJ068oUFB_CMTDo2Oq8ggrJi7gZh9dV0Yh7X58OWkV2R-pXfiLwFvvJkL0OFUTCS_XbXix3pOeyvLiaj0TscMR7yGI2Qex9n1guvRUn84bSn1GDq7uaFrjzCsM8m421NJYC-EZ1" }}
+                <SmartImage
+                    uri="https://lh3.googleusercontent.com/aida-public/AB6AXuBZZUY6Flmba_HEvAt4ainR9mU1Ih15CJYknjySCAY6HXreso2wZR4ulo-6AMHb7ZNGvHf3VSESxWVXMS5FcMwZtcrzfAfGnjVhV4WobVpcH1DN7XlsW948gScKtZF3ojUDUjCecJJ068oUFB_CMTDo2Oq8ggrJi7gZh9dV0Yh7X58OWkV2R-pXfiLwFvvJkL0OFUTCS_XbXix3pOeyvLiaj0TscMR7yGI2Qex9n1guvRUn84bSn1GDq7uaFrjzCsM8m421NJYC-EZ1"
                     className="w-full h-full object-cover opacity-30 grayscale"
                 />
 
@@ -73,10 +74,7 @@ export default function ActiveNavigationScreen({ navigation, route }: Props) {
                 {/* Destination Marker */}
                 <View className="absolute top-[260px] left-[245px] z-20 items-center">
                     <View className="bg-white dark:bg-slate-800 p-2 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 mb-2">
-                        <Image
-                            source={{ uri: point?.thumbnailUrl }}
-                            className="w-10 h-10 rounded object-cover"
-                        />
+                        <SmartImage uri={point?.thumbnailUrl} className="w-10 h-10 rounded object-cover" />
                         <Text className="text-[10px] font-bold mt-1 text-center" style={{ color: theme.foreground }}>{point?.name}</Text>
                     </View>
                     <View className="w-3 h-3 bg-primary rounded-full border-2 border-white" />

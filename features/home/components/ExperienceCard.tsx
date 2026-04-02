@@ -1,13 +1,14 @@
-import { View, ImageBackground, TouchableOpacity } from "react-native";
+import { View, TouchableOpacity } from "react-native";
 import { Text } from "@/components/ui/text";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { THEME } from "@/lib/theme";
+import { SmartImageBackground } from "@/components/ui/smart-image";
 
 type ExperienceCardProps = {
   title: string;
   tag: "Workshop" | "Event" | "Tour";
-  imageUrl: string;
+  imageUrl?: string | null;
   onPress?: () => void;
 };
 
@@ -40,8 +41,8 @@ export default function ExperienceCard({
       activeOpacity={0.9}
       className="w-40 h-48 rounded-xl overflow-hidden mr-3"
     >
-      <ImageBackground
-        source={{ uri: imageUrl }}
+      <SmartImageBackground
+        uri={imageUrl}
         className="flex-1"
         imageStyle={{ borderRadius: 12 }}
       >
@@ -64,7 +65,7 @@ export default function ExperienceCard({
             {title}
           </Text>
         </LinearGradient>
-      </ImageBackground>
+      </SmartImageBackground>
     </TouchableOpacity>
   );
 }

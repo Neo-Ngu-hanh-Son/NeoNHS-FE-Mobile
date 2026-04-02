@@ -6,10 +6,12 @@ import type { MapPoint } from '@/features/map';
 import { RootStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import PlaceCard from '../PlaceCard';
 import SectionHeader from '../SectionHeader';
+import SectionStateMessage from './SectionStateMessage';
 
 type Props = {
   destinations: MapPoint[];
   loading: boolean;
+  error?: boolean;
 };
 
 type HomeScreenProps = CompositeScreenProps<
@@ -17,7 +19,7 @@ type HomeScreenProps = CompositeScreenProps<
   StackScreenProps<RootStackParamList>
 >;
 
-export default function MustSeePlacesSection({ destinations, loading }: Props) {
+export default function MustSeePlacesSection({ destinations, loading, error }: Props) {
   const { navigate } = useNavigation<HomeScreenProps['navigation']>();
 
   function handleExploreAllDestinations(): void {
@@ -28,8 +30,33 @@ export default function MustSeePlacesSection({ destinations, loading }: Props) {
     navigate('Main', { screen: 'PointDetail', params: { pointId: id } });
   }
 
-  if (destinations == null || destinations.length === 0) {
-    return null;
+  if (error) {
+    return (
+      <View className="mb-4">
+        <SectionHeader
+          title="Must-See Places"
+          showSeeAll
+          onSeeAllPress={handleExploreAllDestinations}
+        />
+        <SectionStateMessage
+          tone="error"
+          message="Failed to fetch destinations. Please pull to refresh."
+        />
+      </View>
+    );
+  }
+
+  if (!loading && (destinations == null || destinations.length === 0)) {
+    return (
+      <View className="mb-4">
+        <SectionHeader
+          title="Must-See Places"
+          showSeeAll
+          onSeeAllPress={handleExploreAllDestinations}
+        />
+        <SectionStateMessage message="No destinations found." />
+      </View>
+    );
   }
 
   return (
@@ -47,7 +74,7 @@ export default function MustSeePlacesSection({ destinations, loading }: Props) {
           <PlaceCard
             key={place.id}
             name={place.name}
-            imageUrl={place.thumbnailUrl ?? ''}
+            imageUrl={place.thumbnailUrl}
             onPress={() => handlePlacePress(place.id)}
           />
         ))}

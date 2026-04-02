@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Image, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
+import { SmartImage } from '@/components/ui/smart-image';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { MapPoint } from '../../map/types';
@@ -23,12 +24,9 @@ export function PointDetailLocation({ point, onOpenMap }: PointDetailLocationPro
         onPress={onOpenMap}
         className="relative h-48 overflow-hidden rounded-2xl border border-border"
         activeOpacity={0.8}>
-        <Image
-          source={{
-            uri: `https://maps.googleapis.com/maps/api/staticmap?center=${point.latitude},${point.longitude}&zoom=17&size=600x300&markers=color:red%7C${point.latitude},${point.longitude}&key=${googleMapApiKey}`,
-          }}
+        <SmartImage
+          uri={`https://maps.googleapis.com/maps/api/staticmap?center=${point.latitude},${point.longitude}&zoom=17&size=600x300&markers=color:red%7C${point.latitude},${point.longitude}&key=${googleMapApiKey}`}
           className="h-full w-full"
-          resizeMode="cover"
         />
         {/* Open in Maps badge */}
         <View

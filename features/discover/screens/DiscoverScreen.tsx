@@ -1,11 +1,4 @@
-import {
-  View,
-  ScrollView,
-  RefreshControl,
-  Image,
-  TouchableOpacity,
-  Dimensions,
-} from 'react-native';
+import { View, ScrollView, RefreshControl, TouchableOpacity, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useCallback } from 'react';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +14,7 @@ import { useAttractions } from '../hooks/useAttractions';
 import { useEvents } from '../../event/hooks/useEvents';
 import { EventStatus } from '../../event/types';
 import { useWorkshopTemplates } from '../../workshops/hooks/useWorkshopTemplates';
+import { SmartImage } from '@/components/ui/smart-image';
 
 type DiscoverScreenProps = CompositeScreenProps<
   BottomTabScreenProps<TabsStackParamList, 'Discover'>,
@@ -123,7 +117,9 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    Promise.allSettled([refetchAttractions(), refetchEvents(), refetchWorkshops()]).finally(() => setRefreshing(false));
+    Promise.allSettled([refetchAttractions(), refetchEvents(), refetchWorkshops()]).finally(() =>
+      setRefreshing(false)
+    );
   }, [refetchAttractions, refetchEvents, refetchWorkshops]);
 
   const renderHeader = () => (
@@ -192,8 +188,8 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
                   })
                 }>
                 <View className="relative h-48">
-                  <Image
-                    source={{ uri: attr.thumbnailUrl || (attr as any).image }}
+                  <SmartImage
+                    uri={attr.thumbnailUrl || (attr as any).image}
                     className="h-full w-full object-cover"
                   />
                   <View className="absolute right-3 top-3 flex-row items-center gap-1 rounded-lg bg-white/90 px-2 py-1 dark:bg-slate-900/90">
@@ -250,14 +246,11 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
                 <TouchableOpacity
                   key={workshop.id}
                   className="w-44"
-                  onPress={() => navigation.navigate('WorkshopDetail', { workshopId: workshop.id })}>
+                  onPress={() =>
+                    navigation.navigate('WorkshopDetail', { workshopId: workshop.id })
+                  }>
                   <View className="relative mb-2 h-44 w-44 overflow-hidden rounded-2xl">
-                    {thumb && (
-                      <Image
-                        source={{ uri: thumb.imageUrl }}
-                        className="h-full w-full object-cover"
-                      />
-                    )}
+                    <SmartImage uri={thumb?.imageUrl} className="h-full w-full object-cover" />
                     {tagName ? (
                       <View
                         className="absolute bottom-3 left-3 rounded px-2 py-0.5"
@@ -321,10 +314,7 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
                   style={{ backgroundColor: theme.card, borderColor: theme.border }}
                   onPress={() => navigation.navigate('EventDetail', { eventId: event.id })}>
                   <View className="relative h-36">
-                    <Image
-                      source={{ uri: event.thumbnailUrl || undefined }}
-                      className="h-full w-full object-cover"
-                    />
+                    <SmartImage uri={event.thumbnailUrl} className="h-full w-full object-cover" />
                     {/* Date badge */}
                     <View className="absolute left-3 top-3 min-w-[45px] items-center rounded-xl bg-white p-1.5 shadow-lg dark:bg-slate-900">
                       <Text className="mb-1 text-[10px] font-bold uppercase leading-none text-red-500">
@@ -411,8 +401,8 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
           contentContainerStyle={{ paddingHorizontal: 20, gap: 16 }}>
           {BLOGS.map((blog) => (
             <TouchableOpacity key={blog.id} className="w-80">
-              <Image
-                source={{ uri: blog.image }}
+              <SmartImage
+                uri={blog.image}
                 className="mb-3 h-44 w-full rounded-2xl object-cover shadow-sm"
               />
               <Text

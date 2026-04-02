@@ -1,14 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import * as Location from 'expo-location';
-import * as Notifications from 'expo-notifications';
 import { logger } from '@/utils/logger';
 import checkinServices from '../services/checkinServices';
-import { mapConstants } from '../mapConstants';
 import { MapPointCheckin } from '../types';
-import { LatLng } from 'react-native-maps';
-import * as geolib from 'geolib';
-
-const GEOFENCING_TASK = 'CHECKIN_GEOFENCE_TASK';
+import MAP_CONSTANTS from '../constants';
 
 /**
  * User location data structure
@@ -47,8 +42,6 @@ export interface UseUserLocationReturn {
   getCurrentLocation: () => Promise<UserLocation | null>;
   /** Synchronize nearby geofences so that user will get a notification when entering/exiting */
   syncNearbyGeofences: (latitude: number, longitude: number) => Promise<MapPointCheckin[]>;
-  /** Calculate distance in meters between two points */
-  calculateDistance: (point1: LatLng, point2: LatLng) => number;
 }
 
 export interface UseUserLocationOptions {
@@ -65,7 +58,7 @@ export interface UseUserLocationOptions {
 const DEFAULT_OPTIONS: UseUserLocationOptions = {
   autoStart: false,
   accuracy: Location.Accuracy.High,
-  updateInterval: 3000,
+  updateInterval: MAP_CONSTANTS.UPDATE_USER_LOCATION_THROTTLE_MS,
   distanceInterval: 5,
 };
 
@@ -81,17 +74,17 @@ const DEFAULT_OPTIONS: UseUserLocationOptions = {
  * ```
  */
 export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLocationReturn {
-  const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
+  const mergedOptions = useMemo(() => ({ ...DEFAULT_OPTIONS, ...options }), [options]);
 
   const [location, setLocation] = useState<UserLocation | null>(null);
   const [previousLocation, setPreviousLocation] = useState<UserLocation | null>(null);
   const [isTracking, setIsTracking] = useState(false);
-  const [permissionStatus, setPermissionStatus] =
-    useState<LocationPermissionStatus>('undetermined');
+  const [permissionStatus, setPermissionStatus] = useState<LocationPermissionStatus>('undetermined');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const locationSubscription = useRef<Location.LocationSubscription | null>(null);
+  const isTrackingRef = useRef(false);
 
   /**
    * Check current permission status
@@ -125,17 +118,6 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
       if (!granted) {
         setError('Location permission denied');
       }
-
-      // Additionally request to send notification for geofencing if permission is granted (Optional)
-      if (granted) {
-        const { status: notificationStatus } = await Location.requestBackgroundPermissionsAsync();
-        if (notificationStatus !== 'granted') {
-          logger.warn(
-            'Background location permission not granted, geofencing notifications may not work properly'
-          );
-        }
-      }
-
       return granted;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to request permission';
@@ -193,7 +175,9 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
    * Start continuous location tracking
    */
   const startTracking = useCallback(async (): Promise<void> => {
-    if (isTracking) {
+    // Read from ref so this callback doesn't depend on isTracking state
+    // (which would make its identity change on every tracking toggle)
+    if (isTrackingRef.current) {
       logger.info('Location tracking already active');
       return;
     }
@@ -238,6 +222,7 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
         }
       );
 
+      isTrackingRef.current = true;
       setIsTracking(true);
       logger.info('Location tracking started');
     } catch (err) {
@@ -247,94 +232,59 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
     } finally {
       setIsLoading(false);
     }
-  }, [isTracking, checkPermission, requestPermission, mergedOptions]);
+  }, [checkPermission, requestPermission, mergedOptions]);
 
   /**
    * Stop location tracking
    */
   const stopTracking = useCallback((): void => {
+    const hadSubscription = locationSubscription.current != null;
+
     if (locationSubscription.current) {
       locationSubscription.current.remove();
       locationSubscription.current = null;
     }
-    setIsTracking(false);
-    logger.info('Location tracking stopped');
+
+    isTrackingRef.current = false;
+    setIsTracking((wasTracking) => {
+      if (wasTracking || hadSubscription) {
+        logger.info('Location tracking stopped');
+      }
+      return false;
+    });
   }, []);
 
-  const syncNearbyGeofences = async (latitude: number, longitude: number) => {
-    let nearbyPoints: MapPointCheckin[] = [];
+  const syncNearbyGeofences = useCallback(async (latitude: number, longitude: number) => {
     try {
-      nearbyPoints = (
-        await checkinServices.getNearbyCheckIns(
-          latitude,
-          longitude,
-          mapConstants.checkinPointDetectRadiusMeters
-        )
+      const nearbyPoints = (
+        await checkinServices.getNearbyCheckIns(latitude, longitude, MAP_CONSTANTS.CHECKINPOINT_DETECT_RADIUS_M)
       ).data;
-      const regions = nearbyPoints.map((point) => ({
-        identifier: point.id, // Your UUID from backend
-        latitude: point.latitude,
-        longitude: point.longitude,
-        radius: mapConstants.checkinPointDetectRadiusMeters,
-        notifyOnEnter: true,
-        notifyOnExit: false,
-      }));
 
-      let gateKeep = false;
+      logger.debug('Check-in points near user: ' + nearbyPoints.length);
 
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== 'granted') {
-        logger.warn(
-          'Notifications permission not granted, geofencing notifications may not work properly'
-        );
-      }
-      const { status: notificationStatus } = await Location.requestBackgroundPermissionsAsync();
-      if (notificationStatus !== 'granted') {
-        logger.warn('Background location permission not granted, stopping geofencing');
-        gateKeep = true;
-      }
-
-      const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
-      if (backgroundStatus !== 'granted') {
-        logger.warn('Background location permission not granted, stopping geofencing');
-        gateKeep = true;
-      }
-
-      if (regions.length > 0 && !gateKeep) {
-        // This make it so that the app only send one notification.
-        await Location.startGeofencingAsync(GEOFENCING_TASK, [regions[0]]);
-      }
+      return nearbyPoints;
     } catch (err) {
       logger.error('Failed to sync geofences', err);
       return [];
-    } finally {
-      // Still return the nearby points even if geofencing setup fails
-      logger.debug('Check-in points near user: ' + nearbyPoints.length);
-      return nearbyPoints;
     }
-  };
-
-  const calculateDistance = (
-    point1: { latitude: number; longitude: number },
-    point2: { latitude: number; longitude: number }
-  ) => {
-    return geolib.getDistance(
-      { latitude: point1.latitude, longitude: point1.longitude },
-      { latitude: point2.latitude, longitude: point2.longitude }
-    );
-  };
+  }, []);
 
   // Check permission on mount
   useEffect(() => {
     checkPermission();
   }, [checkPermission]);
 
-  // Auto-start tracking if enabled
+  // Auto-start tracking if enabled (on mount only)
+  const startTrackingRef = useRef(startTracking);
+  useEffect(() => {
+    startTrackingRef.current = startTracking;
+  }, [startTracking]);
+
   useEffect(() => {
     if (mergedOptions.autoStart) {
-      startTracking();
+      void startTrackingRef.current();
     }
-  }, [mergedOptions.autoStart]); // Intentionally only run on mount
+  }, [mergedOptions.autoStart]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -358,7 +308,6 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
     requestPermission,
     getCurrentLocation,
     syncNearbyGeofences,
-    calculateDistance,
   };
 }
 

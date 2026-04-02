@@ -18,7 +18,9 @@ export const discoverService = {
   },
 
   getPointById: async (id: string | number): Promise<ApiResponse<MapPoint>> => {
-    return await apiClient.get<MapPoint>(endpoints.discover.getPointById(id));
+    return await apiClient.get<MapPoint>(endpoints.discover.getPointById(id), {
+      requiresAuth: false,
+    });
   },
 
   getAllPoints: async (): Promise<ApiResponse<PageResponse<MapPoint>>> => {

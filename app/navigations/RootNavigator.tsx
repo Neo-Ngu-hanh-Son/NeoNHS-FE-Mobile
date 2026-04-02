@@ -1,14 +1,15 @@
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
 import { View } from 'react-native';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import type { RootStackParamList } from './NavigationParamTypes';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { NAV_THEME } from '@/lib/theme';
-import { PanoramaProvider } from '../providers/ParanomaProvider';
+import { PanoramaProvider } from '../providers/PanoramaProvider';
 
-const Stack = createStackNavigator<RootStackParamList>();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
   const { colorScheme, isDarkColorScheme } = useTheme();

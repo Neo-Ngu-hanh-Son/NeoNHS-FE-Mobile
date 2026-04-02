@@ -1,8 +1,6 @@
 import { blogService } from '@/features/blog';
-import { apiClient } from '@/services/api';
 import { BLOG_CATEGORY_SLUG_CONST } from '../homeScreenConst';
 import eventService from '@/features/event/services/eventService';
-import { EventStatus } from '@/features/event/types';
 import discoverService from '@/features/discover/services/discoverServices';
 
 export const homeService = {

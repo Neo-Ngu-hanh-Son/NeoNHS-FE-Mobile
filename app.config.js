@@ -6,13 +6,13 @@ export default {
     slug: 'neonhs',
     version: '1.0.0',
     orientation: 'portrait',
-    icon: './assets/images/NeoNHSLogo.png',
+    icon: './assets/images/NeoNHSLogo_Optimized.jpg',
     scheme: 'neonhs',
     userInterfaceStyle: 'automatic',
     newArchEnabled: true,
 
     splash: {
-      image: './assets/images/NeoNHSLogo.png',
+      image: './assets/images/NeoNHSLogo_Optimized.jpg',
       resizeMode: 'contain',
       backgroundColor: '#ffffff',
     },
@@ -29,7 +29,7 @@ export default {
       versionName: '1.0.0',
       edgeToEdgeEnabled: true,
       adaptiveIcon: {
-        foregroundImage: './assets/images/NeoNHSLogo.png',
+        foregroundImage: './assets/images/NeoNHSLogo_Optimized.jpg',
         backgroundColor: '#ffffff',
       },
       permissions: [
@@ -76,5 +76,11 @@ export default {
         }
       ]
     ],
+
+    extra: {
+      eas: {
+        projectId: "ac061500-3be3-4ec9-b779-93680d9cbc39"
+      }
+    }
   },
 };
