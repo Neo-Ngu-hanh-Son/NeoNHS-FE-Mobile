@@ -62,9 +62,7 @@ export default function PointHistoryAudioScreen({ route }: Props) {
   }
 
   if (!selectedAudio) {
-    return (
-      <FullScreenError onRetry={refetch} message="No history audio is available for this point." />
-    );
+    return <FullScreenError onRetry={refetch} message="No history audio is available for this point." />;
   }
 
   // ─── Main content ───
@@ -80,11 +78,7 @@ export default function PointHistoryAudioScreen({ route }: Props) {
         initialAudioIndex={selectedIndex}
         onAudioChange={(index) => setSelectedIndex(index)}
         selectedAudioId={selectedAudio?.id}
-        selectedAudioLabel={
-          selectedAudio
-            ? selectedAudio.metadata.title + ' - ' + selectedAudio.metadata.language
-            : ''
-        }
+        selectedAudioLabel={selectedAudio ? selectedAudio.metadata.title + ' - ' + selectedAudio.metadata.language : ''}
       />
 
       {/* Transcript (word flow) */}
@@ -99,10 +93,7 @@ export default function PointHistoryAudioScreen({ route }: Props) {
             By: {selectedAudio.metadata.artist}
           </Text>
         </View>
-        <ScrollView
-          style={{ maxHeight: 200 }}
-          showsVerticalScrollIndicator={true}
-          nestedScrollEnabled={true}>
+        <ScrollView style={{ maxHeight: 200 }} showsVerticalScrollIndicator={true} nestedScrollEnabled={true}>
           <HistoryWordFlow words={selectedAudio?.words || []} activeIndex={activeIndex} />
         </ScrollView>
       </View>
