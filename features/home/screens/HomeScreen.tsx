@@ -95,7 +95,7 @@ export default function HomeScreen({ navigation }: HomeScreen) {
   ]);
 
   function handleNotificationPress(): void {
-    logger.info('Notifications pressed on Home');
+    navigation.navigate('Main', { screen: 'Notifications', params: undefined } as any);
   }
 
   function handleProfilePress(): void {

@@ -25,6 +25,7 @@ import PointHistoryAudioScreen from '@/features/point/screens/PointHistoryAudioS
 import CheckinCameraScreen from '@/features/map/screens/CheckinCameraScreen';
 import CheckinCompleteScreen from '@/features/map/screens/CheckinCompleteScreen';
 import CheckinGalleryScreen from '@/features/profile/screens/CheckinGalleryScreen';
+import NotificationsScreen from '@/features/notifications/screens/NotificationsScreen';
 
 const Stack = createStackNavigator<MainStackParamList>();
 
@@ -146,6 +147,11 @@ export default function MainNavigator() {
         name="CheckinGallery"
         component={CheckinGalleryScreen}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{ headerShown: true, title: "Notifications", headerBackTitle: "Back" }}
       />
     </Stack.Navigator>
   );

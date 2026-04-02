@@ -77,4 +77,6 @@ export interface AuthContextValue extends AuthState {
     refreshAuth: (result: TokenRefreshResult) => Promise<void>;
     updateUser: (user: Partial<User>) => void;
     loginWithGoogle: (idToken: string) => Promise<void>;
+    unreadNotificationCount: number;
+    setUnreadNotificationCount: (count: number) => void;
 }

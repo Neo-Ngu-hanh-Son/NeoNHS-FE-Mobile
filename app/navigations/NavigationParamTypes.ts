@@ -113,6 +113,11 @@ type BaseMainRoutes = {
   Tabs: NavigatorScreenParams<TabsStackParamList>;
 };
 
+/* Notifications */
+export type NotificationRoutes = {
+  Notifications: undefined;
+};
+
 export type MainStackParamList = BaseMainRoutes &
   AccountRoutes &
   TransactionRoutes &
@@ -122,7 +127,8 @@ export type MainStackParamList = BaseMainRoutes &
   EventRoutes &
   WorkshopRoutes &
   CheckoutRoutes &
-  BlogRoutes;
+  BlogRoutes &
+  NotificationRoutes;
 
 /* ============================================================
    ROOT STACK

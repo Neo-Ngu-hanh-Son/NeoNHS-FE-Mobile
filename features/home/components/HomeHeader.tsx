@@ -4,6 +4,7 @@ import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { THEME } from "@/lib/theme";
+import { useAuth } from "@/features/auth/context/AuthContext";
 
 type HomeHeaderProps = {
   onNotificationPress?: () => void;
@@ -18,6 +19,7 @@ export default function HomeHeader({
 }: HomeHeaderProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const { unreadNotificationCount } = useAuth();
 
   return (
     <View className="flex-row items-center justify-between px-4 py-3">
@@ -39,9 +41,16 @@ export default function HomeHeader({
           variant="ghost"
           size="icon"
           onPress={onNotificationPress}
-          className="rounded-full"
+          className="rounded-full relative"
         >
           <Ionicons name="notifications-outline" size={20} color={theme.foreground} />
+          {unreadNotificationCount > 0 && (
+            <View className="absolute top-1 right-2 bg-red-500 rounded-full min-w-[16px] h-[16px] items-center justify-center px-1">
+              <Text className="text-white text-[10px] font-bold">
+                {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+              </Text>
+            </View>
+          )}
         </Button>
 
         <TouchableOpacity
