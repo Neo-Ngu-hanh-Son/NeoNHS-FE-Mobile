@@ -20,6 +20,7 @@ import { parseFloatOrDefault } from '@/utils/parseNumber';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MAP_CONSTANTS from '../constants';
+import { LocationAccuracy } from 'expo-location';
 
 type MapScreenProps = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Map'>,
@@ -48,7 +49,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     () => ({
       autoStart: true,
       updateInterval: MAP_CONSTANTS.UPDATE_USER_LOCATION_THROTTLE_MS,
-      distanceInterval: 5,
+      accuracy: LocationAccuracy.BestForNavigation,
     }),
     []
   );
@@ -157,8 +158,6 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
   const handleNavigate = useCallback(
     (point: MapPoint) => {
       if (point.id && point.id !== 'offline') {
-        logger.info('Navigate to:', point);
-
         if (point.type === 'EVENT') {
           navigation.navigate('EventDetail', { eventId: point.id });
         } else if (point.type === 'WORKSHOP') {
@@ -179,18 +178,6 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     },
     [alert, navigation]
   );
-
-  /**
-   * Handle permission request from banner
-   */
-  const handleRequestPermission = useCallback(async () => {
-    const granted = await requestPermission();
-    if (granted) {
-      // Start tracking after permission granted
-      startTracking();
-    }
-  }, [requestPermission, startTracking]);
-
   // Auto request permission on mount if not granted or denied
   useEffect(() => {
     requestPermission();

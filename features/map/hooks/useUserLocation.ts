@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { Platform } from 'react-native';
 import * as Location from 'expo-location';
 import { logger } from '@/utils/logger';
 import checkinServices from '../services/checkinServices';
@@ -59,7 +60,7 @@ const DEFAULT_OPTIONS: UseUserLocationOptions = {
   autoStart: false,
   accuracy: Location.Accuracy.High,
   updateInterval: MAP_CONSTANTS.UPDATE_USER_LOCATION_THROTTLE_MS,
-  distanceInterval: 5,
+  distanceInterval: 0,
 };
 
 /**
@@ -175,10 +176,8 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
    * Start continuous location tracking
    */
   const startTracking = useCallback(async (): Promise<void> => {
-    // Read from ref so this callback doesn't depend on isTracking state
-    // (which would make its identity change on every tracking toggle)
     if (isTrackingRef.current) {
-      logger.info('Location tracking already active');
+      // logger.info('Location tracking already active');
       return;
     }
 
@@ -232,7 +231,7 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
     } finally {
       setIsLoading(false);
     }
-  }, [checkPermission, requestPermission, mergedOptions]);
+  }, [checkPermission, requestPermission, mergedOptions.accuracy, mergedOptions.updateInterval]);
 
   /**
    * Stop location tracking
@@ -248,7 +247,7 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
     isTrackingRef.current = false;
     setIsTracking((wasTracking) => {
       if (wasTracking || hadSubscription) {
-        logger.info('Location tracking stopped');
+        // logger.info('Location tracking stopped');
       }
       return false;
     });
@@ -260,7 +259,7 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
         await checkinServices.getNearbyCheckIns(latitude, longitude, MAP_CONSTANTS.CHECKINPOINT_DETECT_RADIUS_M)
       ).data;
 
-      logger.debug('Check-in points near user: ' + nearbyPoints.length);
+      // logger.debug('Check-in points near user: ' + nearbyPoints.length);
 
       return nearbyPoints;
     } catch (err) {
@@ -274,12 +273,16 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
     checkPermission();
   }, [checkPermission]);
 
-  // Auto-start tracking if enabled (on mount only)
+  // Keep the latest startTracking callback without making the auto-start
+  // effect depend on callback identity.
   const startTrackingRef = useRef(startTracking);
   useEffect(() => {
     startTrackingRef.current = startTracking;
   }, [startTracking]);
 
+  // Auto-start tracking if enabled (on mount only).
+  // Keeping this mount-scoped prevents unintended restarts when consumers
+  // explicitly stop tracking (e.g. on screen blur).
   useEffect(() => {
     if (mergedOptions.autoStart) {
       void startTrackingRef.current();

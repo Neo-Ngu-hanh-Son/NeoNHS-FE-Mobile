@@ -86,10 +86,11 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       latitudeDelta: MAP_CENTER.latitudeDelta,
       longitudeDelta: MAP_CENTER.longitudeDelta,
     });
+    // This is so that the map can retain the last user-interacted location
+    const [lastMapInteractionLocation, setLastMapInteractionLocation] = useState<Region | undefined>(MAP_CENTER);
     const mapRef = useRef<MapView>(null);
     const currentRegionRef = useRef<Region>(MAP_CENTER);
     const onMarkerPressRef = useRef(onMarkerPress); // Store in ref to avoid re-creating handlers and causing re-renders
-    const isGuidanceModeRef = useRef(isGuidanceMode);
     const isFocused = useIsFocused();
 
     // Only purpose is to hope that the marker itself render correctly
@@ -174,6 +175,8 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       currentRegionRef.current = region;
       mapZoomRef.current.latitudeDelta = region.latitudeDelta;
       mapZoomRef.current.longitudeDelta = region.longitudeDelta;
+
+      setLastMapInteractionLocation(region);
     }, []);
 
     const handleMapInteraction = useCallback(() => {
@@ -189,7 +192,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
 
       // If enabling follow mode, immediately pan to user location
       if (newFollowState && userLocation && mapRef.current) {
-        logger.info('Follow mode enabled, panning to user location');
+        // logger.info('Follow mode enabled, panning to user location');
         mapRef.current.animateToRegion(
           {
             latitude: userLocation.latitude,
@@ -354,7 +357,8 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
               longitude: poi.longitude,
             }}
             onPress={() => {
-              if (isGuidanceModeRef.current) {
+              logger.debug('Can marker pressed:', isGuidanceMode ? 'No, in guidance mode' : 'Yes');
+              if (isGuidanceMode) {
                 return;
               }
               onMarkerPressRef.current?.(poi);
@@ -405,7 +409,8 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
                     }}
                     zIndex={30}
                     onPress={() => {
-                      if (isGuidanceModeRef.current) {
+                      console.log('Is guidance mode?', isGuidanceMode);
+                      if (isGuidanceMode) {
                         return;
                       }
                       onMarkerPressRef.current?.(checkinAsPoint);
@@ -429,6 +434,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       shouldShowParentPoint,
       effectiveMarkerFilters.showAll,
       effectiveMarkerFilters.showCheckin,
+      isGuidanceMode,
       // trackChanges,
     ]);
 
@@ -439,7 +445,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           ref={mapRef}
           style={styles.map}
           provider={PROVIDER_GOOGLE}
-          initialRegion={MAP_CENTER}
+          initialRegion={lastMapInteractionLocation}
           // clusterColor={theme.primary}
           // radius={10}
           mapType="standard"

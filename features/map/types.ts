@@ -201,6 +201,7 @@ export interface Leg {
 
 export interface Step {
   distanceMeters?: number;
+  staticDuration?: string;
   polyline: {
     encodedPolyline: string; // The polyline for just this specific step
   };
@@ -221,7 +222,7 @@ export interface Step {
 /**
  * Custom types for quick retrival when working with the hook
  */
-export type NavigationStep = {
+export type NavigationSteps = {
   previousStep: Step | null;
   currentStep: Step | null;
   nextStep: Step | null;
@@ -244,7 +245,10 @@ export type TripMetadata = {
   tripRemainingDistanceText: string | undefined;
   tripRemainingDurationText: string | undefined;
 
-  tripRemainingDistance: number | undefined; // in meters
+  tripTotalDistanceMeters: number | undefined; // in meters
+  tripTotalDuration: number | undefined; // in seconds
+
+  tripRemainingDistanceMeters: number | undefined; // in meters
   tripRemainingDuration: number | undefined; // in seconds
 };
 

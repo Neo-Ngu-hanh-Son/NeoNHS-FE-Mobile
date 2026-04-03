@@ -19,13 +19,7 @@ type Props = {
   retryToken?: number;
 };
 
-export default function DynamicPanorama({
-  pointId,
-  isOpen,
-  onBack,
-  onOpen,
-  retryToken = 0,
-}: Props) {
+export default function DynamicPanorama({ pointId, isOpen, onBack, onOpen, retryToken = 0 }: Props) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const insets = useSafeAreaInsets();
@@ -67,7 +61,7 @@ export default function DynamicPanorama({
           payload: pointId,
         })
       );
-    }, 1000)
+    }, 1000);
   }, [isWebViewReady, pointId]);
 
   useEffect(() => {
@@ -91,6 +85,7 @@ export default function DynamicPanorama({
     setIsWebViewReady(false);
     logger.info('[DynamicPanorama] Reloading WebView by user action');
     webViewRef.current?.reload();
+    // After reload, re-send the existing point id
   }, []);
 
   // On ready, try to send the postMessage immediately
@@ -160,9 +155,7 @@ export default function DynamicPanorama({
           renderLoading={() => (
             <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
               <ActivityIndicator size="large" color={theme.primary} />
-              <Text style={[styles.loadingText, { color: theme.mutedForeground }]}>
-                Loading panorama...
-              </Text>
+              <Text style={[styles.loadingText, { color: theme.mutedForeground }]}>Loading panorama...</Text>
             </View>
           )}
           androidLayerType="hardware"

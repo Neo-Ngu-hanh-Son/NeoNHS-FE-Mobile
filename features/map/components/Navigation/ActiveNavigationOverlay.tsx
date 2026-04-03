@@ -20,24 +20,18 @@ export default function ActiveNavigationOverlay({
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
-  const statusTitle = isLoading
-    ? 'Preparing route...'
-    : isReady
-      ? 'Route ready'
-      : 'Navigation unavailable';
+  const statusTitle = isLoading ? 'Preparing route...' : isReady ? 'Route ready' : 'Waiting for navigation data...';
   const statusSubtitle =
     errorMessage ??
     (isLoading
       ? 'Fetching directions from your current location'
       : isReady
         ? 'Follow the route on the map'
-        : 'Unable to load route guidance');
+        : 'Fetching route data...');
 
   const hasActiveInstruction = isReady && !!currentNavigationStepData?.currentInstructionText;
   const maneuverPresentation = getManeuverPresentation(currentNavigationStepData?.currentManeuver);
-  const topCardTitle = hasActiveInstruction
-    ? currentNavigationStepData?.currentInstructionText
-    : statusTitle;
+  const topCardTitle = hasActiveInstruction ? currentNavigationStepData?.currentInstructionText : statusTitle;
 
   let topCardSubtitle = statusSubtitle;
   if (hasActiveInstruction) {
@@ -52,7 +46,7 @@ export default function ActiveNavigationOverlay({
   return (
     <>
       {/* ── Top card: current instruction / status ── */}
-      <SafeAreaView pointerEvents="box-none" className="absolute left-0 right-0 top-0 px-3" edges={['top']}>
+      <SafeAreaView pointerEvents="box-none" className="absolute left-0 right-0 top-2 px-3" edges={['top']}>
         <View
           className="rounded-3xl px-4 py-3"
           style={{
