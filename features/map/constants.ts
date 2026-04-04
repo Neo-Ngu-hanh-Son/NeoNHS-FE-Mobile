@@ -8,7 +8,7 @@ const MAP_CONSTANTS = {
   ARRIVAL_RADIUS_M: 10, // Radius to consider user has arrived at the destination
 
   // The minimum time interval between user location updates to prevent excessive re-renders and computations
-  UPDATE_USER_LOCATION_THROTTLE_MS: 1500,
+  UPDATE_USER_LOCATION_THROTTLE_MS: 3000,
 
   ADVANCE_THRESHOLD_M: 0.5, // The distance in meters threshold for advancing to the next step
 
@@ -48,6 +48,15 @@ const MAP_CONSTANTS = {
       ],
     },
   ],
+
+  FULL_SCREEN_SHEET_INDEX: 2,
+  DEFAULT_TRAVEL_MODE: 'WALK' as const,
+  TRAVEL_MODE_LABELS: {
+    WALK: 'Walking',
+    DRIVE: 'Driving',
+    BICYCLE: 'Cycling',
+    TWO_WHEELER: 'Motorbike',
+  },
 };
 
 export default MAP_CONSTANTS;

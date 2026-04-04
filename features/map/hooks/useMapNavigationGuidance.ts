@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { parseFloatOrDefault } from '@/utils/parseNumber';
 import { logger } from '@/utils/logger';
-import { mapDirectionService } from '../services/mapDirectionService';
 import {
   decodeRoutePolyline,
   extractStreetNameFromInstruction,
@@ -17,14 +17,17 @@ import {
   PolylineCoordinate,
   RouteResponse,
   Step,
+  TravelMode,
   TripMetadata,
 } from '../types';
 import type { LocationPermissionStatus, UserLocation } from './useUserLocation';
 import { distanceUtils } from '@/utils/distanceUtils';
 import MAP_CONSTANTS from '../constants';
+import { buildDirectionsQueryOptions } from './useCachedDirections';
 
 type UseMapNavigationGuidanceParams = {
   targetNavigationPointId?: string;
+  travelMode: TravelMode;
   mapPoints: MapPoint[];
   userLocation: UserLocation | null;
   permissionStatus: LocationPermissionStatus;
@@ -67,6 +70,7 @@ const EMPTY_TRIP_METADATA: TripMetadata = {
 // TODO: Format this function holy shiba
 export function useMapNavigationGuidance({
   targetNavigationPointId,
+  travelMode,
   mapPoints,
   userLocation,
   permissionStatus,
@@ -75,6 +79,7 @@ export function useMapNavigationGuidance({
   alert,
   clearTargetNavigationParam,
 }: UseMapNavigationGuidanceParams): UseMapNavigationGuidanceReturn {
+  const queryClient = useQueryClient();
   const [navigationStatus, setNavigationStatus] = useState<NavigationStatusState>({
     isMapReady: false,
     isGuidanceMode: Boolean(targetNavigationPointId),
@@ -130,12 +135,20 @@ export function useMapNavigationGuidance({
 
     return {
       targetId: targetNavigationPointId,
+      travelMode,
       origin: {
         latitude: userLocation.latitude,
         longitude: userLocation.longitude,
       },
     };
-  }, [navigationStatus.isGuidanceMode, targetNavigationPointId, navigationStatus.isMapReady, userLocation, mapPoints]);
+  }, [
+    navigationStatus.isGuidanceMode,
+    targetNavigationPointId,
+    navigationStatus.isMapReady,
+    userLocation,
+    mapPoints,
+    travelMode,
+  ]);
 
   const getTrackingStartContext = useCallback(() => {
     if (!navigationStatus.isGuidanceMode || !targetNavigationPointId) {
@@ -181,7 +194,7 @@ export function useMapNavigationGuidance({
     }));
     resetDirectionRefs();
     resetDirectionState();
-  }, [targetNavigationPointId, resetDirectionRefs, resetDirectionState]);
+  }, [targetNavigationPointId, travelMode, resetDirectionRefs, resetDirectionState]);
 
   /**
    * Use effect to start tracking user location if guidance mode is initiated and tracking hasn't started yet
@@ -204,12 +217,13 @@ export function useMapNavigationGuidance({
       return;
     }
 
-    const { targetId, origin } = directionsFetchContext;
+    const { targetId, origin, travelMode: selectedTravelMode } = directionsFetchContext;
+    const requestKey = `${targetId}:${selectedTravelMode}`;
 
-    if (fetchedNavigationTargetRef.current === targetId) {
+    if (fetchedNavigationTargetRef.current === requestKey) {
       return;
     }
-    if (directionsInFlightTargetRef.current === targetId) {
+    if (directionsInFlightTargetRef.current === requestKey) {
       return;
     }
 
@@ -237,7 +251,7 @@ export function useMapNavigationGuidance({
     let isCancelled = false;
 
     const fetchDirections = async () => {
-      directionsInFlightTargetRef.current = targetId;
+      directionsInFlightTargetRef.current = requestKey;
       setNavigationStatus((prev) => ({
         ...prev,
         isDirectionsLoading: true,
@@ -246,10 +260,16 @@ export function useMapNavigationGuidance({
       }));
 
       try {
-        const response = await mapDirectionService.getDirections(origin, destination, 'WALK');
+        const response = await queryClient.fetchQuery(
+          buildDirectionsQueryOptions({
+            origin,
+            destination,
+            travelMode: selectedTravelMode,
+          })
+        );
 
-        const leg = response.data.routes?.[0]?.legs?.[0];
-        const encodedPolyline = response.data.routes?.[0]?.polyline?.encodedPolyline;
+        const leg = response.routes?.[0]?.legs?.[0];
+        const encodedPolyline = response.routes?.[0]?.polyline?.encodedPolyline;
         const decodedCoordinates = encodedPolyline ? decodeRoutePolyline(encodedPolyline) : [];
 
         const startLatLng = leg?.startLocation?.latLng;
@@ -279,7 +299,7 @@ export function useMapNavigationGuidance({
         if (!isCancelled) {
           const nextSteps = leg?.steps ?? [];
           setRouteState({
-            routeSummary: response.data,
+            routeSummary: response,
             steps: nextSteps,
             navigationPolylineCoordinates: decodedCoordinates,
             navigationEndpoints: {
@@ -293,7 +313,7 @@ export function useMapNavigationGuidance({
           }));
           setCurrentUserStepIndex(0);
 
-          fetchedNavigationTargetRef.current = targetId;
+          fetchedNavigationTargetRef.current = requestKey;
         }
       } catch (error) {
         logger.error('[useMapNavigationGuidance] Failed to fetch navigation directions', error);
@@ -310,7 +330,7 @@ export function useMapNavigationGuidance({
           }));
         }
       } finally {
-        if (directionsInFlightTargetRef.current === targetId) {
+        if (directionsInFlightTargetRef.current === requestKey) {
           directionsInFlightTargetRef.current = null;
         }
 
@@ -326,7 +346,7 @@ export function useMapNavigationGuidance({
     return () => {
       isCancelled = true;
     };
-  }, [getDirectionsFetchContext, mapPoints, alert]);
+  }, [getDirectionsFetchContext, mapPoints, alert, queryClient]);
 
   /**
    * This effect watches for changes in the user's location and updates the current navigation step accordingly.

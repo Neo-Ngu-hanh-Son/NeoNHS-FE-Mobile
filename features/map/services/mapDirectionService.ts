@@ -1,7 +1,7 @@
 import { LatLng } from 'react-native-maps';
 import { logger } from '@/utils/logger';
 import { DirectionsRequestBody, RouteResponse, TravelMode } from '../types';
-import { apiClient, ApiResponse } from '@/services/api';
+import { ApiResponse } from '@/services/api';
 import axios from 'axios';
 
 const ROUTES_API_URL = 'https://routes.googleapis.com/directions/v2:computeRoutes';

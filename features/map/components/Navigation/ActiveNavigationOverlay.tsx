@@ -14,6 +14,7 @@ export default function ActiveNavigationOverlay({
   isLoading,
   isReady,
   errorMessage,
+  travelModeLabel,
   onOpenSteps,
   canOpenSteps,
   currentNavigationStepData,
@@ -104,7 +105,11 @@ export default function ActiveNavigationOverlay({
                 {currentNavigationStepData?.tripDistanceText ? ` (${currentNavigationStepData?.tripDistanceText})` : ''}
               </Text>
               <Text className="text-xs text-white/80">
-                {isReady ? 'Walking to destination' : isLoading ? 'Please wait while route loads' : 'No active route'}
+                {isReady
+                  ? `${travelModeLabel ?? 'Walking'} to destination`
+                  : isLoading
+                    ? 'Please wait while route loads'
+                    : 'No active route'}
               </Text>
             </View>
 

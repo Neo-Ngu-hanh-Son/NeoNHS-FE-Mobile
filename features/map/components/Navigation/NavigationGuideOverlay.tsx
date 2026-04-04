@@ -8,6 +8,7 @@ export default function NavigationGuideOverlay({
   isLoading,
   isReady,
   errorMessage,
+  travelModeLabel,
   onOpenSteps,
   canOpenSteps,
   currentNavigationStepData,
@@ -23,14 +24,17 @@ export default function NavigationGuideOverlay({
   }
 
   return (
-    <ActiveNavigationOverlay
-      isLoading={isLoading}
-      isReady={isReady}
-      errorMessage={errorMessage}
-      onOpenSteps={onOpenSteps}
-      canOpenSteps={canOpenSteps}
-      currentNavigationStepData={currentNavigationStepData}
-      onExit={onExit}
-    />
+    <>
+      <ActiveNavigationOverlay
+        isLoading={isLoading}
+        isReady={isReady}
+        errorMessage={errorMessage}
+        travelModeLabel={travelModeLabel}
+        onOpenSteps={onOpenSteps}
+        canOpenSteps={canOpenSteps}
+        currentNavigationStepData={currentNavigationStepData}
+        onExit={onExit}
+      />
+    </>
   );
 }

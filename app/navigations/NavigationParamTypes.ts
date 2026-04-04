@@ -1,4 +1,5 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
+import type { TravelMode } from '@/features/map/types';
 
 /* ============================================================
    AUTH STACK
@@ -20,7 +21,15 @@ export type AuthStackParamList = {
 export type TabsStackParamList = {
   Home: undefined;
   Discover: undefined;
-  Map: { pointId?: string, targetNavigationPointId?: string, userCheckedInPointId?: string  } | undefined;
+  Map:
+    | {
+        pointId?: string;
+        targetNavigationPointId?: string;
+        userCheckedInPointId?: string;
+        transportMode?: TravelMode;
+        navigationRequestId?: number;
+      }
+    | undefined;
   Bookings: undefined;
   Profile: undefined;
   TestCart: undefined;
@@ -75,7 +84,7 @@ export type MapRoutes = {
   PointHistoryAudio: { pointId: string };
   Panorama: { pointId: string };
   CheckinCamera: { pointId?: string | null; pointName: string };
-  CheckinComplete: { imageUrl?: string; rewardPoints?: number, userTotalPoints?: number };
+  CheckinComplete: { imageUrl?: string; rewardPoints?: number; userTotalPoints?: number };
 };
 
 /* Events */
@@ -130,7 +139,6 @@ export type MainStackParamList = BaseMainRoutes &
   CheckoutRoutes &
   BlogRoutes &
   ChatRoutes;
-
 
 /* ============================================================
    ROOT STACK

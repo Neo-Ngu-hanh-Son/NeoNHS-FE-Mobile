@@ -1,6 +1,6 @@
 # NeoNHS Mobile - Codebase Index
 
-> Last updated: 2026-04-02
+> Last updated: 2026-04-04
 > Stack: Expo 54, React Native 0.81, TypeScript 5.9, NativeWind 4, React Navigation 7, TanStack Query 5
 > Architecture: Feature-first mobile app with shared app shell
 
@@ -8,9 +8,9 @@
 
 ## Snapshot
 
-- Total indexed source files (`app`, `components`, `features`, `hooks`, `lib`, `services`, `types`, `utils`): **267**
+- Total indexed source files (`app`, `components`, `features`, `hooks`, `lib`, `services`, `types`, `utils`): **287**
 - Top-level source distribution:
-  - `features`: 205
+  - `features`: 225
   - `components`: 25
   - `app`: 13
   - `services`: 13
@@ -48,6 +48,7 @@ index.tsx
             -> LoadingProvider
             -> AuthProvider
             -> ApiProvider
+              -> ChatProvider
        -> ThemedStatusBar
        -> RootNavigator
             -> NavigationContainer
@@ -89,6 +90,7 @@ Type source of truth: `app/navigations/NavigationParamTypes.ts`
 - `Bookings`
 - `Profile`
 - `TestCart`
+- `Chat`
 
 ### Main Stack (registered)
 
@@ -111,12 +113,14 @@ Type source of truth: `app/navigations/NavigationParamTypes.ts`
 - `EventDetail`
 - `WorkshopList`
 - `WorkshopDetail`
+- `WorkshopAllReviews`
 - `BlogList`
 - `BlogDetails`
 - `Panorama`
 - `CheckinCamera`
 - `CheckinComplete`
 - `CheckinGallery`
+- `ChatRoom`
 
 Note: `AudioGuide` exists in route types but is not currently registered in `MainNavigator.tsx`.
 
@@ -141,14 +145,15 @@ File counts shown are source files within each feature folder.
 
 | Feature              | Files | Primary Responsibilities                                                     |
 | -------------------- | ----: | ---------------------------------------------------------------------------- |
-| `features/map`       |    45 | Map rendering, clustering, filters, user location, check-in flow, directions |
+| `features/map`       |    47 | Map rendering, clustering, filters, user location, check-in flow, directions |
 | `features/home`      |    32 | Home dashboard sections, overview data, featured content                     |
-| `features/workshops` |    22 | Workshop list/detail/session browsing and APIs                               |
+| `features/workshops` |    29 | Workshop list/detail/session browsing and APIs                               |
 | `features/blog`      |    20 | Blog list/detail, filtering, HTML rendering                                  |
 | `features/point`     |    19 | Point detail pages and history-audio playback UI                             |
 | `features/profile`   |    18 | Account management, KYC, transactions, gallery                               |
 | `features/auth`      |    14 | Authentication screens, auth context, auth services                          |
 | `features/event`     |    14 | Event detail and ticket catalog querying                                     |
+| `features/chat`      |    11 | Chat room list, real-time messaging flows, floating chat entry               |
 | `features/discover`  |     9 | Destination browsing and navigation setup screens                            |
 | `features/cart`      |     6 | Cart list, pre-checkout, payment flow                                        |
 | `features/panorama`  |     4 | Panorama rendering and panorama API service                                  |

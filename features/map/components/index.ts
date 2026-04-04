@@ -17,6 +17,7 @@ export { default as PointDetailModal } from './PointDetailModal/PointDetailModal
 // Navigation guidance overlay
 export { default as NavigationGuideOverlay } from './Navigation/NavigationGuideOverlay';
 export { default as NavigationStepsBottomSheet } from './Navigation/NavigationStepsBottomSheet';
+export { default as TransportModeSelectorSheet } from './Navigation/TransportModeSelectorSheet';
 
 // Marker filter controls
 export { default as MapMarkerFilterBar } from './Filters/MapMarkerFilterBar';

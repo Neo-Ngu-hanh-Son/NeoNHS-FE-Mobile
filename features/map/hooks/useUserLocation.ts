@@ -230,7 +230,13 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
     } finally {
       setIsLoading(false);
     }
-  }, [checkPermission, requestPermission, mergedOptions.accuracy, mergedOptions.updateInterval]);
+  }, [
+    checkPermission,
+    requestPermission,
+    mergedOptions.accuracy,
+    mergedOptions.updateInterval,
+    mergedOptions.distanceInterval,
+  ]);
 
   /**
    * Stop location tracking

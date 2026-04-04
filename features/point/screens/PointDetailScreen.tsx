@@ -76,7 +76,7 @@ export default function PointDetailScreen({ navigation, route }: Props) {
   const handleNavigate = () => {
     navigation.navigate('Tabs', {
       screen: 'Map',
-      params: { targetNavigationPointId: pointId },
+      params: { targetNavigationPointId: pointId, navigationRequestId: Date.now() },
     });
   };
 
@@ -118,10 +118,7 @@ export default function PointDetailScreen({ navigation, route }: Props) {
   // ─── Main content ───
   return (
     <View className="flex-1 bg-background">
-      <RefreshableScrollView
-        onRefresh={() => refetch()}
-        contentContainerStyle={{ paddingBottom: 120 }}
-        edges={[]}>
+      <RefreshableScrollView onRefresh={() => refetch()} contentContainerStyle={{ paddingBottom: 120 }} edges={[]}>
         {/* Hero image with nav buttons */}
         <PointDetailHero
           point={point}
