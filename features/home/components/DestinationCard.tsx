@@ -1,6 +1,7 @@
-import { View, ImageBackground, TouchableOpacity, Dimensions } from "react-native";
+import { View, TouchableOpacity, Dimensions } from "react-native";
 import { Text } from "@/components/ui/text";
 import { LinearGradient } from "expo-linear-gradient";
+import { SmartImageBackground } from "@/components/ui/smart-image";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = (SCREEN_WIDTH - 48) / 2; // 16px padding on each side + 16px gap
@@ -8,7 +9,7 @@ const CARD_WIDTH = (SCREEN_WIDTH - 48) / 2; // 16px padding on each side + 16px 
 type DestinationCardProps = {
   title: string;
   subtitle: string;
-  imageUrl: string;
+  imageUrl?: string | null;
   size?: "small" | "large";
   onPress?: () => void;
 };
@@ -31,8 +32,8 @@ export default function DestinationCard({
       className="rounded-xl overflow-hidden"
       style={{ width: cardWidth, height: cardHeight }}
     >
-      <ImageBackground
-        source={{ uri: imageUrl }}
+      <SmartImageBackground
+        uri={imageUrl}
         className="flex-1"
         imageStyle={{ borderRadius: 12 }}
       >
@@ -49,7 +50,7 @@ export default function DestinationCard({
             </Text>
           </View>
         </LinearGradient>
-      </ImageBackground>
+      </SmartImageBackground>
     </TouchableOpacity>
   );
 }

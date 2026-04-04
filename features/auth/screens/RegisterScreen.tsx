@@ -3,8 +3,6 @@ import { CompositeScreenProps } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 
 import { Text } from '@/components/ui/text';
-import { Separator } from '@/components/ui/separator';
-import { IconButton } from '@/components/Buttons/IconButton';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { AuthStackParamList, RootStackParamList } from '@/app/navigations/NavigationParamTypes';
@@ -12,6 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import AuthLayout from '../components/AuthLayout';
 import AppLink from '@/components/Navigator/AppLink';
 import RegisterForm from '../components/RegisterForm';
+import { useState } from 'react';
 
 type RegisterScreenProps = CompositeScreenProps<
   StackScreenProps<AuthStackParamList, 'Register'>,
@@ -19,7 +18,8 @@ type RegisterScreenProps = CompositeScreenProps<
 >;
 
 export default function RegisterScreen({ navigation }: RegisterScreenProps) {
-  const { register, isLoading } = useAuth();
+  const { register } = useAuth();
+  const [loading, setLoading] = useState(false);
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
@@ -30,6 +30,7 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
     phoneNumber: string
   ) => {
     try {
+      setLoading(true);
       await register({ fullname, email, password, phoneNumber: phoneNumber.trim() || null });
       Alert.alert(
         'Registration Successful',
@@ -48,11 +49,13 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
         'Registration Failed',
         (error as Error).message || 'Unable to create account. Please try again.'
       );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <AuthLayout isLoading={isLoading}>
+    <AuthLayout isLoading={loading}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -62,7 +65,7 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
           </Text>
         </View>
 
-        <RegisterForm onSubmit={handleRegister} isLoading={isLoading} />
+        <RegisterForm onSubmit={handleRegister} isLoading={loading} />
 
         {/* Divider */}
         {/* <View style={styles.dividerContainer}>

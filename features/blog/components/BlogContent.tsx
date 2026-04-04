@@ -1,4 +1,4 @@
-import { useWindowDimensions, Linking, View, Modal, Pressable, Image } from 'react-native';
+import { useWindowDimensions, Linking, View, Modal, Pressable } from 'react-native';
 import RenderHTML, { CustomBlockRenderer } from 'react-native-render-html';
 import { cssRulesFromSpecs, tableModel } from '@native-html/table-plugin';
 import TableRenderer from '@native-html/table-plugin';
@@ -6,6 +6,7 @@ import { baseStyle, tagsStyles, classesStyles, cleanTableSpecs } from '../styles
 import { logger } from '@/utils/logger';
 import WebView from 'react-native-webview';
 import { useState } from 'react';
+import { SmartImage } from '@/components/ui/smart-image';
 
 interface BlogContentProps {
   html: string;
@@ -40,8 +41,8 @@ export default function BlogContent({ html }: BlogContentProps) {
 
     return (
       <Pressable onPress={onPress} style={{ marginVertical: 12 }}>
-        <Image
-          source={{ uri: src }}
+        <SmartImage
+          uri={src}
           style={{
             width: contentWidth,
             height: computedHeight,
@@ -94,8 +95,8 @@ export default function BlogContent({ html }: BlogContentProps) {
             alignItems: 'center',
           }}>
           {selectedImage && (
-            <Image
-              source={{ uri: selectedImage }}
+            <SmartImage
+              uri={selectedImage}
               style={{
                 width: width,
                 height: height,

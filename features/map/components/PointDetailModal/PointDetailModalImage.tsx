@@ -1,7 +1,8 @@
 import { useTheme } from '@/app/providers/ThemeProvider';
+import { SmartImage } from '@/components/ui/smart-image';
 import { THEME } from '@/lib/theme';
 import React from 'react';
-import { View, StyleSheet, Image } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 
 type PointDetailModalImageProps = {
   point: {
@@ -14,13 +15,9 @@ export default function PointDetailModalImage({ point }: PointDetailModalImagePr
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   return (
     <View style={[styles.container, { borderColor: theme.border }]}>
-      <Image
-        source={
-          point.thumbnailUrl
-            ? { uri: point.thumbnailUrl }
-            : require('@/assets/images/NeoNHSLogo.png')
-        }
-        resizeMode="cover"
+      <SmartImage
+        uri={point.thumbnailUrl}
+        fallbackSource={require('@/assets/images/NeoNHSLogo.png')}
         style={styles.image}
       />
     </View>

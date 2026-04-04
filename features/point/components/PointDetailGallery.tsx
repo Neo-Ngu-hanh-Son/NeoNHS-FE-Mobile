@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Image, ScrollView, TouchableOpacity } from 'react-native';
+import { View, ScrollView, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/ui/text';
+import { SmartImage } from '@/components/ui/smart-image';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 
@@ -27,13 +28,10 @@ export function PointDetailGallery() {
       </View>
 
       {/* Horizontal scroll */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 12 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
         {GALLERY_PHOTOS.map((uri, index) => (
           <TouchableOpacity key={index} activeOpacity={0.85}>
-            <Image source={{ uri }} className="h-32 w-32 rounded-2xl" resizeMode="cover" />
+            <SmartImage uri={uri} className="h-32 w-32 rounded-2xl" />
           </TouchableOpacity>
         ))}
       </ScrollView>

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, TouchableOpacity, TextInput, Image, Dimensions } from "react-native";
+import { View, TouchableOpacity, TextInput, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { StackScreenProps } from "@react-navigation/stack";
@@ -10,6 +10,7 @@ import { THEME } from "@/lib/theme";
 import { MainStackParamList } from "@/app/navigations/NavigationParamTypes";
 import { discoverService } from "../services/discoverServices";
 import { MapPoint } from "../../map/types";
+import { SmartImage } from "@/components/ui/smart-image";
 
 const { width, height } = Dimensions.get("window");
 
@@ -52,8 +53,8 @@ export default function PointMapSelectionScreen({ navigation, route }: Props) {
         <View className="flex-1" style={{ backgroundColor: theme.background }}>
             {/* Map Placeholder */}
             <View className="absolute inset-0 bg-slate-200 dark:bg-slate-800">
-                <Image
-                    source={{ uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuBZZUY6Flmba_HEvAt4ainR9mU1Ih15CJYknjySCAY6HXreso2wZR4ulo-6AMHb7ZNGvHf3VSESxWVXMS5FcMwZtcrzfAfGnjVhV4WobVpcH1DN7XlsW948gScKtZF3ojUDUjCecJJ068oUFB_CMTDo2Oq8ggrJi7gZh9dV0Yh7X58OWkV2R-pXfiLwFvvJkL0OFUTCS_XbXix3pOeyvLiaj0TscMR7yGI2Qex9n1guvRUn84bSn1GDq7uaFrjzCsM8m421NJYC-EZ1" }}
+                <SmartImage
+                    uri="https://lh3.googleusercontent.com/aida-public/AB6AXuBZZUY6Flmba_HEvAt4ainR9mU1Ih15CJYknjySCAY6HXreso2wZR4ulo-6AMHb7ZNGvHf3VSESxWVXMS5FcMwZtcrzfAfGnjVhV4WobVpcH1DN7XlsW948gScKtZF3ojUDUjCecJJ068oUFB_CMTDo2Oq8ggrJi7gZh9dV0Yh7X58OWkV2R-pXfiLwFvvJkL0OFUTCS_XbXix3pOeyvLiaj0TscMR7yGI2Qex9n1guvRUn84bSn1GDq7uaFrjzCsM8m421NJYC-EZ1"
                     className="w-full h-full object-cover opacity-50 grayscale"
                 />
 
@@ -67,10 +68,7 @@ export default function PointMapSelectionScreen({ navigation, route }: Props) {
                 <View className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-20 items-center">
                     <Text className="text-[10px] font-bold mb-1 text-black bg-white/80 px-2 py-0.5 rounded shadow-sm">{point?.name}</Text>
                     <View className="bg-white p-1 rounded-lg shadow-lg border border-slate-200">
-                        <Image
-                            source={{ uri: point?.thumbnailUrl }}
-                            className="w-12 h-8 object-contain"
-                        />
+                        <SmartImage uri={point?.thumbnailUrl} className="w-12 h-8 object-contain" />
                     </View>
                 </View>
             </View>
@@ -114,10 +112,7 @@ export default function PointMapSelectionScreen({ navigation, route }: Props) {
                 <View className="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mt-4 mb-2" />
                 <View className="px-6 py-4 pb-12">
                     <View className="flex-row items-start gap-4 mb-6">
-                        <Image
-                            source={{ uri: point?.thumbnailUrl }}
-                            className="w-16 h-16 rounded-2xl object-cover"
-                        />
+                        <SmartImage uri={point?.thumbnailUrl} className="w-16 h-16 rounded-2xl object-cover" />
                         <View className="flex-1">
                             <Text className="text-xl font-bold" style={{ color: theme.foreground }}>{point?.name}</Text>
                             <View className="flex-row items-center gap-1 mt-1">

@@ -1,10 +1,11 @@
 import React from "react";
-import { View, ScrollView, Image } from "react-native";
+import { View, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { Text } from "@/components/ui/text";
 import { WorkshopTemplateResponse } from "../types";
 import { formatPrice, formatDuration } from "../utils/helpers";
+import { SmartImage } from "@/components/ui/smart-image";
 
 interface ThemeColors {
   foreground: string;
@@ -140,7 +141,7 @@ export default function WorkshopInfoSection({ workshop, theme }: WorkshopInfoSec
                 style={{ backgroundColor: tag.tagColor + "18" }}
               >
                 {tag.iconUrl && (
-                  <Image source={{ uri: tag.iconUrl }} className="w-4 h-4 rounded-full" />
+                  <SmartImage uri={tag.iconUrl} className="w-4 h-4 rounded-full" />
                 )}
                 <Text className="text-xs font-semibold" style={{ color: tag.tagColor }}>
                   {tag.name}

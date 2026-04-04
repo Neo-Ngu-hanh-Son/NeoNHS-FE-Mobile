@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
 import { Modal, StyleSheet, View, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { THEME } from '@/lib/theme';
@@ -144,12 +144,15 @@ export function ModalProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const value: ModalContextValue = {
-    alert,
-    confirm,
-    info,
-    dismiss,
-  };
+  const value: ModalContextValue = useMemo(
+    () => ({
+      alert,
+      confirm,
+      info,
+      dismiss,
+    }),
+    [alert, confirm, info, dismiss]
+  );
 
   return (
     <ModalContext.Provider value={value}>
