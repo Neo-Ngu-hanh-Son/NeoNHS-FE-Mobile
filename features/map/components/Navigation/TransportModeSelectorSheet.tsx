@@ -7,7 +7,6 @@ import { THEME } from '@/lib/theme';
 import { TravelMode } from '../../types';
 
 type TransportModeSelectorSheetProps = {
-  visible: boolean;
   selectedMode: TravelMode;
   destinationName?: string;
   previewDistanceText?: string;
@@ -55,7 +54,6 @@ const MODE_OPTIONS: ModeOption[] = [
 ];
 
 export default function TransportModeSelectorSheet({
-  visible,
   selectedMode,
   destinationName,
   previewDistanceText,
@@ -92,27 +90,36 @@ export default function TransportModeSelectorSheet({
     [onSelectMode, selectedMode]
   );
 
-  if (!visible) {
-    return null;
-  }
-
   return (
     <View
       pointerEvents="box-none"
-      className="absolute bottom-0 left-0 right-0 px-3"
+      className="absolute bottom-3 left-0 right-0 px-3"
       style={{ zIndex: 60, elevation: 20 }}>
       <View
-        className="rounded-3xl border px-4 pb-5 pt-3"
+        className="rounded-2xl border px-3 pb-3 pt-2"
         style={{
           borderColor: theme.border,
           backgroundColor: isDarkColorScheme ? 'rgba(20,24,31,0.96)' : 'rgba(255,255,255,0.97)',
         }}>
-        <Text className="text-lg font-bold">Choose transportation</Text>
-        <Text className="mt-1 text-xs text-muted-foreground">
-          {destinationName ? `Destination: ${destinationName}` : 'Select how you want to travel'}
-        </Text>
+        <View className="flex-row items-start justify-between gap-3">
+          <View className="flex-1">
+            <Text className="text-base font-bold">Choose transportation</Text>
+            <Text numberOfLines={1} className="mt-0.5 text-[11px] text-muted-foreground">
+              {destinationName ? `To ${destinationName}` : 'Select how you want to travel'}
+            </Text>
+          </View>
 
-        <View className="mt-4 gap-2">
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Cancel navigation"
+            activeOpacity={0.85}
+            onPress={onCancel}
+            className="h-8 w-8 items-center justify-center rounded-full border border-border bg-background">
+            <Ionicons name="close" size={16} color={theme.foreground} />
+          </TouchableOpacity>
+        </View>
+
+        <View className="mt-3 flex-row flex-wrap gap-2">
           {MODE_OPTIONS.map((option) => {
             const isSelected = option.mode === selectedMode;
 
@@ -124,50 +131,41 @@ export default function TransportModeSelectorSheet({
                 accessibilityState={{ selected: isSelected }}
                 activeOpacity={0.8}
                 onPress={makeModePressHandler(option.mode)}
-                className={`rounded-xl border px-3 py-3 ${
+                className={`min-h-10 flex-1 rounded-lg border px-2 py-2 ${
                   isSelected ? 'border-primary/60 bg-primary/10' : 'border-border/50 bg-background'
                 }`}>
                 <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center gap-2">
-                    <Ionicons name={option.icon} size={18} color={isSelected ? theme.primary : theme.foreground} />
+                  <View className="flex-row items-center gap-1.5">
+                    <Ionicons name={option.icon} size={14} color={isSelected ? theme.primary : theme.foreground} />
                     <View>
-                      <Text className="text-sm font-semibold">{option.label}</Text>
-                      <Text className="text-xs text-muted-foreground">{option.description}</Text>
+                      <Text className="text-xs font-semibold">{option.label}</Text>
                     </View>
                   </View>
-                  {isSelected ? <Ionicons name="checkmark-circle" size={18} color={theme.primary} /> : null}
+                  {isSelected ? <Ionicons name="checkmark-circle" size={14} color={theme.primary} /> : null}
                 </View>
               </TouchableOpacity>
             );
           })}
         </View>
 
-        <View className="mt-4 rounded-xl border border-border/40 bg-background px-3 py-3">
-          <Text className="text-xs font-semibold text-muted-foreground">Route preview</Text>
-          <Text className="mt-1 text-sm font-semibold">{summaryText}</Text>
+        <View className="mt-2.5 rounded-lg border border-border/40 bg-background px-2.5 py-2">
+          <Text className="text-[11px] font-semibold text-muted-foreground">Route preview</Text>
+          <Text className="mt-0.5 text-xs font-semibold">{summaryText}</Text>
           {errorMessage ? <Text className="mt-1 text-xs text-destructive">{errorMessage}</Text> : null}
         </View>
 
-        <View className="mt-4 flex-row items-center gap-2">
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="Cancel navigation"
-            activeOpacity={0.85}
-            onPress={onCancel}
-            className="h-11 flex-1 items-center justify-center rounded-xl border border-border bg-background">
-            <Text className="text-sm font-semibold">Cancel</Text>
-          </TouchableOpacity>
+        <View className="mt-2.5 flex-row items-center gap-2">
           <TouchableOpacity
             accessibilityRole="button"
             accessibilityLabel="Start navigation"
             activeOpacity={0.85}
             onPress={onStartNavigation}
             disabled={!canStartNavigation}
-            className={`h-11 flex-1 items-center justify-center rounded-xl ${
+            className={`h-10 flex-1 items-center justify-center rounded-lg ${
               canStartNavigation ? 'bg-primary' : 'bg-muted'
             }`}>
             <Text
-              className={`text-sm font-semibold ${canStartNavigation ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
+              className={`text-xs font-semibold ${canStartNavigation ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
               Start Navigation
             </Text>
           </TouchableOpacity>

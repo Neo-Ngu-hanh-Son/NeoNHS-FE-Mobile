@@ -23,6 +23,7 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
   const [isSavingPhoto, setIsSavingPhoto] = useState(false);
   const { isSubmitting, submit } = useSubmitUserCheckin();
   const { isDarkColorScheme } = useTheme();
+
   const theme = useMemo(() => (isDarkColorScheme ? THEME.dark : THEME.light), [isDarkColorScheme]);
 
   const persistCurrentCapture = useCallback(() => {
@@ -50,10 +51,7 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
 
   const handleFinishCheckin = useCallback(async () => {
     if (!pointId) {
-      Alert.alert(
-        'Missing check-in point',
-        'No check-in point selected. Please return to the map and try again.'
-      );
+      Alert.alert('Missing check-in point', 'No check-in point selected. Please return to the map and try again.');
       return;
     }
 
@@ -83,10 +81,7 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
       });
     } catch (error) {
       logger.error('[CheckinCameraScreen] Failed to finish check-in', error);
-      Alert.alert(
-        'Check-in failed',
-        error instanceof Error ? error.message : 'Unable to complete check-in right now.'
-      );
+      Alert.alert('Check-in failed', error instanceof Error ? error.message : 'Unable to complete check-in right now.');
     }
   }, [capturedCaption, capturedPhotoUri, draftImages, navigation, pointId, submit]);
 

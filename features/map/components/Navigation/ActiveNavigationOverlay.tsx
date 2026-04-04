@@ -16,7 +16,6 @@ export default function ActiveNavigationOverlay({
   errorMessage,
   travelModeLabel,
   onOpenSteps,
-  canOpenSteps,
   currentNavigationStepData,
   onExit,
 }: ActiveNavigationOverlayProps) {
@@ -80,12 +79,10 @@ export default function ActiveNavigationOverlay({
 
             <TouchableOpacity
               onPress={onOpenSteps}
-              disabled={!canOpenSteps}
-              className={`rounded-full px-3 py-1 ${canOpenSteps ? 'bg-white/20' : 'bg-white/10'}`}
+              className={`rounded-full bg-white/10 px-3 py-1`}
               accessibilityRole="button"
-              accessibilityLabel="Open navigation steps"
-              accessibilityState={{ disabled: !canOpenSteps }}>
-              <Text className={`text-xs font-semibold ${canOpenSteps ? 'text-white' : 'text-white/70'}`}>Steps</Text>
+              accessibilityLabel="Open navigation steps">
+              <Text className={`text-xs font-semibold text-white/70`}>Steps</Text>
             </TouchableOpacity>
           </View>
         </View>

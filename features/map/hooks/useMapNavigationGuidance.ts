@@ -27,7 +27,7 @@ import { buildDirectionsQueryOptions } from './useCachedDirections';
 
 type UseMapNavigationGuidanceParams = {
   targetNavigationPointId?: string;
-  travelMode: TravelMode;
+  travelMode: TravelMode | null;
   mapPoints: MapPoint[];
   userLocation: UserLocation | null;
   permissionStatus: LocationPermissionStatus;
@@ -264,7 +264,7 @@ export function useMapNavigationGuidance({
           buildDirectionsQueryOptions({
             origin,
             destination,
-            travelMode: selectedTravelMode,
+            travelMode: selectedTravelMode ? selectedTravelMode : MAP_CONSTANTS.DEFAULT_TRAVEL_MODE,
           })
         );
 

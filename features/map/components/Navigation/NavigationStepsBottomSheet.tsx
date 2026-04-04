@@ -47,7 +47,7 @@ const NavigationStepsBottomSheet = forwardRef<BottomSheet, NavigationStepsBottom
       [clampedCurrentStepIndex]
     );
     return (
-      <BottomSheet ref={ref} index={-1} snapPoints={snapPoints} enablePanDownToClose onChange={onChange}>
+      <BottomSheet ref={ref} index={-1} snapPoints={snapPoints} enablePanDownToClose>
         <BottomSheetFlatList<Step>
           ref={listRef}
           data={steps}

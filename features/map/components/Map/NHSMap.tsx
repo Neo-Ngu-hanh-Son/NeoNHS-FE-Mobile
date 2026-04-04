@@ -279,20 +279,19 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
     }, [isMapReady, isFollowingUser, userLocation, isFocused]);
 
     // 1. Memoize the routes (since they never change)
-    const memoizedRoutes = useMemo(() => {
+    const memoizedRoutes = useMemo((): React.ReactNode[] => {
       return renderRoutes.map((line) => (
         <Polyline key={line.id} coordinates={line.coordinates} strokeColor="#fafafa50" strokeWidth={8} />
       ));
-    }, []); // Empty array because renderRoutes is static imported data
+    }, []);
 
     const memoizedNavigationRoute = useMemo(() => {
-      if (!navigationPolylineCoordinates || navigationPolylineCoordinates.length < 2) {
-        return null;
-      }
-
+      const hasPoints = navigationPolylineCoordinates && navigationPolylineCoordinates.length >= 2;
+      // Instead of returing null, just return an empty array for it to "hide" the route
       return (
         <Polyline
-          coordinates={navigationPolylineCoordinates}
+          key="active-navigation-polyline"
+          coordinates={hasPoints ? navigationPolylineCoordinates : []}
           strokeColor={theme.primary}
           strokeWidth={6}
           lineCap="round"

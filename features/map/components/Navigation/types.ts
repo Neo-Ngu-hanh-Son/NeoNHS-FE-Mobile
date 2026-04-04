@@ -11,14 +11,12 @@ export type NavigationStepData = {
 };
 
 export type NavigationGuideOverlayProps = {
-  visible: boolean;
   isLoading: boolean;
   isReady: boolean;
   errorMessage?: string | null;
   travelModeLabel?: string;
   onExit: () => void;
   onOpenSteps: () => void;
-  canOpenSteps: boolean;
   currentNavigationStepData?: NavigationStepData;
   isUserArrived?: boolean;
   isGuidanceMode?: boolean;

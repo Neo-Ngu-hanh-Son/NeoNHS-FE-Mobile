@@ -4,6 +4,7 @@ import checkinServices from '@/features/map/services/checkinServices';
 import { CheckinImageRequest, CheckinMethod, UserCheckinRequest } from '@/features/map/types';
 import { useUserLocation } from '@/features/map/hooks/useUserLocation';
 import { logger } from '@/utils/logger';
+import { useCheckinMutation } from './Checkin/useCheckinMutation';
 
 export type CheckinDraftImage = {
   localUri: string;
@@ -16,8 +17,9 @@ type SubmitUserCheckinParams = {
 };
 
 export function useSubmitUserCheckin() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { getCurrentLocation } = useUserLocation({ autoStart: false });
+  const { mutateAsync, isPending } = useCheckinMutation();
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const submit = useCallback(
     async ({ checkinPointId, images }: SubmitUserCheckinParams) => {
@@ -29,9 +31,8 @@ export function useSubmitUserCheckin() {
         throw new Error('Please take at least one photo before finishing check-in.');
       }
 
-      setIsSubmitting(true);
-
       try {
+        setUploadingImage(true);
         const currentLocation = await getCurrentLocation();
 
         if (!currentLocation) {
@@ -79,8 +80,8 @@ export function useSubmitUserCheckin() {
 
         logger.info('[useSubmitUserCheckin] Submitting check-in', { payload });
 
-        const response = await checkinServices.userCheckIn(payload);
-        const isSuccess = Boolean(response?.success) || response?.status === 200;
+        const response = await mutateAsync(payload);
+        const isSuccess = response?.status === 200 || Boolean(response?.success);
 
         if (!isSuccess) {
           throw new Error(response?.message ?? 'Unable to complete check-in right now.');
@@ -92,13 +93,20 @@ export function useSubmitUserCheckin() {
           earnedPoints: response?.data?.earnedPoints,
           userTotalPoints: response?.data?.userTotalPoints,
         };
+      } catch (error) {
+        logger.error('[useSubmitUserCheckin] Failed to submit check-in', error);
+        throw error instanceof Error
+          ? error
+          : new Error('An unexpected error occurred while submitting your check-in.');
       } finally {
-        setIsSubmitting(false);
+        setUploadingImage(false);
       }
     },
-    [getCurrentLocation]
+    [getCurrentLocation, mutateAsync]
   );
 
+  // There are 2 loading state, therefore we combine them and return here
+  let isSubmitting = isPending || uploadingImage;
   return {
     isSubmitting,
     submit,

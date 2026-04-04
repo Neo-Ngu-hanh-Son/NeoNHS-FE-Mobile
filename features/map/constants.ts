@@ -50,7 +50,7 @@ const MAP_CONSTANTS = {
   ],
 
   FULL_SCREEN_SHEET_INDEX: 2,
-  DEFAULT_TRAVEL_MODE: 'WALK' as const,
+  DEFAULT_TRAVEL_MODE: 'DRIVE' as const,
   TRAVEL_MODE_LABELS: {
     WALK: 'Walking',
     DRIVE: 'Driving',
