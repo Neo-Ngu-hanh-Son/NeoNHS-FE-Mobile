@@ -105,3 +105,28 @@ export const formatDistanceText = (distanceMeters?: number): string | undefined 
 
   return `${(distanceMeters / 1000).toFixed(1)} km`;
 };
+
+
+
+export function parseDurationSeconds(duration?: string): number | undefined {
+  if (!duration) {
+    return undefined;
+  }
+
+  const parsed = Number.parseInt(duration.replace('s', ''), 10);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return undefined;
+  }
+
+  return parsed;
+}
+
+export function extractStreetNameFromInstruction(instruction?: string): string | undefined {
+  if (!instruction) {
+    return undefined;
+  }
+
+  const match = instruction.match(/\b(?:onto|on|toward|towards)\s+([^,.;]+)/i);
+  const streetName = match?.[1]?.trim();
+  return streetName && streetName.length > 0 ? streetName : undefined;
+}

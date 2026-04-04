@@ -1,10 +1,9 @@
-import React, { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { forwardRef, useCallback, useMemo, useRef } from 'react';
 import BottomSheet, { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { View } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { Step } from '../../types';
 import type { BottomSheetFlatListMethods } from '@gorhom/bottom-sheet';
-import { logger } from '@/utils/logger';
 
 type NavigationStepsBottomSheetProps = {
   steps: Step[];

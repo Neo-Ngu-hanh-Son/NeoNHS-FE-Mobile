@@ -69,6 +69,9 @@ const hasUserArrivedAtDestination = (
   return distance <= MAP_CONSTANTS.ARRIVAL_RADIUS_M;
 };
 
+/**
+ * List of distance-related utility functions that use the turf.js library
+ */
 export const distanceUtils = {
   calculateDistance,
   calculatePointToLineDistance,

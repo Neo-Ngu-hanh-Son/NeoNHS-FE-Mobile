@@ -2,8 +2,23 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { parseFloatOrDefault } from '@/utils/parseNumber';
 import { logger } from '@/utils/logger';
 import { mapDirectionService } from '../services/mapDirectionService';
-import { decodeRoutePolyline, formatDistanceText, formatDurationText } from '../helpers';
-import { CurrentNavigationStepData, MapPoint, PolylineCoordinate, RouteResponse, Step, TripMetadata } from '../types';
+import {
+  decodeRoutePolyline,
+  extractStreetNameFromInstruction,
+  formatDistanceText,
+  formatDurationText,
+  parseDurationSeconds,
+} from '../helpers';
+import {
+  CurrentNavigationStepData,
+  MapPoint,
+  NavigationRouteState,
+  NavigationStatusState,
+  PolylineCoordinate,
+  RouteResponse,
+  Step,
+  TripMetadata,
+} from '../types';
 import type { LocationPermissionStatus, UserLocation } from './useUserLocation';
 import { distanceUtils } from '@/utils/distanceUtils';
 import MAP_CONSTANTS from '../constants';
@@ -38,25 +53,6 @@ type UseMapNavigationGuidanceReturn = {
   currentNavigationStepData: CurrentNavigationStepData;
 };
 
-type NavigationStatusState = {
-  isMapReady: boolean;
-  isGuidanceMode: boolean;
-  isDirectionsLoading: boolean;
-  isDirectionsReady: boolean;
-  directionError: string | null;
-  isUserArrived: boolean;
-};
-
-type NavigationRouteState = {
-  routeSummary: RouteResponse | null;
-  steps: Step[];
-  navigationPolylineCoordinates: PolylineCoordinate[];
-  navigationEndpoints: {
-    origin: PolylineCoordinate;
-    destination: PolylineCoordinate;
-  } | null;
-};
-
 const EMPTY_TRIP_METADATA: TripMetadata = {
   tripTotalDistanceText: undefined,
   tripTotalDurationText: undefined,
@@ -68,30 +64,7 @@ const EMPTY_TRIP_METADATA: TripMetadata = {
   tripRemainingDuration: undefined,
 };
 
-
-function parseDurationSeconds(duration?: string): number | undefined {
-  if (!duration) {
-    return undefined;
-  }
-
-  const parsed = Number.parseInt(duration.replace('s', ''), 10);
-  if (!Number.isFinite(parsed) || parsed < 0) {
-    return undefined;
-  }
-
-  return parsed;
-}
-
-function extractStreetNameFromInstruction(instruction?: string): string | undefined {
-  if (!instruction) {
-    return undefined;
-  }
-
-  const match = instruction.match(/\b(?:onto|on|toward|towards)\s+([^,.;]+)/i);
-  const streetName = match?.[1]?.trim();
-  return streetName && streetName.length > 0 ? streetName : undefined;
-}
-
+// TODO: Format this function holy shiba
 export function useMapNavigationGuidance({
   targetNavigationPointId,
   mapPoints,
@@ -118,8 +91,6 @@ export function useMapNavigationGuidance({
     navigationEndpoints: null,
   });
 
-  const [tripMetadata, setTripMetadata] = useState<TripMetadata>(EMPTY_TRIP_METADATA);
-
   const [currentUserStepIndex, setCurrentUserStepIndex] = useState(0); // Index of the current step
 
   const fetchedNavigationTargetRef = useRef<string | null>(null);
@@ -139,9 +110,7 @@ export function useMapNavigationGuidance({
       isDirectionsReady: false,
       directionError: null,
       isUserArrived: false,
-      // isGuidanceMode: false,
     }));
-    setTripMetadata(EMPTY_TRIP_METADATA);
     setCurrentUserStepIndex(0);
   }, []);
 
@@ -172,7 +141,7 @@ export function useMapNavigationGuidance({
     if (!navigationStatus.isGuidanceMode || !targetNavigationPointId) {
       return null;
     }
-    if (permissionStatus !== 'granted' || userLocation || isTracking) {
+    if (permissionStatus !== 'granted' || !userLocation || isTracking) {
       return null;
     }
 
@@ -366,12 +335,12 @@ export function useMapNavigationGuidance({
     if (!navigationStatus.isGuidanceMode || !userLocation || routeState.steps.length === 0) {
       return;
     }
-
+    const userLocationPoint = {
+      longitude: userLocation.longitude,
+      latitude: userLocation.latitude,
+    };
     const nearestStepIndex = distanceUtils.findCurrentUserStepIndex(
-      {
-        latitude: userLocation.latitude,
-        longitude: userLocation.longitude,
-      },
+      userLocationPoint,
       currentUserStepIndex,
       routeState.steps
     );
@@ -385,33 +354,18 @@ export function useMapNavigationGuidance({
     // // If user is close to the current step end, or clearly closer to the next segment,
     // // proactively advance to avoid one-step-behind UI.
     if (currentStep && nextStep) {
-      const distanceToCurrentStepEnd = distanceUtils.calculateDistance(
-        {
-          latitude: userLocation.latitude,
-          longitude: userLocation.longitude,
-        },
-        {
-          latitude: currentStep.endLocation.latLng.latitude,
-          longitude: currentStep.endLocation.latLng.longitude,
-        }
-      );
+      const distanceToCurrentStepEnd = distanceUtils.calculateDistance(userLocationPoint, {
+        latitude: currentStep.endLocation.latLng.latitude,
+        longitude: currentStep.endLocation.latLng.longitude,
+      });
 
-      const distanceToCurrentStepStart = distanceUtils.calculateDistance(
-        {
-          latitude: userLocation.latitude,
-          longitude: userLocation.longitude,
-        },
-        {
-          latitude: currentStep.startLocation.latLng.latitude,
-          longitude: currentStep.startLocation.latLng.longitude,
-        }
-      );
+      const distanceToCurrentStepStart = distanceUtils.calculateDistance(userLocationPoint, {
+        latitude: currentStep.startLocation.latLng.latitude,
+        longitude: currentStep.startLocation.latLng.longitude,
+      });
 
       const currentSegmentDistance = distanceUtils.calculatePointToLineDistance(
-        {
-          latitude: userLocation.latitude,
-          longitude: userLocation.longitude,
-        },
+        userLocationPoint,
         {
           latitude: currentStep.startLocation.latLng.latitude,
           longitude: currentStep.startLocation.latLng.longitude,
@@ -423,10 +377,7 @@ export function useMapNavigationGuidance({
       );
 
       const nextSegmentDistance = distanceUtils.calculatePointToLineDistance(
-        {
-          latitude: userLocation.latitude,
-          longitude: userLocation.longitude,
-        },
+        userLocationPoint,
         {
           latitude: nextStep.startLocation.latLng.latitude,
           longitude: nextStep.startLocation.latLng.longitude,
@@ -457,17 +408,12 @@ export function useMapNavigationGuidance({
     }
   }, [currentUserStepIndex, navigationStatus.isGuidanceMode, routeState.steps, userLocation]);
 
-  /**
-   * Recompute trip metadata whenever route/steps/index changes.
-   * Keep this independent so bottom-bar trip info can update with remaining values.
-   */
-  useEffect(() => {
+  const tripMetadata = useMemo<TripMetadata>(() => {
     const leg = routeState.routeSummary?.routes?.[0]?.legs?.[0];
     const steps = routeState.steps;
 
     if (!leg && steps.length === 0) {
-      setTripMetadata((prev) => (prev === EMPTY_TRIP_METADATA ? prev : EMPTY_TRIP_METADATA));
-      return;
+      return EMPTY_TRIP_METADATA;
     }
 
     const totalDistanceFromSteps = steps.reduce((sum, step) => sum + (step.distanceMeters ?? 0), 0);
@@ -497,7 +443,7 @@ export function useMapNavigationGuidance({
     const tripRemainingDuration =
       tripTotalDuration !== undefined ? Math.max(tripTotalDuration - completedDuration, 0) : undefined;
 
-    const nextTripMetadata: TripMetadata = {
+    return {
       tripTotalDistanceText: formatDistanceText(tripTotalDistanceMeters),
       tripTotalDurationText: tripTotalDuration !== undefined ? formatDurationText(`${tripTotalDuration}s`) : undefined,
       tripRemainingDistanceText: formatDistanceText(tripRemainingDistanceMeters),
@@ -508,23 +454,6 @@ export function useMapNavigationGuidance({
       tripRemainingDistanceMeters,
       tripRemainingDuration,
     };
-
-    setTripMetadata((prev) => {
-      if (
-        prev.tripTotalDistanceText === nextTripMetadata.tripTotalDistanceText &&
-        prev.tripTotalDurationText === nextTripMetadata.tripTotalDurationText &&
-        prev.tripRemainingDistanceText === nextTripMetadata.tripRemainingDistanceText &&
-        prev.tripRemainingDurationText === nextTripMetadata.tripRemainingDurationText &&
-        prev.tripTotalDistanceMeters === nextTripMetadata.tripTotalDistanceMeters &&
-        prev.tripTotalDuration === nextTripMetadata.tripTotalDuration &&
-        prev.tripRemainingDistanceMeters === nextTripMetadata.tripRemainingDistanceMeters &&
-        prev.tripRemainingDuration === nextTripMetadata.tripRemainingDuration
-      ) {
-        return prev;
-      }
-
-      return nextTripMetadata;
-    });
   }, [routeState.routeSummary, routeState.steps, currentUserStepIndex]);
 
   /**
@@ -566,6 +495,10 @@ export function useMapNavigationGuidance({
   const totalSteps = routeState.steps.length;
   const currentIndex = totalSteps > 0 ? Math.min(currentUserStepIndex, totalSteps - 1) : 0;
 
+  useEffect(() => {
+    // Reset mode when changing step (or leaving guidance) so each step derives instruction fresh.
+  }, [currentIndex, navigationStatus.isGuidanceMode]);
+
   const currentStep = useMemo(() => {
     if (totalSteps === 0) {
       return null;
@@ -579,40 +512,36 @@ export function useMapNavigationGuidance({
     const baseManeuver = currentStep?.navigationInstruction?.maneuver ?? null;
     const baseInstruction = currentStep?.navigationInstruction?.instructions;
 
-    const userLocationPoint = {
-      latitude: userLocation?.latitude ?? 0,
-      longitude: userLocation?.longitude ?? 0,
-    }
-
     let currentManeuver = baseManeuver;
     let currentInstructionText = baseInstruction;
     let currentStepDistanceText = currentStep?.localizedValues?.distance?.text;
 
     if (currentStep && userLocation) {
-      const distanceToNextManeuver = distanceUtils.calculateDistance(
-        userLocationPoint,
-        {
-          latitude: currentStep.endLocation.latLng.latitude,
-          longitude: currentStep.endLocation.latLng.longitude,
-        }
-      );
+      const userLocationPoint = {
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+      };
 
-      const distanceToPreviousManeuver = distanceUtils.calculateDistance(
-        userLocationPoint,
-        {
-          latitude: currentStep.startLocation.latLng.latitude,
-          longitude: currentStep.startLocation.latLng.longitude,
-        }
-      );
+      const distanceToNextManeuver = distanceUtils.calculateDistance(userLocationPoint, {
+        latitude: currentStep.endLocation.latLng.latitude,
+        longitude: currentStep.endLocation.latLng.longitude,
+      });
+
+      const distanceToPreviousManeuver = distanceUtils.calculateDistance(userLocationPoint, {
+        latitude: currentStep.startLocation.latLng.latitude,
+        longitude: currentStep.startLocation.latLng.longitude,
+      });
 
       const distanceToNextManeuverText = formatDistanceText(distanceToNextManeuver);
 
+      const shouldEnterContinueStraight =
+        distanceToNextManeuver > MAP_CONSTANTS.STEP_RADIUS_M &&
+        distanceToPreviousManeuver > MAP_CONSTANTS.STEP_RADIUS_M;
       // If the user is in between the two start and end point, displaying a generic message: "Continue follow the {streetName}"
-      if (distanceToNextManeuver > MAP_CONSTANTS.STEP_RADIUS_M
-        && distanceToPreviousManeuver > MAP_CONSTANTS.STEP_RADIUS_M) {
+      if (shouldEnterContinueStraight) {
         const streetName = extractStreetNameFromInstruction(baseInstruction);
         currentManeuver = 'STRAIGHT';
-        currentInstructionText = streetName ? `Continue straight on ${streetName}` : 'Continue straight';
+        currentInstructionText = streetName ? `Continue on ${streetName}` : 'Continue straight';
       }
 
       // Show dynamic remaining distance to current maneuver in the top card metadata.

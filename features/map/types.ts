@@ -253,3 +253,21 @@ export type TripMetadata = {
 };
 
 
+export type NavigationStatusState = {
+  isMapReady: boolean;
+  isGuidanceMode: boolean;
+  isDirectionsLoading: boolean;
+  isDirectionsReady: boolean;
+  directionError: string | null;
+  isUserArrived: boolean;
+};
+
+export type NavigationRouteState = {
+  routeSummary: RouteResponse | null;
+  steps: Step[];
+  navigationPolylineCoordinates: PolylineCoordinate[];
+  navigationEndpoints: {
+    origin: PolylineCoordinate;
+    destination: PolylineCoordinate;
+  } | null;
+};
