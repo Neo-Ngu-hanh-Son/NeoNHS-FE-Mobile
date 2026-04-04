@@ -11,6 +11,7 @@ import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import { BackgroundGeoFencingData } from '@/features/map';
 import { logger } from '@/utils/logger';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // This is the default configuration
 configureReanimatedLogger({
@@ -55,10 +56,12 @@ function ThemedStatusBar() {
 
 export default function App() {
   return (
-    <Providers>
-      <ThemedStatusBar />
-      <RootNavigator />
-      <PortalHost />
-    </Providers>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Providers>
+        <ThemedStatusBar />
+        <RootNavigator />
+        <PortalHost />
+      </Providers>
+    </GestureHandlerRootView>
   );
 }

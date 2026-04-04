@@ -34,6 +34,7 @@ type NHSMapProps = {
   onMapReadyCallback?: () => void;
   navigationPolylineCoordinates?: PolylineCoordinate[];
   isGuidanceMode?: boolean;
+  isMapInteractionEnabled?: boolean;
   markerFilters?: MapMarkerFilters;
 };
 
@@ -69,6 +70,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       onMapReadyCallback,
       navigationPolylineCoordinates,
       isGuidanceMode = false,
+      isMapInteractionEnabled = true,
       markerFilters,
     },
     ref
@@ -93,23 +95,11 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
     const onMarkerPressRef = useRef(onMarkerPress); // Store in ref to avoid re-creating handlers and causing re-renders
     const isFocused = useIsFocused();
 
-    // Only purpose is to hope that the marker itself render correctly
-    const [trackChanges, setTrackChanges] = useState(true);
-
-    useEffect(() => {
-      if (isMapReady) {
-        const timeout = setTimeout(() => {
-          setTrackChanges(false);
-        }, 500);
-
-        return () => clearTimeout(timeout);
-      }
-    }, [isMapReady, shouldDisplayMarkerName]);
-
     const activeCheckinPoint = useCheckinProximity(
       userLocation,
       checkinPoints,
-      MAP_CONSTANTS.CHECKINPOINT_DETECT_RADIUS_M
+      MAP_CONSTANTS.CHECKINPOINT_DETECT_RADIUS_M,
+      isGuidanceMode
     );
 
     // Expose methods to parent via ref
@@ -170,7 +160,6 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       const zoom = Math.log2(360 / region.longitudeDelta);
       const shouldShow = zoom >= 17.5;
       setShouldDisplayMarkerName((prev) => (prev === shouldShow ? prev : shouldShow));
-
       // Store for later
       currentRegionRef.current = region;
       mapZoomRef.current.latitudeDelta = region.latitudeDelta;
@@ -218,7 +207,11 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       onActiveCheckinPointChange?.(activeCheckinPoint);
     }, [activeCheckinPoint, onActiveCheckinPointChange]);
 
+    /**
+     * useEffect to fetch checkin points near user when the user moves.
+     */
     useEffect(() => {
+      if (isGuidanceMode) return;
       let isCancelled = false;
 
       const syncCheckinPoints = async () => {
@@ -264,7 +257,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       return () => {
         isCancelled = true;
       };
-    }, [userLocation, previousLocation, syncNearbyGeofences]);
+    }, [userLocation, previousLocation, syncNearbyGeofences, isGuidanceMode]);
 
     /**
      * Effect to auto-pan to user location when following
@@ -398,7 +391,6 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
                   defaultPitch: checkin.defaultPitch,
                 };
 
-                // TODO: Optimize this by not making the whole marker arrays re-render on just a selected point
                 return (
                   <Marker
                     tracksViewChanges={true}
@@ -435,7 +427,6 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       effectiveMarkerFilters.showAll,
       effectiveMarkerFilters.showCheckin,
       isGuidanceMode,
-      // trackChanges,
     ]);
 
     return (
@@ -449,6 +440,10 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           // clusterColor={theme.primary}
           // radius={10}
           mapType="standard"
+          scrollEnabled={isMapInteractionEnabled}
+          zoomEnabled={isMapInteractionEnabled}
+          rotateEnabled={isMapInteractionEnabled}
+          pitchEnabled={isMapInteractionEnabled}
           showsUserLocation={false}
           showsMyLocationButton={false} // We use custom button
           onRegionChangeComplete={handleRegionChangeComplete}
@@ -456,7 +451,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
             setIsMapReady(true);
             onMapReadyCallback?.();
           }}
-          onPanDrag={handleMapInteraction} // Detect when user drags the map
+          onPanDrag={isMapInteractionEnabled ? handleMapInteraction : undefined} // Detect when user drags the map
           customMapStyle={MAP_CONSTANTS.GOOGLE_MAP_STYLE}>
           {/* Polylines */}
           {memoizedRoutes}

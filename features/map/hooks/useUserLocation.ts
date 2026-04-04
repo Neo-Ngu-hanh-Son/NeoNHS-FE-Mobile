@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Platform } from 'react-native';
 import * as Location from 'expo-location';
 import { logger } from '@/utils/logger';
 import checkinServices from '../services/checkinServices';

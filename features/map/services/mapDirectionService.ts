@@ -103,6 +103,7 @@ export const mapDirectionService = {
           });
         });
       });
+      logger.debug('[mapDirectionService] Fetched directions successfully', response.data.routes.at(0)?.legs.at(0));
       return response;
     } catch (error) {
       logger.error('[mapDirectionService] Network error while fetching directions', error);

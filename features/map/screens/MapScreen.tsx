@@ -10,7 +10,6 @@ import { MapMarkerFilterBar } from '../components';
 import { mapService } from '../services/mapServices';
 import { useModal } from '@/app/providers/ModalProvider';
 import { useMapMarkerFilters, useMapNavigationGuidance, useUserLocation } from '../hooks';
-import { LocationPermissionBanner } from '../components/UserLocation';
 import { mapData } from '../data';
 import { CompositeScreenProps, useIsFocused } from '@react-navigation/native';
 import { ScreenLayout } from '@/components/common/ScreenLayout';
@@ -21,6 +20,10 @@ import { useAuth } from '@/features/auth/context/AuthContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MAP_CONSTANTS from '../constants';
 import { LocationAccuracy } from 'expo-location';
+import BottomSheet from '@gorhom/bottom-sheet';
+import NavigationStepsBottomSheet from '../components/Navigation/NavigationStepsBottomSheet';
+
+const FULL_SCREEN_SHEET_INDEX = 2;
 
 type MapScreenProps = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Map'>,
@@ -30,13 +33,14 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
   const { isAuthenticated } = useAuth();
   const initialPointId = route.params?.pointId;
   const targetNavigationPointId = route.params?.targetNavigationPointId;
-  const userCheckedInPointId = route.params?.userCheckedInPointId;
   const isFocused = useIsFocused();
 
   // Map states
   const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const mapRef = useRef<NHSMapRef>(null);
+  const navigationStepsSheetRef = useRef<BottomSheet>(null);
+  const [navigationStepsSheetIndex, setNavigationStepsSheetIndex] = useState(-1);
   const [activePoint, setActivePoint] = useState<MapPointCheckin | null>(null);
   const insets = useSafeAreaInsets();
 
@@ -60,7 +64,6 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     previousLocation,
     isTracking,
     permissionStatus,
-    error: locationError,
     isLoading: isLocationLoading,
     startTracking,
     stopTracking,
@@ -115,6 +118,8 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     isDirectionsLoading,
     isDirectionsReady,
     directionError,
+    navigationSteps,
+    currentUserStepIndex,
     navigationPolylineCoordinates,
     onMapReady,
     handleExitGuidance,
@@ -195,6 +200,32 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     });
   }, [activePoint, isAuthenticated, navigation]);
 
+  const canOpenNavigationSteps = isDirectionsReady && navigationSteps.length > 0;
+  const isMapInteractionEnabled = navigationStepsSheetIndex !== FULL_SCREEN_SHEET_INDEX;
+
+  const handleOpenNavigationSteps = useCallback(() => {
+    if (!canOpenNavigationSteps) {
+      return;
+    }
+
+    navigationStepsSheetRef.current?.snapToIndex(0);
+  }, [canOpenNavigationSteps]);
+
+  const handleCloseNavigationSteps = useCallback(() => {
+    navigationStepsSheetRef.current?.close();
+  }, []);
+
+  const handleNavigationStepsSheetChange = useCallback((index: number) => {
+    setNavigationStepsSheetIndex(index);
+  }, []);
+
+  useEffect(() => {
+    if (!isGuidanceMode || isUserArrived) {
+      handleCloseNavigationSteps();
+      setNavigationStepsSheetIndex(-1);
+    }
+  }, [handleCloseNavigationSteps, isGuidanceMode, isUserArrived]);
+
   // Auto fit the screen to the full route when directions are ready
   useEffect(() => {
     if (!isGuidanceMode || !targetNavigationPointId || !isDirectionsReady || !navigationEndpoints) {
@@ -214,6 +245,8 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
   }, [isGuidanceMode, targetNavigationPointId, isDirectionsReady, navigationEndpoints, mapRef]);
 
   function onNavigationExit(): void {
+    handleCloseNavigationSteps();
+    setNavigationStepsSheetIndex(-1);
     handleExitGuidance();
     mapRef.current?.reloadMap();
   }
@@ -244,6 +277,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
         onMapReadyCallback={onMapReady}
         navigationPolylineCoordinates={isGuidanceMode ? navigationPolylineCoordinates : []}
         isGuidanceMode={isGuidanceMode}
+        isMapInteractionEnabled={isMapInteractionEnabled}
         markerFilters={markerFilters}
       />
 
@@ -262,8 +296,17 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
         isReady={isDirectionsReady}
         errorMessage={directionError}
         onExit={onNavigationExit}
+        onOpenSteps={handleOpenNavigationSteps}
+        canOpenSteps={canOpenNavigationSteps}
         currentNavigationStepData={currentNavigationStepData}
         isUserArrived={isUserArrived}
+      />
+
+      <NavigationStepsBottomSheet
+        ref={navigationStepsSheetRef}
+        steps={navigationSteps}
+        currentStepIndex={currentUserStepIndex}
+        onChange={handleNavigationStepsSheetChange}
       />
 
       {/* Point detail modal */}

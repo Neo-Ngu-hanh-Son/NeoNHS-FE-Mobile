@@ -8,6 +8,8 @@ export default function NavigationGuideOverlay({
   isLoading,
   isReady,
   errorMessage,
+  onOpenSteps,
+  canOpenSteps,
   currentNavigationStepData,
   onExit,
   isUserArrived,
@@ -25,6 +27,8 @@ export default function NavigationGuideOverlay({
       isLoading={isLoading}
       isReady={isReady}
       errorMessage={errorMessage}
+      onOpenSteps={onOpenSteps}
+      canOpenSteps={canOpenSteps}
       currentNavigationStepData={currentNavigationStepData}
       onExit={onExit}
     />

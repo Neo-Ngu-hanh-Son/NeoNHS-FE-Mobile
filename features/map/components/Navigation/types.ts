@@ -16,6 +16,8 @@ export type NavigationGuideOverlayProps = {
   isReady: boolean;
   errorMessage?: string | null;
   onExit: () => void;
+  onOpenSteps: () => void;
+  canOpenSteps: boolean;
   currentNavigationStepData?: NavigationStepData;
   isUserArrived?: boolean;
 };

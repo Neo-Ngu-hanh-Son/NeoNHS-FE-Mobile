@@ -25,6 +25,8 @@ type UseMapNavigationGuidanceReturn = {
   isDirectionsReady: boolean;
   directionError: string | null;
   routeSummary: RouteResponse | null;
+  navigationSteps: Step[];
+  currentUserStepIndex: number;
   navigationPolylineCoordinates: PolylineCoordinate[];
   onMapReady: () => void;
   handleExitGuidance: () => void;
@@ -66,8 +68,6 @@ const EMPTY_TRIP_METADATA: TripMetadata = {
   tripRemainingDuration: undefined,
 };
 
-const ACTION_THRESHOLD_M = 100;
-const PREPARATION_THRESHOLD_M = 200;
 
 function parseDurationSeconds(duration?: string): number | undefined {
   if (!duration) {
@@ -151,12 +151,7 @@ export function useMapNavigationGuidance({
   }, []);
 
   const getDirectionsFetchContext = useCallback(() => {
-    if (
-      !navigationStatus.isGuidanceMode ||
-      !targetNavigationPointId ||
-      !navigationStatus.isMapReady ||
-      !userLocation
-    ) {
+    if (!navigationStatus.isGuidanceMode || !targetNavigationPointId || !navigationStatus.isMapReady || !userLocation) {
       return null;
     }
 
@@ -346,7 +341,6 @@ export function useMapNavigationGuidance({
           }));
         }
       } finally {
-
         if (directionsInFlightTargetRef.current === targetId) {
           directionsInFlightTargetRef.current = null;
         }
@@ -382,17 +376,14 @@ export function useMapNavigationGuidance({
       routeState.steps
     );
 
-    let boundedStepIndex = Math.min(
-      Math.max(nearestStepIndex, 0),
-      routeState.steps.length - 1
-    );
+    let boundedStepIndex = Math.min(Math.max(nearestStepIndex, 0), routeState.steps.length - 1);
 
     const currentStep = routeState.steps[boundedStepIndex];
     const nextStep = routeState.steps[boundedStepIndex + 1];
 
-    // Transition guard: nearest-segment matching can lag by one step around junctions.
-    // If user is close to the current step end, or clearly closer to the next segment,
-    // proactively advance to avoid one-step-behind UI.
+    // // Transition guard: nearest-segment matching can lag by one step around junctions.
+    // // If user is close to the current step end, or clearly closer to the next segment,
+    // // proactively advance to avoid one-step-behind UI.
     if (currentStep && nextStep) {
       const distanceToCurrentStepEnd = distanceUtils.calculateDistance(
         {
@@ -402,6 +393,17 @@ export function useMapNavigationGuidance({
         {
           latitude: currentStep.endLocation.latLng.latitude,
           longitude: currentStep.endLocation.latLng.longitude,
+        }
+      );
+
+      const distanceToCurrentStepStart = distanceUtils.calculateDistance(
+        {
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
+        },
+        {
+          latitude: currentStep.startLocation.latLng.latitude,
+          longitude: currentStep.startLocation.latLng.longitude,
         }
       );
 
@@ -435,10 +437,17 @@ export function useMapNavigationGuidance({
         }
       );
 
-      if (
+      const shouldAdvance =
         distanceToCurrentStepEnd <= MAP_CONSTANTS.STEP_RADIUS_M ||
-        nextSegmentDistance + 0.5 < currentSegmentDistance
-      ) {
+        nextSegmentDistance + MAP_CONSTANTS.ADVANCE_THRESHOLD_M < currentSegmentDistance;
+      if (shouldAdvance) {
+        logger.info('[useMapNavigationGuidance] Advancing to next step', {
+          currentStepIndex: boundedStepIndex,
+          distanceToCurrentStepEnd,
+          distanceToCurrentStepStart,
+          currentSegmentDistance,
+          nextSegmentDistance,
+        });
         boundedStepIndex = Math.min(boundedStepIndex + 1, routeState.steps.length - 1);
       }
     }
@@ -470,8 +479,7 @@ export function useMapNavigationGuidance({
     const tripTotalDistanceMeters =
       leg?.distanceMeters ?? (totalDistanceFromSteps > 0 ? totalDistanceFromSteps : undefined);
     const tripTotalDuration =
-      parseDurationSeconds(leg?.duration) ??
-      (totalDurationFromSteps > 0 ? totalDurationFromSteps : undefined);
+      parseDurationSeconds(leg?.duration) ?? (totalDurationFromSteps > 0 ? totalDurationFromSteps : undefined);
 
     const completedStepCount = Math.min(Math.max(currentUserStepIndex, 0), steps.length);
     const completedDistanceMeters = steps
@@ -487,19 +495,14 @@ export function useMapNavigationGuidance({
         : undefined;
 
     const tripRemainingDuration =
-      tripTotalDuration !== undefined
-        ? Math.max(tripTotalDuration - completedDuration, 0)
-        : undefined;
+      tripTotalDuration !== undefined ? Math.max(tripTotalDuration - completedDuration, 0) : undefined;
 
     const nextTripMetadata: TripMetadata = {
       tripTotalDistanceText: formatDistanceText(tripTotalDistanceMeters),
-      tripTotalDurationText:
-        tripTotalDuration !== undefined ? formatDurationText(`${tripTotalDuration}s`) : undefined,
+      tripTotalDurationText: tripTotalDuration !== undefined ? formatDurationText(`${tripTotalDuration}s`) : undefined,
       tripRemainingDistanceText: formatDistanceText(tripRemainingDistanceMeters),
       tripRemainingDurationText:
-        tripRemainingDuration !== undefined
-          ? formatDurationText(`${tripRemainingDuration}s`)
-          : undefined,
+        tripRemainingDuration !== undefined ? formatDurationText(`${tripRemainingDuration}s`) : undefined,
       tripTotalDistanceMeters,
       tripTotalDuration,
       tripRemainingDistanceMeters,
@@ -551,12 +554,7 @@ export function useMapNavigationGuidance({
         isUserArrived: true,
       }));
     }
-  }, [
-    navigationStatus.isGuidanceMode,
-    routeState.navigationEndpoints,
-    userLocation,
-    navigationStatus.isUserArrived,
-  ]);
+  }, [navigationStatus.isGuidanceMode, routeState.navigationEndpoints, userLocation, navigationStatus.isUserArrived]);
 
   const onMapReady = useCallback(() => {
     setNavigationStatus((prev) => ({
@@ -576,8 +574,15 @@ export function useMapNavigationGuidance({
   }, [currentIndex, routeState.steps, totalSteps]);
 
   const currentNavigationStepData: CurrentNavigationStepData = useMemo(() => {
+    // note: Base maneuever is the instruction for the end point of a road, not the start point. But there is an
+    // exception of the first road, which contain both the initial instruction and an instruction for the end.
     const baseManeuver = currentStep?.navigationInstruction?.maneuver ?? null;
     const baseInstruction = currentStep?.navigationInstruction?.instructions;
+
+    const userLocationPoint = {
+      latitude: userLocation?.latitude ?? 0,
+      longitude: userLocation?.longitude ?? 0,
+    }
 
     let currentManeuver = baseManeuver;
     let currentInstructionText = baseInstruction;
@@ -585,36 +590,29 @@ export function useMapNavigationGuidance({
 
     if (currentStep && userLocation) {
       const distanceToNextManeuver = distanceUtils.calculateDistance(
-        {
-          latitude: userLocation.latitude,
-          longitude: userLocation.longitude,
-        },
+        userLocationPoint,
         {
           latitude: currentStep.endLocation.latLng.latitude,
           longitude: currentStep.endLocation.latLng.longitude,
         }
       );
 
+      const distanceToPreviousManeuver = distanceUtils.calculateDistance(
+        userLocationPoint,
+        {
+          latitude: currentStep.startLocation.latLng.latitude,
+          longitude: currentStep.startLocation.latLng.longitude,
+        }
+      );
+
       const distanceToNextManeuverText = formatDistanceText(distanceToNextManeuver);
 
-      // 1) Reassurance state: user is still far from the next decision point.
-      if (distanceToNextManeuver > PREPARATION_THRESHOLD_M) {
+      // If the user is in between the two start and end point, displaying a generic message: "Continue follow the {streetName}"
+      if (distanceToNextManeuver > MAP_CONSTANTS.STEP_RADIUS_M
+        && distanceToPreviousManeuver > MAP_CONSTANTS.STEP_RADIUS_M) {
         const streetName = extractStreetNameFromInstruction(baseInstruction);
         currentManeuver = 'STRAIGHT';
-        currentInstructionText = streetName
-          ? `Continue straight on ${streetName}`
-          : 'Continue straight';
-      }
-
-      // 2) Preparation state: surface anticipation cue before the upcoming maneuver.
-      if (
-        distanceToNextManeuver > ACTION_THRESHOLD_M &&
-        distanceToNextManeuver <= PREPARATION_THRESHOLD_M &&
-        baseInstruction
-      ) {
-        currentInstructionText = distanceToNextManeuverText
-          ? `In ${distanceToNextManeuverText}, ${baseInstruction}`
-          : baseInstruction;
+        currentInstructionText = streetName ? `Continue straight on ${streetName}` : 'Continue straight';
       }
 
       // Show dynamic remaining distance to current maneuver in the top card metadata.
@@ -648,6 +646,8 @@ export function useMapNavigationGuidance({
     isDirectionsReady: navigationStatus.isDirectionsReady,
     directionError: navigationStatus.directionError,
     routeSummary: routeState.routeSummary,
+    navigationSteps: routeState.steps,
+    currentUserStepIndex,
     navigationPolylineCoordinates: routeState.navigationPolylineCoordinates,
     onMapReady,
     handleExitGuidance,
