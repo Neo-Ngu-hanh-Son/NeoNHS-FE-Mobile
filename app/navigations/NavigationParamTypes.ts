@@ -20,7 +20,7 @@ export type AuthStackParamList = {
 export type TabsStackParamList = {
   Home: undefined;
   Discover: undefined;
-  Map: { pointId?: string, targetNavigationPointId?: string, userCheckedInPointId?: string  } | undefined;
+  Map: { pointId?: string, targetNavigationPointId?: string, userCheckedInPointId?: string } | undefined;
   Bookings: undefined;
   Profile: undefined;
   TestCart: undefined;
@@ -119,6 +119,11 @@ type BaseMainRoutes = {
   Tabs: NavigatorScreenParams<TabsStackParamList>;
 };
 
+/* Notifications */
+export type NotificationRoutes = {
+  Notifications: undefined;
+};
+
 export type MainStackParamList = BaseMainRoutes &
   AccountRoutes &
   TransactionRoutes &
@@ -129,6 +134,7 @@ export type MainStackParamList = BaseMainRoutes &
   WorkshopRoutes &
   CheckoutRoutes &
   BlogRoutes &
+  NotificationRoutes &
   ChatRoutes;
 
 

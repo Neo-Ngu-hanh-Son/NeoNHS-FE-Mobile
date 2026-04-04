@@ -4,8 +4,9 @@ import React, {
   useCallback,
   useReducer,
   useEffect,
-  useRef,
   useMemo,
+  useState,
+  useRef,
   ReactNode,
 } from 'react';
 import type { AuthContextValue, AuthState, LoginCredentials, RegisterData, User } from '../types';
@@ -14,6 +15,8 @@ import { storage } from '@/utils/storage';
 import type { ApiError, TokenRefreshResult } from '@/services/api/types';
 import { logger } from '@/utils/logger';
 import LoadingOverlay from '@/components/Loader/LoadingOverlay';
+import { apiClient } from '@/services/api/client';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 const initialState: AuthState = {
   user: null,
@@ -99,6 +102,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     userRef.current = state.user;
     refreshTokenRef.current = state.refreshToken;
   }, [state.user, state.refreshToken]);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const previousUnreadCountRef = useRef(0);
+  const { expoPushToken } = usePushNotifications();
+
+  // Gửi push token lên server bất cứ khi nào user được xác thực và có token
+  useEffect(() => {
+    if (state.isAuthenticated && expoPushToken) {
+      apiClient.post('/notifications/push-token', { token: expoPushToken })
+        .then(() => logger.info('[AuthContext] Successfully uploaded Expo Push Token to Backend'))
+        .catch(err => logger.error('[AuthContext] Error sending Push Token', err));
+    }
+  }, [state.isAuthenticated, expoPushToken]);
+
+  // Polling fetching unread notifications count context
+  useEffect(() => {
+    if (!state.isAuthenticated || !state.user?.email) return;
+
+    const fetchNotifications = async () => {
+      try {
+        const response = await apiClient.get<any>('/notifications', {
+          params: { email: state.user!.email, page: 0, size: 20 }
+        });
+        const unreadItems = response.data.content.filter((n: any) => !n.isRead);
+
+        if (unreadItems.length > previousUnreadCountRef.current) {
+          // Send a local push notification for the newest one
+          const newest = unreadItems[0];
+          import('expo-notifications').then(Notifications => {
+            Notifications.scheduleNotificationAsync({
+              content: {
+                title: newest.title,
+                body: newest.message,
+                data: { url: 'Notifications' },
+              },
+              trigger: null, // Send immediately
+            });
+          });
+        }
+
+        previousUnreadCountRef.current = unreadItems.length;
+        setUnreadNotificationCount(unreadItems.length);
+      } catch (err) {
+        logger.error('Error fetching unread notifications:', err);
+      }
+    };
+
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 10000); // 10 seconds
+
+    return () => clearInterval(interval);
+  }, [state.isAuthenticated, state.user?.email]);
 
   /**
    * Initialize auth state from storage
@@ -314,6 +368,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshAuth,
       updateUser,
       loginWithGoogle,
+      unreadNotificationCount,
+      setUnreadNotificationCount,
     }),
     [
       state.user,
@@ -328,6 +384,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshAuth,
       updateUser,
       loginWithGoogle,
+      unreadNotificationCount,
+      setUnreadNotificationCount,
     ]
   );
 
