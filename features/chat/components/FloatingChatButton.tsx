@@ -27,7 +27,7 @@ export function FloatingChatButton() {
   });
 
   // Specifically hide on Map & Chat screens
-  const hiddenOnScreens = ['Map', 'Chat', 'ChatRoom'];
+  const hiddenOnScreens = ['Map', 'Chat', 'ChatRoom', 'Cart'];
   if (currentRouteName && hiddenOnScreens.includes(currentRouteName)) {
     return null;
   }
@@ -59,7 +59,7 @@ export function FloatingChatButton() {
         }}
       >
         <Ionicons name="chatbubble" size={28} color="#FFFFFF" />
-        
+
         {totalUnreadCount > 0 && (
           <View
             className="absolute -top-1 -right-1 items-center justify-center"

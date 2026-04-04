@@ -28,7 +28,7 @@ export const ChatRestService = {
     participantIds: string[],
     name: string | null = null
   ): Promise<ChatRoom> => {
-    const res = await apiClient.post<ChatRoom>("/chat/rooms", {
+    const res = await apiClient.post<ChatRoom>("chat/rooms", {
       name,
       participantIds,
     });
@@ -36,7 +36,7 @@ export const ChatRestService = {
   },
 
   getMyRooms: async (): Promise<ChatRoom[]> => {
-    const res = await apiClient.get<ChatRoom[]>("/chat/rooms");
+    const res = await apiClient.get<ChatRoom[]>("chat/rooms");
     return res.data;
   },
 
@@ -52,7 +52,7 @@ export const ChatRestService = {
   },
 
   getChatParticipantInfo: async (userId: string): Promise<any> => {
-    const res = await apiClient.get<any>(`/chat/users/${userId}`);
+    const res = await apiClient.get<any>(`chat/users/${userId}`);
     return res.data;
   },
 };
