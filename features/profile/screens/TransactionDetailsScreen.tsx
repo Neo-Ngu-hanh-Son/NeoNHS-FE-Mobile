@@ -175,6 +175,14 @@ export default function TransactionDetailsScreen() {
                                     <Text style={styles.label}>Type</Text>
                                     <Text style={[styles.value, { color: theme.foreground }]}>{selectedTicket.ticketType}</Text>
                                 </View>
+                                {selectedTicket.price !== undefined && selectedTicket.price !== null && (
+                                    <View style={styles.row}>
+                                        <Text style={styles.label}>Price</Text>
+                                        <Text style={[styles.value, { color: theme.foreground }]}>
+                                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedTicket.price)}
+                                        </Text>
+                                    </View>
+                                )}
                                 <View style={styles.row}>
                                     <Text style={styles.label}>Status</Text>
                                     <Text style={[styles.value, { color: selectedTicket.status === 'ACTIVE' ? '#15803d' : theme.foreground }]}>
@@ -284,6 +292,11 @@ export default function TransactionDetailsScreen() {
                                 <Text style={[styles.ticketName, { color: theme.foreground }]} numberOfLines={1}>{ticket.itemName}</Text>
                                 <Text style={[styles.ticketCode, { color: theme.mutedForeground }]}>{ticket.ticketCode}</Text>
                             </View>
+                            {ticket.price !== undefined && ticket.price !== null && (
+                                <Text style={[{ fontWeight: 'bold', marginRight: 8, color: theme.foreground }]}>
+                                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(ticket.price)}
+                                </Text>
+                            )}
                             <View style={[styles.statusBadge, { backgroundColor: getStatusColor(ticket.status) + '20' }]}>
                                 <Text style={[styles.statusText, { color: getStatusColor(ticket.status) }]}>{ticket.status}</Text>
                             </View>
