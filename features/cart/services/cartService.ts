@@ -19,6 +19,13 @@ export const cartService = {
     },
 
     /**
+     * Add workshop session to cart
+     */
+    async addWorkshopSessionToCart(workshopSessionId: string, quantity: number) {
+        return apiClient.post<any>(endpoints.cart.addToCart(), { workshopSessionId, quantity });
+    },
+
+    /**
      * Update cart item quantity
      */
     async updateCartItem(itemId: string, quantity: number) {

@@ -99,6 +99,7 @@ export default function TransactionHistoryScreen() {
         const lowerType = type ? type.toLowerCase() : '';
         if (lowerType === 'event') return 'sailboat';
         if (lowerType === 'workshop') return 'hands-holding-circle';
+        if (lowerType === 'mixed') return 'cart-shopping';
         return 'receipt';
     };
 
@@ -124,7 +125,7 @@ export default function TransactionHistoryScreen() {
                     </View>
                     <View style={styles.cardInfo}>
                         <Text style={[styles.cardTitle, { color: theme.foreground }]} numberOfLines={2}>
-                            {item.type} payment
+                            {item.type === 'MIXED' ? 'CART checkout' : `${item.type} payment`}
                         </Text>
                         <Text style={{ color: theme.mutedForeground, fontSize: 12, marginBottom: 4 }}>Order #{item.orderId?.slice(0, 8)}</Text>
                         <View style={styles.statusRow}>

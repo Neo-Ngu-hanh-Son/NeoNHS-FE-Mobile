@@ -92,5 +92,15 @@ export const userService = {
             livePhotoBase64,
         });
     },
+
+    /**
+     * Check if a selfie image is a live human
+     * @param base64Image - Base64 encoded selfie image
+     */
+    async checkLiveness(base64Image: string): Promise<ApiResponse<boolean>> {
+        return apiClient.post<boolean>(endpoints.users.checkLiveness(), {
+            image: base64Image
+        });
+    }
 };
 
