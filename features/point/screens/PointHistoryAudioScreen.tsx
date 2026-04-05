@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
-import { Image, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { Text } from '@/components/ui/text';
+import { SmartImage } from '@/components/ui/smart-image';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { MainStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
@@ -61,9 +62,7 @@ export default function PointHistoryAudioScreen({ route }: Props) {
   }
 
   if (!selectedAudio) {
-    return (
-      <FullScreenError onRetry={refetch} message="No history audio is available for this point." />
-    );
+    return <FullScreenError onRetry={refetch} message="No history audio is available for this point." />;
   }
 
   // ─── Main content ───
@@ -79,21 +78,13 @@ export default function PointHistoryAudioScreen({ route }: Props) {
         initialAudioIndex={selectedIndex}
         onAudioChange={(index) => setSelectedIndex(index)}
         selectedAudioId={selectedAudio?.id}
-        selectedAudioLabel={
-          selectedAudio
-            ? selectedAudio.metadata.title + ' - ' + selectedAudio.metadata.language
-            : ''
-        }
+        selectedAudioLabel={selectedAudio ? selectedAudio.metadata.title + ' - ' + selectedAudio.metadata.language : ''}
       />
 
       {/* Transcript (word flow) */}
       <View className="mt-5 rounded-2xl border border-border bg-card p-5">
         {selectedAudio.metadata.coverImage ? (
-          <Image
-            source={{ uri: selectedAudio.metadata.coverImage }}
-            className="mb-4 h-40 w-full rounded-xl"
-            resizeMode="cover"
-          />
+          <SmartImage uri={selectedAudio.metadata.coverImage} className="mb-4 h-40 w-full rounded-xl" />
         ) : null}
 
         <View className="mb-3 flex-col items-start justify-start gap-2">
@@ -102,10 +93,7 @@ export default function PointHistoryAudioScreen({ route }: Props) {
             By: {selectedAudio.metadata.artist}
           </Text>
         </View>
-        <ScrollView
-          style={{ maxHeight: 200 }}
-          showsVerticalScrollIndicator={true}
-          nestedScrollEnabled={true}>
+        <ScrollView style={{ maxHeight: 200 }} showsVerticalScrollIndicator={true} nestedScrollEnabled={true}>
           <HistoryWordFlow words={selectedAudio?.words || []} activeIndex={activeIndex} />
         </ScrollView>
       </View>

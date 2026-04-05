@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Animated, Easing, Platform } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { Marker } from 'react-native-maps';
 import { UserLocation } from '../../hooks/useUserLocation';
-import { logger } from '@/utils/logger';
 
 interface UserLocationMarkerProps {
   location: UserLocation;
@@ -17,147 +16,75 @@ export default function UserLocationMarker({
   showHeading = true,
   color = '#4285F4',
 }: UserLocationMarkerProps) {
-  const pulseScale = 1;
-  const pulseOpacity = 0.4;
-  const markerRef = useRef<any>(null);
+  // Only purpose is to hope that the marker itself render correctly
+  const [trackChanges, setTrackChanges] = useState(true);
 
-  const prevCoords = useRef({
-    latitude: location.latitude,
-    longitude: location.longitude,
-  });
-
-  // Animate marker position when location changes (Android)
   useEffect(() => {
-    const newCoords = {
-      latitude: location.latitude,
-      longitude: location.longitude,
-    };
+    const timeout = setTimeout(() => {
+      setTrackChanges(false);
+    }, 500);
 
-    if (
-      prevCoords.current.latitude !== newCoords.latitude ||
-      prevCoords.current.longitude !== newCoords.longitude
-    ) {
-      if (Platform.OS === 'android' && markerRef.current) {
-        try {
-          markerRef.current.animateMarkerToCoordinate(newCoords, 500);
-        } catch (error) {
-          console.warn('Failed to animate marker:', error);
-        }
-      }
-      prevCoords.current = newCoords;
-    }
-  }, [location.latitude, location.longitude]);
+    return () => clearTimeout(timeout);
+  }, []);
 
   return (
     <Marker
-      ref={markerRef}
       coordinate={{
         latitude: location.latitude,
         longitude: location.longitude,
       }}
       anchor={{ x: 0.5, y: 0.5 }}
       flat
-      tracksViewChanges={true}>
+      tracksViewChanges={trackChanges}>
       <View style={styles.container}>
-        <View
-          style={[
-            styles.pulseRing,
-            {
-              backgroundColor: color,
-              transform: [{ scale: pulseScale }],
-              opacity: pulseOpacity,
-            },
-          ]}
-        />
-
-        {showAccuracyCircle && location.accuracy && (
+        {showAccuracyCircle ? (
           <View
             style={[
-              styles.accuracyCircle,
+              styles.outerGlow,
               {
-                backgroundColor: `${color}15`,
-                borderColor: `${color}30`,
+                backgroundColor: `${color}33`,
               },
             ]}
           />
-        )}
+        ) : null}
 
-        {showHeading && location.heading !== null && (
-          <View
-            style={[
-              styles.headingContainer,
-              {
-                transform: [{ rotate: `${location.heading}deg` }],
-              },
-            ]}>
-            <View style={[styles.headingArrow, { borderBottomColor: color }]} />
-          </View>
-        )}
-
-        <View style={[styles.outerCircle, { backgroundColor: 'white' }]}>
-          <View style={[styles.innerCircle, { backgroundColor: color }]} />
+        <View style={styles.dotShell}>
+          <View style={[styles.dotCore, { backgroundColor: color }]} />
         </View>
       </View>
     </Marker>
   );
 }
 
-const DOT_SIZE = 24;
-const INNER_DOT_SIZE = 16;
-const PULSE_SIZE = 40;
-
 const styles = StyleSheet.create({
   container: {
-    width: PULSE_SIZE * 2,
-    height: PULSE_SIZE * 2,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pulseRing: {
+  outerGlow: {
     position: 'absolute',
-    width: PULSE_SIZE,
-    height: PULSE_SIZE,
-    borderRadius: 9999,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
   },
-  accuracyCircle: {
-    position: 'absolute',
-    width: PULSE_SIZE * 1.5,
-    height: PULSE_SIZE * 1.5,
-    borderRadius: 9999,
-    borderWidth: 1,
-  },
-  headingContainer: {
-    position: 'absolute',
-    width: DOT_SIZE,
-    height: DOT_SIZE * 2,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-  },
-  headingArrow: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 6,
-    borderRightWidth: 6,
-    borderBottomWidth: 10,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    marginTop: -4,
-  },
-  outerCircle: {
-    width: DOT_SIZE,
-    height: DOT_SIZE,
-    borderRadius: DOT_SIZE / 2,
+  dotShell: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: 'white',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  innerCircle: {
-    width: INNER_DOT_SIZE,
-    height: INNER_DOT_SIZE,
-    borderRadius: INNER_DOT_SIZE / 2,
+  dotCore: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
 });

@@ -1,14 +1,15 @@
-import { View, ImageBackground, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SmartImageBackground } from '@/components/ui/smart-image';
 
 type FeaturedEventCardProps = {
   tag?: string;
   title: string;
   description: string;
-  imageUrl: string;
+  imageUrl?: string | null;
   onPress?: () => void;
 };
 
@@ -24,8 +25,8 @@ export default function FeaturedCard({
       onPress={onPress}
       activeOpacity={0.9}
       className="mx-4 h-80 overflow-hidden rounded-2xl">
-      <ImageBackground
-        source={{ uri: imageUrl }}
+      <SmartImageBackground
+        uri={imageUrl}
         className="flex-1"
         imageStyle={{ borderRadius: 16 }}>
         <LinearGradient colors={['transparent', 'rgba(0,0,0,0.7)']} className="flex-1 justify-end">
@@ -55,7 +56,7 @@ export default function FeaturedCard({
             </Button>
           </View>
         </LinearGradient>
-      </ImageBackground>
+      </SmartImageBackground>
     </TouchableOpacity>
   );
 }

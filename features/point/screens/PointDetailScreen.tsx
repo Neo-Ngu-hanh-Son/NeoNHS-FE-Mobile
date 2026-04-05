@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Share } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { CompositeScreenProps } from '@react-navigation/native';
@@ -33,7 +33,11 @@ export default function PointDetailScreen({ navigation, route }: Props) {
   const { pointId } = route.params;
   const [isFavorite, setIsFavorite] = useState(false);
   const [isReadMore, setIsReadMore] = useState(false);
-  const { openPanorama, closePanorama } = usePanorama();
+  const { openPanorama, preloadPanorama, resendPanoramaMessage } = usePanorama();
+
+  useEffect(() => {
+    preloadPanorama(pointId);
+  }, [pointId, preloadPanorama]);
 
   const {
     data: point,
@@ -70,7 +74,10 @@ export default function PointDetailScreen({ navigation, route }: Props) {
   };
 
   const handleNavigate = () => {
-    navigation.navigate('PointMapSelection', { pointId });
+    navigation.navigate('Tabs', {
+      screen: 'Map',
+      params: { targetNavigationPointId: pointId },
+    });
   };
 
   const handleAudioGuide = () => {
@@ -81,6 +88,10 @@ export default function PointDetailScreen({ navigation, route }: Props) {
   const handleOpenPanorama = () => {
     if (!point) return;
     openPanorama(pointId);
+    // Fallback retry in case the first message is sent before the WebView is ready.
+    setTimeout(() => {
+      resendPanoramaMessage();
+    }, 500);
     // Navigate to the panorama screen so that the user can also see the back button and have a consistent experience
     // navigation.navigate('Panorama', { pointId });
   };

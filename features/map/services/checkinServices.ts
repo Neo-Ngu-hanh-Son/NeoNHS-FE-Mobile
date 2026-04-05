@@ -1,6 +1,6 @@
 import { apiClient, ApiResponse, endpoints } from '@/services/api';
-import { MapPointCheckin, UserCheckinRequest, UserCheckinResultResponse } from '../types';
-import { mapConstants } from '../mapConstants';
+import { MapPointCheckin, UserCheckinRequest, UserCheckinResultResponse, mapConstants } from '../types';
+import { parseFloatOrDefault } from '@/utils/parseNumber';
 
 type MultipartCheckinImage = {
   uri: string;
@@ -36,13 +36,20 @@ const checkinServices = {
     metersRadius?: number
   ): Promise<ApiResponse<MapPointCheckin[]>> => {
     if (!metersRadius) {
-      metersRadius = mapConstants.fetchingCheckinParameters;
+      metersRadius = mapConstants.FETCH_CHECKIN_RADIUS_M;
     }
     const queryParams: Record<string, number> = { latitude: lat, longitude: lng, metersRadius };
-    return await apiClient.get(endpoints.map.getNearbyCheckIns(), {
+    const result = await apiClient.get<MapPointCheckin[]>(endpoints.map.getNearbyCheckIns(), {
       requiresAuth: true,
       params: queryParams,
     });
+    // Parse all the lat and lng values to numbers to ensure consistency
+    result.data = result.data.map((checkin) => ({
+      ...checkin,
+      latitude: parseFloatOrDefault(checkin.latitude as unknown as string, 0),
+      longitude: parseFloatOrDefault(checkin.longitude as unknown as string, 0),
+    }));
+    return result;
   },
 };
 

@@ -1,9 +1,10 @@
-import React, { useState, useCallback } from "react";
-import { View, Image, FlatList, Dimensions } from "react-native";
+import React, { useState, useCallback } from 'react';
+import { View, FlatList, Dimensions, Image as RNImage } from 'react-native';
 
-import { WorkshopImageResponse } from "../types";
+import { WorkshopImageResponse } from '../types';
+import { SmartImage } from '@/components/ui/smart-image';
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const MAX_HEIGHT = 360;
 const MIN_HEIGHT = 200;
 
@@ -13,11 +14,7 @@ interface WorkshopImageGalleryProps {
   mutedColor: string;
 }
 
-export default function WorkshopImageGallery({
-  images,
-  primaryColor,
-  mutedColor,
-}: WorkshopImageGalleryProps) {
+export default function WorkshopImageGallery({ images, primaryColor, mutedColor }: WorkshopImageGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [imageHeight, setImageHeight] = useState(280);
 
@@ -25,14 +22,14 @@ export default function WorkshopImageGallery({
 
   const onFirstImageLoad = useCallback(() => {
     if (imageList.length === 0) return;
-    Image.getSize(
+    RNImage.getSize(
       imageList[0],
-      (width, height) => {
+      (width: number, height: number) => {
         const ratio = height / width;
         const calculated = Math.round(SCREEN_WIDTH * ratio);
         setImageHeight(Math.max(MIN_HEIGHT, Math.min(calculated, MAX_HEIGHT)));
       },
-      () => setImageHeight(280),
+      () => setImageHeight(280)
     );
   }, [imageList]);
 
@@ -55,18 +52,18 @@ export default function WorkshopImageGallery({
           setActiveIndex(idx);
         }}
         renderItem={({ item }) => (
-          <Image
-            source={{ uri: item }}
+          <SmartImage
+            uri={item}
             style={{
               width: SCREEN_WIDTH,
               height: imageHeight,
             }}
-            resizeMode="contain"
+            contentFit="contain"
           />
         )}
       />
       {imageList.length > 1 && (
-        <View className="flex-row items-center justify-center gap-1.5 mt-2">
+        <View className="mt-2 flex-row items-center justify-center gap-1.5">
           {imageList.map((_, i) => (
             <View
               key={i}

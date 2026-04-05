@@ -65,8 +65,25 @@ class ApiClient {
     // Request interceptor - Add auth token
     this.axiosInstance.interceptors.request.use(
       async (config) => {
-        // Log the request config
-        logger.debug(`[ApiClient] ${config.method?.toUpperCase()} ${config.baseURL}/${config.url}`);
+        // Log the request config (skip noisy polling endpoints)
+        const isSilent = config.url?.includes('/notifications');
+        if (!isSilent) {
+          logger.debug(`[ApiClient] ${config.method?.toUpperCase()} ${config.baseURL}/${config.url}`);
+        }
+
+        // Guard against invalid pagination sent by callers.
+        if (config.params && typeof config.params === 'object' && 'page' in config.params) {
+          const pageValue = (config.params as Record<string, unknown>).page;
+          if (typeof pageValue === 'number' && pageValue < 0) {
+            (config.params as Record<string, unknown>).page = 0;
+          }
+          if (typeof pageValue === 'string') {
+            const parsedPage = Number(pageValue);
+            if (!Number.isNaN(parsedPage) && parsedPage < 0) {
+              (config.params as Record<string, unknown>).page = '0';
+            }
+          }
+        }
 
         // Add authentication token if required
         const requiresAuth = (config as RequestConfig).requiresAuth !== false;

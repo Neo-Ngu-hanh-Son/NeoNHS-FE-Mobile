@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, Image, FlatList, Dimensions } from "react-native";
+import { View, FlatList, Dimensions } from "react-native";
 
 import { EventImageResponse } from "../types";
+import { SmartImage } from "@/components/ui/smart-image";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -24,8 +25,8 @@ export default function EventImageGallery({
     images && images.length > 0
       ? images.map((img) => img.imageUrl)
       : thumbnailUrl
-      ? [thumbnailUrl]
-      : [];
+        ? [thumbnailUrl]
+        : [];
 
   if (imageList.length === 0) return null;
 
@@ -44,8 +45,8 @@ export default function EventImageGallery({
           setActiveIndex(idx);
         }}
         renderItem={({ item }) => (
-          <Image
-            source={{ uri: item }}
+          <SmartImage
+            uri={item}
             style={{ width: SCREEN_WIDTH, height: 260 }}
             className="object-cover"
           />

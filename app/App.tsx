@@ -23,35 +23,35 @@ function ThemedStatusBar() {
   return <StatusBar style={isDarkColorScheme ? 'light' : 'dark'} />;
 }
 
-// Define background tasks here
-const GEOFENCING_TASK = 'CHECKIN_GEOFENCE_TASK';
+// Define background tasks here (No longer used because of performance issues, but left here for reference and future use)
+// const GEOFENCING_TASK = 'CHECKIN_GEOFENCE_TASK';
 
-TaskManager.defineTask<BackgroundGeoFencingData>(
-  GEOFENCING_TASK,
-  async ({ data, error }) => {
-    if (error) {
-      throw error;
-    }
+// TaskManager.defineTask<BackgroundGeoFencingData>(
+//   GEOFENCING_TASK,
+//   async ({ data, error }) => {
+//     if (error) {
+//       throw error;
+//     }
 
-    if (!data) return;
+//     if (!data) return;
 
-    const { eventType, region } = data;
-    if (eventType === Location.GeofencingEventType.Enter) {
-      logger.info(`[Background Task] Entered geofence for region ${region.identifier}`);
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "📍 Nearby Check-in!",
-          body: "You are close to a point. Open the app to check in!",
-          data: { pointId: region.identifier },
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-          seconds: 1,
-        },
-      });
-    }
-  }
-);
+//     const { eventType, region } = data;
+//     if (eventType === Location.GeofencingEventType.Enter) {
+//       logger.info(`[Background Task] Entered geofence for region ${region.identifier}`);
+//       await Notifications.scheduleNotificationAsync({
+//         content: {
+//           title: "📍 Nearby Check-in!",
+//           body: "You are close to a point. Open the app to check in!",
+//           data: { pointId: region.identifier },
+//         },
+//         trigger: {
+//           type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+//           seconds: 1,
+//         },
+//       });
+//     }
+//   }
+// );
 
 export default function App() {
   return (

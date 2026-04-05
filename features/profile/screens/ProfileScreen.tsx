@@ -1,23 +1,21 @@
-import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { CommonActions, CompositeScreenProps } from '@react-navigation/native';
-import { useCallback, useEffect } from 'react';
+import { CompositeScreenProps, useIsFocused } from '@react-navigation/native';
+import { useCallback, useEffect, useRef } from 'react';
 import type { StackScreenProps } from '@react-navigation/stack';
 
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { SmartImage } from '@/components/ui/smart-image';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { logger } from '@/utils/logger';
-import type {
-  MainStackParamList,
-  RootStackParamList,
-  TabsStackParamList,
-} from '@/app/navigations/NavigationParamTypes';
+import type { RootStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { userService } from '../services/userService';
+import ActionCard from '../components/ActionCard';
 
 type ProfileNavigationProp = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Profile'>,
@@ -28,31 +26,49 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
   const { user, isAuthenticated, logout, updateUser } = useAuth();
   const { isDarkColorScheme, toggleColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const isFocused = useIsFocused();
+  const isFetchingProfileRef = useRef(false);
+  const lastFetchAtRef = useRef(0);
+
+  // Minimum interval between profile fetches to prevent excessive re-renders
+  const PROFILE_FETCH_COOLDOWN_MS = 30_000;
 
   const handleLogin = () => {
-    navigation.navigate('Auth', { screen: 'Login' });
+    navigation.replace('Auth', { screen: 'Login' });
   };
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (isAuthenticated) {
-        try {
-          const response = await userService.getProfile();
-          if (response.success && response.data) {
-            updateUser(response.data);
-          }
-        } catch (error) {
-          logger.error('Fetch profile error:', error);
-        }
+  const fetchProfile = useCallback(async () => {
+    if (!isAuthenticated) {
+      return;
+    }
+    if (isFetchingProfileRef.current) {
+      return;
+    }
+    // Throttle: skip if already fetched recently
+    if (Date.now() - lastFetchAtRef.current < PROFILE_FETCH_COOLDOWN_MS) {
+      return;
+    }
+
+    try {
+      isFetchingProfileRef.current = true;
+      const response = await userService.getProfile();
+      if (response.success && response.data) {
+        updateUser(response.data);
       }
-    };
+      lastFetchAtRef.current = Date.now();
+    } catch (error) {
+      logger.error('Fetch profile error:', error);
+    } finally {
+      isFetchingProfileRef.current = false;
+    }
+  }, [isAuthenticated, updateUser]);
 
-    const unsubscribe = navigation.addListener('focus', () => {
+  // Fetch profile when screen comes into focus (throttled)
+  useEffect(() => {
+    if (isAuthenticated && isFocused) {
       fetchProfile();
-    });
-
-    return unsubscribe;
-  }, [navigation, isAuthenticated]);
+    }
+  }, [fetchProfile, isAuthenticated, isFocused]);
 
   const handleLogout = () => {
     Alert.alert('Sign Out', 'Are you sure?', [
@@ -76,32 +92,14 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
     navigation.navigate('Main', { screen: 'UpdateAccount' });
   };
 
-  const ActionCard = ({ title, desc, onPress, rightIcon }: any) => (
-    <TouchableOpacity
-      style={[styles.actionCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-      onPress={onPress}
-      activeOpacity={0.7}>
-      <View style={styles.actionCardHeader}>
-        <Text style={[styles.cardTitle, { color: theme.foreground }]}>{title}</Text>
-        {rightIcon || <Text className="text-xs font-medium text-primary">See all</Text>}
-      </View>
-      <Text style={[styles.cardDesc, { color: theme.mutedForeground }]} numberOfLines={2}>
-        {desc}
-      </Text>
-    </TouchableOpacity>
-  );
-
   if (!isAuthenticated || !user) {
     return (
-      <SafeAreaView
-        style={[styles.container, { backgroundColor: theme.background }]}
-        edges={['top']}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
         <View style={styles.contentGuest}>
           <Text className="mb-6 text-2xl font-bold" style={{ color: theme.foreground }}>
             Profile
           </Text>
-          <View
-            style={[styles.guestCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={[styles.guestCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Ionicons name="person-outline" size={48} color={theme.mutedForeground} />
             <Text className="mt-4 text-xl font-semibold" style={{ color: theme.foreground }}>
               Welcome, Guest!
@@ -116,18 +114,11 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
   }
 
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: isDarkColorScheme ? theme.background : THEME.light.primary },
-      ]}>
+    <View style={[styles.container, { backgroundColor: isDarkColorScheme ? theme.background : THEME.light.primary }]}>
       {/* Header Area */}
       <SafeAreaView
         edges={['top']}
-        style={[
-          styles.blueHeader,
-          { backgroundColor: isDarkColorScheme ? theme.background : THEME.light.primary },
-        ]}>
+        style={[styles.blueHeader, { backgroundColor: isDarkColorScheme ? theme.background : THEME.light.primary }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <MaterialIcons name="chevron-left" size={28} color="white" />
           <Text className="text-lg font-medium text-white">Back</Text>
@@ -136,9 +127,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
 
       {/* Main Content Area (Ô trắng) */}
       <View style={[styles.mainSheet, { backgroundColor: theme.background }]}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Profile Card - Đã đưa vào trong ô trắng, không còn nổi */}
           <View
             style={[
@@ -147,10 +136,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
             ]}>
             <View style={styles.userInfoRow}>
               <View style={styles.avatarBorder}>
-                <Image
-                  source={{ uri: user.avatarUrl || 'https://via.placeholder.com/150' }}
-                  style={styles.avatarImage}
-                />
+                <SmartImage uri={user.avatarUrl || 'https://via.placeholder.com/150'} style={styles.avatarImage} />
               </View>
               <View>
                 <Text style={[styles.userName, { color: theme.foreground }]} numberOfLines={1}>
@@ -169,7 +155,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
               </View>
               <View>
                 <Text style={styles.pointsLabel}>Your Points</Text>
-                <Text style={styles.pointsValue}>6000</Text>
+                <Text style={styles.pointsValue}>{(user.userPoint ?? 0).toLocaleString('en-US')}</Text>
               </View>
             </View>
           </View>
@@ -181,14 +167,11 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
               onPress={() => navigation.navigate('Main', { screen: 'KycVerification' })}
               activeOpacity={0.7}>
               <View style={styles.kycCardLeft}>
-                <View
-                  style={[styles.kycIconCircle, { backgroundColor: THEME.light.primary + '15' }]}>
+                <View style={[styles.kycIconCircle, { backgroundColor: THEME.light.primary + '15' }]}>
                   <MaterialIcons name="verified-user" size={24} color={THEME.light.primary} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.cardTitle, { color: theme.foreground }]}>
-                    Verify Account
-                  </Text>
+                  <Text style={[styles.cardTitle, { color: theme.foreground }]}>Verify Account</Text>
                   <Text style={[styles.cardDesc, { color: theme.mutedForeground }]}>
                     Verify your identity with CCCD for payback
                   </Text>
@@ -197,19 +180,14 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
               <MaterialIcons name="chevron-right" size={22} color={theme.primary} />
             </TouchableOpacity>
           ) : (
-            <View
-              style={[styles.kycCard, { backgroundColor: '#22C55E10', borderColor: '#22C55E' }]}>
+            <View style={[styles.kycCard, { backgroundColor: '#22C55E10', borderColor: '#22C55E' }]}>
               <View style={styles.kycCardLeft}>
                 <View style={[styles.kycIconCircle, { backgroundColor: '#22C55E20' }]}>
                   <MaterialIcons name="check-circle" size={24} color="#22C55E" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.cardTitle, { color: theme.foreground }]}>
-                    Account Verified
-                  </Text>
-                  <Text style={[styles.cardDesc, { color: '#22C55E' }]}>
-                    Your identity has been verified
-                  </Text>
+                  <Text style={[styles.cardTitle, { color: theme.foreground }]}>Account Verified</Text>
+                  <Text style={[styles.cardDesc, { color: '#22C55E' }]}>Your identity has been verified</Text>
                 </View>
               </View>
               <MaterialIcons name="verified" size={22} color="#22C55E" />
@@ -219,13 +197,15 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
           {/* Admin/Vendor Actions */}
           {(user.role === 'ADMIN' || user.role === 'VENDOR') && (
             <View style={{ marginBottom: 20 }}>
-              <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>
-                MANAGEMENT
-              </Text>
+              <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>MANAGEMENT</Text>
               <ActionCard
                 title="Verify Ticket"
                 desc="Scan QR code to verify customer tickets"
                 rightIcon={<MaterialIcons name="qr-code-scanner" size={20} color={theme.primary} />}
+                themeCard={theme.card}
+                themeBorder={theme.border}
+                themeForeground={theme.foreground}
+                themeMutedForeground={theme.mutedForeground}
                 onPress={() => navigation.navigate('Main', { screen: 'TicketVerification' })}
               />
             </View>
@@ -237,9 +217,11 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
             <ActionCard
               title="Withdraw Money"
               desc="Transfer your balance to your bank account"
-              rightIcon={
-                <MaterialIcons name="account-balance-wallet" size={20} color={theme.primary} />
-              }
+              rightIcon={<MaterialIcons name="account-balance-wallet" size={20} color={theme.primary} />}
+              themeCard={theme.card}
+              themeBorder={theme.border}
+              themeForeground={theme.foreground}
+              themeMutedForeground={theme.mutedForeground}
               onPress={() => navigation.navigate('Main', { screen: 'Withdraw' })}
             />
           </View>
@@ -248,27 +230,47 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
           <ActionCard
             title="Your Order"
             desc="View your order and transaction history here"
+            themeCard={theme.card}
+            themeBorder={theme.border}
+            themeForeground={theme.foreground}
+            themeMutedForeground={theme.mutedForeground}
             onPress={() => navigation.navigate('Main', { screen: 'TransactionHistory' })}
           />
           <ActionCard
             title="Check-in Photos"
             desc="Browse all your check-in images grouped by destination or date"
             rightIcon={<Ionicons name="images-outline" size={20} color={theme.primary} />}
+            themeCard={theme.card}
+            themeBorder={theme.border}
+            themeForeground={theme.foreground}
+            themeMutedForeground={theme.mutedForeground}
             onPress={() => navigation.navigate('Main', { screen: 'CheckinGallery' })}
           />
           <ActionCard
             title="Payment Method"
             desc="Save your preferred payment method for smoother transactions"
+            themeCard={theme.card}
+            themeBorder={theme.border}
+            themeForeground={theme.foreground}
+            themeMutedForeground={theme.mutedForeground}
             onPress={() => {}}
           />
           <ActionCard
             title="Coupon & Voucher"
             desc="Claim vouchers and discounts for reduced prices or free shipping"
+            themeCard={theme.card}
+            themeBorder={theme.border}
+            themeForeground={theme.foreground}
+            themeMutedForeground={theme.mutedForeground}
             onPress={() => {}}
           />
           <ActionCard
             title="Support Center"
             desc="Find the best answer to your question"
+            themeCard={theme.card}
+            themeBorder={theme.border}
+            themeForeground={theme.foreground}
+            themeMutedForeground={theme.mutedForeground}
             onPress={() => {}}
           />
 
@@ -277,9 +279,11 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
             <ActionCard
               title="Change Password"
               desc="Update your account password for better security"
-              rightIcon={
-                <Ionicons name="chevron-forward" size={16} color={theme.mutedForeground} />
-              }
+              rightIcon={<Ionicons name="chevron-forward" size={16} color={theme.mutedForeground} />}
+              themeCard={theme.card}
+              themeBorder={theme.border}
+              themeForeground={theme.foreground}
+              themeMutedForeground={theme.mutedForeground}
               onPress={() => navigation.navigate('Main', { screen: 'ChangePassword' })}
             />
           </View>
@@ -291,6 +295,10 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
               title="Dark Mode"
               desc="Toggle between light and dark visual themes"
               rightIcon={<Switch checked={isDarkColorScheme} onCheckedChange={toggleColorScheme} />}
+              themeCard={theme.card}
+              themeBorder={theme.border}
+              themeForeground={theme.foreground}
+              themeMutedForeground={theme.mutedForeground}
             />
 
             <View style={{ marginTop: 12 }}>
@@ -299,12 +307,14 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
                 desc="Choose your preferred language"
                 rightIcon={
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={{ color: theme.mutedForeground, fontSize: 12, marginRight: 4 }}>
-                      English
-                    </Text>
+                    <Text style={{ color: theme.mutedForeground, fontSize: 12, marginRight: 4 }}>English</Text>
                     <Ionicons name="chevron-forward" size={16} color={theme.mutedForeground} />
                   </View>
                 }
+                themeCard={theme.card}
+                themeBorder={theme.border}
+                themeForeground={theme.foreground}
+                themeMutedForeground={theme.mutedForeground}
                 onPress={() => {}}
               />
             </View>

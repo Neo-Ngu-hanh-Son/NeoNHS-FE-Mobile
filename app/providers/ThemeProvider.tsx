@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useState,
   useCallback,
+  useMemo,
   ReactNode,
 } from 'react';
 import { useColorScheme as useNativeColorScheme } from 'react-native';
@@ -76,14 +77,17 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     return theme;
   }, [colorScheme]);
 
-  const value: ThemeContextValue = {
-    colorScheme,
-    isDarkColorScheme: colorScheme === 'dark',
-    toggleColorScheme,
-    setColorScheme,
-    isLoading,
-    getCurrentTheme,
-  };
+  const value: ThemeContextValue = useMemo(
+    () => ({
+      colorScheme,
+      isDarkColorScheme: colorScheme === 'dark',
+      toggleColorScheme,
+      setColorScheme,
+      isLoading,
+      getCurrentTheme,
+    }),
+    [colorScheme, toggleColorScheme, setColorScheme, isLoading, getCurrentTheme]
+  );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

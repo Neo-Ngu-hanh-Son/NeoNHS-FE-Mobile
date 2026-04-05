@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { View, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SmartImage } from '@/components/ui/smart-image';
 import { Text } from '@/components/ui/text';
 import { MapPoint } from '../../map/types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -31,10 +32,10 @@ export function PointDetailHero({
   return (
     <View className="relative" style={{ height: HERO_HEIGHT }}>
       {/* Hero Image */}
-      <Image
-        source={{ uri: point.thumbnailUrl || FALLBACK_IMAGE }}
+      <SmartImage
+        uri={point.thumbnailUrl}
+        fallbackSource={{ uri: FALLBACK_IMAGE }}
         className="absolute inset-0 h-full w-full"
-        resizeMode="cover"
       />
 
       {/* Bottom gradient overlay */}

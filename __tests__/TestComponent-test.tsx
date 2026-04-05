@@ -42,7 +42,7 @@ describe('LoginScreen Component Tests', () => {
     // Default auth mock
     mockUseAuth.mockReturnValue({
       user: null,
-      token: null,
+      accessToken: null,
       refreshToken: null,
       isAuthenticated: false,
       isLoading: false,
@@ -52,6 +52,7 @@ describe('LoginScreen Component Tests', () => {
       logout: jest.fn(),
       refreshAuth: jest.fn(),
       updateUser: jest.fn(),
+      loginWithGoogle: jest.fn(),
     });
   });
 

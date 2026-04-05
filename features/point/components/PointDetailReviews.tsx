@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Image, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
 import { Card, CardContent } from '@/components/ui/card';
+import { SmartImage } from '@/components/ui/smart-image';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 
@@ -55,12 +56,9 @@ function ReviewCard() {
         {/* Author row */}
         <View className="flex-row items-start justify-between">
           <View className="flex-row items-center gap-3">
-            <Image
-              source={{
-                uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAyA0J5rjp-aat59aZlP_WPjj2erMvBLSVc3jMNbe2unFO_xI0RXTo7kfksioeO335FoVJHhTzY5ACTZKVFHxXj2J1-190VmStf7Z5nZF99bv-kFmgd7-KKn02qB_mvBya6bARq9ILUymtkP1dEuQvBUxC2HWNVmmv8hnucAalFtRq3KfhaLuRpVGGnoCzPfCkrHfO_IlgghxAGez_M-m6TIrMMatVy7I838qCmfBm_Weznr7MqF8Pr-BuL5pSj5Yuwt_y-2Muv82bD',
-              }}
+            <SmartImage
+              uri="https://lh3.googleusercontent.com/aida-public/AB6AXuAyA0J5rjp-aat59aZlP_WPjj2erMvBLSVc3jMNbe2unFO_xI0RXTo7kfksioeO335FoVJHhTzY5ACTZKVFHxXj2J1-190VmStf7Z5nZF99bv-kFmgd7-KKn02qB_mvBya6bARq9ILUymtkP1dEuQvBUxC2HWNVmmv8hnucAalFtRq3KfhaLuRpVGGnoCzPfCkrHfO_IlgghxAGez_M-m6TIrMMatVy7I838qCmfBm_Weznr7MqF8Pr-BuL5pSj5Yuwt_y-2Muv82bD"
               className="h-10 w-10 rounded-full"
-              resizeMode="cover"
             />
             <View>
               <Text className="text-sm font-bold">Sarah Jenkins</Text>
@@ -81,8 +79,7 @@ function ReviewCard() {
 
         {/* Review text */}
         <Text className="text-sm leading-6 text-muted-foreground">
-          Absolutely stunning views! The hike was moderate but well worth it. Make sure to bring bug
-          spray though.
+          Absolutely stunning views! The hike was moderate but well worth it. Make sure to bring bug spray though.
         </Text>
       </CardContent>
     </Card>
@@ -115,9 +112,7 @@ export function PointDetailReviews() {
       <ReviewCard />
 
       {/* View all link */}
-      <TouchableOpacity
-        className="flex-row items-center justify-center gap-1 py-1"
-        activeOpacity={0.7}>
+      <TouchableOpacity className="flex-row items-center justify-center gap-1 py-1" activeOpacity={0.7}>
         <Text className="text-sm font-bold" style={{ color: theme.primary }}>
           View all reviews
         </Text>

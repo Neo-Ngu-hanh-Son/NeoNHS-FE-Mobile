@@ -1,4 +1,4 @@
-import { View, Image } from 'react-native';
+import { View } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { Separator } from '@/components/ui/separator';
 import type { BlogResponse } from '../types/blog';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { parseIntoVNDate } from '@/utils/date';
+import { SmartImage } from '@/components/ui/smart-image';
 
 interface BlogHeaderProps {
   blog: BlogResponse;
@@ -26,16 +27,12 @@ export default function BlogHeader({ blog }: BlogHeaderProps) {
     <View className="gap-3">
       <View className="relative">
         {/* Cover image */}
-        {coverImage ? (
-          <Image
-            source={{ uri: coverImage }}
-            className="h-52 w-full"
-            resizeMode="cover"
-            accessibilityLabel={`Cover image for ${blog.title}`}
-          />
-        ) : (
-          <View className="h-52 w-full bg-gray-200" />
-        )}
+        <SmartImage
+          uri={coverImage}
+          className="h-52 w-full"
+          resizeMode="cover"
+          accessibilityLabel={`Cover image for ${blog.title}`}
+        />
 
         {/* Back button */}
         <View className="absolute left-4 top-4 rounded-full bg-white/20 backdrop-blur-md">

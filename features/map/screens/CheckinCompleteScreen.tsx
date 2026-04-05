@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, Image, Share, TouchableOpacity, View } from 'react-native';
+import { Alert, GestureResponderEvent, Share, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -7,6 +7,7 @@ import * as MediaLibrary from 'expo-media-library';
 
 import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { Button } from '@/components/ui/button';
+import { SmartImage } from '@/components/ui/smart-image';
 import { Text } from '@/components/ui/text';
 import { logger } from '@/utils/logger';
 
@@ -52,6 +53,13 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
     }
   };
 
+  function handleMapNavigation(event: GestureResponderEvent): void {
+    navigation.navigate('Tabs', {
+      screen: 'Map',
+      params: {},
+    });
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-[#f5f5f5]" edges={['top']}>
       <View className="flex-row items-center justify-between px-5 py-4">
@@ -76,9 +84,7 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
           <Text className="text-3xl font-bold text-foreground">Check-in Successful!</Text>
           <View className="mt-2 flex-row items-center">
             <Ionicons name="star" size={16} color="#15803d" />
-            <Text className="ml-2 text-lg font-semibold text-[#15803d]">
-              You earned {rewardPoints ?? 50} Points!
-            </Text>
+            <Text className="ml-2 text-lg font-semibold text-[#15803d]">You earned {rewardPoints ?? 50} Points!</Text>
             <Text className="ml-2 text-sm text-muted-foreground">(Total: {userTotalPoints ?? '...'} Points)</Text>
           </View>
         </View>
@@ -97,7 +103,7 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
 
         <View className="mt-5 overflow-hidden rounded-3xl bg-muted">
           {imageUrl ? (
-            <Image source={{ uri: imageUrl }} className="h-48 w-full" resizeMode="cover" />
+            <SmartImage uri={imageUrl} className="h-48 w-full" />
           ) : (
             <View className="h-48 w-full items-center justify-center">
               <Text className="text-sm text-muted-foreground">No image available</Text>
@@ -115,10 +121,7 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
           <Ionicons name="download" size={18} color="#15803d" />
           <Text className="text-primary">Download Photo</Text>
         </Button>
-        <Button
-          onPress={() => navigation.navigate('Tabs', { screen: 'Map' })}
-          className="h-12 rounded-full"
-        >
+        <Button onPress={handleMapNavigation} className="h-12 rounded-full">
           <Text>Back To Map</Text>
         </Button>
       </View>

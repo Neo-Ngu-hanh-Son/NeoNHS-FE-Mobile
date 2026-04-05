@@ -1,8 +1,9 @@
 import React, { memo, useMemo } from 'react';
-import { Image, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { Card } from '@/components/ui/card';
 import { Text } from '@/components/ui/text';
 import type { Blog } from '@/features/blog/types';
+import { SmartImage } from '@/components/ui/smart-image';
 
 interface BlogCardProps {
   blog: Blog;
@@ -28,15 +29,7 @@ function BlogCardComponent({ blog, onPress }: BlogCardProps) {
     <Pressable onPress={() => onPress?.(blog)} accessibilityRole="button">
       <Card className="mb-3 gap-0 overflow-hidden border-border py-0">
         <View className="flex-row">
-          {blog.thumbnailUrl ? (
-            <Image
-              source={{ uri: blog.thumbnailUrl }}
-              className="h-32 w-28 bg-muted"
-              resizeMode="cover"
-            />
-          ) : (
-            <View className="h-32 w-28 bg-muted" />
-          )}
+          <SmartImage uri={blog.thumbnailUrl} className="h-32 w-28 bg-muted" contentFit="cover" />
 
           <View className="flex-1 px-3 py-2">
             <Text className="text-base font-semibold text-foreground" numberOfLines={2}>

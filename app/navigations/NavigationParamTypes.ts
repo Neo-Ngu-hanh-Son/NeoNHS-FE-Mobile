@@ -20,10 +20,11 @@ export type AuthStackParamList = {
 export type TabsStackParamList = {
   Home: undefined;
   Discover: undefined;
-  Map: { pointId?: string } | undefined;
+  Map: { pointId?: string, targetNavigationPointId?: string, userCheckedInPointId?: string } | undefined;
   Bookings: undefined;
   Profile: undefined;
   TestCart: undefined;
+  Chat: undefined;
 };
 
 /* ============================================================
@@ -105,12 +106,22 @@ export type CheckoutRoutes = {
   };
 };
 
+/* Chat */
+export type ChatRoutes = {
+  ChatRoom: { roomId: string };
+};
+
 /* ============================================================
    MAIN STACK (MERGED)
    ============================================================ */
 
 type BaseMainRoutes = {
   Tabs: NavigatorScreenParams<TabsStackParamList>;
+};
+
+/* Notifications */
+export type NotificationRoutes = {
+  Notifications: undefined;
 };
 
 export type MainStackParamList = BaseMainRoutes &
@@ -122,7 +133,10 @@ export type MainStackParamList = BaseMainRoutes &
   EventRoutes &
   WorkshopRoutes &
   CheckoutRoutes &
-  BlogRoutes;
+  BlogRoutes &
+  NotificationRoutes &
+  ChatRoutes;
+
 
 /* ============================================================
    ROOT STACK
