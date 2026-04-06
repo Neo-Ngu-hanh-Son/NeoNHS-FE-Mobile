@@ -1,5 +1,5 @@
 import React, { forwardRef, useCallback, useMemo, useRef } from 'react';
-import BottomSheet, { BottomSheetFlatList } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetFlatList, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { View } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { Step } from '../../types';
@@ -13,8 +13,6 @@ type NavigationStepsBottomSheetProps = {
 
 const NavigationStepsBottomSheet = forwardRef<BottomSheet, NavigationStepsBottomSheetProps>(
   ({ steps, currentStepIndex, onChange }, ref) => {
-    const snapPoints = useMemo(() => ['80%'], []);
-
     const clampedCurrentStepIndex = useMemo(() => {
       if (steps.length === 0) {
         return -1;
@@ -47,27 +45,23 @@ const NavigationStepsBottomSheet = forwardRef<BottomSheet, NavigationStepsBottom
       [clampedCurrentStepIndex]
     );
     return (
-      <BottomSheet ref={ref} index={-1} snapPoints={snapPoints} enablePanDownToClose>
-        <BottomSheetFlatList<Step>
-          ref={listRef}
-          data={steps}
-          keyExtractor={(item: Step, index: number) => `${index}`}
-          contentContainerStyle={{ paddingBottom: 24 }}
-          keyboardShouldPersistTaps="handled"
-          initialNumToRender={10}
-          ListHeaderComponent={
-            <View className="px-4 pb-3 pt-2">
-              <Text className="text-lg font-bold">Route steps</Text>
-              <Text className="text-xs text-muted-foreground">Follow these instructions</Text>
-            </View>
-          }
-          ListEmptyComponent={
+      <BottomSheet ref={ref} index={-1} enablePanDownToClose enableDynamicSizing detached={true}>
+        <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 24 }} keyboardShouldPersistTaps="handled">
+          {/* Header */}
+          <View className="px-4 pb-3 pt-2">
+            <Text className="text-lg font-bold">Route steps</Text>
+            <Text className="text-xs text-muted-foreground">Follow these instructions</Text>
+          </View>
+
+          {/* List Body */}
+          {steps.length > 0 ? (
+            steps.map((item, index) => <React.Fragment key={index}>{renderItem({ item, index })}</React.Fragment>)
+          ) : (
             <View className="px-4 py-6">
               <Text className="text-sm text-muted-foreground">No step instructions available yet.</Text>
             </View>
-          }
-          renderItem={renderItem}
-        />
+          )}
+        </BottomSheetScrollView>
       </BottomSheet>
     );
   }

@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome6, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
@@ -22,34 +22,29 @@ type TransportModeSelectorSheetProps = {
 type ModeOption = {
   mode: TravelMode;
   label: string;
-  description: string;
-  icon: React.ComponentProps<typeof Ionicons>['name'];
+  icon: React.ComponentProps<typeof FontAwesome6>['name'];
 };
 
 const MODE_OPTIONS: ModeOption[] = [
   {
     mode: 'WALK',
     label: 'Walk',
-    description: 'Pedestrian routes',
-    icon: 'walk-outline',
+    icon: 'person-walking',
   },
   {
     mode: 'DRIVE',
     label: 'Drive',
-    description: 'Car-friendly roads',
-    icon: 'car-outline',
+    icon: 'car',
   },
-  {
-    mode: 'BICYCLE',
-    label: 'Bicycle',
-    description: 'Cycle-friendly route',
-    icon: 'bicycle-outline',
-  },
+  // {
+  //   mode: 'BICYCLE',
+  //   label: 'Bicycle',
+  //   icon: 'bicycle',
+  // },
   {
     mode: 'TWO_WHEELER',
     label: 'Motorbike',
-    description: 'Two-wheeler route',
-    icon: 'speedometer-outline',
+    icon: 'motorcycle',
   },
 ];
 
@@ -90,6 +85,10 @@ export default function TransportModeSelectorSheet({
     [onSelectMode, selectedMode]
   );
 
+  const selectedModeLabel = useMemo(() => {
+    return MODE_OPTIONS.find((option) => option.mode === selectedMode)?.label ?? 'Walk';
+  }, [selectedMode]);
+
   return (
     <View
       pointerEvents="box-none"
@@ -104,7 +103,7 @@ export default function TransportModeSelectorSheet({
         <View className="flex-row items-start justify-between gap-3">
           <View className="flex-1">
             <Text className="text-base font-bold">Choose transportation</Text>
-            <Text numberOfLines={1} className="mt-0.5 text-[11px] text-muted-foreground">
+            <Text numberOfLines={1} className="mt-0.5 text-sm text-muted-foreground">
               {destinationName ? `To ${destinationName}` : 'Select how you want to travel'}
             </Text>
           </View>
@@ -119,7 +118,7 @@ export default function TransportModeSelectorSheet({
           </TouchableOpacity>
         </View>
 
-        <View className="mt-3 flex-row flex-wrap gap-2">
+        <View className="mt-3 flex-row items-center justify-between">
           {MODE_OPTIONS.map((option) => {
             const isSelected = option.mode === selectedMode;
 
@@ -131,26 +130,22 @@ export default function TransportModeSelectorSheet({
                 accessibilityState={{ selected: isSelected }}
                 activeOpacity={0.8}
                 onPress={makeModePressHandler(option.mode)}
-                className={`min-h-10 flex-1 rounded-lg border px-2 py-2 ${
+                className={`flex-1 items-center justify-center rounded-full border px-4 py-2 ${
                   isSelected ? 'border-primary/60 bg-primary/10' : 'border-border/50 bg-background'
                 }`}>
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center gap-1.5">
-                    <Ionicons name={option.icon} size={14} color={isSelected ? theme.primary : theme.foreground} />
-                    <View>
-                      <Text className="text-xs font-semibold">{option.label}</Text>
-                    </View>
-                  </View>
-                  {isSelected ? <Ionicons name="checkmark-circle" size={14} color={theme.primary} /> : null}
-                </View>
+                <FontAwesome6 name={option.icon} size={24} color={isSelected ? theme.primary : theme.foreground} />
               </TouchableOpacity>
             );
           })}
         </View>
 
+        <View className="mt-2.5 rounded-lg border border-border/40 px-2.5 py-2">
+          <Text className="font-semibold">Travel by: {selectedModeLabel}</Text>
+        </View>
+
         <View className="mt-2.5 rounded-lg border border-border/40 bg-background px-2.5 py-2">
-          <Text className="text-[11px] font-semibold text-muted-foreground">Route preview</Text>
-          <Text className="mt-0.5 text-xs font-semibold">{summaryText}</Text>
+          <Text className="text-xs font-semibold text-muted-foreground">Route preview</Text>
+          <Text className="mt-0.5 font-semibold">{summaryText}</Text>
           {errorMessage ? <Text className="mt-1 text-xs text-destructive">{errorMessage}</Text> : null}
         </View>
 
@@ -165,7 +160,7 @@ export default function TransportModeSelectorSheet({
               canStartNavigation ? 'bg-primary' : 'bg-muted'
             }`}>
             <Text
-              className={`text-xs font-semibold ${canStartNavigation ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
+              className={`font-semibold ${canStartNavigation ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
               Start Navigation
             </Text>
           </TouchableOpacity>

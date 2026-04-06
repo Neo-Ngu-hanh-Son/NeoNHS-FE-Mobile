@@ -70,7 +70,7 @@ export const useMapNavigationPreviewController = ({
   const previewRouteQuery = useDirectionsPreview(buildPreviewRouteQuery(), shouldFetchPreviewRoute);
 
   const previewErrorMessage = useMemo(() => {
-    if (targetNavigationPointId && !previewOrigin) return 'Enable location access to preview available routes.';
+    if (targetNavigationPointId && !previewOrigin) return 'Getting current location...';
     if (targetNavigationPointId && !previewDestination) return 'Unable to read destination coordinates.';
     if (previewRouteQuery.isError) return 'Failed to load route preview.';
     return null;

@@ -2,11 +2,12 @@ import { useWindowDimensions, Linking, View, Modal, Pressable } from 'react-nati
 import RenderHTML, { CustomBlockRenderer } from 'react-native-render-html';
 import { cssRulesFromSpecs, tableModel } from '@native-html/table-plugin';
 import TableRenderer from '@native-html/table-plugin';
-import { baseStyle, tagsStyles, classesStyles, cleanTableSpecs } from '../styles/blogHtmlStyles';
+import { getBlogHtmlStyleSet } from '../styles/blogHtmlStyles';
 import { logger } from '@/utils/logger';
 import WebView from 'react-native-webview';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { SmartImage } from '@/components/ui/smart-image';
+import { useTheme } from '@/app/providers/ThemeProvider';
 
 interface BlogContentProps {
   html: string;
@@ -15,9 +16,14 @@ interface BlogContentProps {
 export default function BlogContent({ html }: BlogContentProps) {
   const { width, height } = useWindowDimensions();
   const contentWidth = width - 100;
+  const { isDarkColorScheme } = useTheme();
 
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const blogHtmlStyleSet = useMemo(() => {
+    return getBlogHtmlStyleSet(isDarkColorScheme);
+  }, [isDarkColorScheme]);
 
   const handleLinkPress = (_event: unknown, href: string) => {
     Linking.openURL(href).catch((err) => logger.error('[BlogContent] Failed to open URL:', err));
@@ -30,8 +36,7 @@ export default function BlogContent({ html }: BlogContentProps) {
     // so the image is never rendered with 0-height (blank + empty space).
     const imgW = attrWidth ? parseFloat(attrWidth) : 0;
     const imgH = attrHeight ? parseFloat(attrHeight) : 0;
-    const computedHeight =
-      imgW > 0 && imgH > 0 ? (imgH / imgW) * contentWidth : contentWidth * 0.5625; // fallback to 16:9 ratio
+    const computedHeight = imgW > 0 && imgH > 0 ? (imgH / imgW) * contentWidth : contentWidth * 0.5625; // fallback to 16:9 ratio
 
     const onPress = () => {
       if (!src) return;
@@ -61,9 +66,9 @@ export default function BlogContent({ html }: BlogContentProps) {
         <RenderHTML
           contentWidth={contentWidth}
           source={{ html }}
-          baseStyle={baseStyle}
-          tagsStyles={tagsStyles}
-          classesStyles={classesStyles}
+          baseStyle={blogHtmlStyleSet.baseStyle}
+          tagsStyles={blogHtmlStyleSet.tagsStyles}
+          classesStyles={blogHtmlStyleSet.classesStyles}
           enableExperimentalMarginCollapsing
           enableCSSInlineProcessing
           renderers={{
@@ -76,7 +81,7 @@ export default function BlogContent({ html }: BlogContentProps) {
           renderersProps={{
             a: { onPress: handleLinkPress },
             table: {
-              cssRules: cssRulesFromSpecs(cleanTableSpecs),
+              cssRules: cssRulesFromSpecs(blogHtmlStyleSet.tableSpecs),
               enableExperimentalHorizontalScrolling: true,
             },
           }}

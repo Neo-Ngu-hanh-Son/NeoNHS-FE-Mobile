@@ -102,7 +102,6 @@ export function useMapNavigationGuidance({
   const directionsInFlightTargetRef = useRef<string | null>(null);
 
   const resetDirectionState = useCallback(() => {
-    logger.info('Resetting navigation state');
     setRouteState({
       routeSummary: null,
       steps: [],

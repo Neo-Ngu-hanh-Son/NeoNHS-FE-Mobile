@@ -1,8 +1,9 @@
-import { useEffect, RefObject, useState } from 'react';
+import { useEffect, RefObject, useCallback, useRef } from 'react';
 import { LatLng } from 'react-native-maps';
 import { NHSMapRef } from '@/features/map/components';
 import { parseFloatOrDefault } from '@/utils/parseNumber';
 import { MapPoint } from '../../types';
+import { logger } from '@/utils/logger';
 
 interface UseMapCameraControllerProps {
   mapRef: RefObject<NHSMapRef | null>;
@@ -12,6 +13,7 @@ interface UseMapCameraControllerProps {
   navigationEndpoints?: { origin: LatLng; destination: LatLng } | null;
   isDirectionsReady: boolean;
   isGuidanceMode: boolean;
+  handleOpenPointSheet: (point: MapPoint) => void;
 }
 
 /**
@@ -29,16 +31,20 @@ export const useMapCameraController = ({
   navigationEndpoints,
   isDirectionsReady,
   isGuidanceMode,
+  handleOpenPointSheet,
 }: UseMapCameraControllerProps) => {
-  const [focusedPoint, setFocusedPoint] = useState<MapPoint | null>(null);
-
+  const autoTriggerFocusRef = useRef(true);
+  /**
+   * This effect focus the camera to a specific point if user navigate it from the point details screen.
+   */
   useEffect(() => {
     if (!initialPointId || mapPoints.length === 0) return;
 
     const targetPoint = mapPoints.find((p) => p.id === initialPointId);
 
-    if (targetPoint) {
-      // logger.info('[MapScreen] Auto-focusing on point:', targetPoint.name);
+    // logger.debug('Is map ready in camera controller?', isMapReady);
+    if (targetPoint && autoTriggerFocusRef.current && mapRef.current) {
+      handleOpenPointSheet(targetPoint);
       setTimeout(() => {
         mapRef.current?.animateToCoordinate(
           {
@@ -50,10 +56,9 @@ export const useMapCameraController = ({
           600
         );
       }, 500);
-      // Set state and return in to the parent
-      setFocusedPoint(targetPoint);
+      autoTriggerFocusRef.current = false; // Reset the ref after the initial focus attempt
     }
-  }, [initialPointId, mapPoints, mapRef]);
+  }, [initialPointId, mapPoints, mapRef, handleOpenPointSheet]);
 
   // 2. Handle Route Fitting (Auto, no need to trigger any states)
   useEffect(() => {
@@ -73,7 +78,42 @@ export const useMapCameraController = ({
     );
   }, [isGuidanceMode, targetNavigationPointId, isDirectionsReady, navigationEndpoints, mapRef]);
 
+  // ================= Functions to programmatically control the camera =================
+
+  const focusOnPoint = useCallback(
+    (targetPoint: MapPoint) => {
+      console.log('Focusing on point:', targetPoint.name);
+      mapRef.current?.animateToCoordinate(
+        {
+          latitude: parseFloatOrDefault(targetPoint.latitude, 0),
+          longitude: parseFloatOrDefault(targetPoint.longitude, 0),
+          latDelta: 0.001,
+          lngDelta: 0.001,
+        },
+        600
+      );
+    },
+    [mapRef]
+  );
+
+  const fitCameraToCoordinates = useCallback(
+    (origin: LatLng, destination: LatLng) => {
+      mapRef.current?.fitToCoordinates(
+        [origin, destination],
+        {
+          top: 160,
+          right: 64,
+          bottom: 180,
+          left: 64,
+        },
+        true
+      );
+    },
+    [mapRef]
+  );
+
   return {
-    focusedPoint,
+    focusOnPoint,
+    fitCameraToCoordinates,
   };
 };

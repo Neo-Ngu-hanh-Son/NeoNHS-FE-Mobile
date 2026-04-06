@@ -13,6 +13,7 @@ import { CameraIcon } from 'lucide-react-native';
 type CheckinCameraCaptureProps = {
   isBusy: boolean;
   onClose: () => void;
+  onOpenGallery: () => void;
   onImageSelected: (imageUri: string) => void;
   pointName?: string;
 };
@@ -20,6 +21,7 @@ type CheckinCameraCaptureProps = {
 export default function CheckinCameraCapture({
   isBusy,
   onClose,
+  onOpenGallery,
   onImageSelected,
   pointName,
 }: CheckinCameraCaptureProps) {
@@ -124,42 +126,46 @@ export default function CheckinCameraCapture({
             </TouchableOpacity>
 
             <View className="mx-3 flex-1">
-              <Text
-                className="text-center text-base font-semibold leading-5 text-white"
-                numberOfLines={2}>
+              <Text className="text-center text-base font-semibold leading-5 text-white" numberOfLines={2}>
                 Checking in at: {pointName}
               </Text>
             </View>
 
-            <TouchableOpacity
-              onPress={handlePickImage}
-              disabled={isBusy}
-              className="h-10 w-10 items-center justify-center rounded-full bg-black/40">
-              <Ionicons name="image" size={22} color="white" />
-            </TouchableOpacity>
+            <View className="flex-row items-center gap-2">
+              <TouchableOpacity
+                onPress={handlePickImage}
+                disabled={isBusy}
+                className="h-10 w-10 items-center justify-center rounded-full bg-black/40">
+                <Ionicons name="image" size={22} color="white" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </View>
 
       <CheckinCameraCenterHint />
 
-      <View className="absolute bottom-9 left-0 right-0 items-center">
-        <View className="flex-row items-center gap-4">
+      <View className="absolute bottom-9 left-0 right-0 w-full items-center">
+        <View className="flex-1 flex-row items-center justify-between gap-12">
+          <TouchableOpacity
+            onPress={onOpenGallery}
+            disabled={isBusy}
+            className="h-14 w-14 items-center justify-center rounded-full bg-black/40">
+            <Ionicons name="images" size={32} color="white" />
+          </TouchableOpacity>
           <TouchableOpacity
             style={[styles.captureButton, isBusy ? styles.captureButtonDisabled : null]}
             onPress={handleTakePicture}
             disabled={isBusy || !cameraReady}>
             <CameraIcon size={32} color="white" />
           </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleToggleCameraFacing}
+            disabled={isBusy}
+            className="h-14 w-14 items-center justify-center rounded-full bg-black/40">
+            <Ionicons name="camera-reverse" size={32} color="white" />
+          </TouchableOpacity>
         </View>
-      </View>
-      <View className="absolute bottom-9 right-4 items-center">
-        <TouchableOpacity
-          onPress={handleToggleCameraFacing}
-          disabled={isBusy}
-          className="h-14 w-14 items-center justify-center rounded-full bg-black/40">
-          <Ionicons name="camera-reverse" size={24} color="white" />
-        </TouchableOpacity>
       </View>
     </View>
   );

@@ -21,7 +21,6 @@ export default function CheckinCameraButton({
   const scale3 = useRef(new Animated.Value(1)).current;
   const opacity3 = useRef(new Animated.Value(0.6)).current;
 
-
   useEffect(() => {
     if (!isSugestingCheckin) return;
 
@@ -90,7 +89,7 @@ export default function CheckinCameraButton({
 
     animation.start();
     return () => animation.stop();
-  }, [isSugestingCheckin]);
+  }, [isSugestingCheckin, opacity1, opacity2, opacity3, scale1, scale2, scale3]);
 
   const ringStyle = (scale: Animated.Value, opacity: Animated.Value) => ({
     position: 'absolute' as const,
@@ -111,17 +110,16 @@ export default function CheckinCameraButton({
           <Animated.View style={ringStyle(scale1, opacity1)} />
           <Animated.View style={ringStyle(scale2, opacity2)} />
           <Animated.View style={ringStyle(scale3, opacity3)} />
-          <View className='absolute bottom-20 px-2 py-1 rounded-md bg-white bg-opacity-70 flex-row items-center gap-1'>
+          <View className="absolute bottom-20 flex-row items-center gap-1 rounded-md bg-white bg-opacity-70 px-2 py-1">
             <Text className="text-sm font-medium text-primary">Check-in nearby!</Text>
           </View>
         </>
       )}
 
       <Button
-        className="elevation-5 h-16 w-16 rounded-full p-3 shadow-lg bg-primary"
+        className="elevation-5 h-16 w-16 rounded-full bg-primary p-3 shadow-lg"
         onPress={onOpenCamera}
-        variant={'default'}
-      >
+        variant={'default'}>
         <MaterialCommunityIcons name="camera" size={24} color="white" />
       </Button>
     </View>

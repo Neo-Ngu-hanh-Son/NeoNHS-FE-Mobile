@@ -1,33 +1,24 @@
-import React, { useEffect, useRef } from 'react';
-import {
-  View,
-  StyleSheet,
-  Image,
-  Modal,
-  Animated,
-  Dimensions,
-  TouchableWithoutFeedback,
-  ScrollView,
-} from 'react-native';
+import React, { forwardRef, useCallback, useMemo } from 'react';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { MapPoint } from '../../types';
-import { IconButton } from '@/components/Buttons/IconButton';
 import PointDetailModalHeader from './PointDetailModalHeader';
 import PointDetailModalImage from './PointDetailModalImage';
 import PointDetailModalDescription from './PointDetailModalDescription';
 import { Button } from '@/components/ui/button';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const MODAL_HEIGHT = SCREEN_HEIGHT * 0.45;
-
 interface PointDetailModalProps {
   point: MapPoint | null;
-  visible: boolean;
   onClose: () => void;
+  onAfterClose?: () => void;
   onViewDetails?: (point: MapPoint) => void;
 }
+
+export type MapPointDetailSheetRef = BottomSheetModal;
 
 const formatDateTime = (value?: string) => {
   if (!value) return 'N/A';
@@ -42,194 +33,120 @@ const formatParticipants = (current?: number, max?: number) => {
   return String(current ?? max ?? 'N/A');
 };
 
-export default function MapPointDetailModal({
-  point,
-  visible,
-  onClose,
-  onViewDetails,
-}: PointDetailModalProps) {
-  const { isDarkColorScheme } = useTheme();
-  const theme = isDarkColorScheme ? THEME.dark : THEME.light;
-  const slideAnim = useRef(new Animated.Value(MODAL_HEIGHT)).current;
+const MapPointDetailModal = forwardRef<MapPointDetailSheetRef, PointDetailModalProps>(
+  ({ point, onClose, onAfterClose, onViewDetails }: PointDetailModalProps, ref) => {
+    const { isDarkColorScheme } = useTheme();
+    const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+    const snapPoints = useMemo(() => ['50%'], []);
 
-  useEffect(() => {
-    if (visible) {
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-        tension: 65,
-        friction: 11,
-      }).start();
-    } else {
-      Animated.timing(slideAnim, {
-        toValue: MODAL_HEIGHT,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [visible, slideAnim]);
+    const renderBackdrop = useCallback(
+      (props: React.ComponentProps<typeof BottomSheetBackdrop>) => (
+        <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} opacity={0.3} pressBehavior="close" />
+      ),
+      []
+    );
 
-  if (!point) return null;
+    const isEvent = point?.type === 'EVENT';
+    const isWorkshop = point?.type === 'WORKSHOP';
 
-  const isEvent = point.type === 'EVENT';
-  const isWorkshop = point.type === 'WORKSHOP';
-  const isCheckin = point.type === 'CHECKIN';
-
-  const detailRows = [
-    ...(isEvent || isWorkshop
+    const detailRows = point
       ? [
-        { label: 'Start time', value: formatDateTime(point.startTime) },
-        { label: 'End time', value: formatDateTime(point.endTime) },
-        {
-          label: 'Participants',
-          value: formatParticipants(point.currentEnrolled, point.maxParticipants),
-        },
-      ]
-      : []),
-    ...(isWorkshop
-      ? [
-        {
-          label: 'Organizer',
-          value: point.workshopOrganizerName || 'N/A',
-        },
-      ]
-      : []),
-  ];
-
-  return (
-    <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.overlay}>
-          <TouchableWithoutFeedback>
-            <Animated.View
-              style={[
-                styles.modalContainer,
+          ...(isEvent || isWorkshop
+            ? [
+                { label: 'Start time', value: formatDateTime(point.startTime) },
+                { label: 'End time', value: formatDateTime(point.endTime) },
                 {
-                  backgroundColor: theme.card,
-                  transform: [{ translateY: slideAnim }],
+                  label: 'Participants',
+                  value: formatParticipants(point.currentEnrolled, point.maxParticipants),
                 },
-              ]}>
-              {/* Handle bar */}
-              <View style={styles.handleContainer}>
-                <View style={[styles.handle, { backgroundColor: theme.border }]} />
+              ]
+            : []),
+          ...(isWorkshop
+            ? [
+                {
+                  label: 'Organizer',
+                  value: point.workshopOrganizerName || 'N/A',
+                },
+              ]
+            : []),
+        ]
+      : [];
+
+    return (
+      <BottomSheetModal
+        ref={ref}
+        index={0}
+        snapPoints={snapPoints}
+        enableDynamicSizing
+        onDismiss={onAfterClose}
+        enablePanDownToClose
+        backdropComponent={renderBackdrop}
+        backgroundStyle={{ backgroundColor: theme.card }}
+        handleIndicatorStyle={{ backgroundColor: theme.border }}>
+        <BottomSheetScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.contentContainer}
+          keyboardShouldPersistTaps="handled">
+          {point ? (
+            <>
+              <View style={styles.headerRow}>
+                <View style={styles.headerColumn}>
+                  <PointDetailModalHeader point={point} />
+                </View>
+                <View style={styles.imageColumn}>
+                  <PointDetailModalImage point={point} />
+                </View>
               </View>
 
-              <IconButton
-                icon={'close'}
-                borderless
-                onPress={onClose}
-                variant="ghost"
-                iconSize={20}
-                buttonStyle={styles.closeButton}
-              />
+              <PointDetailModalDescription point={point} />
 
-              <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
-                <View style={styles.headerRow}>
-                  <View style={styles.headerColumn}>
-                    <PointDetailModalHeader point={point} />
-                  </View>
-                  <View style={styles.imageColumn}>
-                    <PointDetailModalImage point={point} />
-                  </View>
+              {detailRows.length > 0 && (
+                <View style={[styles.detailSection, { borderColor: theme.border }]}>
+                  {detailRows.map((row) => (
+                    <View key={row.label} style={styles.detailRow}>
+                      <Text style={[styles.detailLabel, { color: theme.mutedForeground }]}>{row.label}</Text>
+                      <Text style={[styles.detailValue, { color: theme.foreground }]}>{row.value}</Text>
+                    </View>
+                  ))}
                 </View>
+              )}
 
-                <PointDetailModalDescription point={point} />
+              <View style={styles.actions}>
+                <Button onPress={() => onViewDetails?.(point)} variant="default">
+                  <Text>View details</Text>
+                </Button>
+              </View>
+            </>
+          ) : (
+            <View className="flex-1 items-center justify-center py-10">
+              <ActivityIndicator size="large" color={theme.primary} />
+            </View>
+          )}
+        </BottomSheetScrollView>
+      </BottomSheetModal>
+    );
+  }
+);
 
-                {detailRows.length > 0 && (
-                  <View style={[styles.detailSection, { borderColor: theme.border }]}>
-                    {detailRows.map((row) => (
-                      <View key={row.label} style={styles.detailRow}>
-                        <Text style={[styles.detailLabel, { color: theme.mutedForeground }]}>
-                          {row.label}
-                        </Text>
-                        <Text style={[styles.detailValue, { color: theme.foreground }]}>
-                          {row.value}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
+MapPointDetailModal.displayName = 'MapPointDetailModal';
 
-                {/* Action buttons */}
-                <View style={styles.actions}>
-                  <Button
-                    // icon="navigate"
-                    onPress={() => onViewDetails?.(point)}
-                    variant="default">
-                    <Text>View details</Text>
-                  </Button>
-
-                  {/* <IconButton
-                    icon="bookmark-outline"
-                    variant="outline"
-                    onPress={() => onViewDetails?.(point)}>
-                    <Text>{secondaryActionLabel}</Text>
-                  </IconButton> */}
-                </View>
-              </ScrollView>
-            </Animated.View>
-          </TouchableWithoutFeedback>
-        </View>
-      </TouchableWithoutFeedback>
-    </Modal>
-  );
-}
+export default MapPointDetailModal;
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    justifyContent: 'flex-end',
-    zIndex: 999,
+  contentContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 12,
   },
-  modalContainer: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 10,
-  },
-  handleContainer: {
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  handle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
+  closeRow: {
+    alignItems: 'flex-end',
+    marginTop: 8,
   },
   closeButton: {
-    position: 'absolute',
-    top: 12,
-    right: 16,
     borderRadius: 9999,
-    zIndex: 10,
-    backgroundColor: THEME.light.muted + '30',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingLeft: 0,
-    paddingRight: 0,
-    paddingTop: 0,
-    paddingBottom: 0,
     width: 32,
     height: 32,
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingBottom: 32,
-  },
-  imageContainer: {
-    height: 160,
-    width: 160,
-    borderRadius: 9999,
-    overflow: 'hidden',
-    marginBottom: 16,
-  },
-  image: {
-    width: '100%',
-    height: '100%',
   },
   actions: {
     flexDirection: 'row',

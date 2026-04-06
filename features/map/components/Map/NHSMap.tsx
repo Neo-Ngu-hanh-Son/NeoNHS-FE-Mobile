@@ -19,6 +19,7 @@ import { useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { distanceUtils } from '@/utils/distanceUtils';
 import MAP_CONSTANTS from '../../constants';
+import { useMapStore } from '../../store/useMapStore';
 
 type NHSMapProps = {
   onMarkerPress?: (point: MapPoint) => void;
@@ -78,7 +79,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
     const { isDarkColorScheme } = useTheme();
     const theme = isDarkColorScheme ? THEME.dark : THEME.light;
     const [shouldDisplayMarkerName, setShouldDisplayMarkerName] = useState(false);
-    const [isMapReady, setIsMapReady] = useState(false);
+    // const [isMapReady, setIsMapReady] = useState(false);
     const [isFollowingUser, setIsFollowingUser] = useState(false);
     const [mapKey, setMapKey] = useState(0);
     const [checkinPoints, setCheckinPoints] = useState<MapPointCheckin[]>([]);
@@ -94,6 +95,12 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
     const currentRegionRef = useRef<Region>(MAP_CENTER);
     const onMarkerPressRef = useRef(onMarkerPress); // Store in ref to avoid re-creating handlers and causing re-renders
     const isFocused = useIsFocused();
+
+    // Zustand store for global map state
+    const setIsMapReady = useMapStore((state) => state.setIsMapReady);
+    const isMapReady = useMapStore((state) => state.isMapReady);
+    // const setGlobalLastMapInteractionLocation = useMapStore((state) => state.setLastMapInteractionLocation);
+    // const setGlobalMapZoom = useMapStore((state) => state.setMapZoom);
 
     const activeCheckinPoint = useCheckinProximity(
       userLocation,
@@ -111,6 +118,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
         coordinate: { latitude: number; longitude: number; latDelta?: number; lngDelta?: number },
         duration = 500
       ) => {
+        logger.debug('Animating to coordinate:', coordinate, ' with duration:', duration);
         mapRef.current?.animateToRegion(
           {
             ...coordinate,
@@ -201,7 +209,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       setIsMapReady(false);
       setIsFollowingUser(false);
       setMapKey((prev) => prev + 1);
-    }, []);
+    }, [setIsMapReady]);
 
     useEffect(() => {
       onActiveCheckinPointChange?.(activeCheckinPoint);
@@ -349,7 +357,6 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
               longitude: poi.longitude,
             }}
             onPress={() => {
-              logger.debug('Can marker pressed:', isGuidanceMode ? 'No, in guidance mode' : 'Yes');
               if (isGuidanceMode) {
                 return;
               }
@@ -400,16 +407,17 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
                     }}
                     zIndex={30}
                     onPress={() => {
-                      console.log('Is guidance mode?', isGuidanceMode);
                       if (isGuidanceMode) {
                         return;
                       }
-                      onMarkerPressRef.current?.(checkinAsPoint);
+                      // Sneak the id as parent point id so that the view detals work
+                      let newCheckinAsPoint: MapPoint = { ...checkinAsPoint, id: parentPoint.id };
+                      onMarkerPressRef.current?.(newCheckinAsPoint);
                     }}>
                     <MarkerVisual
                       point={checkinAsPoint}
                       showName={shouldDisplayMarkerName}
-                      // isSelected={selectedPointId === checkin.id}
+                      // isSelected={selectedPointId === checkin.id} (Because performance issues, this is removed)
                     />
                   </Marker>
                 );
@@ -462,34 +470,26 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           {userLocation && <UserLocationMarker location={userLocation} showAccuracyCircle={true} showHeading={true} />}
         </MapView>
 
-        <View
-          style={[
-            styles.followButtonContainer,
-            { backgroundColor: theme.background },
-            isGuidanceMode ? { bottom: 104 } : { bottom: 24 },
-          ]}>
-          <FollowUserButton
-            onPress={handleFollowUserToggle}
-            isLoading={isLocationLoading}
-            hasLocation={!!userLocation}
-            isFollowing={isFollowingUser}
-          />
-        </View>
+        <View style={[styles.buttonContainer, isGuidanceMode ? { bottom: 80 } : { bottom: 24 }]}>
+          <View style={[styles.reloadButtonContainer, { backgroundColor: theme.background }]}>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Reload map"
+              activeOpacity={0.8}
+              onPress={handleReloadMap}
+              style={[styles.reloadButton, { borderColor: theme.border }]}>
+              <Ionicons name="reload" size={20} color={theme.foreground} />
+            </TouchableOpacity>
+          </View>
 
-        <View
-          style={[
-            styles.reloadButtonContainer,
-            { backgroundColor: theme.background },
-            isGuidanceMode ? { bottom: 160 } : { top: 16 },
-          ]}>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="Reload map"
-            activeOpacity={0.8}
-            onPress={handleReloadMap}
-            style={[styles.reloadButton, { borderColor: theme.border }]}>
-            <Ionicons name="reload" size={20} color={theme.foreground} />
-          </TouchableOpacity>
+          <View style={[styles.followButtonContainer, { backgroundColor: theme.background }]}>
+            <FollowUserButton
+              onPress={handleFollowUserToggle}
+              isLoading={isLocationLoading}
+              hasLocation={!!userLocation}
+              isFollowing={isFollowingUser}
+            />
+          </View>
         </View>
       </View>
     );
@@ -506,10 +506,13 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
   },
-  followButtonContainer: {
+  buttonContainer: {
     position: 'absolute',
     bottom: 24,
     right: 16,
+    gap: 8,
+  },
+  followButtonContainer: {
     borderRadius: 12,
     elevation: 4,
     zIndex: 20,
@@ -519,8 +522,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   reloadButtonContainer: {
-    position: 'absolute',
-    right: 16,
     borderRadius: 20,
     elevation: 4,
     zIndex: 20,

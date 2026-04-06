@@ -7,7 +7,7 @@ export const logger = RNLogger.createLogger({
     warn: 2,
     error: 3,
   },
-  severity: "debug",
+  severity: __DEV__ ? "debug" : "error",
   transport: consoleTransport,
   transportOptions: {
     colors: {

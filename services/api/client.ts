@@ -3,24 +3,11 @@
  * Reusable HTTP client using Axios with interceptors, error handling, and type safety
  */
 
-import axios, {
-  type AxiosInstance,
-  type AxiosRequestConfig,
-  type AxiosResponse,
-  type AxiosError,
-} from 'axios';
-import type {
-  ApiResponse,
-  ApiError,
-  RequestConfig,
-  ApiClientConfig,
-  TokenRefreshResult,
-} from "./types";
-import {
-  ApiErrorCode,
-} from "./types";
-import { API_CONFIG } from "@/utils/constants";
-import { logger } from "@/utils/logger";
+import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse, type AxiosError } from 'axios';
+import type { ApiResponse, ApiError, RequestConfig, ApiClientConfig, TokenRefreshResult } from './types';
+import { ApiErrorCode } from './types';
+import { API_CONFIG } from '@/utils/constants';
+import { logger } from '@/utils/logger';
 
 class ApiClient {
   private axiosInstance: AxiosInstance;
@@ -66,7 +53,7 @@ class ApiClient {
     this.axiosInstance.interceptors.request.use(
       async (config) => {
         // Log the request config
-        logger.debug(`[ApiClient] ${config.method?.toUpperCase()} ${config.baseURL}/${config.url}`);
+        // logger.debug(`[ApiClient] ${config.method?.toUpperCase()} ${config.baseURL}/${config.url}`);
 
         // Guard against invalid pagination sent by callers.
         if (config.params && typeof config.params === 'object' && 'page' in config.params) {
@@ -90,7 +77,7 @@ class ApiClient {
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
           } else {
-            logger.error("[ApiClient] Authentication token not found in store for this request, skipping");
+            logger.error('[ApiClient] Authentication token not found in store for this request, skipping');
           }
         }
 
@@ -288,10 +275,10 @@ class ApiClient {
         let errorCode: string | undefined;
 
         if (responseData) {
-          if (typeof responseData === "string") {
+          if (typeof responseData === 'string') {
             // Server returned plain text error
             errorMessage = responseData;
-          } else if (typeof responseData === "object") {
+          } else if (typeof responseData === 'object') {
             // Server returned JSON error object
             // Try common error message fields in order of preference
             errorMessage =
@@ -299,14 +286,12 @@ class ApiClient {
               responseData.error ||
               responseData.detail ||
               responseData.errorMessage ||
-              (responseData.errors && typeof responseData.errors === "string"
-                ? responseData.errors
-                : null) ||
+              (responseData.errors && typeof responseData.errors === 'string' ? responseData.errors : null) ||
               response.statusText ||
-              "An error occurred";
+              'An error occurred';
 
             // Extract validation errors if present
-            if (responseData.errors && typeof responseData.errors === "object") {
+            if (responseData.errors && typeof responseData.errors === 'object') {
               errorDetails = responseData.errors;
             }
 
@@ -315,7 +300,7 @@ class ApiClient {
           }
         } else {
           // No response data, use status text
-          errorMessage = response.statusText || "An error occurred";
+          errorMessage = response.statusText || 'An error occurred';
         }
 
         apiError = {
@@ -390,11 +375,7 @@ class ApiClient {
    */
   async post<T>(endpoint: string, data?: unknown, config?: RequestConfig): Promise<ApiResponse<T>> {
     const { transformData = true, ...restConfig } = config ?? {};
-    const response = await this.axiosInstance.post<T>(
-      endpoint,
-      data,
-      restConfig as AxiosRequestConfig
-    );
+    const response = await this.axiosInstance.post<T>(endpoint, data, restConfig as AxiosRequestConfig);
     return transformData ? this.transformResponse(response) : response;
   }
 
@@ -403,28 +384,16 @@ class ApiClient {
    */
   async put<T>(endpoint: string, data?: unknown, config?: RequestConfig): Promise<ApiResponse<T>> {
     const { transformData = true, ...restConfig } = config ?? {};
-    const response = await this.axiosInstance.put<T>(
-      endpoint,
-      data,
-      restConfig as AxiosRequestConfig
-    );
+    const response = await this.axiosInstance.put<T>(endpoint, data, restConfig as AxiosRequestConfig);
     return transformData ? this.transformResponse(response) : response;
   }
 
   /**
    * PATCH request
    */
-  async patch<T>(
-    endpoint: string,
-    data?: unknown,
-    config?: RequestConfig
-  ): Promise<ApiResponse<T>> {
+  async patch<T>(endpoint: string, data?: unknown, config?: RequestConfig): Promise<ApiResponse<T>> {
     const { transformData = true, ...restConfig } = config ?? {};
-    const response = await this.axiosInstance.patch<T>(
-      endpoint,
-      data,
-      restConfig as AxiosRequestConfig
-    );
+    const response = await this.axiosInstance.patch<T>(endpoint, data, restConfig as AxiosRequestConfig);
     return transformData ? this.transformResponse(response) : response;
   }
 

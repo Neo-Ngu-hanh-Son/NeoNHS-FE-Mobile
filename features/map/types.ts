@@ -173,12 +173,26 @@ export type PolylineCoordinate = LatLng;
 
 // Maneuver types used by Google to help you choose icons (Left turn, Right turn, etc.)
 export type Maneuver =
-  | 'MANEUVER_UNSPECIFIED' | 'DEPART' | 'TURN_LEFT' | 'TURN_RIGHT'
-  | 'TURN_SLIGHT_LEFT' | 'TURN_SLIGHT_RIGHT' | 'TURN_SHARP_LEFT'
-  | 'TURN_SHARP_RIGHT' | 'UTURN_LEFT' | 'UTURN_RIGHT' | 'STRAIGHT'
-  | 'RAMP_LEFT' | 'RAMP_RIGHT' | 'MERGE' | 'FORK_LEFT' | 'FORK_RIGHT'
-  | 'FERRY' | 'ROUNDABOUT_LEFT' | 'ROUNDABOUT_RIGHT' | 'NAME_CHANGE';
-
+  | 'MANEUVER_UNSPECIFIED'
+  | 'DEPART'
+  | 'TURN_LEFT'
+  | 'TURN_RIGHT'
+  | 'TURN_SLIGHT_LEFT'
+  | 'TURN_SLIGHT_RIGHT'
+  | 'TURN_SHARP_LEFT'
+  | 'TURN_SHARP_RIGHT'
+  | 'UTURN_LEFT'
+  | 'UTURN_RIGHT'
+  | 'STRAIGHT'
+  | 'RAMP_LEFT'
+  | 'RAMP_RIGHT'
+  | 'MERGE'
+  | 'FORK_LEFT'
+  | 'FORK_RIGHT'
+  | 'FERRY'
+  | 'ROUNDABOUT_LEFT'
+  | 'ROUNDABOUT_RIGHT'
+  | 'NAME_CHANGE';
 
 export interface RouteResponse {
   routes: Route[];
@@ -212,12 +226,11 @@ export interface Step {
     instructions: string; // e.g., "Turn right at The Dreamers"
   };
   localizedValues: {
-    distance: { text: string };       // e.g., "0.3 km"
+    distance: { text: string }; // e.g., "0.3 km"
     staticDuration: { text: string }; // e.g., "1 min"
   };
   travelMode: TravelMode;
 }
-
 
 /**
  * Custom types for quick retrival when working with the hook
@@ -226,7 +239,7 @@ export type NavigationSteps = {
   previousStep: Step | null;
   currentStep: Step | null;
   nextStep: Step | null;
-}
+};
 
 export type CurrentNavigationStepData = {
   tripDistanceText: string | undefined;
@@ -236,7 +249,7 @@ export type CurrentNavigationStepData = {
   currentStepDistanceText: string | undefined;
   currentStepDurationText: string | undefined;
   currentStepProgressText: string | undefined;
-}
+};
 
 export type TripMetadata = {
   tripTotalDistanceText: string | undefined;
@@ -251,7 +264,6 @@ export type TripMetadata = {
   tripRemainingDistanceMeters: number | undefined; // in meters
   tripRemainingDuration: number | undefined; // in seconds
 };
-
 
 export type NavigationStatusState = {
   isMapReady: boolean;
@@ -270,4 +282,12 @@ export type NavigationRouteState = {
     origin: PolylineCoordinate;
     destination: PolylineCoordinate;
   } | null;
+};
+
+// Check-in related types
+export type CheckinSessionGalleryImage = {
+  id: string;
+  uri: string;
+  caption?: string;
+  label: string;
 };

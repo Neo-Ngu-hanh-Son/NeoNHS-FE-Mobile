@@ -1,26 +1,26 @@
-import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { StackScreenProps } from '@react-navigation/stack';
 import { MainStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { logger } from '@/utils/logger';
-import { MapPoint, MapPointCheckin, TravelMode } from '../types';
+import { MapPoint } from '../types';
 import MapPointDetailModal from '../components/PointDetailModal/PointDetailModal';
+import type { MapPointDetailSheetRef } from '../components/PointDetailModal/PointDetailModal';
 import NHSMap, { NHSMapRef } from '../components/Map/NHSMap';
 import NavigationGuideOverlay from '../components/Navigation/NavigationGuideOverlay';
 import { MapMarkerFilterBar, TransportModeSelectorSheet } from '../components';
 import { mapService } from '../services/mapServices';
 import { useModal } from '@/app/providers/ModalProvider';
-import { useDirectionsCacheClient, useMapMarkerFilters, useMapNavigationGuidance, useUserLocation } from '../hooks';
+import { useMapMarkerFilters, useMapNavigationGuidance, useUserLocation } from '../hooks';
 import { mapData } from '../data';
-import { CompositeScreenProps, useIsFocused } from '@react-navigation/native';
+import { CompositeScreenProps } from '@react-navigation/native';
 import { ScreenLayout } from '@/components/common/ScreenLayout';
 import { useQuery } from '@tanstack/react-query';
 import CheckinCameraButton from '../components/Camera/CheckinCameraButton';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MAP_CONSTANTS from '../constants';
 import { LocationAccuracy } from 'expo-location';
 import BottomSheet from '@gorhom/bottom-sheet';
 import NavigationStepsBottomSheet from '../components/Navigation/NavigationStepsBottomSheet';
-import { decodeRoutePolyline, formatDistanceText, formatDurationText } from '../helpers';
+import { decodeRoutePolyline } from '../helpers';
 import { useMapStore } from '../store/useMapStore';
 import { useMapNavigationPreviewController } from '../hooks/Navigation/useMapNavigationPreviewController';
 import { QUERY_KEYS } from '@/services/api/tanstack/queryKeyConstants';
@@ -42,15 +42,14 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
   const initialPointId = route.params?.pointId;
   const targetNavigationPointId = route.params?.targetNavigationPointId;
   const requestedTransportMode = route.params?.transportMode;
-  const navigationRequestId = route.params?.navigationRequestId;
 
   // Zustand store for managing map-wide states like view mode
-  const setViewMode = useMapStore((state) => state.setViewMode);
   const viewMode = useMapStore((state) => state.viewMode);
 
   // Map states
   const mapRef = useRef<NHSMapRef>(null);
   const navigationStepsSheetRef = useRef<BottomSheet>(null);
+  const pointDetailSheetRef = useRef<MapPointDetailSheetRef>(null);
 
   const { alert } = useModal();
 
@@ -63,7 +62,6 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     permissionStatus,
     isLoading: isLocationLoading,
     startTracking,
-    stopTracking,
     requestPermission,
     syncNearbyGeofences,
   } = useUserLocation(USER_LOCATION_OPTIONS);
@@ -81,7 +79,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     logger.error('[MapScreen] Failed to fetch map points, using default map points.');
   }
 
-  const controller = useMapScreenController({ navigation });
+  const controller = useMapScreenController({ navigation, pointDetailSheetRef });
 
   const {
     activeGuidanceTargetPointId,
@@ -134,7 +132,21 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     travelMode: confirmedTravelMode,
   });
 
-  const { focusedPoint } = useMapCameraController({
+  const { handleMarkerPress } = controller;
+
+  const handleOpenPointSheet = useCallback(
+    (point: MapPoint) => {
+      handleMarkerPress(point);
+      pointDetailSheetRef.current?.present();
+    },
+    [handleMarkerPress]
+  );
+
+  const handleClosePointSheet = useCallback(() => {
+    pointDetailSheetRef.current?.dismiss();
+  }, []);
+
+  useMapCameraController({
     mapRef,
     initialPointId,
     targetNavigationPointId,
@@ -142,15 +154,8 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     navigationEndpoints,
     isDirectionsReady,
     isGuidanceMode,
+    handleOpenPointSheet,
   });
-
-  // Auto-focus on a point if navigated with a pointId
-  useEffect(() => {
-    if (focusedPoint) {
-      controller.setSelectedPoint(focusedPoint);
-      controller.setModalVisible(true);
-    }
-  }, [focusedPoint, controller]);
 
   const displayedRouteSummary = useMemo(() => {
     if (viewMode === 'PREVIEWING_NAVIGATION' && previewRouteSummary) {
@@ -162,7 +167,6 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
 
   const navigationPolylineCoordinates = useMemo(() => {
     if (viewMode === 'EXPLORING') {
-      console.log('Not in navigation mode, no polyline to display');
       return [];
     }
 
@@ -174,19 +178,19 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     return decodeRoutePolyline(encodedPolyline);
   }, [displayedRouteSummary, viewMode]);
 
-  // Use a ref so the cleanup/effect can read the latest tracking state
-  // without depending on it (which would cause the infinite loop).
-  const isTrackingRef = useRef(isTracking);
-  useEffect(() => {
-    isTrackingRef.current = isTracking;
-  }, [isTracking]);
+  // // Use a ref so the cleanup/effect can read the latest tracking state
+  // // without depending on it (which would cause the infinite loop).
+  // const isTrackingRef = useRef(isTracking);
+  // useEffect(() => {
+  //   isTrackingRef.current = isTracking;
+  // }, [isTracking]);
 
-  // Stop tracking when screen loses focus; restart is handled by autoStart on re-focus
-  useEffect(() => {
-    if (!controller.isFocused && isTrackingRef.current) {
-      stopTracking();
-    }
-  }, [controller.isFocused, stopTracking]);
+  // // Stop tracking when screen loses focus; restart is handled by autoStart on re-focus
+  // useEffect(() => {
+  //   if (!controller.isFocused && isTrackingRef.current) {
+  //     stopTracking();
+  //   }
+  // }, [controller.isFocused, stopTracking]);
 
   // Auto request permission on mount if not granted or denied
   useEffect(() => {
@@ -195,7 +199,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
 
   const handleOpenNavigationSteps = useCallback(() => {
     if (viewMode !== 'NAVIGATING') return;
-    navigationStepsSheetRef.current?.snapToIndex(0);
+    navigationStepsSheetRef.current?.expand();
   }, [viewMode]);
 
   const handleCloseNavigationSteps = useCallback(() => {
@@ -220,7 +224,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
       {/* Main map */}
       <NHSMap
         ref={mapRef}
-        onMarkerPress={controller.handleMarkerPress}
+        onMarkerPress={handleOpenPointSheet}
         selectedPointId={controller.selectedPoint?.id ?? ''}
         mapPoints={mapPoints}
         userLocation={userLocation}
@@ -246,9 +250,10 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
             topInset={controller.insets.top}
           />
           <MapPointDetailModal
+            ref={pointDetailSheetRef}
             point={controller.selectedPoint}
-            visible={controller.modalVisible}
-            onClose={controller.handleCloseModal}
+            onClose={handleClosePointSheet}
+            onAfterClose={controller.handlePointSheetClosed}
             onViewDetails={controller.handleNavigate}
           />
           <CheckinCameraButton

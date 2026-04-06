@@ -8,6 +8,7 @@ import GoogleLoginProvider from './GoogleLoginProvider';
 import LoadingProvider from './LoadingProvider';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/services/api/tanstack/queryClient';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
 import { ChatProvider } from '@/features/chat/context/ChatProvider';
 
@@ -24,7 +25,9 @@ export function Providers({ children }: { children: ReactNode }) {
               <LoadingProvider>
                 <AuthProvider>
                   <ApiProvider>
-                    <ChatProvider>{children}</ChatProvider>
+                    <BottomSheetModalProvider>
+                      <ChatProvider>{children}</ChatProvider>
+                    </BottomSheetModalProvider>
                   </ApiProvider>
                 </AuthProvider>
               </LoadingProvider>

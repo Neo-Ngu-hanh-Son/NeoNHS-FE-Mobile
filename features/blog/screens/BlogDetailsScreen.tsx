@@ -10,13 +10,12 @@ import type { MainStackParamList } from '@/app/navigations/NavigationParamTypes'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FullScreenLoader from '@/components/Loader/FullScreenLoader';
 import { useEffect } from 'react';
-import { useMutation } from '@tanstack/react-query';
 import { blogService } from '../services/blogService';
 import { BLOG_MINIMUM_READING_TIME_SECONDS } from '../constants';
 
 type Props = StackScreenProps<MainStackParamList, 'BlogDetails'>;
 
-export default function BlogDetailsScreen({ navigation, route }: Props) {
+export default function BlogDetailsScreen({ route }: Props) {
   const { blogId } = route.params;
 
   const { data: blog, isLoading, isError, error, refetch } = useBlogDetail(blogId);
@@ -47,10 +46,10 @@ export default function BlogDetailsScreen({ navigation, route }: Props) {
   }
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="flex-1 bg-background">
       <ScrollView
-        className="flex-1"
-        contentContainerClassName="pb-12"
+        className="flex-1 bg-background"
+        contentContainerClassName="bg-background pb-12"
         showsVerticalScrollIndicator={false}>
         <BlogHeader blog={blog} />
         <BlogContent html={blog.contentHTML ?? ''} />
