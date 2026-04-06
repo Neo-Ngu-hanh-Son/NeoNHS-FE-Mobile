@@ -92,17 +92,17 @@ export const mapDirectionService = {
        * "instructions": "Head southeast on Thanh Khê 6 toward Lý Thái Tông\nPass by Ngã tư (on left)"},
        * There will be 2 navigation instructions separated by a newline, we only get the first one
        */
-      response.data.routes.forEach((route) => {
-        route.legs.forEach((leg) => {
-          leg.steps.forEach((step) => {
-            try {
-              step.navigationInstruction.instructions = step.navigationInstruction.instructions.split('\n')[0];
-            } catch (e) {
-              logger.warn(`[mapDirectionService] Failed to split navigation instruction, skipping ${e}`);
-            }
-          });
-        });
-      });
+      // response.data.routes.forEach((route) => {
+      //   route.legs.forEach((leg) => {
+      //     leg.steps.forEach((step) => {
+      //       try {
+      //         step.navigationInstruction.instructions = step.navigationInstruction.instructions.split('\n')[0];
+      //       } catch (e) {
+      //         logger.warn(`[mapDirectionService] Failed to split navigation instruction, skipping ${e}`);
+      //       }
+      //     });
+      //   });
+      // });
       return response;
     } catch (error) {
       logger.error('[mapDirectionService] Network error while fetching directions', error);

@@ -4,6 +4,7 @@ import { NHSMapRef } from '@/features/map/components';
 import { parseFloatOrDefault } from '@/utils/parseNumber';
 import { MapPoint } from '../../types';
 import { logger } from '@/utils/logger';
+import { useMapStore } from '../../store/useMapStore';
 
 interface UseMapCameraControllerProps {
   mapRef: RefObject<NHSMapRef | null>;
@@ -34,6 +35,8 @@ export const useMapCameraController = ({
   handleOpenPointSheet,
 }: UseMapCameraControllerProps) => {
   const autoTriggerFocusRef = useRef(true);
+  const viewMode = useMapStore((state) => state.viewMode);
+  const isMapReady = useMapStore((state) => state.isMapReady);
   /**
    * This effect focus the camera to a specific point if user navigate it from the point details screen.
    */
@@ -43,7 +46,7 @@ export const useMapCameraController = ({
     const targetPoint = mapPoints.find((p) => p.id === initialPointId);
 
     // logger.debug('Is map ready in camera controller?', isMapReady);
-    if (targetPoint && autoTriggerFocusRef.current && mapRef.current) {
+    if (targetPoint && autoTriggerFocusRef.current && mapRef.current && isMapReady) {
       handleOpenPointSheet(targetPoint);
       setTimeout(() => {
         mapRef.current?.animateToCoordinate(
@@ -58,11 +61,10 @@ export const useMapCameraController = ({
       }, 500);
       autoTriggerFocusRef.current = false; // Reset the ref after the initial focus attempt
     }
-  }, [initialPointId, mapPoints, mapRef, handleOpenPointSheet]);
+  }, [initialPointId, mapPoints, mapRef, handleOpenPointSheet, isMapReady]);
 
-  // 2. Handle Route Fitting (Auto, no need to trigger any states)
   useEffect(() => {
-    if (!isGuidanceMode || !targetNavigationPointId || !isDirectionsReady || !navigationEndpoints) {
+    if (!isGuidanceMode || !targetNavigationPointId || !isDirectionsReady || !navigationEndpoints || !isMapReady) {
       return;
     }
 
@@ -76,8 +78,7 @@ export const useMapCameraController = ({
       },
       true
     );
-  }, [isGuidanceMode, targetNavigationPointId, isDirectionsReady, navigationEndpoints, mapRef]);
-
+  }, [isGuidanceMode, targetNavigationPointId, isDirectionsReady, navigationEndpoints, mapRef, isMapReady]);
   // ================= Functions to programmatically control the camera =================
 
   const focusOnPoint = useCallback(

@@ -4,6 +4,8 @@ import { logger } from '@/utils/logger';
 import checkinServices from '../services/checkinServices';
 import { MapPointCheckin } from '../types';
 import MAP_CONSTANTS from '../constants';
+import { useFocusEffect } from '@react-navigation/native';
+import { distanceUtils } from '@/utils/distanceUtils';
 
 /**
  * User location data structure
@@ -179,7 +181,7 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
       // logger.info('Location tracking already active');
       return;
     }
-
+    isTrackingRef.current = true;
     try {
       setIsLoading(true);
       setError(null);
@@ -212,7 +214,23 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
 
           // Use functional state update so previousLocation always reflects the latest value,
           // avoiding stale closure reads when the watcher callback keeps running.
+          // OLD method that update everytime new location arrive, delete later ?
+          // setLocation((currentLocation) => {
+          //   setPreviousLocation(currentLocation);
+          //   return userLocation;
+          // });
+
           setLocation((currentLocation) => {
+            if (!currentLocation) {
+              setPreviousLocation(null);
+              return userLocation;
+            }
+
+            const distance = distanceUtils.calculateDistance(currentLocation, userLocation);
+            if (distance < MAP_CONSTANTS.DISTANCE_BEFORE_UPDATE_USER_LOCATION_M) {
+              return currentLocation;
+            }
+
             setPreviousLocation(currentLocation);
             return userLocation;
           });
@@ -220,7 +238,6 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
         }
       );
 
-      isTrackingRef.current = true;
       setIsTracking(true);
       logger.info('Location tracking started');
     } catch (err) {
@@ -288,11 +305,18 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
   // Auto-start tracking if enabled (on mount only).
   // Keeping this mount-scoped prevents unintended restarts when consumers
   // explicitly stop tracking (e.g. on screen blur).
-  useEffect(() => {
-    if (mergedOptions.autoStart) {
-      void startTrackingRef.current();
-    }
-  }, [mergedOptions.autoStart]);
+  // Revert to normal useEffect if you experiencing weird stuff
+  useFocusEffect(
+    useCallback(() => {
+      if (mergedOptions.autoStart) {
+        startTracking();
+      }
+
+      return () => {
+        stopTracking();
+      };
+    }, [startTracking, stopTracking, mergedOptions.autoStart])
+  );
 
   // Cleanup on unmount
   useEffect(() => {

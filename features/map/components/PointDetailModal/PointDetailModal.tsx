@@ -1,7 +1,6 @@
-import React, { forwardRef, useCallback, useMemo } from 'react';
-import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { forwardRef, useCallback } from 'react';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
@@ -37,7 +36,6 @@ const MapPointDetailModal = forwardRef<MapPointDetailSheetRef, PointDetailModalP
   ({ point, onClose, onAfterClose, onViewDetails }: PointDetailModalProps, ref) => {
     const { isDarkColorScheme } = useTheme();
     const theme = isDarkColorScheme ? THEME.dark : THEME.light;
-    const snapPoints = useMemo(() => ['50%'], []);
 
     const renderBackdrop = useCallback(
       (props: React.ComponentProps<typeof BottomSheetBackdrop>) => (
@@ -76,7 +74,6 @@ const MapPointDetailModal = forwardRef<MapPointDetailSheetRef, PointDetailModalP
       <BottomSheetModal
         ref={ref}
         index={0}
-        snapPoints={snapPoints}
         enableDynamicSizing
         onDismiss={onAfterClose}
         enablePanDownToClose

@@ -42,7 +42,7 @@ export default function TabsNavigator() {
           fontSize: 11,
           fontWeight: '500',
         },
-        animation: 'shift',
+        animation: 'none',
       }}>
       <Tab.Screen
         name="Home"
@@ -80,11 +80,7 @@ export default function TabsNavigator() {
         options={{
           title: 'Bookings',
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? 'briefcase' : 'briefcase-outline'}
-              color={color}
-              size={size}
-            />
+            <Ionicons name={focused ? 'briefcase' : 'briefcase-outline'} color={color} size={size} />
           ),
         }}
       />

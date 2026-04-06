@@ -12,9 +12,8 @@ export type NavigationStepData = {
 
 export type NavigationGuideOverlayProps = {
   isLoading: boolean;
-  isReady: boolean;
   errorMessage?: string | null;
-  travelModeLabel?: string;
+  travelModeLabel?: string | null;
   onExit: () => void;
   onOpenSteps: () => void;
   currentNavigationStepData?: NavigationStepData;

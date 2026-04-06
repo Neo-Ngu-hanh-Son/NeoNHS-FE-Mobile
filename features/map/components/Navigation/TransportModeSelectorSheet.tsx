@@ -7,7 +7,7 @@ import { THEME } from '@/lib/theme';
 import { TravelMode } from '../../types';
 
 type TransportModeSelectorSheetProps = {
-  selectedMode: TravelMode;
+  selectedMode: TravelMode | null;
   destinationName?: string;
   previewDistanceText?: string;
   previewDurationText?: string;
@@ -27,25 +27,25 @@ type ModeOption = {
 
 const MODE_OPTIONS: ModeOption[] = [
   {
-    mode: 'WALK',
-    label: 'Walk',
-    icon: 'person-walking',
-  },
-  {
     mode: 'DRIVE',
     label: 'Drive',
     icon: 'car',
+  },
+  {
+    mode: 'TWO_WHEELER',
+    label: 'Motorbike',
+    icon: 'motorcycle',
+  },
+  {
+    mode: 'WALK',
+    label: 'Walk',
+    icon: 'person-walking',
   },
   // {
   //   mode: 'BICYCLE',
   //   label: 'Bicycle',
   //   icon: 'bicycle',
   // },
-  {
-    mode: 'TWO_WHEELER',
-    label: 'Motorbike',
-    icon: 'motorcycle',
-  },
 ];
 
 export default function TransportModeSelectorSheet({
@@ -86,7 +86,7 @@ export default function TransportModeSelectorSheet({
   );
 
   const selectedModeLabel = useMemo(() => {
-    return MODE_OPTIONS.find((option) => option.mode === selectedMode)?.label ?? 'Walk';
+    return MODE_OPTIONS.find((option) => option.mode === selectedMode)?.label;
   }, [selectedMode]);
 
   return (
@@ -140,7 +140,9 @@ export default function TransportModeSelectorSheet({
         </View>
 
         <View className="mt-2.5 rounded-lg border border-border/40 px-2.5 py-2">
-          <Text className="font-semibold">Travel by: {selectedModeLabel}</Text>
+          <Text className="font-semibold">
+            {selectedModeLabel ? `Travel by: ${selectedModeLabel}` : 'Select a travel mode'}
+          </Text>
         </View>
 
         <View className="mt-2.5 rounded-lg border border-border/40 bg-background px-2.5 py-2">

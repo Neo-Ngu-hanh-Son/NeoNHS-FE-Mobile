@@ -24,6 +24,7 @@ import type { LocationPermissionStatus, UserLocation } from './useUserLocation';
 import { distanceUtils } from '@/utils/distanceUtils';
 import MAP_CONSTANTS from '../constants';
 import { buildDirectionsQueryOptions } from './useCachedDirections';
+import { useMapStore } from '../store/useMapStore';
 
 type UseMapNavigationGuidanceParams = {
   targetNavigationPointId?: string;
@@ -35,6 +36,8 @@ type UseMapNavigationGuidanceParams = {
   startTracking: () => Promise<void>;
   alert: (title: string, message: string) => void;
   clearTargetNavigationParam: () => void;
+  previewRouteSummary: RouteResponse | null;
+  previewErrorMessage: string | null;
 };
 
 type UseMapNavigationGuidanceReturn = {
@@ -48,10 +51,6 @@ type UseMapNavigationGuidanceReturn = {
   navigationPolylineCoordinates: PolylineCoordinate[];
   onMapReady: () => void;
   handleExitGuidance: () => void;
-  navigationEndpoints: {
-    origin: PolylineCoordinate;
-    destination: PolylineCoordinate;
-  } | null;
   isUserArrived: boolean;
   currentNavigationStepData: CurrentNavigationStepData;
 };
@@ -78,79 +77,58 @@ export function useMapNavigationGuidance({
   startTracking,
   alert,
   clearTargetNavigationParam,
+  previewRouteSummary,
+  previewErrorMessage,
 }: UseMapNavigationGuidanceParams): UseMapNavigationGuidanceReturn {
-  const queryClient = useQueryClient();
   const [navigationStatus, setNavigationStatus] = useState<NavigationStatusState>({
     isMapReady: false,
-    isGuidanceMode: Boolean(targetNavigationPointId),
-    isDirectionsLoading: false,
-    isDirectionsReady: false,
-    directionError: null,
     isUserArrived: false,
   });
 
-  const [routeState, setRouteState] = useState<NavigationRouteState>({
-    routeSummary: null,
-    steps: [],
-    navigationPolylineCoordinates: [],
-    navigationEndpoints: null,
-  });
+  const viewMode = useMapStore((state) => state.viewMode);
+  const isGuidanceMode = viewMode === 'NAVIGATING';
+  const isDirectionsLoading = previewRouteSummary === null || previewRouteSummary === undefined;
+  const isDirectionsReady = previewRouteSummary !== null || previewRouteSummary !== undefined;
+  const directionError = previewErrorMessage;
 
-  const [currentUserStepIndex, setCurrentUserStepIndex] = useState(0); // Index of the current step
+  // 1. Extract the base legs for cleaner access
+  const routeLeg = previewRouteSummary?.routes?.[0]?.legs?.[0];
 
-  const fetchedNavigationTargetRef = useRef<string | null>(null);
-  const directionsInFlightTargetRef = useRef<string | null>(null);
+  const steps = useMemo(() => {
+    return previewRouteSummary?.routes?.[0]?.legs?.[0]?.steps ?? [];
+  }, [previewRouteSummary]);
 
-  const resetDirectionState = useCallback(() => {
-    setRouteState({
-      routeSummary: null,
-      steps: [],
-      navigationPolylineCoordinates: [],
-      navigationEndpoints: null,
-    });
-    setNavigationStatus((prev) => ({
-      ...prev,
-      isDirectionsLoading: false,
-      isDirectionsReady: false,
-      directionError: null,
-      isUserArrived: false,
-    }));
-    setCurrentUserStepIndex(0);
-  }, []);
+  // 3. Derived Polyline (Memoized because decoding can be CPU intensive)
+  const navigationPolylineCoordinates = useMemo(() => {
+    const encoded = previewRouteSummary?.routes?.[0]?.polyline?.encodedPolyline;
+    return encoded ? decodeRoutePolyline(encoded) : [];
+  }, [previewRouteSummary]);
 
-  const resetDirectionRefs = useCallback(() => {
-    fetchedNavigationTargetRef.current = null;
-    directionsInFlightTargetRef.current = null;
-  }, []);
+  // 4. Derived Endpoints (Memoized to prevent unnecessary re-renders in Map components)
+  const navigationEndpoints = useMemo(() => {
+    const start = routeLeg?.startLocation?.latLng;
+    const end = routeLeg?.endLocation?.latLng;
 
-  const getDirectionsFetchContext = useCallback(() => {
-    if (!navigationStatus.isGuidanceMode || !targetNavigationPointId || !navigationStatus.isMapReady || !userLocation) {
-      return null;
-    }
-
-    if (mapPoints.length === 0) {
-      return null;
-    }
+    if (!start || !end) return null;
 
     return {
-      targetId: targetNavigationPointId,
-      travelMode,
       origin: {
-        latitude: userLocation.latitude,
-        longitude: userLocation.longitude,
+        latitude: start.latitude,
+        longitude: start.longitude,
+      },
+      destination: {
+        latitude: end.latitude,
+        longitude: end.longitude,
       },
     };
-  }, [
-    navigationStatus.isGuidanceMode,
-    targetNavigationPointId,
-    navigationStatus.isMapReady,
-    userLocation,
-    mapPoints,
-    travelMode,
-  ]);
+  }, [routeLeg]);
+
+  const routeSummary = previewRouteSummary;
+
+  const [currentUserStepIndex, setCurrentUserStepIndex] = useState(0);
 
   const getTrackingStartContext = useCallback(() => {
-    if (!navigationStatus.isGuidanceMode || !targetNavigationPointId) {
+    if (!isGuidanceMode || !targetNavigationPointId) {
       return null;
     }
     if (permissionStatus !== 'granted' || !userLocation || isTracking) {
@@ -158,7 +136,7 @@ export function useMapNavigationGuidance({
     }
 
     return { targetId: targetNavigationPointId };
-  }, [navigationStatus.isGuidanceMode, targetNavigationPointId, permissionStatus, userLocation, isTracking]);
+  }, [isGuidanceMode, targetNavigationPointId, permissionStatus, userLocation, isTracking]);
 
   const handleExitGuidance = useCallback(() => {
     setNavigationStatus((prev) => ({
@@ -166,34 +144,11 @@ export function useMapNavigationGuidance({
       isGuidanceMode: false,
       isUserArrived: false,
     }));
-    resetDirectionState();
-    resetDirectionRefs();
+    console.log(
+      '[useMapNavigationGuidance] Exiting guidance mode TODO: Implement the reset function (Should live in the useMapNavigationPreviewController'
+    );
     clearTargetNavigationParam();
-  }, [clearTargetNavigationParam, resetDirectionRefs, resetDirectionState]);
-
-  /**
-   * Use effect to reset navigation states
-   */
-  useEffect(() => {
-    if (!targetNavigationPointId) {
-      setNavigationStatus((prev) => ({
-        ...prev,
-        isGuidanceMode: false,
-        isUserArrived: false,
-      }));
-      resetDirectionState();
-      resetDirectionRefs();
-      return;
-    }
-
-    setNavigationStatus((prev) => ({
-      ...prev,
-      isGuidanceMode: true,
-      isUserArrived: false,
-    }));
-    resetDirectionRefs();
-    resetDirectionState();
-  }, [targetNavigationPointId, travelMode, resetDirectionRefs, resetDirectionState]);
+  }, [clearTargetNavigationParam]);
 
   /**
    * Use effect to start tracking user location if guidance mode is initiated and tracking hasn't started yet
@@ -207,167 +162,38 @@ export function useMapNavigationGuidance({
     startTracking();
   }, [getTrackingStartContext, startTracking]);
 
-  /**
-   * Use effect to fetch navigation directions when guidance mode is initiated and a target navigation point is set
-   */
+  // sync state with new route
   useEffect(() => {
-    const directionsFetchContext = getDirectionsFetchContext();
-    if (!directionsFetchContext) {
-      return;
-    }
+    setNavigationStatus((prev) => ({
+      ...prev,
+      isDirectionsLoading: previewRouteSummary == null,
+      isDirectionsReady: previewRouteSummary != null,
+      directionError: previewErrorMessage,
+    }));
+  }, [previewRouteSummary, previewErrorMessage]);
 
-    const { targetId, origin, travelMode: selectedTravelMode } = directionsFetchContext;
-    const requestKey = `${targetId}:${selectedTravelMode}`;
-
-    if (fetchedNavigationTargetRef.current === requestKey) {
-      return;
-    }
-    if (directionsInFlightTargetRef.current === requestKey) {
-      return;
-    }
-
-    const targetPoint = mapPoints.find((point) => point.id === targetId);
-    if (!targetPoint) {
-      logger.warn('[useMapNavigationGuidance] Navigation target point not found for id:', targetId);
-      alert('Navigation Unavailable', 'Unable to find the destination point on the map.');
-      return;
-    }
-
-    const destination = {
-      latitude: parseFloatOrDefault(targetPoint.latitude, NaN),
-      longitude: parseFloatOrDefault(targetPoint.longitude, NaN),
-    };
-
-    if (!Number.isFinite(destination.latitude) || !Number.isFinite(destination.longitude)) {
-      logger.error('[useMapNavigationGuidance] Invalid destination coordinates', {
-        pointId: targetPoint.id,
-        latitude: targetPoint.latitude,
-        longitude: targetPoint.longitude,
-      });
-      return;
-    }
-
-    let isCancelled = false;
-
-    const fetchDirections = async () => {
-      directionsInFlightTargetRef.current = requestKey;
-      setNavigationStatus((prev) => ({
-        ...prev,
-        isDirectionsLoading: true,
-        isDirectionsReady: false,
-        directionError: null,
-      }));
-
-      try {
-        const response = await queryClient.fetchQuery(
-          buildDirectionsQueryOptions({
-            origin,
-            destination,
-            travelMode: selectedTravelMode ? selectedTravelMode : MAP_CONSTANTS.DEFAULT_TRAVEL_MODE,
-          })
-        );
-
-        const leg = response.routes?.[0]?.legs?.[0];
-        const encodedPolyline = response.routes?.[0]?.polyline?.encodedPolyline;
-        const decodedCoordinates = encodedPolyline ? decodeRoutePolyline(encodedPolyline) : [];
-
-        const startLatLng = leg?.startLocation?.latLng;
-        const endLatLng = leg?.endLocation?.latLng;
-        const routeOrigin = {
-          latitude: startLatLng?.latitude ?? origin.latitude,
-          longitude: startLatLng?.longitude ?? origin.longitude,
-        };
-        const endPoint = {
-          latitude: endLatLng?.latitude ?? destination.latitude,
-          longitude: endLatLng?.longitude ?? destination.longitude,
-        };
-
-        if (!encodedPolyline || decodedCoordinates.length === 0) {
-          logger.warn('[useMapNavigationGuidance] Empty route data returned from directions API', {
-            targetNavigationPointId: targetId,
-          });
-
-          if (!isCancelled) {
-            setNavigationStatus((prev) => ({
-              ...prev,
-              directionError: 'Unable to build a route for this destination right now.',
-            }));
-          }
-        }
-
-        if (!isCancelled) {
-          const nextSteps = leg?.steps ?? [];
-          setRouteState({
-            routeSummary: response,
-            steps: nextSteps,
-            navigationPolylineCoordinates: decodedCoordinates,
-            navigationEndpoints: {
-              origin: routeOrigin,
-              destination: endPoint,
-            },
-          });
-          setNavigationStatus((prev) => ({
-            ...prev,
-            isDirectionsReady: decodedCoordinates.length > 1,
-          }));
-          setCurrentUserStepIndex(0);
-
-          fetchedNavigationTargetRef.current = requestKey;
-        }
-      } catch (error) {
-        logger.error('[useMapNavigationGuidance] Failed to fetch navigation directions', error);
-        if (!isCancelled) {
-          setRouteState((prev) => ({
-            ...prev,
-            navigationPolylineCoordinates: [],
-            navigationEndpoints: null,
-          }));
-          setNavigationStatus((prev) => ({
-            ...prev,
-            isDirectionsReady: false,
-            directionError: 'Failed to load directions. Please try again.',
-          }));
-        }
-      } finally {
-        if (directionsInFlightTargetRef.current === requestKey) {
-          directionsInFlightTargetRef.current = null;
-        }
-
-        setNavigationStatus((prev) => ({
-          ...prev,
-          isDirectionsLoading: false,
-        }));
-      }
-    };
-
-    fetchDirections();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [getDirectionsFetchContext, mapPoints, alert, queryClient]);
+  // reset step on new route
+  useEffect(() => {
+    setCurrentUserStepIndex(0);
+  }, [steps]);
 
   /**
    * This effect watches for changes in the user's location and updates the current navigation step accordingly.
    */
   useEffect(() => {
-    if (!navigationStatus.isGuidanceMode || !userLocation || routeState.steps.length === 0) {
+    if (!userLocation || steps.length === 0 || !isGuidanceMode) {
       return;
     }
     const userLocationPoint = {
       longitude: userLocation.longitude,
       latitude: userLocation.latitude,
     };
-    const nearestStepIndex = distanceUtils.findCurrentUserStepIndex(
-      userLocationPoint,
-      currentUserStepIndex,
-      routeState.steps
-    );
+    const nearestStepIndex = distanceUtils.findCurrentUserStepIndex(userLocationPoint, currentUserStepIndex, steps);
 
-    let boundedStepIndex = Math.min(Math.max(nearestStepIndex, 0), routeState.steps.length - 1);
+    let boundedStepIndex = Math.min(Math.max(nearestStepIndex, 0), steps.length - 1);
 
-    const currentStep = routeState.steps[boundedStepIndex];
-    const nextStep = routeState.steps[boundedStepIndex + 1];
+    const currentStep = steps[boundedStepIndex];
+    const nextStep = steps[boundedStepIndex + 1];
 
     // // Transition guard: nearest-segment matching can lag by one step around junctions.
     // // If user is close to the current step end, or clearly closer to the next segment,
@@ -418,18 +244,17 @@ export function useMapNavigationGuidance({
           currentSegmentDistance,
           nextSegmentDistance,
         });
-        boundedStepIndex = Math.min(boundedStepIndex + 1, routeState.steps.length - 1);
+        boundedStepIndex = Math.min(boundedStepIndex + 1, steps.length - 1);
       }
     }
 
     if (boundedStepIndex !== currentUserStepIndex) {
       setCurrentUserStepIndex(boundedStepIndex);
     }
-  }, [currentUserStepIndex, navigationStatus.isGuidanceMode, routeState.steps, userLocation]);
+  }, [currentUserStepIndex, isGuidanceMode, steps, userLocation]);
 
   const tripMetadata = useMemo<TripMetadata>(() => {
-    const leg = routeState.routeSummary?.routes?.[0]?.legs?.[0];
-    const steps = routeState.steps;
+    const leg = routeSummary?.routes?.[0]?.legs?.[0];
 
     if (!leg && steps.length === 0) {
       return EMPTY_TRIP_METADATA;
@@ -473,18 +298,13 @@ export function useMapNavigationGuidance({
       tripRemainingDistanceMeters,
       tripRemainingDuration,
     };
-  }, [routeState.routeSummary, routeState.steps, currentUserStepIndex]);
+  }, [routeSummary, steps, currentUserStepIndex]);
 
   /**
    * Handle watch current user location to determine if has arrived at destination.
    */
   useEffect(() => {
-    if (
-      !navigationStatus.isGuidanceMode ||
-      !userLocation ||
-      !routeState.navigationEndpoints ||
-      navigationStatus.isUserArrived
-    ) {
+    if (!isGuidanceMode || !userLocation || !navigationEndpoints || navigationStatus.isUserArrived) {
       return;
     }
 
@@ -493,7 +313,7 @@ export function useMapNavigationGuidance({
         latitude: userLocation.latitude,
         longitude: userLocation.longitude,
       },
-      routeState.navigationEndpoints.destination
+      navigationEndpoints.destination
     );
 
     if (hasArrived) {
@@ -502,7 +322,7 @@ export function useMapNavigationGuidance({
         isUserArrived: true,
       }));
     }
-  }, [navigationStatus.isGuidanceMode, routeState.navigationEndpoints, userLocation, navigationStatus.isUserArrived]);
+  }, [isGuidanceMode, navigationEndpoints, userLocation, navigationStatus.isUserArrived]);
 
   const onMapReady = useCallback(() => {
     setNavigationStatus((prev) => ({
@@ -511,19 +331,15 @@ export function useMapNavigationGuidance({
     }));
   }, []);
 
-  const totalSteps = routeState.steps.length;
+  const totalSteps = steps.length;
   const currentIndex = totalSteps > 0 ? Math.min(currentUserStepIndex, totalSteps - 1) : 0;
-
-  useEffect(() => {
-    // Reset mode when changing step (or leaving guidance) so each step derives instruction fresh.
-  }, [currentIndex, navigationStatus.isGuidanceMode]);
 
   const currentStep = useMemo(() => {
     if (totalSteps === 0) {
       return null;
     }
-    return routeState.steps[currentIndex] ?? null;
-  }, [currentIndex, routeState.steps, totalSteps]);
+    return steps[currentIndex] ?? null;
+  }, [currentIndex, steps, totalSteps]);
 
   const currentNavigationStepData: CurrentNavigationStepData = useMemo(() => {
     // note: Base maneuever is the instruction for the end point of a road, not the start point. But there is an
@@ -589,17 +405,16 @@ export function useMapNavigationGuidance({
   ]);
 
   return {
-    isGuidanceMode: navigationStatus.isGuidanceMode,
-    isDirectionsLoading: navigationStatus.isDirectionsLoading,
-    isDirectionsReady: navigationStatus.isDirectionsReady,
-    directionError: navigationStatus.directionError,
-    routeSummary: routeState.routeSummary,
-    navigationSteps: routeState.steps,
+    isGuidanceMode,
+    isDirectionsLoading,
+    isDirectionsReady,
+    directionError,
+    routeSummary,
+    navigationSteps: steps,
     currentUserStepIndex,
-    navigationPolylineCoordinates: routeState.navigationPolylineCoordinates,
+    navigationPolylineCoordinates: navigationPolylineCoordinates,
     onMapReady,
     handleExitGuidance,
-    navigationEndpoints: routeState.navigationEndpoints,
     isUserArrived: navigationStatus.isUserArrived,
     currentNavigationStepData,
   };

@@ -267,10 +267,6 @@ export type TripMetadata = {
 
 export type NavigationStatusState = {
   isMapReady: boolean;
-  isGuidanceMode: boolean;
-  isDirectionsLoading: boolean;
-  isDirectionsReady: boolean;
-  directionError: string | null;
   isUserArrived: boolean;
 };
 

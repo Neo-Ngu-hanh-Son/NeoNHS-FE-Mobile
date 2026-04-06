@@ -5,7 +5,6 @@ import type { NavigationGuideOverlayProps } from './types';
 
 export default function NavigationGuideOverlay({
   isLoading,
-  isReady,
   errorMessage,
   travelModeLabel,
   onOpenSteps,
@@ -21,7 +20,6 @@ export default function NavigationGuideOverlay({
     <>
       <ActiveNavigationOverlay
         isLoading={isLoading}
-        isReady={isReady}
         errorMessage={errorMessage}
         travelModeLabel={travelModeLabel}
         onOpenSteps={onOpenSteps}

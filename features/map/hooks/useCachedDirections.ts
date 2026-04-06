@@ -35,6 +35,9 @@ export const buildDirectionsQueryOptions = (params: DirectionsCacheParams) => {
   };
 };
 
+/**
+ * Get the directions for preview (and for navigation as well)
+ */
 export function useDirectionsPreview(params: DirectionsCacheParams | null, enabled: boolean) {
   return useQuery({
     queryKey: params ? buildDirectionsQueryKey(params) : ['map-directions', 'preview-disabled'],
@@ -50,12 +53,16 @@ export function useDirectionsPreview(params: DirectionsCacheParams | null, enabl
     staleTime: DIRECTIONS_CACHE_STALE_TIME_MS,
     gcTime: DIRECTIONS_CACHE_GC_TIME_MS,
     enabled: enabled && !!params,
+    placeholderData: (prev) => prev,
   });
 }
 
 export function useDirectionsCacheClient() {
   const queryClient = useQueryClient();
 
+  /**
+   * Get the queries of the direction from cache if have (Fetched above)
+   */
   const fetchDirectionsWithCache = useCallback(
     (params: DirectionsCacheParams) => {
       return queryClient.fetchQuery(buildDirectionsQueryOptions(params));

@@ -89,6 +89,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       latitudeDelta: MAP_CENTER.latitudeDelta,
       longitudeDelta: MAP_CENTER.longitudeDelta,
     });
+    const setMapZoom = useMapStore((state) => state.setMapZoom);
     // This is so that the map can retain the last user-interacted location
     const [lastMapInteractionLocation, setLastMapInteractionLocation] = useState<Region | undefined>(MAP_CENTER);
     const mapRef = useRef<MapView>(null);
@@ -97,6 +98,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
     const isFocused = useIsFocused();
 
     // Zustand store for global map state
+    const viewMode = useMapStore((state) => state.viewMode);
     const setIsMapReady = useMapStore((state) => state.setIsMapReady);
     const isMapReady = useMapStore((state) => state.isMapReady);
     // const setGlobalLastMapInteractionLocation = useMapStore((state) => state.setLastMapInteractionLocation);
@@ -199,10 +201,14 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           },
           500
         );
+        setMapZoom({
+          latitudeDelta: mapZoomRef.current.latitudeDelta,
+          longitudeDelta: mapZoomRef.current.longitudeDelta,
+        });
       } else {
         logger.info('Follow mode disabled');
       }
-    }, [isFollowingUser, userLocation, startTrackingCallback]);
+    }, [isFollowingUser, userLocation, startTrackingCallback, setMapZoom]);
 
     const handleReloadMap = useCallback(() => {
       logger.info('[NHSMap] Map reload triggered');
@@ -470,14 +476,14 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           {userLocation && <UserLocationMarker location={userLocation} showAccuracyCircle={true} showHeading={true} />}
         </MapView>
 
-        <View style={[styles.buttonContainer, isGuidanceMode ? { bottom: 80 } : { bottom: 24 }]}>
-          <View style={[styles.reloadButtonContainer, { backgroundColor: theme.background }]}>
+        <View style={[styles.buttonContainer, viewMode === 'NAVIGATING' ? { bottom: 80 } : { bottom: 24 }]}>
+          <View style={[styles.followButtonContainer, { backgroundColor: theme.background }]}>
             <TouchableOpacity
               accessibilityRole="button"
               accessibilityLabel="Reload map"
               activeOpacity={0.8}
               onPress={handleReloadMap}
-              style={[styles.reloadButton, { borderColor: theme.border }]}>
+              style={[styles.reloadButton]}>
               <Ionicons name="reload" size={20} color={theme.foreground} />
             </TouchableOpacity>
           </View>
@@ -520,6 +526,7 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 8,
   },
   reloadButtonContainer: {
     borderRadius: 20,
@@ -532,7 +539,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
   },
 });
 

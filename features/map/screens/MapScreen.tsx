@@ -18,7 +18,7 @@ import { useQuery } from '@tanstack/react-query';
 import CheckinCameraButton from '../components/Camera/CheckinCameraButton';
 import MAP_CONSTANTS from '../constants';
 import { LocationAccuracy } from 'expo-location';
-import BottomSheet from '@gorhom/bottom-sheet';
+import BottomSheet, { useBottomSheetModal } from '@gorhom/bottom-sheet';
 import NavigationStepsBottomSheet from '../components/Navigation/NavigationStepsBottomSheet';
 import { decodeRoutePolyline } from '../helpers';
 import { useMapStore } from '../store/useMapStore';
@@ -41,7 +41,6 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
   // Route params
   const initialPointId = route.params?.pointId;
   const targetNavigationPointId = route.params?.targetNavigationPointId;
-  const requestedTransportMode = route.params?.transportMode;
 
   // Zustand store for managing map-wide states like view mode
   const viewMode = useMapStore((state) => state.viewMode);
@@ -98,13 +97,16 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     handleTravelModeSelection,
     handleCancelTransportSelection,
     setConfirmedTravelMode,
+    selectedDirectionsRoute,
+    previewOrigin,
+    previewDestination,
   } = useMapNavigationPreviewController({
     targetNavigationPointId,
     mapPoints,
     userLocation,
     viewMode,
     navigation,
-    requestedTransportMode,
+    mapRef,
   });
 
   const {
@@ -112,12 +114,10 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     isDirectionsLoading,
     isDirectionsReady,
     directionError,
-    routeSummary,
     navigationSteps,
     currentUserStepIndex,
     onMapReady,
     handleExitGuidance,
-    navigationEndpoints,
     isUserArrived,
     currentNavigationStepData,
   } = useMapNavigationGuidance({
@@ -130,11 +130,13 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     alert,
     clearTargetNavigationParam,
     travelMode: confirmedTravelMode,
+    previewRouteSummary,
+    previewErrorMessage,
   });
 
   const { handleMarkerPress } = controller;
 
-  const handleOpenPointSheet = useCallback(
+  const handleOpenPointSheetModal = useCallback(
     (point: MapPoint) => {
       handleMarkerPress(point);
       pointDetailSheetRef.current?.present();
@@ -142,7 +144,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     [handleMarkerPress]
   );
 
-  const handleClosePointSheet = useCallback(() => {
+  const handleClosePointSheetModal = useCallback(() => {
     pointDetailSheetRef.current?.dismiss();
   }, []);
 
@@ -151,46 +153,31 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     initialPointId,
     targetNavigationPointId,
     mapPoints,
-    navigationEndpoints,
+    // navigationEndpoints:
+    //   previewOrigin && previewDestination
+    //     ? {
+    //         origin: previewOrigin,
+    //         destination: previewDestination,
+    //       }
+    //     : null,
     isDirectionsReady,
     isGuidanceMode,
-    handleOpenPointSheet,
+    handleOpenPointSheet: handleOpenPointSheetModal,
   });
-
-  const displayedRouteSummary = useMemo(() => {
-    if (viewMode === 'PREVIEWING_NAVIGATION' && previewRouteSummary) {
-      return previewRouteSummary;
-    }
-
-    return routeSummary;
-  }, [viewMode, previewRouteSummary, routeSummary]);
 
   const navigationPolylineCoordinates = useMemo(() => {
     if (viewMode === 'EXPLORING') {
       return [];
     }
 
-    const encodedPolyline = displayedRouteSummary?.routes?.[0]?.polyline?.encodedPolyline;
+    const encodedPolyline = previewRouteSummary?.routes?.[0]?.polyline?.encodedPolyline;
+
     if (!encodedPolyline) {
       return [];
     }
 
     return decodeRoutePolyline(encodedPolyline);
-  }, [displayedRouteSummary, viewMode]);
-
-  // // Use a ref so the cleanup/effect can read the latest tracking state
-  // // without depending on it (which would cause the infinite loop).
-  // const isTrackingRef = useRef(isTracking);
-  // useEffect(() => {
-  //   isTrackingRef.current = isTracking;
-  // }, [isTracking]);
-
-  // // Stop tracking when screen loses focus; restart is handled by autoStart on re-focus
-  // useEffect(() => {
-  //   if (!controller.isFocused && isTrackingRef.current) {
-  //     stopTracking();
-  //   }
-  // }, [controller.isFocused, stopTracking]);
+  }, [previewRouteSummary, viewMode]);
 
   // Auto request permission on mount if not granted or denied
   useEffect(() => {
@@ -199,20 +186,16 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
 
   const handleOpenNavigationSteps = useCallback(() => {
     if (viewMode !== 'NAVIGATING') return;
-    navigationStepsSheetRef.current?.expand();
+    navigationStepsSheetRef.current?.snapToIndex(0);
   }, [viewMode]);
 
   const handleCloseNavigationSteps = useCallback(() => {
+    logger.debug('Closing navigation steps sheet');
     navigationStepsSheetRef.current?.close();
   }, []);
 
-  useEffect(() => {
-    if (!isGuidanceMode || isUserArrived) {
-      handleCloseNavigationSteps();
-    }
-  }, [controller, handleCloseNavigationSteps, isGuidanceMode, isUserArrived]);
-
   function onNavigationExit(): void {
+    logger.debug('Exiting navigation');
     handleCloseNavigationSteps();
     setConfirmedTravelMode(null);
     handleExitGuidance();
@@ -224,7 +207,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
       {/* Main map */}
       <NHSMap
         ref={mapRef}
-        onMarkerPress={handleOpenPointSheet}
+        onMarkerPress={handleOpenPointSheetModal}
         selectedPointId={controller.selectedPoint?.id ?? ''}
         mapPoints={mapPoints}
         userLocation={userLocation}
@@ -252,7 +235,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
           <MapPointDetailModal
             ref={pointDetailSheetRef}
             point={controller.selectedPoint}
-            onClose={handleClosePointSheet}
+            onClose={handleClosePointSheetModal}
             onAfterClose={controller.handlePointSheetClosed}
             onViewDetails={controller.handleNavigate}
           />
@@ -283,8 +266,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
       {viewMode === 'NAVIGATING' && (
         <>
           <NavigationGuideOverlay
-            isLoading={isDirectionsLoading}
-            isReady={isDirectionsReady}
+            isLoading={navigationSteps == null || navigationSteps.length === 0}
             errorMessage={directionError}
             travelModeLabel={activeTravelModeLabel}
             onExit={onNavigationExit}
