@@ -36,8 +36,12 @@ export const ChatRestService = {
   },
 
   getMyRooms: async (): Promise<ChatRoom[]> => {
-    const res = await apiClient.get<ChatRoom[]>("chat/rooms");
-    return res.data;
+    const res = await apiClient.get<any>("chat/rooms");
+    const data = res.data;
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.content)) return data.content;
+    if (data && Array.isArray(data.data)) return data.data;
+    return [];
   },
 
   getRoomMessages: async (
