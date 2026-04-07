@@ -9,7 +9,6 @@ import { BookingsScreen } from '@/features/bookings/screens';
 import ProfileScreen from '@/features/profile/screens/ProfileScreen';
 import CartListScreen from '@/features/cart/screens/CartListScreen';
 import ChatRoomListScreen from '@/features/chat/screens/ChatRoomListScreen';
-
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import type { TabsStackParamList } from './NavigationParamTypes';

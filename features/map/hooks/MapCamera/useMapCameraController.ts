@@ -3,7 +3,6 @@ import { LatLng } from 'react-native-maps';
 import { NHSMapRef } from '@/features/map/components';
 import { parseFloatOrDefault } from '@/utils/parseNumber';
 import { MapPoint } from '../../types';
-import { logger } from '@/utils/logger';
 import { useMapStore } from '../../store/useMapStore';
 
 interface UseMapCameraControllerProps {
@@ -35,7 +34,7 @@ export const useMapCameraController = ({
   handleOpenPointSheet,
 }: UseMapCameraControllerProps) => {
   const autoTriggerFocusRef = useRef(true);
-  const viewMode = useMapStore((state) => state.viewMode);
+  const initialFocusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMapReady = useMapStore((state) => state.isMapReady);
   /**
    * This effect focus the camera to a specific point if user navigate it from the point details screen.
@@ -48,7 +47,7 @@ export const useMapCameraController = ({
     // logger.debug('Is map ready in camera controller?', isMapReady);
     if (targetPoint && autoTriggerFocusRef.current && mapRef.current && isMapReady) {
       handleOpenPointSheet(targetPoint);
-      setTimeout(() => {
+      initialFocusTimeoutRef.current = setTimeout(() => {
         mapRef.current?.animateToCoordinate(
           {
             latitude: parseFloatOrDefault(targetPoint.latitude, 0),
@@ -61,6 +60,13 @@ export const useMapCameraController = ({
       }, 500);
       autoTriggerFocusRef.current = false; // Reset the ref after the initial focus attempt
     }
+
+    return () => {
+      if (initialFocusTimeoutRef.current) {
+        clearTimeout(initialFocusTimeoutRef.current);
+        initialFocusTimeoutRef.current = null;
+      }
+    };
   }, [initialPointId, mapPoints, mapRef, handleOpenPointSheet, isMapReady]);
 
   useEffect(() => {
@@ -83,7 +89,6 @@ export const useMapCameraController = ({
 
   const focusOnPoint = useCallback(
     (targetPoint: MapPoint) => {
-      console.log('Focusing on point:', targetPoint.name);
       mapRef.current?.animateToCoordinate(
         {
           latitude: parseFloatOrDefault(targetPoint.latitude, 0),

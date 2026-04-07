@@ -262,6 +262,7 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
     const hadSubscription = locationSubscription.current != null;
 
     if (locationSubscription.current) {
+      logger.info('Location tracking stopped');
       locationSubscription.current.remove();
       locationSubscription.current = null;
     }
@@ -269,7 +270,6 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
     isTrackingRef.current = false;
     setIsTracking((wasTracking) => {
       if (wasTracking || hadSubscription) {
-        // logger.info('Location tracking stopped');
       }
       return false;
     });

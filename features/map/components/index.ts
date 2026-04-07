@@ -21,3 +21,6 @@ export { default as TransportModeSelectorSheet } from './Navigation/TransportMod
 
 // Marker filter controls
 export { default as MapMarkerFilterBar } from './Filters/MapMarkerFilterBar';
+
+// Search controls
+export { default as MapSearchBar } from './Search/MapSearchBar';

@@ -2,6 +2,7 @@ export { useUserLocation } from './useUserLocation';
 export { useSubmitUserCheckin } from './useSubmitUserCheckin';
 export { useMapNavigationGuidance } from './useMapNavigationGuidance';
 export { useMapMarkerFilters } from './useMapMarkerFilters';
+export { useMapSearch } from './useMapSearch';
 export {
   useDirectionsPreview,
   useDirectionsCacheClient,

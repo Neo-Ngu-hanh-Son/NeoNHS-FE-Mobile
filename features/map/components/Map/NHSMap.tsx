@@ -2,7 +2,7 @@ import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import React, { useCallback, useImperativeHandle, useRef, useState, forwardRef, useEffect, useMemo } from 'react';
 import { MapPoint } from '../..';
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE, Region } from 'react-native-maps';
+import MapView, { Camera, Marker, Polyline, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { MAP_CENTER } from '../../data';
 // import MapView from 'react-native-map-clustering';
 import { renderRoutes } from '../../data/mapDataOptimized';
@@ -33,7 +33,8 @@ type NHSMapProps = {
   isLocationLoading?: boolean;
   startTrackingCallback?: () => void;
   onMapReadyCallback?: () => void;
-  navigationPolylineCoordinates?: PolylineCoordinate[];
+  navigationPolylineCoordinates: PolylineCoordinate[];
+  isNavPolylineVisible?: boolean;
   isGuidanceMode?: boolean;
   isMapInteractionEnabled?: boolean;
   markerFilters?: MapMarkerFilters;
@@ -70,6 +71,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       startTrackingCallback,
       onMapReadyCallback,
       navigationPolylineCoordinates,
+      isNavPolylineVisible,
       isGuidanceMode = false,
       isMapInteractionEnabled = true,
       markerFilters,
@@ -120,7 +122,6 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
         coordinate: { latitude: number; longitude: number; latDelta?: number; lngDelta?: number },
         duration = 500
       ) => {
-        logger.debug('Animating to coordinate:', coordinate, ' with duration:', duration);
         mapRef.current?.animateToRegion(
           {
             ...coordinate,
@@ -166,6 +167,13 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       },
     }));
 
+    useEffect(() => {
+      if (!isFocused) return;
+
+      logger.info('[NHSMap] Map reload triggered by focus change');
+      setMapKey((prev) => prev + 1);
+    }, [isFocused]);
+
     const handleRegionChangeComplete = useCallback((region: Region) => {
       const zoom = Math.log2(360 / region.longitudeDelta);
       const shouldShow = zoom >= 17.5;
@@ -191,16 +199,20 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
 
       // If enabling follow mode, immediately pan to user location
       if (newFollowState && userLocation && mapRef.current) {
-        // logger.info('Follow mode enabled, panning to user location');
-        mapRef.current.animateToRegion(
-          {
-            latitude: userLocation.latitude,
-            longitude: userLocation.longitude,
-            latitudeDelta: mapZoomRef.current.latitudeDelta,
-            longitudeDelta: mapZoomRef.current.longitudeDelta,
-          },
-          500
-        );
+        mapRef.current.getCamera().then((currentCamera: Camera) => {
+          mapRef.current?.animateCamera(
+            {
+              center: {
+                latitude: userLocation.latitude,
+                longitude: userLocation.longitude,
+              },
+              heading: currentCamera.heading,
+              zoom: currentCamera.zoom,
+              pitch: currentCamera.pitch,
+            },
+            { duration: 300 }
+          );
+        });
         setMapZoom({
           latitudeDelta: mapZoomRef.current.latitudeDelta,
           longitudeDelta: mapZoomRef.current.longitudeDelta,
@@ -292,28 +304,28 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       }
     }, [isMapReady, isFollowingUser, userLocation, isFocused]);
 
-    // 1. Memoize the routes (since they never change)
+    // 1. Memoize the routes of Thuy Son mountain
     const memoizedRoutes = useMemo((): React.ReactNode[] => {
       return renderRoutes.map((line) => (
         <Polyline key={line.id} coordinates={line.coordinates} strokeColor="#fafafa50" strokeWidth={8} />
       ));
     }, []);
 
+    // 2. Memoize the navigation route
     const memoizedNavigationRoute = useMemo(() => {
-      const hasPoints = navigationPolylineCoordinates && navigationPolylineCoordinates.length >= 2;
-      // Instead of returing null, just return an empty array for it to "hide" the route
+      // const hasPoints = navigationPolylineCoordinates && navigationPolylineCoordinates.length >= 2;
+      // Instead of returing null, modify the polyline to be transparent when not visible
       return (
         <Polyline
-          key="active-navigation-polyline"
-          coordinates={hasPoints ? navigationPolylineCoordinates : []}
-          strokeColor={theme.primary}
-          strokeWidth={6}
+          coordinates={navigationPolylineCoordinates}
+          strokeColor={isNavPolylineVisible ? theme.primary : `${theme.primary}00`}
+          strokeWidth={isNavPolylineVisible ? 6 : 0}
           lineCap="round"
           lineJoin="round"
           zIndex={40}
         />
       );
-    }, [navigationPolylineCoordinates, theme.primary]);
+    }, [isNavPolylineVisible, navigationPolylineCoordinates, theme.primary]);
 
     const effectiveMarkerFilters = useMemo<MapMarkerFilters>(() => {
       return (
@@ -473,7 +485,14 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
           {/* Markers */}
           {memoizedMarkers}
 
-          {userLocation && <UserLocationMarker location={userLocation} showAccuracyCircle={true} showHeading={true} />}
+          {userLocation && (
+            <UserLocationMarker
+              key={userLocation?.timestamp}
+              location={userLocation}
+              showAccuracyCircle={true}
+              showHeading={true}
+            />
+          )}
         </MapView>
 
         <View style={[styles.buttonContainer, viewMode === 'NAVIGATING' ? { bottom: 80 } : { bottom: 24 }]}>

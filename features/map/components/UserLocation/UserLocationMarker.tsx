@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Marker } from 'react-native-maps';
 import { UserLocation } from '../../hooks/useUserLocation';
@@ -16,6 +16,14 @@ export default function UserLocationMarker({
   showHeading = true,
   color = '#4285F4',
 }: UserLocationMarkerProps) {
+  const [tracks, setTracks] = useState(true);
+
+  useEffect(() => {
+    setTracks(true);
+    const t = setTimeout(() => setTracks(false), 500);
+    return () => clearTimeout(t);
+  }, [location]);
+
   const markerRotation = showHeading && location.heading != null ? location.heading : 0;
 
   return (
@@ -28,7 +36,7 @@ export default function UserLocationMarker({
       anchor={{ x: 0.5, y: 0.5 }}
       flat
       rotation={markerRotation}
-      tracksViewChanges={true}>
+      tracksViewChanges={tracks}>
       <View style={styles.container}>
         {showAccuracyCircle ? (
           <View

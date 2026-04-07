@@ -144,9 +144,6 @@ export function useMapNavigationGuidance({
       isGuidanceMode: false,
       isUserArrived: false,
     }));
-    console.log(
-      '[useMapNavigationGuidance] Exiting guidance mode TODO: Implement the reset function (Should live in the useMapNavigationPreviewController'
-    );
     clearTargetNavigationParam();
   }, [clearTargetNavigationParam]);
 

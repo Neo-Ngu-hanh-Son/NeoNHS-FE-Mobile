@@ -1,16 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import { Keyboard } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { MainStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { logger } from '@/utils/logger';
-import { MapPoint } from '../types';
+import { MapPoint, PolylineCoordinate } from '../types';
 import MapPointDetailModal from '../components/PointDetailModal/PointDetailModal';
 import type { MapPointDetailSheetRef } from '../components/PointDetailModal/PointDetailModal';
 import NHSMap, { NHSMapRef } from '../components/Map/NHSMap';
 import NavigationGuideOverlay from '../components/Navigation/NavigationGuideOverlay';
-import { MapMarkerFilterBar, TransportModeSelectorSheet } from '../components';
+import { MapMarkerFilterBar, MapSearchBar, TransportModeSelectorSheet } from '../components';
 import { mapService } from '../services/mapServices';
 import { useModal } from '@/app/providers/ModalProvider';
-import { useMapMarkerFilters, useMapNavigationGuidance, useUserLocation } from '../hooks';
+import { useMapMarkerFilters, useMapNavigationGuidance, useMapSearch, useUserLocation } from '../hooks';
 import { mapData } from '../data';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { ScreenLayout } from '@/components/common/ScreenLayout';
@@ -18,7 +19,7 @@ import { useQuery } from '@tanstack/react-query';
 import CheckinCameraButton from '../components/Camera/CheckinCameraButton';
 import MAP_CONSTANTS from '../constants';
 import { LocationAccuracy } from 'expo-location';
-import BottomSheet, { useBottomSheetModal } from '@gorhom/bottom-sheet';
+import BottomSheet from '@gorhom/bottom-sheet';
 import NavigationStepsBottomSheet from '../components/Navigation/NavigationStepsBottomSheet';
 import { decodeRoutePolyline } from '../helpers';
 import { useMapStore } from '../store/useMapStore';
@@ -97,9 +98,6 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     handleTravelModeSelection,
     handleCancelTransportSelection,
     setConfirmedTravelMode,
-    selectedDirectionsRoute,
-    previewOrigin,
-    previewDestination,
   } = useMapNavigationPreviewController({
     targetNavigationPointId,
     mapPoints,
@@ -111,7 +109,6 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
 
   const {
     isGuidanceMode,
-    isDirectionsLoading,
     isDirectionsReady,
     directionError,
     navigationSteps,
@@ -148,7 +145,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     pointDetailSheetRef.current?.dismiss();
   }, []);
 
-  useMapCameraController({
+  const { focusOnPoint } = useMapCameraController({
     mapRef,
     initialPointId,
     targetNavigationPointId,
@@ -165,24 +162,55 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     handleOpenPointSheet: handleOpenPointSheetModal,
   });
 
-  const navigationPolylineCoordinates = useMemo(() => {
+  const { searchText, setSearchText, clearSearch, isSearching, filteredResults } = useMapSearch(mapPoints);
+
+  const handleSelectSearchResult = useCallback(
+    (point: MapPoint) => {
+      Keyboard.dismiss();
+      handleOpenPointSheetModal(point);
+      focusOnPoint(point);
+      clearSearch();
+    },
+    [clearSearch, focusOnPoint, handleOpenPointSheetModal]
+  );
+
+  const lastValidRouteRef = useRef<PolylineCoordinate[] | null>(null);
+  const memorizedEncodedPolyline = useMemo(() => {
     if (viewMode === 'EXPLORING') {
-      return [];
+      return '';
+    }
+    if (!previewRouteSummary?.routes?.[0]?.polyline?.encodedPolyline) {
+      return '';
     }
 
-    const encodedPolyline = previewRouteSummary?.routes?.[0]?.polyline?.encodedPolyline;
+    return previewRouteSummary?.routes?.[0]?.polyline?.encodedPolyline;
+  }, [previewRouteSummary?.routes, viewMode]);
 
-    if (!encodedPolyline) {
-      return [];
+  const navigationPolylineCoordinates = useMemo(() => {
+    const decoded = decodeRoutePolyline(memorizedEncodedPolyline);
+    return decoded;
+  }, [memorizedEncodedPolyline]);
+
+  const displayCoordinates = useMemo(() => {
+    if (navigationPolylineCoordinates && navigationPolylineCoordinates.length >= 2) {
+      lastValidRouteRef.current = navigationPolylineCoordinates;
+      return navigationPolylineCoordinates;
     }
 
-    return decodeRoutePolyline(encodedPolyline);
-  }, [previewRouteSummary, viewMode]);
+    return lastValidRouteRef.current ?? [];
+  }, [navigationPolylineCoordinates]);
+  const isNavPolylineVisible = !!(navigationPolylineCoordinates && navigationPolylineCoordinates.length >= 2);
 
   // Auto request permission on mount if not granted or denied
   useEffect(() => {
     requestPermission();
   }, [requestPermission]);
+
+  useEffect(() => {
+    if (viewMode !== 'EXPLORING') {
+      clearSearch();
+    }
+  }, [clearSearch, viewMode]);
 
   const handleOpenNavigationSteps = useCallback(() => {
     if (viewMode !== 'NAVIGATING') return;
@@ -217,20 +245,30 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
         isLocationLoading={isLocationLoading}
         startTrackingCallback={startTracking}
         onMapReadyCallback={onMapReady}
-        navigationPolylineCoordinates={navigationPolylineCoordinates}
+        navigationPolylineCoordinates={displayCoordinates}
+        isNavPolylineVisible={isNavPolylineVisible}
         isGuidanceMode={isGuidanceMode}
-        isMapInteractionEnabled={true} // TODO: Disable map interaction when the bottom sheet is open in navigation mode
+        isMapInteractionEnabled={true}
         markerFilters={markerFilters}
       />
 
       {/* Exploring Mode */}
       {viewMode === 'EXPLORING' && (
         <>
+          <MapSearchBar
+            value={searchText}
+            onChangeText={setSearchText}
+            onClear={clearSearch}
+            onSelectResult={handleSelectSearchResult}
+            results={filteredResults}
+            isSearching={isSearching}
+            topInset={controller.insets.top}
+          />
           <MapMarkerFilterBar
             filters={markerFilters}
             onToggleShowAll={() => setShowAll(true)}
             onToggleFilter={toggleFilter}
-            topInset={controller.insets.top}
+            topInset={controller.insets.top + 56}
           />
           <MapPointDetailModal
             ref={pointDetailSheetRef}
