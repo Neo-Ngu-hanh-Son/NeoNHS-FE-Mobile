@@ -1,22 +1,23 @@
-import React from 'react';
-import { View, TouchableOpacity, AppState } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useNavigationState } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import React, { useState, useEffect } from "react";
+import { View, TouchableOpacity, ActivityIndicator } from "react-native";
+import AntDesign from '@expo/vector-icons/AntDesign';
+import { useNavigationState, useNavigation } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useTheme } from '@/app/providers/ThemeProvider';
-import { THEME } from '@/lib/theme';
-import { Text } from '@/components/ui/text';
-import { useChatContext } from '../context/ChatProvider';
+import { useTheme } from "@/app/providers/ThemeProvider";
+import { THEME } from "@/lib/theme";
+import { Text } from "@/components/ui/text";
+import { useChatContext } from "../context/ChatProvider";
 
 export function FloatingChatButton() {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const insets = useSafeAreaInsets();
+  const { supportUnreadCount, createOrOpenRoom, rooms } = useChatContext();
   const navigation = useNavigation<any>();
-  const { totalUnreadCount, isConnected } = useChatContext();
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Find the exact currently active route name across nested navigators
+  // Determine the deepest active route name
   const currentRouteName = useNavigationState((state) => {
     if (!state) return null;
     let current: any = state;
@@ -26,24 +27,68 @@ export function FloatingChatButton() {
     return current?.routes?.[current.index]?.name;
   });
 
-  // Specifically hide on Map & Chat screens
-  const hiddenOnScreens = ['Map', 'Chat', 'ChatRoom', 'Cart'];
-  if (currentRouteName && hiddenOnScreens.includes(currentRouteName)) {
+  const [supportRoomId, setSupportRoomId] = useState<string | null>(null);
+
+  // Pre-load the support room ID in the background
+  useEffect(() => {
+    const existing = rooms?.find(r => r.roomType === "SYSTEM_SUPPORT");
+    if (existing) {
+      setSupportRoomId(existing.id);
+    } else {
+      // If none exists in active context, attempt to silently create/fetch it
+      createOrOpenRoom("SYSTEM_SUPPORT", [], "Customer Support")
+        .then(room => setSupportRoomId(room.id))
+        .catch(err => console.log("Silent support chat preload failed:", err?.message || err));
+    }
+  }, [rooms, createOrOpenRoom]);
+
+  const allowedScreens = ["Home", "Discover", "Tabs", "Main"];
+  // Fallback to "Home" on initial load if route name is not yet resolved
+  const effectiveRouteName = currentRouteName ?? "Home";
+  
+  if (!allowedScreens.includes(effectiveRouteName)) {
     return null;
   }
+
+  const handlePress = async () => {
+    // 1. If we preloaded the room ID successfully, navigate instantly!
+    if (supportRoomId) {
+      navigation.navigate("Main", {
+        screen: "ChatRoom",
+        params: { roomId: supportRoomId },
+      });
+      return;
+    }
+
+    // 2. Fallback if the preload hasn't finished yet or failed
+    if (isLoading) return;
+    setIsLoading(true);
+    try {
+      const room = await createOrOpenRoom("SYSTEM_SUPPORT", [], "Customer Support");
+      setSupportRoomId(room.id);
+      navigation.navigate("Main", {
+        screen: "ChatRoom",
+        params: { roomId: room.id },
+      });
+    } catch (error) {
+      console.error("Failed to open support chat", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <View
       style={{
-        position: 'absolute',
-        bottom: insets.bottom + 80, // slightly above the bottom tab bar mapping
+        position: "absolute",
+        bottom: insets.bottom + 80,
         right: 20,
         zIndex: 9999,
       }}
       pointerEvents="box-none"
     >
       <TouchableOpacity
-        onPress={() => navigation.navigate('Main', { screen: 'Tabs', params: { screen: 'Chat' } })}
+        onPress={handlePress}
         activeOpacity={0.8}
         className="items-center justify-center shadow-lg"
         style={{
@@ -51,20 +96,24 @@ export function FloatingChatButton() {
           height: 56,
           borderRadius: 28,
           backgroundColor: theme.primary,
-          elevation: 5, // for android shadow
-          shadowColor: '#000', // for ios shadow
+          elevation: 5,
+          shadowColor: "#000",
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: 0.3,
           shadowRadius: 3,
         }}
       >
-        <Ionicons name="chatbubble" size={28} color="#FFFFFF" />
+        {isLoading ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <AntDesign name="message" size={24} color="white" />
+        )}
 
-        {totalUnreadCount > 0 && (
+        {supportUnreadCount > 0 && !isLoading && (
           <View
             className="absolute -top-1 -right-1 items-center justify-center"
             style={{
-              backgroundColor: 'red',
+              backgroundColor: "red",
               minWidth: 22,
               height: 22,
               borderRadius: 11,
@@ -74,7 +123,7 @@ export function FloatingChatButton() {
             }}
           >
             <Text className="text-white text-xs font-bold" style={{ fontSize: 10 }}>
-              {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
+              {supportUnreadCount > 99 ? "99+" : supportUnreadCount}
             </Text>
           </View>
         )}
