@@ -35,6 +35,7 @@ export const userEndpoints = {
   deleteUser: (id: string | number) => `users/${id}`,
   performKyc: (id: string | number) => `users/${id}/kyc`,
   withdraw: () => `users/withdraw`,
+  checkLiveness: () => `users/check-liveness`,
 } as const;
 
 /**

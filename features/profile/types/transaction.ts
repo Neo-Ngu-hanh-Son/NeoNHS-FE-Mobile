@@ -1,5 +1,5 @@
 export type TransactionStatus = 'SUCCESS' | 'PENDING' | 'CANCELLED' | 'FAILED';
-export type TransactionType = 'EVENT' | 'WORKSHOP';
+export type TransactionType = 'EVENT' | 'WORKSHOP' | 'MIXED' | 'ENTRANCE';
 
 export interface Transaction {
     id: string;
@@ -19,6 +19,7 @@ export interface Ticket {
     itemName: string;
     validFrom: string;
     validTo: string;
+    price: number;
 }
 
 export interface TransactionDetail extends Transaction {
