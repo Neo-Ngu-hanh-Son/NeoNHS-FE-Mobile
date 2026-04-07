@@ -17,6 +17,7 @@ import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { WorkshopImageGallery, WorkshopInfoSection, WorkshopSessionList, WorkshopDetailReviews } from '../components';
 import { useWorkshopDetail } from '../hooks/useWorkshopDetail';
 import { useWorkshopSessions } from '../hooks/useWorkshopSessions';
+import { useChatContext } from '@/features/chat/context/ChatProvider';
 
 type Props = StackScreenProps<MainStackParamList, 'WorkshopDetail'>;
 
@@ -27,6 +28,8 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
 
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'info' | 'sessions'>('info');
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const { createOrOpenRoom } = useChatContext();
 
   const {
     data: workshop,
@@ -133,9 +136,8 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
         <View className="mt-6 flex-row gap-2 px-5">
           <TouchableOpacity
             onPress={() => setActiveTab('info')}
-            className={`flex-1 items-center rounded-xl py-3 ${
-              activeTab === 'info' ? 'bg-primary' : ''
-            }`}
+            className={`flex-1 items-center rounded-xl py-3 ${activeTab === 'info' ? 'bg-primary' : ''
+              }`}
             style={activeTab !== 'info' ? { backgroundColor: theme.muted } : undefined}>
             <Text
               className={`text-sm font-bold ${activeTab === 'info' ? 'text-white' : ''}`}
@@ -145,9 +147,8 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setActiveTab('sessions')}
-            className={`flex-1 items-center rounded-xl py-3 ${
-              activeTab === 'sessions' ? 'bg-primary' : ''
-            }`}
+            className={`flex-1 items-center rounded-xl py-3 ${activeTab === 'sessions' ? 'bg-primary' : ''
+              }`}
             style={activeTab !== 'sessions' ? { backgroundColor: theme.muted } : undefined}>
             <Text
               className={`text-sm font-bold ${activeTab === 'sessions' ? 'text-white' : ''}`}
@@ -203,6 +204,55 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
           )}
         </View>
       </ScrollView>
+
+      {/* Sticky bottom: Consult with Artisan */}
+      <View
+        className="px-5 py-3 border-t flex-row items-center"
+        style={{ borderColor: theme.border, backgroundColor: theme.card }}
+      >
+        <View className="flex-1 mr-3">
+          <Text className="text-xs" style={{ color: theme.mutedForeground }}>Price from</Text>
+          <Text className="text-lg font-bold" style={{ color: theme.foreground }}>
+            {workshop.defaultPrice.toLocaleString('vi-VN')} ₫
+          </Text>
+        </View>
+        <TouchableOpacity
+          onPress={async () => {
+            if (isChatLoading) return;
+            setIsChatLoading(true);
+            try {
+              const thumbnailImg = workshop.images.find(img => img.isThumbnail);
+              const room = await createOrOpenRoom(
+                'VENDOR_CHAT',
+                [workshop.vendorId],
+                workshop.name
+              );
+              navigation.navigate('ChatRoom', {
+                roomId: room.id,
+                workshopSnippet: {
+                  workshopId: workshop.id,
+                  title: workshop.name,
+                  price: workshop.defaultPrice,
+                  thumbnailUrl: thumbnailImg?.imageUrl || (workshop.images[0]?.imageUrl ?? ''),
+                },
+              });
+            } catch (e) {
+              console.error('Failed to open vendor chat', e);
+            } finally {
+              setIsChatLoading(false);
+            }
+          }}
+          className="flex-row items-center rounded-xl px-5 py-3"
+          style={{ backgroundColor: theme.primary }}
+          activeOpacity={0.8}
+          disabled={isChatLoading}
+        >
+          <Ionicons name="chatbubble-outline" size={18} color="#FFFFFF" />
+          <Text className="ml-2 font-bold text-white">
+            {isChatLoading ? 'Opening...' : 'Chat with Vendor'}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }

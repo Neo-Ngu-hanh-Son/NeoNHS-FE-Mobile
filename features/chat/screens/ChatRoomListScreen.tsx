@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { View, FlatList, TextInput, TouchableOpacity } from "react-native";
+import { View, FlatList, TextInput, TouchableOpacity, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -9,27 +9,46 @@ import { THEME } from "@/lib/theme";
 
 import { ChatRoomItem } from "../components/ChatRoomItem";
 import { useChatContext } from "../context/ChatProvider";
+import { RoomType } from "../types";
+
+type TabKey = "all" | "support" | "artist";
+const TABS: { key: TabKey; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "support", label: "Support" },
+  { key: "artist", label: "Vendor" },
+];
 
 export default function ChatRoomListScreen({ navigation }: any) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
-  
-  const { rooms, isLoadingRooms } = useChatContext();
-  const [searchQuery, setSearchQuery] = useState("");
 
-  // Filter mock rooms by search query (name or fullname of the other participant)
+  const { rooms, isLoadingRooms, hideRoom } = useChatContext();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<TabKey>("all");
+
+  // ── Filtering logic ──────────────────────────────────
   const filteredRooms = useMemo(() => {
-    if (!searchQuery.trim()) return rooms;
-    
-    return rooms.filter(r => {
-      const displayName = r.otherParticipant?.fullname || r.name || "";
-      return displayName.toLowerCase().includes(searchQuery.toLowerCase());
-    });
-  }, [searchQuery, rooms]);
+    let list = rooms.filter(r => !r.isHidden); // hide archived rooms
+
+    // Tab filter
+    if (activeTab === "support") list = list.filter(r => r.roomType === "SYSTEM_SUPPORT");
+    else if (activeTab === "artist") list = list.filter(r => r.roomType === "VENDOR_CHAT");
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(r => {
+        const name = r.otherParticipant?.fullname || r.name || "";
+        return name.toLowerCase().includes(q);
+      });
+    }
+
+    return list;
+  }, [rooms, searchQuery, activeTab]);
 
   const renderHeader = () => (
     <View className="px-4 py-3">
-      {/* Page Title Header */}
+      {/* Page Title */}
       <View className="flex-row items-center mb-4 mt-2">
         <TouchableOpacity onPress={() => navigation.goBack()} className="p-2 -ml-2">
           <Ionicons name="arrow-back" size={24} color={theme.foreground} />
@@ -42,11 +61,8 @@ export default function ChatRoomListScreen({ navigation }: any) {
         </TouchableOpacity>
       </View>
 
-      {/* Search Bar */}
-      <View
-        className="flex-row items-center rounded-xl px-4 py-2.5 gap-2"
-        style={{ backgroundColor: theme.muted }}
-      >
+      {/* Search */}
+      <View className="flex-row items-center rounded-xl px-4 py-2.5 gap-2" style={{ backgroundColor: theme.muted }}>
         <Ionicons name="search" size={20} color={theme.mutedForeground} />
         <TextInput
           placeholder="Search chats..."
@@ -62,6 +78,31 @@ export default function ChatRoomListScreen({ navigation }: any) {
           </TouchableOpacity>
         )}
       </View>
+
+      {/* Tab Bar */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3">
+        {TABS.map(tab => {
+          const isActive = activeTab === tab.key;
+          return (
+            <TouchableOpacity
+              key={tab.key}
+              onPress={() => setActiveTab(tab.key)}
+              className={`mr-2 rounded-full px-5 py-2`}
+              style={{
+                backgroundColor: isActive ? theme.primary : theme.muted,
+              }}
+              activeOpacity={0.7}
+            >
+              <Text
+                className="text-sm font-semibold"
+                style={{ color: isActive ? "#FFFFFF" : theme.mutedForeground }}
+              >
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
     </View>
   );
 
@@ -71,9 +112,10 @@ export default function ChatRoomListScreen({ navigation }: any) {
         data={filteredRooms}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <ChatRoomItem 
-            room={item} 
+          <ChatRoomItem
+            room={item}
             onPress={() => navigation.navigate("ChatRoom", { roomId: item.id })}
+            onHide={() => hideRoom(item.id)}
           />
         )}
         ListHeaderComponent={renderHeader}
@@ -81,7 +123,7 @@ export default function ChatRoomListScreen({ navigation }: any) {
           <View className="py-20 items-center">
             <Ionicons name="chatbubble-ellipses-outline" size={48} color={theme.mutedForeground} />
             <Text className="mt-4 text-base" style={{ color: theme.mutedForeground }}>
-              No chats found.
+              {activeTab === "all" ? "No chats found." : `No ${activeTab === "support" ? "support" : "artist"} chats found.`}
             </Text>
           </View>
         )}

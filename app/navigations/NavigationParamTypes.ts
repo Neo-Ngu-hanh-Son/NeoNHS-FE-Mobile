@@ -108,7 +108,15 @@ export type CheckoutRoutes = {
 
 /* Chat */
 export type ChatRoutes = {
-  ChatRoom: { roomId: string };
+  ChatRoom: {
+    roomId: string;
+    workshopSnippet?: {
+      workshopId: string;
+      title: string;
+      price: number;
+      thumbnailUrl: string;
+    };
+  };
 };
 
 /* ============================================================
