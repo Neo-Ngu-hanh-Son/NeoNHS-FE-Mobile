@@ -19,6 +19,12 @@ interface UseMapNavigationPreviewControllerProps {
   viewMode: MapViewMode;
   setViewMode: (mode: MapViewMode) => void;
   mapIsReady?: boolean;
+  focusOnPoint?: (point: MapPoint) => void;
+  fitCameraToCoordinates?: (
+    origin: LatLng,
+    destination: LatLng,
+    options?: { top: number; right: number; bottom: number; left: number }
+  ) => void;
 }
 
 export const useMapNavigationPreviewController = ({
@@ -30,6 +36,8 @@ export const useMapNavigationPreviewController = ({
   setViewMode,
   mapIsReady = false,
   mapRef,
+  focusOnPoint,
+  fitCameraToCoordinates,
 }: UseMapNavigationPreviewControllerProps) => {
   const { alert } = useModal();
   const [confirmedTravelMode, setConfirmedTravelMode] = useState<TravelMode | null>(null);
@@ -110,11 +118,7 @@ export const useMapNavigationPreviewController = ({
     }
 
     try {
-      // const query = await fetchDirectionsWithCache(previewParams);
-      // console.log('[useMapNavigationPreviewController] Directions fetched for navigation start:', query);
-      // console.log('[useMapNavigationPreviewController] Route preview summary:', previewRouteSummary);
       setConfirmedTravelMode(selectedTravelMode);
-      // setSelectedDirectionsRoute(query);
     } catch (error) {
       logger.error('[useMapNavigationController] Failed to start navigation with selected transport mode', error);
       alert('Navigation Unavailable', 'Failed to load this route mode. Please try again.');
@@ -135,18 +139,23 @@ export const useMapNavigationPreviewController = ({
   const handleFitRoute = useCallback(() => {
     if (!mapIsReady) return;
     if (!previewOrigin || !previewDestination) return;
-    // Fit the camera to the route again
-    mapRef.current?.fitToCoordinates(
-      [previewOrigin, previewDestination],
-      {
-        top: 160,
-        right: 64,
-        bottom: 360,
-        left: 64,
-      },
-      true
-    );
-  }, [mapIsReady, previewOrigin, previewDestination, mapRef]);
+    fitCameraToCoordinates?.(previewOrigin, previewDestination, {
+      top: 160,
+      right: 64,
+      bottom: 360,
+      left: 64,
+    });
+    // mapRef.current?.fitToCoordinates(
+    //   [previewOrigin, previewDestination],
+    //   {
+    //     top: 160,
+    //     right: 64,
+    //     bottom: 360,
+    //     left: 64,
+    //   },
+    //   true
+    // );
+  }, [mapIsReady, previewOrigin, previewDestination, fitCameraToCoordinates]);
 
   const handleTravelModeSelection = useCallback(
     (mode: TravelMode) => {
@@ -169,9 +178,12 @@ export const useMapNavigationPreviewController = ({
   const shouldAnimateRef = useRef(true);
   useEffect(() => {
     if (!shouldAnimateRef.current) return;
+    if (viewMode !== 'PREVIEWING_NAVIGATION') return;
+    if (!previewOrigin || !previewDestination) return;
+
     handleFitRoute();
     shouldAnimateRef.current = false;
-  }, [handleFitRoute, navigation]);
+  }, [handleFitRoute, previewOrigin, previewDestination, viewMode]);
 
   /**
    * Use effect to switch between explore mode and preview navigation (auto when mounted)

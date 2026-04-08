@@ -191,6 +191,7 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
       if (status !== 'granted') {
         const granted = await requestPermission();
         if (!granted) {
+          setError('Location permission is required to start tracking');
           return;
         }
       }

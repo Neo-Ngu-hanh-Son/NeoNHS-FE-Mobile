@@ -79,12 +79,6 @@ export interface NHSMapProps<T extends MapPoint = MapPoint> {
   isNavPolylineVisible?: boolean;
 
   /**
-   * Indicates navigation guidance mode.
-   * Recommended source: useMapNavigationGuidance().isGuidanceMode.
-   */
-  isGuidanceMode?: boolean;
-
-  /**
    * Enables/disables pan/zoom/rotate/pitch map gestures.
    * Recommended source: screen UI state (normally true).
    */

@@ -14,11 +14,12 @@ import CheckinHistoryBottomSheet from '@/features/map/components/Camera/CheckinH
 import { CheckinDraftImage, useSubmitUserCheckin } from '@/features/map/hooks/useSubmitUserCheckin';
 import { useModal } from '@/app/providers/ModalProvider';
 import { CheckinSessionGalleryImage } from '../types';
+import { useAuth } from '@/features/auth';
 
 type CheckinCameraScreenProps = StackScreenProps<MainStackParamList, 'CheckinCamera'>;
 
 export default function CheckinCameraScreen({ navigation, route }: CheckinCameraScreenProps) {
-  const { pointId, pointName } = route.params;
+  const { pointId, pointName, pointRewardPoints } = route.params;
   const [capturedPhotoUri, setCapturedPhotoUri] = useState<string | null>(null);
   const [capturedCaption, setCapturedCaption] = useState('');
   const [draftImages, setDraftImages] = useState<CheckinDraftImage[]>([]);
@@ -27,6 +28,7 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
   const [isSavingPhoto, setIsSavingPhoto] = useState(false);
   const { isSubmitting, submit } = useSubmitUserCheckin();
   const { isDarkColorScheme } = useTheme();
+  const { user, updateUser } = useAuth();
   const { alert } = useModal();
 
   const theme = useMemo(() => (isDarkColorScheme ? THEME.dark : THEME.light), [isDarkColorScheme]);
@@ -96,15 +98,22 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
     ];
 
     try {
-      const response = await submit({
+      // TODO: DO NOT WAIT FOR THE SUBMIT, just display that user earned some points and that's all, when they visit the profile, it will get auto fetched from the server again.
+      submit({
         checkinPointId: pointId,
         images: payloadImages,
       });
 
+      // Before leaving, update user state to get the new points first.
+      const userPoint = user?.userPoint ?? 0;
+      const newPoint = userPoint + (pointRewardPoints ?? 0);
+      updateUser?.({
+        ...user,
+        userPoint: newPoint,
+      });
       navigation.replace('CheckinComplete', {
-        imageUrl: response.imageUrl,
-        rewardPoints: response.earnedPoints,
-        userTotalPoints: response.userTotalPoints,
+        rewardPoints: pointRewardPoints ?? 0,
+        userTotalPoints: newPoint,
       });
     } catch (error) {
       logger.error('[CheckinCameraScreen] Failed to finish check-in', error);

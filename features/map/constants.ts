@@ -50,6 +50,13 @@ const MAP_CONSTANTS = {
     },
   ],
 
+  MAP_CAMERA_DEFAULT_FIT_TO_COORDINATES_PADDING: {
+    top: 160,
+    right: 64,
+    bottom: 180,
+    left: 64,
+  },
+
   FULL_SCREEN_SHEET_INDEX: 2,
   DEFAULT_TRAVEL_MODE: 'DRIVE' as const,
   TRAVEL_MODE_LABELS: {

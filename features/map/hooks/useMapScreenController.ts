@@ -79,6 +79,7 @@ export const useMapScreenController = ({ navigation, pointDetailSheetRef }: Prop
     navigation.navigate('CheckinCamera', {
       pointId: activePoint?.id,
       pointName: activePoint?.name ?? '',
+      pointRewardPoints: activePoint?.rewardPoints ?? 0,
     });
   }, [activePoint, dismissPointDetailSheet, isAuthenticated, navigation]);
 

@@ -3,7 +3,7 @@ import type { MapPoint } from '../types';
 
 const normalizeText = (value: string) => value.trim().toLowerCase();
 
-export function useMapSearch(mapPoints: MapPoint[]) {
+export function useMapSearch<TPoint extends MapPoint>(mapPoints: TPoint[]) {
   const [searchText, setSearchText] = useState('');
 
   const normalizedQuery = useMemo(() => normalizeText(searchText), [searchText]);

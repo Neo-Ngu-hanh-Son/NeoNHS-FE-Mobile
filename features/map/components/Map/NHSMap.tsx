@@ -45,7 +45,6 @@ const NHSMapInner = <T extends MapPoint>(
     onMapReadyCallback,
     navigationPolylineCoordinates,
     isNavPolylineVisible,
-    isGuidanceMode = false,
     isMapInteractionEnabled = true,
     markerFilters,
     enableCheckinMode = false,
@@ -76,6 +75,7 @@ const NHSMapInner = <T extends MapPoint>(
   const isFocused = useIsFocused();
   // const setGlobalLastMapInteractionLocation = useMapStore((state) => state.setLastMapInteractionLocation);
   // const setGlobalMapZoom = useMapStore((state) => state.setMapZoom);
+  const isGuidanceMode = viewMode === 'NAVIGATING';
 
   const activeCheckinPoint = useCheckinProximity(
     userLocation,
@@ -209,7 +209,7 @@ const NHSMapInner = <T extends MapPoint>(
    * useEffect to fetch checkin points near user when the user moves.
    */
   useEffect(() => {
-    if (isGuidanceMode || !enableCheckinMode) return;
+    if (viewMode !== 'EXPLORING' || !enableCheckinMode) return;
     let isCancelled = false;
 
     const syncCheckinPoints = async () => {
@@ -255,7 +255,7 @@ const NHSMapInner = <T extends MapPoint>(
     return () => {
       isCancelled = true;
     };
-  }, [userLocation, previousLocation, syncNearbyGeofences, isGuidanceMode, enableCheckinMode]);
+  }, [userLocation, previousLocation, syncNearbyGeofences, viewMode, enableCheckinMode]);
 
   /**
    * Effect to auto-pan to user location when following

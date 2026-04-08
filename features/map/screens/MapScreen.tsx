@@ -90,6 +90,25 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
 
   const controller = useMapScreenController({ navigation, pointDetailSheetRef });
 
+  const { handleMarkerPress } = controller;
+
+  const handleOpenPointSheetModal = useCallback(
+    (point: MapPoint) => {
+      handleMarkerPress(point);
+      pointDetailSheetRef.current?.present();
+    },
+    [handleMarkerPress]
+  );
+
+  const { focusOnPoint, fitCameraToCoordinates } = useMapCameraController({
+    mapRef,
+    initialPointId,
+    targetNavigationPointId,
+    mapPoints,
+    handleOpenPointSheet: handleOpenPointSheetModal,
+    isMapReady,
+  });
+
   const {
     activeGuidanceTargetPointId,
     navigationTargetPoint,
@@ -116,11 +135,11 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     setViewMode,
     mapRef,
     mapIsReady: isMapReady,
+    focusOnPoint,
+    fitCameraToCoordinates,
   });
 
   const {
-    isGuidanceMode,
-    isDirectionsReady,
     directionError,
     navigationSteps,
     currentUserStepIndex,
@@ -142,35 +161,9 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     viewMode,
   });
 
-  const { handleMarkerPress } = controller;
-
-  const handleOpenPointSheetModal = useCallback(
-    (point: MapPoint) => {
-      handleMarkerPress(point);
-      pointDetailSheetRef.current?.present();
-    },
-    [handleMarkerPress]
-  );
-
   const handleClosePointSheetModal = useCallback(() => {
     pointDetailSheetRef.current?.dismiss();
   }, []);
-
-  const origin = previewRouteSummary?.routes[0].legs[0].startLocation;
-  const destination = previewRouteSummary?.routes[0].legs[0].endLocation;
-
-  const { focusOnPoint } = useMapCameraController({
-    mapRef,
-    initialPointId,
-    targetNavigationPointId,
-    mapPoints,
-    handleOpenPointSheet: handleOpenPointSheetModal,
-    isMapReady,
-    navigationEndpoints: {
-      origin: origin?.latLng,
-      destination: destination?.latLng,
-    },
-  });
 
   const { searchText, setSearchText, clearSearch, isSearching, filteredResults } = useMapSearch(mapPoints);
 
@@ -257,7 +250,6 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
         onMapReadyCallback={handleOnMapReady}
         navigationPolylineCoordinates={displayCoordinates}
         isNavPolylineVisible={isNavPolylineVisible}
-        isGuidanceMode={isGuidanceMode}
         isMapInteractionEnabled={true}
         markerFilters={markerFilters}
         enableCheckinMode={true}

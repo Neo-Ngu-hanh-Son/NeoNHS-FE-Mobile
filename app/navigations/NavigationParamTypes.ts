@@ -1,6 +1,4 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
-import type { TravelMode } from '@/features/map/types';
-
 /* ============================================================
    AUTH STACK
    ============================================================ */
@@ -75,14 +73,14 @@ export type MapRoutes = {
   AudioGuide: { pointId: string };
   PointHistoryAudio: { pointId: string };
   Panorama: { pointId: string };
-  CheckinCamera: { pointId?: string | null; pointName: string };
+  CheckinCamera: { pointId?: string | null; pointName: string; pointRewardPoints?: number };
   CheckinComplete: { imageUrl?: string; rewardPoints?: number; userTotalPoints?: number };
 };
 
 /* Events */
 export type EventRoutes = {
   EventDetail: { eventId: string };
-  EventTimeLineMap: { eventId: string };
+  EventTimeLineMap: { eventId: string; pointId?: string; targetNavigationPointId?: string };
 };
 
 /* Workshops */

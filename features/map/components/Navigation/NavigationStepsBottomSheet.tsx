@@ -5,7 +5,8 @@ import { Text } from '@/components/ui/text';
 import { Step } from '../../types';
 import type { BottomSheetFlatListMethods } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { logger } from '@/utils/logger';
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { THEME } from '@/lib/theme';
 
 type NavigationStepsBottomSheetProps = {
   steps: Step[];
@@ -16,6 +17,8 @@ type NavigationStepsBottomSheetProps = {
 const NavigationStepsBottomSheet = forwardRef<BottomSheet, NavigationStepsBottomSheetProps>(
   ({ steps, currentStepIndex, onChange }, ref) => {
     const insets = useSafeAreaInsets();
+    const { isDarkColorScheme } = useTheme();
+    const theme = isDarkColorScheme ? THEME.dark : THEME.light;
     const [paddingBottom, setPaddingBottom] = useState(insets.bottom);
 
     const clampedCurrentStepIndex = useMemo(() => {
@@ -29,21 +32,24 @@ const NavigationStepsBottomSheet = forwardRef<BottomSheet, NavigationStepsBottom
         const stepDistance = item.localizedValues?.distance?.text;
         const stepDuration = item.localizedValues?.staticDuration?.text;
         const stepInstruction = item.navigationInstruction?.instructions ?? 'Continue';
+        const cardBorderColor = isCurrentStep ? `${theme.primary}66` : theme.border;
+        const cardBackgroundColor = isCurrentStep ? `${theme.primary}1A` : theme.background;
 
         return (
-          <View
-            className={`mx-3 mb-2 rounded-xl border px-3 py-3 ${
-              isCurrentStep ? 'border-primary/40 bg-primary/10' : 'border-border/40 bg-background'
-            }`}>
-            <Text className="text-xs font-semibold text-muted-foreground">Step {index + 1}</Text>
-            <Text className="mt-1 text-sm font-medium">{stepInstruction}</Text>
-            <Text className="mt-1 text-xs text-muted-foreground">
+          <View style={[styles.stepCard, { borderColor: cardBorderColor, backgroundColor: cardBackgroundColor }]}>
+            <Text className="text-xs font-semibold" style={{ color: theme.mutedForeground }}>
+              Step {index + 1}
+            </Text>
+            <Text className="mt-1 text-sm font-medium" style={{ color: theme.foreground }}>
+              {stepInstruction}
+            </Text>
+            <Text className="mt-1 text-xs" style={{ color: theme.mutedForeground }}>
               {[stepDistance, stepDuration].filter(Boolean).join(' • ') || 'Proceed to next instruction'}
             </Text>
           </View>
         );
       },
-      [clampedCurrentStepIndex]
+      [clampedCurrentStepIndex, theme.background, theme.border, theme.foreground, theme.mutedForeground, theme.primary]
     );
 
     const keyExtractor = useCallback((_: Step, index: number) => index.toString(), []);
@@ -51,11 +57,15 @@ const NavigationStepsBottomSheet = forwardRef<BottomSheet, NavigationStepsBottom
     const ListHeader = useCallback(
       () => (
         <View className="px-4 pb-3 pt-2">
-          <Text className="text-lg font-bold">Route steps</Text>
-          <Text className="text-xs text-muted-foreground">Follow these instructions</Text>
+          <Text className="text-lg font-bold" style={{ color: theme.foreground }}>
+            Route steps
+          </Text>
+          <Text className="text-xs" style={{ color: theme.mutedForeground }}>
+            Follow these instructions
+          </Text>
         </View>
       ),
-      []
+      [theme.foreground, theme.mutedForeground]
     );
 
     const listRef = useRef<BottomSheetFlatListMethods>(null);
@@ -72,6 +82,8 @@ const NavigationStepsBottomSheet = forwardRef<BottomSheet, NavigationStepsBottom
 
     const handleOnIndexChange = useCallback(
       (index: number) => {
+        onChange?.(index);
+
         switch (index) {
           case -1:
             setPaddingBottom(insets.bottom);
@@ -92,7 +104,7 @@ const NavigationStepsBottomSheet = forwardRef<BottomSheet, NavigationStepsBottom
             setPaddingBottom(insets.bottom);
         }
       },
-      [insets.bottom]
+      [insets.bottom, onChange]
     );
 
     return (
@@ -104,6 +116,8 @@ const NavigationStepsBottomSheet = forwardRef<BottomSheet, NavigationStepsBottom
         topInset={insets.top}
         onChange={handleOnIndexChange}
         enableContentPanningGesture={false}
+        backgroundStyle={{ backgroundColor: theme.card }}
+        handleIndicatorStyle={{ backgroundColor: theme.border }}
         style={styles.shadowContainer}>
         <BottomSheetFlatList
           ref={listRef}
@@ -111,8 +125,9 @@ const NavigationStepsBottomSheet = forwardRef<BottomSheet, NavigationStepsBottom
           keyExtractor={keyExtractor}
           renderItem={renderItem}
           ListHeaderComponent={ListHeader}
-          contentContainerStyle={{ paddingBottom: paddingBottom }} // Add extra padding to allow scrolling last items above the bottom sheet handle
+          contentContainerStyle={{ paddingBottom: paddingBottom }}
           keyboardShouldPersistTaps="handled"
+          ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: theme.border }} />}
           onScrollToIndexFailed={(info: any) => {
             setTimeout(() => {
               listRef.current?.scrollToIndex({
@@ -142,5 +157,13 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
 
     elevation: 5,
+  },
+  stepCard: {
+    marginHorizontal: 12,
+    marginBottom: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
   },
 });

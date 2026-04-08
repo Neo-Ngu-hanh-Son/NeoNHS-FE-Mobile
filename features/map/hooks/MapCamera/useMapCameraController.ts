@@ -10,7 +10,6 @@ interface UseMapCameraControllerProps {
   initialPointId?: string;
   targetNavigationPointId?: string;
   mapPoints: MapPoint[];
-  navigationEndpoints?: { origin?: LatLng; destination?: LatLng } | null;
   handleOpenPointSheet: (point: MapPoint) => void;
   isMapReady: boolean;
 }
@@ -26,7 +25,6 @@ export const useMapCameraController = ({
   mapRef,
   initialPointId,
   mapPoints,
-  navigationEndpoints,
   handleOpenPointSheet,
   isMapReady,
 }: UseMapCameraControllerProps) => {
@@ -65,43 +63,11 @@ export const useMapCameraController = ({
     };
   }, [initialPointId, mapPoints, mapRef, handleOpenPointSheet, isMapReady]);
 
-  /**
-   * This effect fit the camera to the navigation preview route when it is first mounted
-   */
-
-  const initialRouteFocusRef = useRef(false);
-  useEffect(() => {
-    console.log('Auto focus statuses', {
-      navigationEndpoints,
-      isMapReady,
-      mapRefReady: !!mapRef.current,
-      initialRouteFocusSet: !!initialRouteFocusRef.current,
-    });
-    if (
-      navigationEndpoints == null ||
-      !navigationEndpoints.origin ||
-      !navigationEndpoints.destination ||
-      initialRouteFocusRef.current ||
-      !isMapReady
-    ) {
-      return;
-    }
-    logger.debug('Fitting camera to navigation route for the first time');
-    mapRef.current?.fitToCoordinates(
-      [navigationEndpoints.origin, navigationEndpoints.destination],
-      {
-        top: 160,
-        right: 64,
-        bottom: 360,
-        left: 64,
-      },
-      true
-    );
-    initialRouteFocusRef.current = true;
-  }, [navigationEndpoints, isMapReady, mapRef]);
-
   // ================= Functions to programmatically control the camera =================
 
+  /**
+   * Focus the camera to a specific point
+   */
   const focusOnPoint = useCallback(
     (targetPoint: MapPoint) => {
       mapRef.current?.animateToCoordinate(
@@ -117,11 +83,16 @@ export const useMapCameraController = ({
     [mapRef]
   );
 
+  /**
+   * Fit the camera of the map to the specific coordiantes
+   *
+   * Note: DOES NOT check if mapRef is available or not, you must check it yourself.
+   */
   const fitCameraToCoordinates = useCallback(
-    (origin: LatLng, destination: LatLng) => {
+    (origin: LatLng, destination: LatLng, options?: { top: number; right: number; bottom: number; left: number }) => {
       mapRef.current?.fitToCoordinates(
         [origin, destination],
-        {
+        options ?? {
           top: 160,
           right: 64,
           bottom: 180,

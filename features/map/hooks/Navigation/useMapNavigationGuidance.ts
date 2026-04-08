@@ -37,7 +37,6 @@ type UseMapNavigationGuidanceParams = {
 };
 
 type UseMapNavigationGuidanceReturn = {
-  isGuidanceMode: boolean;
   isDirectionsLoading: boolean;
   isDirectionsReady: boolean;
   directionError: string | null;
@@ -390,7 +389,6 @@ export function useMapNavigationGuidance({
   ]);
 
   return {
-    isGuidanceMode,
     isDirectionsLoading,
     isDirectionsReady,
     directionError,

@@ -8,17 +8,17 @@ import { Text } from '@/components/ui/text';
 import type { MapPoint } from '../../types';
 import { getMarkerStyle } from '../Marker/MarkerStyles';
 
-type MapSearchBarProps = {
+type MapSearchBarProps<TPoint extends MapPoint = MapPoint> = {
   value: string;
   onChangeText: (text: string) => void;
   onClear: () => void;
-  onSelectResult: (point: MapPoint) => void;
-  results: MapPoint[];
+  onSelectResult: (point: TPoint) => void;
+  results: TPoint[];
   isSearching: boolean;
   topInset?: number;
 };
 
-export default function MapSearchBar({
+export default function MapSearchBar<TPoint extends MapPoint = MapPoint>({
   value,
   onChangeText,
   onClear,
@@ -26,12 +26,12 @@ export default function MapSearchBar({
   results,
   isSearching,
   topInset = 0,
-}: MapSearchBarProps) {
+}: MapSearchBarProps<TPoint>) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
   const renderItem = useCallback(
-    ({ item }: { item: MapPoint }) => {
+    ({ item }: { item: TPoint }) => {
       const markerStyle = getMarkerStyle(item.type);
 
       return (
@@ -63,7 +63,7 @@ export default function MapSearchBar({
     [isDarkColorScheme, onSelectResult, theme.foreground, theme.mutedForeground]
   );
 
-  const keyExtractor = useCallback((item: MapPoint) => item.id, []);
+  const keyExtractor = useCallback((item: TPoint) => item.id, []);
 
   return (
     <View pointerEvents="box-none" className="absolute left-0 right-0 z-50 px-4" style={{ top: topInset + 8 }}>

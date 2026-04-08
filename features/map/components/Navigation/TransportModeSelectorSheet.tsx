@@ -163,7 +163,7 @@ export default function TransportModeSelectorSheet({
             }`}>
             <Text
               className={`font-semibold ${canStartNavigation ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
-              Start Navigation
+              {canStartNavigation ? 'Start Navigation' : 'Loading Navigation...'}
             </Text>
           </TouchableOpacity>
         </View>
