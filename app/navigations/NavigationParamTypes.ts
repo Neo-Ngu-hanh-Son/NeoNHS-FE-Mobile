@@ -21,15 +21,7 @@ export type AuthStackParamList = {
 export type TabsStackParamList = {
   Home: undefined;
   Discover: undefined;
-  Map:
-    | {
-        pointId?: string;
-        targetNavigationPointId?: string;
-        userCheckedInPointId?: string;
-        transportMode?: TravelMode;
-        navigationRequestId?: number;
-      }
-    | undefined;
+  Map: { pointId?: string; targetNavigationPointId?: string; userCheckedInPointId?: string } | undefined;
   Bookings: undefined;
   Profile: undefined;
   TestCart: undefined;
@@ -118,7 +110,15 @@ export type CheckoutRoutes = {
 
 /* Chat */
 export type ChatRoutes = {
-  ChatRoom: { roomId: string };
+  ChatRoom: {
+    roomId: string;
+    workshopSnippet?: {
+      workshopId: string;
+      title: string;
+      price: number;
+      thumbnailUrl: string;
+    };
+  };
 };
 
 /* ============================================================
@@ -127,6 +127,11 @@ export type ChatRoutes = {
 
 type BaseMainRoutes = {
   Tabs: NavigatorScreenParams<TabsStackParamList>;
+};
+
+/* Notifications */
+export type NotificationRoutes = {
+  Notifications: undefined;
 };
 
 export type MainStackParamList = BaseMainRoutes &
@@ -139,6 +144,7 @@ export type MainStackParamList = BaseMainRoutes &
   WorkshopRoutes &
   CheckoutRoutes &
   BlogRoutes &
+  NotificationRoutes &
   ChatRoutes;
 
 /* ============================================================

@@ -26,6 +26,7 @@ import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { userService } from '../services/userService';
 import { ApiError } from '@/services/api/types';
+import LoadingOverlay from '@/components/Loader/LoadingOverlay';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -125,7 +126,24 @@ export default function WithdrawScreen() {
             if (!result.canceled && result.assets && result.assets.length > 0) {
                 const asset = result.assets[0];
                 setLivePhotoUri(asset.uri);
-                setStep('confirm');
+                
+                setIsLoading(true);
+                try {
+                    const base64Data = await uriToBase64(asset.uri);
+                    const livenessRes = await userService.checkLiveness(base64Data);
+                    
+                    if (livenessRes.success && livenessRes.data) {
+                        setStep('confirm');
+                    } else {
+                        Alert.alert('Liveness Check Failed', 'Spoofing detected. Please take a real, clear selfie. Do not use a photo of a photo or a mask.');
+                        setLivePhotoUri(null);
+                    }
+                } catch (error: any) {
+                    Alert.alert('Liveness Check Error', error.message || 'Face spoofing detected or network error. Please try again.');
+                    setLivePhotoUri(null);
+                } finally {
+                    setIsLoading(false);
+                }
             }
         } catch (error) {
             console.error('Camera error:', error);
@@ -563,6 +581,10 @@ export default function WithdrawScreen() {
                 <View style={[styles.mainContent, { backgroundColor: theme.background }]}>
                     {renderContent()}
                 </View>
+                
+                {isLoading && step === 'face' && (
+                    <LoadingOverlay visible={true} message="Checking live face..." />
+                )}
             </SafeAreaView>
         </View>
     );

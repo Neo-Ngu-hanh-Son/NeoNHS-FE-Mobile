@@ -1,17 +1,54 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { cartService } from '../services/cartService';
-import { PreCheckoutResponse } from '../types';
+import { PreCheckoutResponse, CartItem } from '../types';
 import LoadingOverlay from '@/components/Loader/LoadingOverlay';
 import { logger } from '@/utils/logger';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { TouchableOpacity } from 'react-native';
+
+interface GroupedItems {
+    groupName: string;
+    groupType: 'event' | 'workshop' | 'other';
+    items: CartItem[];
+}
+
+function groupCartItems(cartItems: CartItem[]): GroupedItems[] {
+    const groups: Record<string, GroupedItems> = {};
+
+    for (const item of cartItems) {
+        let key: string;
+        let groupName: string;
+        let groupType: 'event' | 'workshop' | 'other';
+
+        if (item.eventId && item.eventName) {
+            key = `event-${item.eventId}`;
+            groupName = item.eventName;
+            groupType = 'event';
+        } else if (item.workshopSessionId && item.workshopName) {
+            key = `workshop-${item.workshopSessionId}`;
+            groupName = item.workshopName;
+            groupType = 'workshop';
+        } else {
+            key = 'other';
+            groupName = 'Other Items';
+            groupType = 'other';
+        }
+
+        if (!groups[key]) {
+            groups[key] = { groupName, groupType, items: [] };
+        }
+        groups[key].items.push(item);
+    }
+
+    return Object.values(groups);
+}
 
 export default function PreCheckoutScreen() {
     const { isDarkColorScheme } = useTheme();
@@ -24,6 +61,11 @@ export default function PreCheckoutScreen() {
 
     const [loading, setLoading] = useState(false);
     const [preCheckoutData, setPreCheckoutData] = useState<PreCheckoutResponse | null>(null);
+
+    const groupedItems = useMemo(() => {
+        if (!preCheckoutData) return [];
+        return groupCartItems(preCheckoutData.cartItems);
+    }, [preCheckoutData]);
 
 
 
@@ -99,13 +141,29 @@ export default function PreCheckoutScreen() {
             <ScrollView contentContainerStyle={styles.content}>
                 <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
                     <Text style={[styles.sectionTitle, { color: theme.foreground }]}>Items ({preCheckoutData.cartItems.length})</Text>
-                    {preCheckoutData.cartItems.map((item, index) => (
-                        <View key={item.id || index} style={[styles.itemRow, { borderBottomColor: theme.border }]}>
-                            <View style={{ flex: 1 }}>
-                                <Text style={{ color: theme.foreground, fontWeight: '500' }}>{item.itemName}</Text>
-                                <Text style={{ color: theme.mutedForeground, fontSize: 12 }}>Qty: {item.quantity}</Text>
+                    {groupedItems.map((group, groupIndex) => (
+                        <View key={groupIndex} style={groupIndex > 0 ? { marginTop: 16 } : undefined}>
+                            {/* Group header */}
+                            <View style={[styles.groupHeader, { backgroundColor: group.groupType === 'event' ? 'rgba(59, 130, 246, 0.08)' : group.groupType === 'workshop' ? 'rgba(168, 85, 247, 0.08)' : 'rgba(107, 114, 128, 0.08)' }]}>
+                                <MaterialIcons
+                                    name={group.groupType === 'event' ? 'event' : group.groupType === 'workshop' ? 'handyman' : 'category'}
+                                    size={16}
+                                    color={group.groupType === 'event' ? '#3b82f6' : group.groupType === 'workshop' ? '#a855f7' : '#6b7280'}
+                                />
+                                <Text style={[styles.groupName, { color: group.groupType === 'event' ? '#3b82f6' : group.groupType === 'workshop' ? '#a855f7' : '#6b7280' }]}>
+                                    {group.groupName}
+                                </Text>
                             </View>
-                            <Text style={{ color: theme.foreground }}>{item.totalPrice.toLocaleString()} VND</Text>
+                            {/* Items in group */}
+                            {group.items.map((item, index) => (
+                                <View key={item.id || index} style={[styles.itemRow, { borderBottomColor: theme.border }]}>
+                                    <View style={{ flex: 1, paddingLeft: 8 }}>
+                                        <Text style={{ color: theme.foreground, fontWeight: '500' }}>{item.itemName}</Text>
+                                        <Text style={{ color: theme.mutedForeground, fontSize: 12 }}>Qty: {item.quantity}</Text>
+                                    </View>
+                                    <Text style={{ color: theme.foreground }}>{item.totalPrice.toLocaleString()} VND</Text>
+                                </View>
+                            ))}
                         </View>
                     ))}
                 </View>
@@ -188,6 +246,19 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 12,
         borderBottomWidth: 1,
+    },
+    groupHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        paddingVertical: 8,
+        borderRadius: 8,
+        marginBottom: 4,
+        gap: 6,
+    },
+    groupName: {
+        fontSize: 14,
+        fontWeight: '600',
     },
     summaryRow: {
         flexDirection: 'row',
