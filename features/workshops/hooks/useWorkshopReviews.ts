@@ -1,49 +1,135 @@
 import { useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
-import { workshopService } from '../services/workshopService';
-import type { WorkshopReviewPageResponse } from '../types';
+import { reviewService } from '@/features/reviews/services/reviewService';
+import { ReviewTypeFlg, type ReviewPageResponse, type ReviewSortBy, type ReviewSortDir } from '@/features/reviews/types';
+import { reviewsQueryKeyRoot } from '@/features/reviews/utils';
 
-export type ReviewSortKey = 'createdAt,desc' | 'rating,desc' | 'rating,asc';
+/**
+ * Compound sort key used by UI chips — split into sortBy / sortDir
+ * before sending to the API.
+ */
+export type ReviewSortKey = `${ReviewSortBy},${ReviewSortDir}`;
 
 const PAGE_SIZE = 10;
 
 /**
- * Infinite-scroll hook for workshop reviews.
- * Maps to GET /api/reviews/workshops/{workshopTemplateId}
+ * Normalize any backend response shape into a flat ReviewPageResponse.
+ *
+ * Spring Boot may nest page metadata under a `page` sub-object
+ * (Spring Boot 3.2+).  The apiClient's transformResponse already strips
+ * one layer of { status, data: ... }, but some endpoints may
+ * double-wrap or use a different format.
+ */
+function normalizePage(raw: any): ReviewPageResponse {
+  if (!raw) {
+    console.warn('[useWorkshopReviews] API returned null/undefined');
+    return emptyPage();
+  }
+
+  if (Array.isArray(raw.content)) {
+    return flattenPageMeta(raw);
+  }
+
+  if (raw.data && Array.isArray(raw.data.content)) {
+    return flattenPageMeta(raw.data);
+  }
+
+  if (Array.isArray(raw)) {
+    return {
+      content: raw,
+      totalElements: raw.length,
+      totalPages: 1,
+      size: raw.length,
+      last: true,
+      first: true,
+      empty: raw.length === 0,
+    };
+  }
+
+  console.warn(
+    '[useWorkshopReviews] Unexpected response shape:',
+    JSON.stringify(raw).slice(0, 500),
+  );
+  return emptyPage();
+}
+
+function flattenPageMeta(page: any): ReviewPageResponse {
+  const nested =
+    typeof page.page === 'object' && page.page !== null ? page.page : null;
+  return {
+    content: page.content ?? [],
+    size: page.size ?? nested?.size ?? PAGE_SIZE,
+    totalElements:
+      page.totalElements ?? nested?.totalElements ?? page.content?.length ?? 0,
+    totalPages: page.totalPages ?? nested?.totalPages ?? 1,
+    number: page.number ?? nested?.number ?? 0,
+    page: typeof page.page === 'number' ? page.page : undefined,
+    first: page.first ?? nested?.first,
+    last: page.last ?? nested?.last,
+    empty: page.empty ?? nested?.empty ?? (page.content?.length === 0),
+  };
+}
+
+function emptyPage(): ReviewPageResponse {
+  return {
+    content: [],
+    totalElements: 0,
+    totalPages: 0,
+    size: PAGE_SIZE,
+    last: true,
+    first: true,
+    empty: true,
+  };
+}
+
+/**
+ * Infinite-scroll hook for workshop template reviews.
+ * GET /api/reviews/workshops/{workshopTemplateId}
  */
 export function useWorkshopReviews(
   workshopTemplateId: string,
-  sort: ReviewSortKey = 'createdAt,desc'
+  sort: ReviewSortKey = 'createdAt,desc',
 ) {
-  return useInfiniteQuery<WorkshopReviewPageResponse>({
-    queryKey: ['workshop-reviews', workshopTemplateId, sort],
+  const root = reviewsQueryKeyRoot(ReviewTypeFlg.WORKSHOP, workshopTemplateId);
+  const [sortBy, sortDir] = sort.split(',') as [ReviewSortBy, ReviewSortDir];
+
+  return useInfiniteQuery<ReviewPageResponse>({
+    queryKey: [...root, sort],
     queryFn: async ({ pageParam = 0 }) => {
-      const response = await workshopService.getReviews(workshopTemplateId, {
-        page: pageParam as number,
-        size: PAGE_SIZE,
-        sort,
-      });
-      return response.data;
+      const response = await reviewService.getWorkshopReviews(
+        workshopTemplateId,
+        { page: pageParam as number, size: PAGE_SIZE, sortBy, sortDir },
+      );
+
+      const normalized = normalizePage(response.data);
+
+      if (__DEV__) {
+        console.log(
+          `[useWorkshopReviews] page=${pageParam}`,
+          `keys=${response.data ? Object.keys(response.data) : 'null'}`,
+          `content.length=${normalized.content.length}`,
+          `totalElements=${normalized.totalElements}`,
+        );
+      }
+
+      return normalized;
     },
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
-      // Guard 1: explicit last-page flag from the API
       if (lastPage.last === true) return undefined;
+      if (lastPage.empty === true) return undefined;
 
-      // Guard 2: math-based fallback — covers cases where `last` is absent OR
-      // where the backend uses `number` (Spring standard) instead of `page`.
-      const currentPage = lastPage.page ?? lastPage.number ?? 0;
+      const currentPage =
+        (typeof lastPage.page === 'number' ? lastPage.page : undefined) ??
+        (typeof lastPage.number === 'number' ? lastPage.number : undefined) ??
+        0;
       const totalPages = lastPage.totalPages ?? 1;
-      if (currentPage + 1 >= totalPages) return undefined;
 
+      if (currentPage + 1 >= totalPages) return undefined;
       return currentPage + 1;
     },
     enabled: !!workshopTemplateId,
-    // Keep the previous sort's data visible while the new sort is fetching
-    // so isLoading stays false and the list doesn't flash/disappear.
     placeholderData: keepPreviousData,
-    // Don't re-fetch just because the keyboard opened or a modal was dismissed.
     refetchOnWindowFocus: false,
-    // Limit retries so a failed request doesn't flood the log with retries.
     retry: 1,
   });
 }
