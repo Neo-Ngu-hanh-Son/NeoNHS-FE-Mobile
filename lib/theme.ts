@@ -63,7 +63,7 @@ export const THEME = {
     sidebarForeground: '#f8fafc',
 
     // Primary (Brighter for dark contrast)
-    primary: '#22c55e',
+    primary: '#15803d',
     primaryForeground: '#0b0f0c',
     sidebarPrimary: '#16a34a',
     sidebarPrimaryForeground: '#ffffff',
