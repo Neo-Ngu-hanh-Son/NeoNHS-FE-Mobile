@@ -3,6 +3,7 @@ import { discoverEndpoints } from './discover.api';
 import { eventEndpoints } from './events.api';
 import { blogEndpoints } from './blog.api';
 import { workshopEndpoints } from './workshops.api';
+import { reviewEndpoints } from './reviews.api';
 import { uploadImageToCloudinary } from '@/services/cloudinary';
 
 /**
@@ -97,5 +98,6 @@ export const endpoints = {
   events: eventEndpoints,
   blog: blogEndpoints,
   workshops: workshopEndpoints,
+  reviews: reviewEndpoints,
   utilities: utilitiesEndpoints,
 } as const;

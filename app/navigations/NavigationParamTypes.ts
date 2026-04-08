@@ -81,6 +81,12 @@ export type MapRoutes = {
 export type EventRoutes = {
   EventDetail: { eventId: string };
   EventTimeLineMap: { eventId: string; pointId?: string; targetNavigationPointId?: string };
+  EventAllReviews: {
+    eventId: string;
+    eventName: string;
+    averageRating: number;
+    totalRatings: number;
+  };
 };
 
 /* Workshops */

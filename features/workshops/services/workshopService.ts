@@ -10,11 +10,6 @@ import {
   WorkshopPageResponse,
   WorkshopFilterParams,
   WorkshopSearchParams,
-  WorkshopReviewResponse,
-  WorkshopReviewPageResponse,
-  WorkshopReviewParams,
-  CreateReviewRequest,
-  UpdateReviewRequest,
 } from '../types';
 
 export const workshopService = {
@@ -107,54 +102,6 @@ export const workshopService = {
     return await apiClient.get<WorkshopPageResponse<WorkshopSessionResponse>>(
       endpoints.workshops.getTemplateSessions(templateId),
       { params: queryParams, requiresAuth: false }
-    );
-  },
-  /**
-   * Get paginated reviews for a workshop template
-   * GET /api/reviews/workshops/{workshopTemplateId}
-   */
-  getReviews: async (
-    workshopTemplateId: string,
-    params?: WorkshopReviewParams
-  ): Promise<ApiResponse<WorkshopReviewPageResponse>> => {
-    const queryParams: Record<string, string | number> = {};
-    if (params) {
-      if (params.page !== undefined) queryParams.page = params.page;
-      if (params.size !== undefined) queryParams.size = params.size;
-      if (params.sort) queryParams.sort = params.sort;
-    }
-    return await apiClient.get<WorkshopReviewPageResponse>(
-      endpoints.workshops.getReviews(workshopTemplateId),
-      { params: queryParams, requiresAuth: false }
-    );
-  },
-
-  /**
-   * Create a review for a workshop template
-   * POST /api/reviews  (requires TOURIST role)
-   */
-  createReview: async (
-    request: CreateReviewRequest
-  ): Promise<ApiResponse<WorkshopReviewResponse>> => {
-    return await apiClient.post<WorkshopReviewResponse>(
-      endpoints.workshops.createReview(),
-      request,
-      { requiresAuth: true }
-    );
-  },
-
-  /**
-   * Update the current user's existing review
-   * PUT /api/reviews/{id}  (requires TOURIST role + review ownership)
-   */
-  updateReview: async (
-    reviewId: string,
-    request: UpdateReviewRequest
-  ): Promise<ApiResponse<WorkshopReviewResponse>> => {
-    return await apiClient.put<WorkshopReviewResponse>(
-      endpoints.workshops.updateReview(reviewId),
-      request,
-      { requiresAuth: true }
     );
   },
 };

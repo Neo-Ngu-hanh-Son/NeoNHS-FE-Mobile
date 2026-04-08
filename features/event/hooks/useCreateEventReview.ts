@@ -3,31 +3,29 @@ import { reviewService } from '@/features/reviews/services/reviewService';
 import { ReviewTypeFlg } from '@/features/reviews/types';
 import { reviewsQueryKeyRoot } from '@/features/reviews/utils';
 
-export type CreateWorkshopReviewBody = {
+export type CreateEventReviewBody = {
   rating: number;
   comment?: string;
   imageUrls?: string[];
 };
 
 /**
- * POST /api/reviews with reviewTypeFlg=1 (workshop) + template id.
+ * POST /api/reviews with reviewTypeFlg=2 (event) + event id.
  */
-export function useCreateWorkshopReview(workshopTemplateId: string) {
+export function useCreateEventReview(eventId: string) {
   const queryClient = useQueryClient();
-  const root = reviewsQueryKeyRoot(ReviewTypeFlg.WORKSHOP, workshopTemplateId);
+  const root = reviewsQueryKeyRoot(ReviewTypeFlg.EVENT, eventId);
 
   return useMutation({
-    mutationFn: (body: CreateWorkshopReviewBody) =>
+    mutationFn: (body: CreateEventReviewBody) =>
       reviewService.createReview({
-        reviewTypeFlg: ReviewTypeFlg.WORKSHOP,
-        reviewTypeId: workshopTemplateId,
+        reviewTypeFlg: ReviewTypeFlg.EVENT,
+        reviewTypeId: eventId,
         ...body,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [...root] });
-      queryClient.invalidateQueries({
-        queryKey: ['workshop-detail', workshopTemplateId],
-      });
+      queryClient.invalidateQueries({ queryKey: ['event-detail', eventId] });
     },
   });
 }
