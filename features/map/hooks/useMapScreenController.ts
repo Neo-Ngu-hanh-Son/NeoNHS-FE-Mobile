@@ -1,4 +1,4 @@
-import { RefObject, useCallback, useEffect, useState } from 'react';
+import { RefObject, useCallback, useState } from 'react';
 import { MapPoint, MapPointCheckin } from '../types';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { useModal } from '@/app/providers/ModalProvider';

@@ -45,7 +45,6 @@ type UseMapNavigationGuidanceReturn = {
   navigationSteps: Step[];
   currentUserStepIndex: number;
   navigationPolylineCoordinates: PolylineCoordinate[];
-  onMapReady: () => void;
   handleExitGuidance: () => void;
   isUserArrived: boolean;
   currentNavigationStepData: CurrentNavigationStepData;
@@ -317,13 +316,6 @@ export function useMapNavigationGuidance({
     }
   }, [isGuidanceMode, navigationEndpoints, userLocation, navigationStatus.isUserArrived]);
 
-  const onMapReady = useCallback(() => {
-    setNavigationStatus((prev) => ({
-      ...prev,
-      isMapReady: true,
-    }));
-  }, []);
-
   const totalSteps = steps.length;
   const currentIndex = totalSteps > 0 ? Math.min(currentUserStepIndex, totalSteps - 1) : 0;
 
@@ -406,7 +398,6 @@ export function useMapNavigationGuidance({
     navigationSteps: steps,
     currentUserStepIndex,
     navigationPolylineCoordinates: navigationPolylineCoordinates,
-    onMapReady,
     handleExitGuidance,
     isUserArrived: navigationStatus.isUserArrived,
     currentNavigationStepData,

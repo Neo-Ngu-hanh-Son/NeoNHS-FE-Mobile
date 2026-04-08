@@ -1,5 +1,5 @@
 // Marker components
-export { default as MarkerVisual } from './Marker/MarkerVisual';
+export { default as MarkerVisual } from './Marker/MapMarkerVisual';
 export { default as MarkerCallout } from './Marker/MarkerCallout';
 export { markerStyles, getMarkerStyle } from './Marker/MarkerStyles';
 export type { MarkerStyle } from './Marker/MarkerStyles';

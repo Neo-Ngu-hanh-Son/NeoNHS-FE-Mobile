@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { TouchableOpacity, View } from 'react-native';
-import { FontAwesome6, Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { FontAwesome6, Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';

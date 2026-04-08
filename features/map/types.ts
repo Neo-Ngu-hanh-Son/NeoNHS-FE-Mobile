@@ -44,6 +44,25 @@ export type Edge = {
   note?: string;
 };
 
+export interface EventMapPoint extends MapPoint {
+  name: string;
+  description?: string;
+  imageList?: string;
+  latitude: number;
+  longitude: number;
+  addressString?: string;
+
+  // Event point specific fields
+  eventPointTag: EventMapPointTag;
+}
+
+export interface EventMapPointTag {
+  name: string;
+  description?: string;
+  color?: string; // Hex color code for the tag, e.g., "#FF5733"
+  iconUrl?: string; // Optional URL for an IMAGE
+}
+
 // These are special points used for map markers and interactions (They are not necessarily nodes in the graph, but can be on the edges)
 export interface MapPoint {
   // Base PointResponse Fields
@@ -79,6 +98,8 @@ export interface MapPoint {
     type: 'node' | 'edge';
     refId: string; // nodeId or edgeId
   };
+
+  // Marker visual metadata (From backend if they include it)
 }
 
 export interface MapPointCheckin {

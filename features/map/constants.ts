@@ -4,7 +4,7 @@ const MAP_CONSTANTS = {
   DISTANCE_LIMIT_BEFORE_REFETCH_M: 20,
 
   // Radius to consider user is "on" the step for navigation guidance
-  STEP_RADIUS_M: 15,
+  STEP_RADIUS_M: 30,
   ARRIVAL_RADIUS_M: 10, // Radius to consider user has arrived at the destination
 
   // The minimum time interval between user location updates to prevent excessive re-renders and computations

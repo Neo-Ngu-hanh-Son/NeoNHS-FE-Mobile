@@ -6,7 +6,7 @@ import { logger } from '@/utils/logger';
 import { MapPoint, PolylineCoordinate } from '../types';
 import MapPointDetailModal from '../components/PointDetailModal/PointDetailModal';
 import type { MapPointDetailSheetRef } from '../components/PointDetailModal/PointDetailModal';
-import NHSMap, { NHSMapRef } from '../components/Map/NHSMap';
+import { NHSMapRef, NHSMap } from '../components/Map/NHSMap';
 import NavigationGuideOverlay from '../components/Navigation/NavigationGuideOverlay';
 import { MapMarkerFilterBar, MapSearchBar, TransportModeSelectorSheet } from '../components';
 import { mapService } from '../services/mapServices';
@@ -46,6 +46,8 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
   // Zustand store for managing map-wide states like view mode
   const viewMode = useMapStore((state) => state.viewMode);
   const setViewMode = useMapStore((state) => state.setViewMode);
+  const setIsMapReady = useMapStore((state) => state.setIsMapReady);
+  const isMapReady = useMapStore((state) => state.isMapReady);
 
   // Map states
   const mapRef = useRef<NHSMapRef>(null);
@@ -55,6 +57,12 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
   const { alert } = useModal();
 
   const { filters: markerFilters, setShowAll, toggleFilter } = useMapMarkerFilters();
+
+  const handleOnMapReady = useCallback(() => {
+    logger.debug('Map reported ready state');
+    setIsMapReady(true);
+  }, [setIsMapReady]);
+
   // User location tracking - auto-start on mount
   const {
     location: userLocation,
@@ -107,6 +115,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     navigation,
     setViewMode,
     mapRef,
+    mapIsReady: isMapReady,
   });
 
   const {
@@ -115,7 +124,6 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     directionError,
     navigationSteps,
     currentUserStepIndex,
-    onMapReady,
     handleExitGuidance,
     isUserArrived,
     currentNavigationStepData,
@@ -148,14 +156,20 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     pointDetailSheetRef.current?.dismiss();
   }, []);
 
+  const origin = previewRouteSummary?.routes[0].legs[0].startLocation;
+  const destination = previewRouteSummary?.routes[0].legs[0].endLocation;
+
   const { focusOnPoint } = useMapCameraController({
     mapRef,
     initialPointId,
     targetNavigationPointId,
     mapPoints,
-    isDirectionsReady,
-    isGuidanceMode,
     handleOpenPointSheet: handleOpenPointSheetModal,
+    isMapReady,
+    navigationEndpoints: {
+      origin: origin?.latLng,
+      destination: destination?.latLng,
+    },
   });
 
   const { searchText, setSearchText, clearSearch, isSearching, filteredResults } = useMapSearch(mapPoints);
@@ -240,13 +254,14 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
         onActiveCheckinPointChange={controller.setActivePoint}
         isLocationLoading={isLocationLoading}
         startTrackingCallback={startTracking}
-        onMapReadyCallback={onMapReady}
+        onMapReadyCallback={handleOnMapReady}
         navigationPolylineCoordinates={displayCoordinates}
         isNavPolylineVisible={isNavPolylineVisible}
         isGuidanceMode={isGuidanceMode}
         isMapInteractionEnabled={true}
         markerFilters={markerFilters}
         enableCheckinMode={true}
+        viewMode={viewMode}
       />
 
       {/* Exploring Mode */}

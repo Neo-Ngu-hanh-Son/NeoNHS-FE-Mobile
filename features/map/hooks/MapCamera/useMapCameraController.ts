@@ -3,17 +3,16 @@ import { LatLng } from 'react-native-maps';
 import { NHSMapRef } from '@/features/map/components';
 import { parseFloatOrDefault } from '@/utils/parseNumber';
 import { MapPoint } from '../../types';
-import { useMapStore } from '../../store/useMapStore';
+import { logger } from '@/utils/logger';
 
 interface UseMapCameraControllerProps {
   mapRef: RefObject<NHSMapRef | null>;
   initialPointId?: string;
   targetNavigationPointId?: string;
   mapPoints: MapPoint[];
-  navigationEndpoints?: { origin: LatLng; destination: LatLng } | null;
-  isDirectionsReady: boolean;
-  isGuidanceMode: boolean;
+  navigationEndpoints?: { origin?: LatLng; destination?: LatLng } | null;
   handleOpenPointSheet: (point: MapPoint) => void;
+  isMapReady: boolean;
 }
 
 /**
@@ -26,16 +25,13 @@ interface UseMapCameraControllerProps {
 export const useMapCameraController = ({
   mapRef,
   initialPointId,
-  targetNavigationPointId,
   mapPoints,
   navigationEndpoints,
-  isDirectionsReady,
-  isGuidanceMode,
   handleOpenPointSheet,
+  isMapReady,
 }: UseMapCameraControllerProps) => {
   const autoTriggerFocusRef = useRef(true);
   const initialFocusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isMapReady = useMapStore((state) => state.isMapReady);
   /**
    * This effect focus the camera to a specific point if user navigate it from the point details screen.
    */
@@ -69,22 +65,41 @@ export const useMapCameraController = ({
     };
   }, [initialPointId, mapPoints, mapRef, handleOpenPointSheet, isMapReady]);
 
+  /**
+   * This effect fit the camera to the navigation preview route when it is first mounted
+   */
+
+  const initialRouteFocusRef = useRef(false);
   useEffect(() => {
-    if (!isGuidanceMode || !targetNavigationPointId || !isDirectionsReady || !navigationEndpoints || !isMapReady) {
+    console.log('Auto focus statuses', {
+      navigationEndpoints,
+      isMapReady,
+      mapRefReady: !!mapRef.current,
+      initialRouteFocusSet: !!initialRouteFocusRef.current,
+    });
+    if (
+      navigationEndpoints == null ||
+      !navigationEndpoints.origin ||
+      !navigationEndpoints.destination ||
+      initialRouteFocusRef.current ||
+      !isMapReady
+    ) {
       return;
     }
-
+    logger.debug('Fitting camera to navigation route for the first time');
     mapRef.current?.fitToCoordinates(
       [navigationEndpoints.origin, navigationEndpoints.destination],
       {
         top: 160,
         right: 64,
-        bottom: 180,
+        bottom: 360,
         left: 64,
       },
       true
     );
-  }, [isGuidanceMode, targetNavigationPointId, isDirectionsReady, navigationEndpoints, mapRef, isMapReady]);
+    initialRouteFocusRef.current = true;
+  }, [navigationEndpoints, isMapReady, mapRef]);
+
   // ================= Functions to programmatically control the camera =================
 
   const focusOnPoint = useCallback(

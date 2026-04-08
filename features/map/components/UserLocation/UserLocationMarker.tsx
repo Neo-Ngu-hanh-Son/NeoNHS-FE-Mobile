@@ -36,7 +36,8 @@ export default function UserLocationMarker({
       anchor={{ x: 0.5, y: 0.5 }}
       flat
       rotation={markerRotation}
-      tracksViewChanges={tracks}>
+      tracksViewChanges={tracks}
+      zIndex={5}>
       <View style={styles.container}>
         {showAccuracyCircle ? (
           <View
@@ -63,6 +64,7 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 10,
   },
   outerGlow: {
     position: 'absolute',

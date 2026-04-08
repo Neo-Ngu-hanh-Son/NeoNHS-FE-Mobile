@@ -2,15 +2,17 @@ import type { Region } from 'react-native-maps';
 import type { MapMarkerFilters } from '../../hooks';
 import type { UserLocation } from '../../hooks/useUserLocation';
 import type { MapPoint, MapPointCheckin, PolylineCoordinate } from '../../types';
+import { MapViewMode } from '../../store/useMapStore';
+import { ReactNode } from 'react';
 
 /**
  * Props for NHSMap.
  */
-export interface NHSMapProps {
+export interface NHSMapProps<T extends MapPoint = MapPoint> {
   /**
    * Called when a marker/check-in marker is pressed.
    */
-  onMarkerPress?: (point: MapPoint) => void;
+  onMarkerPress?: (point: T) => void;
 
   /**
    * Selected point id used for selection-driven marker UI states. (Currently not used because of glitches)
@@ -20,7 +22,7 @@ export interface NHSMapProps {
   /**
    * Map points rendered as parent markers and optional nested check-in markers.
    */
-  mapPoints?: MapPoint[];
+  mapPoints?: T[];
 
   /**
    * Current user location for user marker and follow-user camera behavior.
@@ -99,6 +101,18 @@ export interface NHSMapProps {
    * Recommended source: screen mode flag (true on check-in capable map screens).
    */
   enableCheckinMode?: boolean;
+
+  /**
+   * Specify which view mode the map is in, which will help hide specific element on the map
+   */
+  viewMode: MapViewMode;
+
+  /**
+   * Render a custom marker.
+   *
+   * Note: You have to write your own <Marker/> and <MarkerVisual/> component to use this. You can refer to DynamicMarkerVisual as an example.
+   */
+  renderMarker?: (point: MapPoint, shouldDisplayMarkerName: boolean) => ReactNode;
 }
 
 /**
