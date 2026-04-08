@@ -24,6 +24,7 @@ import { ChatMessage, ProductSnippetParams } from "../types";
 import { useAuth } from "@/features/auth/context/AuthContext";
 import { useChatContext } from "../context/ChatProvider";
 import { ChatRestService } from "../services/chatApiService";
+import { SmartImage } from "@/components/ui/smart-image";
 
 /** Maps backend role strings to user-facing labels. */
 function formatParticipantRole(role?: string): string {
@@ -182,12 +183,46 @@ export default function ChatScreen({ route, navigation }: any) {
 
       if (result.canceled || !result.assets?.[0]) return;
 
+      const localUri = result.assets[0].uri;
+      const placeholderId = `__uploading_${Date.now()}`;
+
+      // Create an optimistic placeholder message with a gray skeleton
+      const placeholder: ChatMessage = {
+        id: placeholderId,
+        chatRoomId: roomId,
+        senderId: currentUserId,
+        content: "",
+        timestamp: new Date().toISOString(),
+        status: "SENT",
+        messageType: "IMAGE",
+        mediaUrl: null,
+        _isUploading: true,
+        _localUri: localUri,
+      };
+
+      // Insert placeholder into messages (inverted list, index 0 = newest)
+      setMessagesByRoom(prev => ({
+        ...prev,
+        [roomId]: [placeholder, ...(prev[roomId] || [])],
+      }));
+
       setIsUploading(true);
-      const mediaUrl = await ChatRestService.uploadMedia(result.assets[0].uri);
+      const mediaUrl = await ChatRestService.uploadMedia(localUri);
       sendWsMessage(roomId, "", "IMAGE", mediaUrl, null);
+
+      // Remove the placeholder — the real message will arrive via WebSocket
+      setMessagesByRoom(prev => ({
+        ...prev,
+        [roomId]: (prev[roomId] || []).filter(m => m.id !== placeholderId),
+      }));
     } catch (e) {
       Alert.alert("Upload failed", "Could not upload image. Please try again.");
       console.error("Image upload error", e);
+      // Remove any lingering placeholders on error
+      setMessagesByRoom(prev => ({
+        ...prev,
+        [roomId]: (prev[roomId] || []).filter(m => !m._isUploading),
+      }));
     } finally {
       setIsUploading(false);
     }
@@ -281,7 +316,11 @@ export default function ChatScreen({ route, navigation }: any) {
             style={{ borderColor: theme.border, backgroundColor: theme.card }}
           >
             {workshopSnippet.thumbnailUrl && (
-              <Image source={{ uri: workshopSnippet.thumbnailUrl }} style={{ width: 60, height: 60 }} />
+              <SmartImage
+                uri={workshopSnippet.thumbnailUrl}
+                className="w-14 h-14 rounded-lg"
+                alt={workshopSnippet.title}
+              />
             )}
             <View className="flex-1 px-3 py-2">
               <Text className="text-sm font-bold" style={{ color: theme.foreground }} numberOfLines={1}>

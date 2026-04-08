@@ -48,6 +48,12 @@ export interface ChatMessage {
     thumbnailUrl?: string;
     [key: string]: any;
   } | null;
+
+  // ── Transient local-only fields (not from server) ────
+  /** True while the image is still uploading to Cloudinary */
+  _isUploading?: boolean;
+  /** Local file URI shown as a blurred preview during upload */
+  _localUri?: string;
 }
 
 // ── Read Receipt Event (from WebSocket) ────────────────

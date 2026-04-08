@@ -63,6 +63,46 @@ export function ChatMessageBubble({
   const renderContent = () => {
     switch (msgType) {
       case "IMAGE":
+        if (message._isUploading) {
+          // ── Uploading placeholder: gray frame with blurred local preview ──
+          return (
+            <View
+              className="rounded-xl overflow-hidden items-center justify-center"
+              style={{
+                width: SCREEN_WIDTH * 0.55,
+                height: SCREEN_WIDTH * 0.55,
+                backgroundColor: isDarkColorScheme ? "#374151" : "#E5E7EB",
+              }}
+            >
+              {message._localUri ? (
+                <Image
+                  source={{ uri: message._localUri }}
+                  className="rounded-xl"
+                  style={{
+                    width: SCREEN_WIDTH * 0.55,
+                    height: SCREEN_WIDTH * 0.55,
+                    resizeMode: "cover",
+                    opacity: 0.4,
+                  }}
+                />
+              ) : null}
+              <View
+                className="absolute items-center justify-center"
+                style={{
+                  width: SCREEN_WIDTH * 0.55,
+                  height: SCREEN_WIDTH * 0.55,
+                }}
+              >
+                <View className="w-10 h-10 rounded-full items-center justify-center bg-black/30">
+                  <Ionicons name="cloud-upload-outline" size={22} color="#FFFFFF" />
+                </View>
+                <Text className="text-xs mt-2 font-medium" style={{ color: "#FFFFFF" }}>
+                  Uploading...
+                </Text>
+              </View>
+            </View>
+          );
+        }
         return (
           <>
             <TouchableOpacity onPress={() => setImageModalVisible(true)} activeOpacity={0.85}>
