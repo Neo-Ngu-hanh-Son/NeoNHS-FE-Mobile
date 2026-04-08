@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import DynamicPanorama from '@/features/panorama/components/DynamicPanorama';
 import { logger } from '@/utils/logger';
 
@@ -21,7 +21,7 @@ export function PanoramaProvider({ children }: { children: ReactNode }) {
   const openPanorama = (pointId: string) => {
     setShouldMountPanorama(true);
     setIsVisible(true);
-    setCurrentPointId(""); // Do this so that when we open the panorama with the same pointId again, it will trigger a change in DynamicPanorama and thus reload the WebView
+    setCurrentPointId(''); // Do this so that when we open the panorama with the same pointId again, it will trigger a change in DynamicPanorama and thus reload the WebView
     setCurrentPointId(pointId);
   };
 
@@ -29,11 +29,11 @@ export function PanoramaProvider({ children }: { children: ReactNode }) {
     setIsVisible(false);
   };
 
-  const preloadPanorama = (pointId: string) => {
+  const preloadPanorama = useCallback((pointId: string) => {
     setShouldMountPanorama(true);
     setCurrentPointId(pointId);
     logger.info(`[PanoramaProvider] Preloading panorama for pointId ${pointId}`);
-  };
+  }, []);
 
   const seedPointId = (pointId: string) => {
     setCurrentPointId(pointId);

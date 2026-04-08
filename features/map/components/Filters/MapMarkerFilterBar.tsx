@@ -25,12 +25,7 @@ export default function MapMarkerFilterBar({
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 4, backgroundColor: 'transparent' }}>
-        <MapMarkerFilterChip
-          label="Show all"
-          icon="apps-outline"
-          active={filters.showAll}
-          onPress={onToggleShowAll}
-        />
+        <MapMarkerFilterChip label="Show all" icon="apps-outline" active={filters.showAll} onPress={onToggleShowAll} />
         <MapMarkerFilterChip
           label="Check-in"
           icon="camera-outline"

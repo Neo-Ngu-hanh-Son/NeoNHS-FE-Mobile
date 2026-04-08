@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, View } from 'react-native';
+import { View } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import * as MediaLibrary from 'expo-media-library';
 
@@ -10,20 +10,50 @@ import LoadingOverlay from '@/components/Loader/LoadingOverlay';
 import { logger } from '@/utils/logger';
 import CheckinCameraCapture from '@/features/map/components/Camera/CheckinCameraCapture';
 import CheckinPhotoReviewModal from '@/features/map/components/Camera/CheckinPhotoReviewModal';
+import CheckinHistoryBottomSheet from '@/features/map/components/Camera/CheckinHistoryBottomSheet';
 import { CheckinDraftImage, useSubmitUserCheckin } from '@/features/map/hooks/useSubmitUserCheckin';
+import { useModal } from '@/app/providers/ModalProvider';
+import { CheckinSessionGalleryImage } from '../types';
+import { useAuth } from '@/features/auth';
 
 type CheckinCameraScreenProps = StackScreenProps<MainStackParamList, 'CheckinCamera'>;
 
 export default function CheckinCameraScreen({ navigation, route }: CheckinCameraScreenProps) {
-  const { pointId, pointName } = route.params;
+  const { pointId, pointName, pointRewardPoints } = route.params;
   const [capturedPhotoUri, setCapturedPhotoUri] = useState<string | null>(null);
   const [capturedCaption, setCapturedCaption] = useState('');
   const [draftImages, setDraftImages] = useState<CheckinDraftImage[]>([]);
   const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
+  const [isHistorySheetVisible, setIsHistorySheetVisible] = useState(false);
   const [isSavingPhoto, setIsSavingPhoto] = useState(false);
   const { isSubmitting, submit } = useSubmitUserCheckin();
   const { isDarkColorScheme } = useTheme();
+  const { user, updateUser } = useAuth();
+  const { alert } = useModal();
+
   const theme = useMemo(() => (isDarkColorScheme ? THEME.dark : THEME.light), [isDarkColorScheme]);
+
+  const sessionGalleryImages = useMemo<CheckinSessionGalleryImage[]>(() => {
+    const draftGallery = [...draftImages].reverse().map((image, index) => ({
+      id: `draft-${index}-${image.localUri}`,
+      uri: image.localUri,
+      caption: image.caption,
+      label: `Photo ${draftImages.length - index}`,
+    }));
+
+    const currentImage = capturedPhotoUri
+      ? [
+          {
+            id: 'current-capture',
+            uri: capturedPhotoUri,
+            caption: capturedCaption.trim() || undefined,
+            label: 'Current photo',
+          },
+        ]
+      : [];
+
+    return [...currentImage, ...draftGallery];
+  }, [capturedCaption, capturedPhotoUri, draftImages]);
 
   const persistCurrentCapture = useCallback(() => {
     if (!capturedPhotoUri) {
@@ -50,15 +80,12 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
 
   const handleFinishCheckin = useCallback(async () => {
     if (!pointId) {
-      Alert.alert(
-        'Missing check-in point',
-        'No check-in point selected. Please return to the map and try again.'
-      );
+      alert('Missing check-in point', 'No check-in point selected. Please return to the map and try again.');
       return;
     }
 
     if (!capturedPhotoUri) {
-      Alert.alert('No photo selected', 'Please take or pick a photo before finishing check-in.');
+      alert('No photo selected', 'Please take or pick a photo before finishing check-in.');
       return;
     }
 
@@ -71,28 +98,32 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
     ];
 
     try {
-      const response = await submit({
+      // TODO: DO NOT WAIT FOR THE SUBMIT, just display that user earned some points and that's all, when they visit the profile, it will get auto fetched from the server again.
+      submit({
         checkinPointId: pointId,
         images: payloadImages,
       });
 
+      // Before leaving, update user state to get the new points first.
+      const userPoint = user?.userPoint ?? 0;
+      const newPoint = userPoint + (pointRewardPoints ?? 0);
+      updateUser?.({
+        ...user,
+        userPoint: newPoint,
+      });
       navigation.replace('CheckinComplete', {
-        imageUrl: response.imageUrl,
-        rewardPoints: response.earnedPoints,
-        userTotalPoints: response.userTotalPoints,
+        rewardPoints: pointRewardPoints ?? 0,
+        userTotalPoints: newPoint,
       });
     } catch (error) {
       logger.error('[CheckinCameraScreen] Failed to finish check-in', error);
-      Alert.alert(
-        'Check-in failed',
-        error instanceof Error ? error.message : 'Unable to complete check-in right now.'
-      );
+      alert('Check-in failed', error instanceof Error ? error.message : 'Unable to complete check-in right now.');
     }
-  }, [capturedCaption, capturedPhotoUri, draftImages, navigation, pointId, submit]);
+  }, [capturedCaption, capturedPhotoUri, draftImages, navigation, pointId, submit, alert]);
 
   const handleSavePhoto = useCallback(async () => {
     if (!capturedPhotoUri) {
-      Alert.alert('No image to save', 'Please capture an image before saving.');
+      alert('No image to save', 'Please capture an image before saving.');
       return;
     }
 
@@ -100,26 +131,34 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
     try {
       const permission = await MediaLibrary.requestPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert('Permission required', 'Please allow media library permission to save photos.');
+        alert('Permission required', 'Please allow media library permission to save photos.');
         return;
       }
 
       await MediaLibrary.saveToLibraryAsync(capturedPhotoUri);
-      Alert.alert('Saved', 'Photo has been saved to your device.');
+      alert('Saved', 'Photo has been saved to your device.');
     } catch (error) {
       logger.error('[CheckinCameraScreen] Failed to save review photo', error);
-      Alert.alert('Save failed', 'Could not save this photo right now.');
+      alert('Save failed', 'Could not save this photo right now.');
     } finally {
       setIsSavingPhoto(false);
     }
-  }, [capturedPhotoUri]);
+  }, [capturedPhotoUri, alert]);
 
   return (
     <View className="flex-1" style={{ backgroundColor: theme.background }}>
       <CheckinCameraCapture
         isBusy={isSubmitting}
         onClose={() => navigation.goBack()}
+        onOpenGallery={() => setIsHistorySheetVisible(true)}
         onImageSelected={handleImageSelected}
+        pointName={pointName}
+      />
+
+      <CheckinHistoryBottomSheet
+        visible={isHistorySheetVisible}
+        onClose={() => setIsHistorySheetVisible(false)}
+        images={sessionGalleryImages}
         pointName={pointName}
       />
 

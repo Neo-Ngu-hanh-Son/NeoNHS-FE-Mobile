@@ -23,6 +23,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { logger } from '@/utils/logger';
 import { usePanorama } from '@/app/providers/PanoramaProvider';
+import MAP_CONSTANTS from '@/features/map/constants';
 
 type Props = CompositeScreenProps<
   StackScreenProps<MainStackParamList, 'PointDetail'>,
@@ -76,7 +77,7 @@ export default function PointDetailScreen({ navigation, route }: Props) {
   const handleNavigate = () => {
     navigation.navigate('Tabs', {
       screen: 'Map',
-      params: { targetNavigationPointId: pointId },
+      params: { targetNavigationPointId: pointId, transportMode: MAP_CONSTANTS.DEFAULT_TRAVEL_MODE },
     });
   };
 
@@ -118,10 +119,7 @@ export default function PointDetailScreen({ navigation, route }: Props) {
   // ─── Main content ───
   return (
     <View className="flex-1 bg-background">
-      <RefreshableScrollView
-        onRefresh={() => refetch()}
-        contentContainerStyle={{ paddingBottom: 120 }}
-        edges={[]}>
+      <RefreshableScrollView onRefresh={() => refetch()} contentContainerStyle={{ paddingBottom: 120 }} edges={[]}>
         {/* Hero image with nav buttons */}
         <PointDetailHero
           point={point}

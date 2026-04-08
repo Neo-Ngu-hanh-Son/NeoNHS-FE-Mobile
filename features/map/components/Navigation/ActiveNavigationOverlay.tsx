@@ -7,37 +7,38 @@ import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { getManeuverPresentation } from '../../helpers';
 import type { NavigationGuideOverlayProps } from './types';
+import { logger } from '@/utils/logger';
 
-type ActiveNavigationOverlayProps = Omit<NavigationGuideOverlayProps, 'visible' | 'isUserArrived'>;
+type ActiveNavigationOverlayProps = Omit<NavigationGuideOverlayProps, 'visible' | 'isUserArrived' | 'isReady'>;
 
 export default function ActiveNavigationOverlay({
   isLoading,
-  isReady,
   errorMessage,
+  travelModeLabel,
+  onOpenSteps,
   currentNavigationStepData,
   onExit,
 }: ActiveNavigationOverlayProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
-  const statusTitle = isLoading
-    ? 'Preparing route...'
-    : isReady
-      ? 'Route ready'
-      : 'Navigation unavailable';
-  const statusSubtitle =
-    errorMessage ??
-    (isLoading
-      ? 'Fetching directions from your current location'
-      : isReady
-        ? 'Follow the route on the map'
-        : 'Unable to load route guidance');
+  const formatedNavigationStepText = () => {
+    if (!currentNavigationStepData?.currentInstructionText) return '';
+    try {
+      return currentNavigationStepData.currentInstructionText.split('\n')[0];
+    } catch (error) {
+      logger.error(`[ActiveNavigationOverlay] Error formatting instruction text: ${error}`);
+      return currentNavigationStepData?.currentInstructionText ?? '';
+    }
+  };
 
-  const hasActiveInstruction = isReady && !!currentNavigationStepData?.currentInstructionText;
+  const statusTitle = isLoading ? 'Preparing route...' : isLoading ? 'Route ready' : 'Waiting for navigation data...';
+  const statusSubtitle =
+    errorMessage ?? (isLoading ? 'Fetching directions from your current location' : 'Fetching route data...');
+
+  const hasActiveInstruction = !!currentNavigationStepData?.currentInstructionText;
   const maneuverPresentation = getManeuverPresentation(currentNavigationStepData?.currentManeuver);
-  const topCardTitle = hasActiveInstruction
-    ? currentNavigationStepData?.currentInstructionText
-    : statusTitle;
+  const topCardTitle = hasActiveInstruction ? formatedNavigationStepText() : statusTitle;
 
   let topCardSubtitle = statusSubtitle;
   if (hasActiveInstruction) {
@@ -52,11 +53,11 @@ export default function ActiveNavigationOverlay({
   return (
     <>
       {/* ── Top card: current instruction / status ── */}
-      <SafeAreaView pointerEvents="box-none" className="absolute left-0 right-0 top-0 px-3" edges={['top']}>
+      <SafeAreaView pointerEvents="box-none" className="absolute left-0 right-0 top-2 px-3" edges={['top']}>
         <View
           className="rounded-3xl px-4 py-3"
           style={{
-            backgroundColor: isReady ? '#1f7a45' : errorMessage ? '#7f1d1d' : '#166534',
+            backgroundColor: isLoading ? '#1f7a45' : errorMessage ? '#7f1d1d' : '#166534',
           }}>
           <View className="flex-row items-center gap-3">
             <View className="h-11 w-11 items-center justify-center rounded-full bg-white/15">
@@ -67,7 +68,7 @@ export default function ActiveNavigationOverlay({
                   name={
                     (hasActiveInstruction
                       ? maneuverPresentation.iconName
-                      : isReady
+                      : isLoading
                         ? 'navigate'
                         : 'warning-outline') as React.ComponentProps<typeof Ionicons>['name']
                   }
@@ -80,6 +81,14 @@ export default function ActiveNavigationOverlay({
               <Text className="text-base font-bold text-white">{topCardTitle}</Text>
               <Text className="text-xs text-white/90">{topCardSubtitle}</Text>
             </View>
+
+            <TouchableOpacity
+              onPress={onOpenSteps}
+              className={`rounded-full bg-white/10 px-3 py-1`}
+              accessibilityRole="button"
+              accessibilityLabel="Open navigation steps">
+              <Text className={`text-xs font-semibold text-white/70`}>Steps</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </SafeAreaView>
@@ -95,10 +104,10 @@ export default function ActiveNavigationOverlay({
             <View className="flex-1">
               <Text className="text-base font-bold text-white">
                 {currentNavigationStepData?.tripDurationText ?? (isLoading ? 'Calculating...' : 'Navigation')}
-                {currentNavigationStepData?.tripDistanceText ? ` (${currentNavigationStepData?.tripDistanceText})` : ''}
+                {currentNavigationStepData?.tripDistanceText ? ` · ${currentNavigationStepData.tripDistanceText}` : ''}
               </Text>
               <Text className="text-xs text-white/80">
-                {isReady ? 'Walking to destination' : isLoading ? 'Please wait while route loads' : 'No active route'}
+                {isLoading ? 'Please wait while route loads' : 'No active route'}
               </Text>
             </View>
 

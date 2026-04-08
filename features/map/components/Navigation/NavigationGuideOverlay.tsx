@@ -4,29 +4,28 @@ import ActiveNavigationOverlay from './ActiveNavigationOverlay';
 import type { NavigationGuideOverlayProps } from './types';
 
 export default function NavigationGuideOverlay({
-  visible,
   isLoading,
-  isReady,
   errorMessage,
+  travelModeLabel,
+  onOpenSteps,
   currentNavigationStepData,
   onExit,
   isUserArrived,
 }: NavigationGuideOverlayProps) {
-  if (!visible) {
-    return null;
-  }
-
   if (isUserArrived) {
     return <ArrivalOverlay onExit={onExit} />;
   }
 
   return (
-    <ActiveNavigationOverlay
-      isLoading={isLoading}
-      isReady={isReady}
-      errorMessage={errorMessage}
-      currentNavigationStepData={currentNavigationStepData}
-      onExit={onExit}
-    />
+    <>
+      <ActiveNavigationOverlay
+        isLoading={isLoading}
+        errorMessage={errorMessage}
+        travelModeLabel={travelModeLabel}
+        onOpenSteps={onOpenSteps}
+        currentNavigationStepData={currentNavigationStepData}
+        onExit={onExit}
+      />
+    </>
   );
 }

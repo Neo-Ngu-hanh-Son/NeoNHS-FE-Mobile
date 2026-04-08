@@ -265,8 +265,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await authService.register(data);
 
       if (response.data) {
-        const { accessToken, userInfo } = response.data;
-        const refreshToken = null; // TODO: Adjust if refreshToken is provided
+        const { accessToken, userInfo, refreshToken } = response.data;
 
         await Promise.all([
           storage.setAuthToken(accessToken),
@@ -315,28 +314,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * Refresh authentication tokens
    * DO NOT USE THIS MANUALLY, it is called automatically by the API client
    */
-  const refreshAuth = useCallback(
-    async (result: TokenRefreshResult): Promise<void> => {
-      try {
-        const { accessToken, refreshToken, userInfo } = result;
-        await Promise.all([
-          storage.setAuthToken(accessToken),
-          refreshToken ? storage.setRefreshToken(refreshToken) : Promise.resolve(),
-          storage.setUserData(userInfo),
-        ]);
+  const refreshAuth = useCallback(async (result: TokenRefreshResult): Promise<void> => {
+    try {
+      const { accessToken, refreshToken, userInfo } = result;
+      await Promise.all([
+        storage.setAuthToken(accessToken),
+        refreshToken ? storage.setRefreshToken(refreshToken) : Promise.resolve(),
+        storage.setUserData(userInfo),
+      ]);
 
-        dispatch({
-          type: 'SET_TOKEN',
-          payload: { ...result },
-        });
-      } catch (error) {
-        logger.error('Token refresh failed:', error);
-        // Use ref to avoid depending on `logout` (keeps this callback stable)
-        await logoutRef.current?.();
-      }
-    },
-    []
-  );
+      dispatch({
+        type: 'SET_TOKEN',
+        payload: { ...result },
+      });
+    } catch (error) {
+      logger.error('Token refresh failed:', error);
+      // Use ref to avoid depending on `logout` (keeps this callback stable)
+      await logoutRef.current?.();
+    }
+  }, []);
 
   const updateUser = useCallback((userData: Partial<User>) => {
     dispatch({ type: 'UPDATE_USER', payload: userData });

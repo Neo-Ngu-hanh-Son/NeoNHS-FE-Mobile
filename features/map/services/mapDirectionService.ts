@@ -1,7 +1,8 @@
 import { LatLng } from 'react-native-maps';
 import { logger } from '@/utils/logger';
 import { DirectionsRequestBody, RouteResponse, TravelMode } from '../types';
-import { apiClient, ApiResponse } from '@/services/api';
+import { ApiResponse } from '@/services/api';
+import axios from 'axios';
 
 const ROUTES_API_URL = 'https://routes.googleapis.com/directions/v2:computeRoutes';
 
@@ -77,14 +78,31 @@ export const mapDirectionService = {
     const requestBody = buildDirectionsRequestBody(origin, destination, travelMode);
 
     try {
-      const response = await apiClient.post<RouteResponse>(ROUTES_API_URL, requestBody, {
-        requiresAuth: false,
+      const response = await axios.post<RouteResponse>(ROUTES_API_URL, requestBody, {
+        // requiresAuth: false,
         headers: {
           'X-Goog-Api-Key': googleMapsApiKey,
           'Content-Type': 'application/json',
           'X-Goog-FieldMask': ROUTES_FIELD_MASK,
         },
       });
+
+      /**
+       * In legs.steps.navigationInstruction:
+       * "instructions": "Head southeast on Thanh Khê 6 toward Lý Thái Tông\nPass by Ngã tư (on left)"},
+       * There will be 2 navigation instructions separated by a newline, we only get the first one
+       */
+      // response.data.routes.forEach((route) => {
+      //   route.legs.forEach((leg) => {
+      //     leg.steps.forEach((step) => {
+      //       try {
+      //         step.navigationInstruction.instructions = step.navigationInstruction.instructions.split('\n')[0];
+      //       } catch (e) {
+      //         logger.warn(`[mapDirectionService] Failed to split navigation instruction, skipping ${e}`);
+      //       }
+      //     });
+      //   });
+      // });
       return response;
     } catch (error) {
       logger.error('[mapDirectionService] Network error while fetching directions', error);

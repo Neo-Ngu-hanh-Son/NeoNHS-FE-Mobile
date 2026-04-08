@@ -4,11 +4,14 @@ const MAP_CONSTANTS = {
   DISTANCE_LIMIT_BEFORE_REFETCH_M: 20,
 
   // Radius to consider user is "on" the step for navigation guidance
-  STEP_RADIUS_M: 10,
+  STEP_RADIUS_M: 30,
   ARRIVAL_RADIUS_M: 10, // Radius to consider user has arrived at the destination
 
   // The minimum time interval between user location updates to prevent excessive re-renders and computations
   UPDATE_USER_LOCATION_THROTTLE_MS: 1500,
+
+  DISTANCE_BEFORE_UPDATE_USER_LOCATION_M: 3, // Minimum distance in meters that the user must move
+  ADVANCE_THRESHOLD_M: 0.5, // The distance in meters threshold for advancing to the next step
 
   GOOGLE_MAP_STYLE: [
     {
@@ -46,6 +49,22 @@ const MAP_CONSTANTS = {
       ],
     },
   ],
+
+  MAP_CAMERA_DEFAULT_FIT_TO_COORDINATES_PADDING: {
+    top: 160,
+    right: 64,
+    bottom: 180,
+    left: 64,
+  },
+
+  FULL_SCREEN_SHEET_INDEX: 2,
+  DEFAULT_TRAVEL_MODE: 'DRIVE' as const,
+  TRAVEL_MODE_LABELS: {
+    DRIVE: 'Driving',
+    TWO_WHEELER: 'Motorbike',
+    WALK: 'Walking',
+    BICYCLE: 'Cycling',
+  },
 };
 
 export default MAP_CONSTANTS;

@@ -44,6 +44,25 @@ export type Edge = {
   note?: string;
 };
 
+export interface EventMapPoint extends MapPoint {
+  name: string;
+  description?: string;
+  imageList?: string;
+  latitude: number;
+  longitude: number;
+  addressString?: string;
+
+  // Event point specific fields
+  eventPointTag: EventMapPointTag;
+}
+
+export interface EventMapPointTag {
+  name: string;
+  description?: string;
+  color?: string; // Hex color code for the tag, e.g., "#FF5733"
+  iconUrl?: string; // Optional URL for an IMAGE
+}
+
 // These are special points used for map markers and interactions (They are not necessarily nodes in the graph, but can be on the edges)
 export interface MapPoint {
   // Base PointResponse Fields
@@ -79,6 +98,8 @@ export interface MapPoint {
     type: 'node' | 'edge';
     refId: string; // nodeId or edgeId
   };
+
+  // Marker visual metadata (From backend if they include it)
 }
 
 export interface MapPointCheckin {
@@ -173,12 +194,26 @@ export type PolylineCoordinate = LatLng;
 
 // Maneuver types used by Google to help you choose icons (Left turn, Right turn, etc.)
 export type Maneuver =
-  | 'MANEUVER_UNSPECIFIED' | 'DEPART' | 'TURN_LEFT' | 'TURN_RIGHT'
-  | 'TURN_SLIGHT_LEFT' | 'TURN_SLIGHT_RIGHT' | 'TURN_SHARP_LEFT'
-  | 'TURN_SHARP_RIGHT' | 'UTURN_LEFT' | 'UTURN_RIGHT' | 'STRAIGHT'
-  | 'RAMP_LEFT' | 'RAMP_RIGHT' | 'MERGE' | 'FORK_LEFT' | 'FORK_RIGHT'
-  | 'FERRY' | 'ROUNDABOUT_LEFT' | 'ROUNDABOUT_RIGHT' | 'NAME_CHANGE';
-
+  | 'MANEUVER_UNSPECIFIED'
+  | 'DEPART'
+  | 'TURN_LEFT'
+  | 'TURN_RIGHT'
+  | 'TURN_SLIGHT_LEFT'
+  | 'TURN_SLIGHT_RIGHT'
+  | 'TURN_SHARP_LEFT'
+  | 'TURN_SHARP_RIGHT'
+  | 'UTURN_LEFT'
+  | 'UTURN_RIGHT'
+  | 'STRAIGHT'
+  | 'RAMP_LEFT'
+  | 'RAMP_RIGHT'
+  | 'MERGE'
+  | 'FORK_LEFT'
+  | 'FORK_RIGHT'
+  | 'FERRY'
+  | 'ROUNDABOUT_LEFT'
+  | 'ROUNDABOUT_RIGHT'
+  | 'NAME_CHANGE';
 
 export interface RouteResponse {
   routes: Route[];
@@ -201,6 +236,7 @@ export interface Leg {
 
 export interface Step {
   distanceMeters?: number;
+  staticDuration?: string;
   polyline: {
     encodedPolyline: string; // The polyline for just this specific step
   };
@@ -211,21 +247,20 @@ export interface Step {
     instructions: string; // e.g., "Turn right at The Dreamers"
   };
   localizedValues: {
-    distance: { text: string };       // e.g., "0.3 km"
+    distance: { text: string }; // e.g., "0.3 km"
     staticDuration: { text: string }; // e.g., "1 min"
   };
   travelMode: TravelMode;
 }
 
-
 /**
  * Custom types for quick retrival when working with the hook
  */
-export type NavigationStep = {
+export type NavigationSteps = {
   previousStep: Step | null;
   currentStep: Step | null;
   nextStep: Step | null;
-}
+};
 
 export type CurrentNavigationStepData = {
   tripDistanceText: string | undefined;
@@ -235,7 +270,7 @@ export type CurrentNavigationStepData = {
   currentStepDistanceText: string | undefined;
   currentStepDurationText: string | undefined;
   currentStepProgressText: string | undefined;
-}
+};
 
 export type TripMetadata = {
   tripTotalDistanceText: string | undefined;
@@ -244,8 +279,32 @@ export type TripMetadata = {
   tripRemainingDistanceText: string | undefined;
   tripRemainingDurationText: string | undefined;
 
-  tripRemainingDistance: number | undefined; // in meters
+  tripTotalDistanceMeters: number | undefined; // in meters
+  tripTotalDuration: number | undefined; // in seconds
+
+  tripRemainingDistanceMeters: number | undefined; // in meters
   tripRemainingDuration: number | undefined; // in seconds
 };
 
+export type NavigationStatusState = {
+  isMapReady: boolean;
+  isUserArrived: boolean;
+};
 
+export type NavigationRouteState = {
+  routeSummary: RouteResponse | null;
+  steps: Step[];
+  navigationPolylineCoordinates: PolylineCoordinate[];
+  navigationEndpoints: {
+    origin: PolylineCoordinate;
+    destination: PolylineCoordinate;
+  } | null;
+};
+
+// Check-in related types
+export type CheckinSessionGalleryImage = {
+  id: string;
+  uri: string;
+  caption?: string;
+  label: string;
+};

@@ -1,5 +1,4 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
-
 /* ============================================================
    AUTH STACK
    ============================================================ */
@@ -20,7 +19,7 @@ export type AuthStackParamList = {
 export type TabsStackParamList = {
   Home: undefined;
   Discover: undefined;
-  Map: { pointId?: string, targetNavigationPointId?: string, userCheckedInPointId?: string } | undefined;
+  Map: { pointId?: string; targetNavigationPointId?: string; userCheckedInPointId?: string } | undefined;
   Bookings: undefined;
   Profile: undefined;
   TestCart: undefined;
@@ -74,13 +73,14 @@ export type MapRoutes = {
   AudioGuide: { pointId: string };
   PointHistoryAudio: { pointId: string };
   Panorama: { pointId: string };
-  CheckinCamera: { pointId?: string | null; pointName: string };
-  CheckinComplete: { imageUrl?: string; rewardPoints?: number, userTotalPoints?: number };
+  CheckinCamera: { pointId?: string | null; pointName: string; pointRewardPoints?: number };
+  CheckinComplete: { imageUrl?: string; rewardPoints?: number; userTotalPoints?: number };
 };
 
 /* Events */
 export type EventRoutes = {
   EventDetail: { eventId: string };
+  EventTimeLineMap: { eventId: string; pointId?: string; targetNavigationPointId?: string };
 };
 
 /* Workshops */
@@ -144,7 +144,6 @@ export type MainStackParamList = BaseMainRoutes &
   BlogRoutes &
   NotificationRoutes &
   ChatRoutes;
-
 
 /* ============================================================
    ROOT STACK

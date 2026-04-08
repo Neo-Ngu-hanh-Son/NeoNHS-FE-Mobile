@@ -66,11 +66,12 @@ const hasUserArrivedAtDestination = (
   destination: { latitude: number; longitude: number }
 ): boolean => {
   const distance = calculateDistance(userLocation, destination);
-  logger.debug('[DistanceUtils] User location: ', userLocation, ' Destination: ', destination);
-  logger.debug('[DistanceUtils] Distance: ', distance, ' ARRIVAL_RADIUS_M: ', MAP_CONSTANTS.ARRIVAL_RADIUS_M);
   return distance <= MAP_CONSTANTS.ARRIVAL_RADIUS_M;
 };
 
+/**
+ * List of distance-related utility functions that use the turf.js library
+ */
 export const distanceUtils = {
   calculateDistance,
   calculatePointToLineDistance,

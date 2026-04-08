@@ -30,7 +30,7 @@ const clientPersister = createAsyncStoragePersister({
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // How long data is considered "fresh" (5 mins)
+      // How long data is considered "fresh" (3 mins)
       staleTime: 1000 * 60 * 3,
       // How long data stays in cache before being deleted (6 hours)
       gcTime: 1000 * 60 * 60 * 6,

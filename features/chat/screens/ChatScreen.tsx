@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   FlatList,
@@ -8,14 +8,14 @@ import {
   Platform,
   Image,
   Alert,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
-import * as ImagePicker from "expo-image-picker";
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 
-import { Text } from "@/components/ui/text";
-import { useTheme } from "@/app/providers/ThemeProvider";
-import { THEME } from "@/lib/theme";
+import { Text } from '@/components/ui/text';
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { THEME } from '@/lib/theme';
 
 import { ChatMessageBubble } from "../components/ChatMessageBubble";
 import { TypingIndicator } from "../components/TypingIndicator";
@@ -28,12 +28,16 @@ import { SmartImage } from "@/components/ui/smart-image";
 
 /** Maps backend role strings to user-facing labels. */
 function formatParticipantRole(role?: string): string {
-  if (!role) return "";
+  if (!role) return '';
   switch (role.toUpperCase()) {
-    case "ADMIN": return "Admin";
-    case "VENDOR": return "Vendor";
-    case "TOURIST": return "Tourist";
-    default: return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+    case 'ADMIN':
+      return 'Admin';
+    case 'VENDOR':
+      return 'Vendor';
+    case 'TOURIST':
+      return 'Tourist';
+    default:
+      return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
   }
 }
 
@@ -45,7 +49,7 @@ export default function ChatScreen({ route, navigation }: any) {
   const workshopSnippet: ProductSnippetParams | undefined = route.params?.workshopSnippet;
 
   const { user } = useAuth();
-  const currentUserId = user?.id?.toString() || "";
+  const currentUserId = user?.id?.toString() || '';
 
   const {
     rooms,
@@ -59,14 +63,14 @@ export default function ChatScreen({ route, navigation }: any) {
     sendReadReceipt,
   } = useChatContext();
 
-  const [messageText, setMessageText] = useState("");
+  const [messageText, setMessageText] = useState('');
   const [isOtherTyping, setIsOtherTyping] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const room = rooms.find(r => r.id === roomId);
+  const room = rooms.find((r) => r.id === roomId);
   const displayParticipant = room?.otherParticipant;
-  const displayName = displayParticipant?.fullname || room?.name || "Chat";
+  const displayName = displayParticipant?.fullname || room?.name || 'Chat';
   const displayAvatar = displayParticipant?.avatarUrl;
 
   const messages = messagesByRoom[roomId] || [];
@@ -81,11 +85,11 @@ export default function ChatScreen({ route, navigation }: any) {
         const page = await ChatRestService.getRoomMessages(roomId, 0, 50);
         const historyMsgs = page.content;
 
-        setMessagesByRoom(prev => {
+        setMessagesByRoom((prev) => {
           const current = prev[roomId] || [];
           const msgMap = new Map<string, ChatMessage>();
-          historyMsgs.forEach(m => msgMap.set(m.id, m));
-          current.forEach(m => msgMap.set(m.id, m));
+          historyMsgs.forEach((m) => msgMap.set(m.id, m));
+          current.forEach((m) => msgMap.set(m.id, m));
 
           const merged = Array.from(msgMap.values()).sort(
             (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
@@ -103,7 +107,7 @@ export default function ChatScreen({ route, navigation }: any) {
           }
         }
       } catch (e) {
-        console.error("Failed to load history", e);
+        console.error('Failed to load history', e);
       }
     };
     fetchHistory();
@@ -151,24 +155,18 @@ export default function ChatScreen({ route, navigation }: any) {
     if (!messageText.trim() || !roomId) return;
     sendTypingStop(roomId);
     sendWsMessage(roomId, messageText.trim());
-    setMessageText("");
+    setMessageText('');
   };
 
   // ── Send product snippet ─────────────────────────────
   const handleSendSnippet = () => {
     if (!roomId || !workshopSnippet) return;
-    sendWsMessage(
-      roomId,
-      `I'd like to ask about this workshop.`,
-      "PRODUCT_SNIPPET",
-      null,
-      {
-        workshopId: workshopSnippet.workshopId,
-        title: workshopSnippet.title,
-        price: workshopSnippet.price,
-        thumbnailUrl: workshopSnippet.thumbnailUrl,
-      }
-    );
+    sendWsMessage(roomId, `I'd like to ask about this workshop.`, 'PRODUCT_SNIPPET', null, {
+      workshopId: workshopSnippet.workshopId,
+      title: workshopSnippet.title,
+      price: workshopSnippet.price,
+      thumbnailUrl: workshopSnippet.thumbnailUrl,
+    });
     // Clear the snippet from nav params so the card disappears
     navigation.setParams({ workshopSnippet: undefined });
   };
@@ -231,18 +229,17 @@ export default function ChatScreen({ route, navigation }: any) {
   // ── Header ───────────────────────────────────────────
   const renderHeader = () => (
     <View
-      className="px-2 py-3 flex-row items-center border-b"
-      style={{ borderColor: theme.border, backgroundColor: theme.card }}
-    >
+      className="flex-row items-center border-b px-2 py-3"
+      style={{ borderColor: theme.border, backgroundColor: theme.card }}>
       <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
         <Ionicons name="arrow-back" size={24} color={theme.primary} />
       </TouchableOpacity>
 
-      <View className="flex-1 flex-row items-center ml-2">
+      <View className="ml-2 flex-1 flex-row items-center">
         {displayAvatar ? (
-          <Image source={{ uri: displayAvatar }} className="w-10 h-10 rounded-full bg-gray-200" />
+          <Image source={{ uri: displayAvatar }} className="h-10 w-10 rounded-full bg-gray-200" />
         ) : (
-          <View className="w-10 h-10 rounded-full items-center justify-center" style={{ backgroundColor: theme.muted }}>
+          <View className="h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: theme.muted }}>
             <Ionicons name="person" size={20} color={theme.mutedForeground} />
           </View>
         )}
@@ -251,7 +248,9 @@ export default function ChatScreen({ route, navigation }: any) {
             {displayName}
           </Text>
           {isOtherTyping ? (
-            <Text className="text-xs" style={{ color: theme.primary }}>typing...</Text>
+            <Text className="text-xs" style={{ color: theme.primary }}>
+              typing...
+            </Text>
           ) : displayParticipant ? (
             <Text className="text-xs" style={{ color: theme.mutedForeground }}>
               {formatParticipantRole(displayParticipant.role)}
@@ -267,8 +266,8 @@ export default function ChatScreen({ route, navigation }: any) {
   );
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={["top"]}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "padding"}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}>
         {renderHeader()}
 
         <FlatList
@@ -301,9 +300,7 @@ export default function ChatScreen({ route, navigation }: any) {
                 showTimestamp={showTs}
                 timestampString={formatChatMessageTime(item.timestamp)}
                 participantAvatar={displayAvatar}
-                onProductSnippetPress={(workshopId) =>
-                  navigation.navigate("WorkshopDetail", { workshopId })
-                }
+                onProductSnippetPress={(workshopId) => navigation.navigate('WorkshopDetail', { workshopId })}
               />
             );
           }}
@@ -312,9 +309,8 @@ export default function ChatScreen({ route, navigation }: any) {
         {/* Product Snippet Card (if entering from Workshop) */}
         {workshopSnippet && (
           <View
-            className="mx-4 mb-2 rounded-xl overflow-hidden flex-row items-center border"
-            style={{ borderColor: theme.border, backgroundColor: theme.card }}
-          >
+            className="mx-4 mb-2 flex-row items-center overflow-hidden rounded-xl border"
+            style={{ borderColor: theme.border, backgroundColor: theme.card }}>
             {workshopSnippet.thumbnailUrl && (
               <SmartImage
                 uri={workshopSnippet.thumbnailUrl}
@@ -327,14 +323,13 @@ export default function ChatScreen({ route, navigation }: any) {
                 {workshopSnippet.title}
               </Text>
               <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-                {workshopSnippet.price.toLocaleString("vi-VN")} ₫
+                {workshopSnippet.price.toLocaleString('vi-VN')} ₫
               </Text>
             </View>
             <TouchableOpacity
-              className="px-3 py-2 mr-2 rounded-lg"
+              className="mr-2 rounded-lg px-3 py-2"
               style={{ backgroundColor: theme.primary }}
-              onPress={handleSendSnippet}
-            >
+              onPress={handleSendSnippet}>
               <Text className="text-xs font-bold text-white">Send</Text>
             </TouchableOpacity>
             <TouchableOpacity className="pr-3" onPress={() => navigation.setParams({ workshopSnippet: undefined })}>
@@ -344,21 +339,21 @@ export default function ChatScreen({ route, navigation }: any) {
         )}
 
         {/* Input Bar */}
-        <View className="px-4 py-3 flex-row items-end border-t" style={{ borderColor: theme.border, backgroundColor: theme.card }}>
+        <View
+          className="flex-row items-end border-t px-4 py-3"
+          style={{ borderColor: theme.border, backgroundColor: theme.card }}>
           {/* Image pick button */}
           <TouchableOpacity
-            className="w-11 h-11 items-center justify-center rounded-full mr-2"
+            className="mr-2 h-11 w-11 items-center justify-center rounded-full"
             style={{ backgroundColor: theme.muted }}
             onPress={handlePickImage}
-            disabled={isUploading}
-          >
-            <Ionicons name={isUploading ? "hourglass" : "camera"} size={20} color={theme.mutedForeground} />
+            disabled={isUploading}>
+            <Ionicons name={isUploading ? 'hourglass' : 'camera'} size={20} color={theme.mutedForeground} />
           </TouchableOpacity>
 
           <View
-            className="flex-1 min-h-[44px] max-h-[120px] rounded-2xl px-4 py-2.5 flex-row items-center border"
-            style={{ backgroundColor: theme.background, borderColor: theme.border }}
-          >
+            className="max-h-[120px] min-h-[44px] flex-1 flex-row items-center rounded-2xl border px-4 py-2.5"
+            style={{ backgroundColor: theme.background, borderColor: theme.border }}>
             <TextInput
               className="flex-1 text-base leading-5"
               style={{ color: theme.foreground, paddingTop: 0, paddingBottom: 0 }}
@@ -371,15 +366,14 @@ export default function ChatScreen({ route, navigation }: any) {
           </View>
 
           <TouchableOpacity
-            className="ml-3 w-11 h-11 items-center justify-center rounded-full"
+            className="ml-3 h-11 w-11 items-center justify-center rounded-full"
             style={{ backgroundColor: messageText.trim() ? theme.primary : theme.muted }}
             onPress={handleSend}
-            disabled={!messageText.trim()}
-          >
+            disabled={!messageText.trim()}>
             <Ionicons
               name="send"
               size={18}
-              color={messageText.trim() ? "#FFFFFF" : theme.mutedForeground}
+              color={messageText.trim() ? '#FFFFFF' : theme.mutedForeground}
               style={{ marginLeft: 2 }}
             />
           </TouchableOpacity>

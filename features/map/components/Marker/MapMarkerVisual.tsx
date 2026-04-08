@@ -1,8 +1,8 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated, Easing } from 'react-native';
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
 import { MapPoint } from '../../types';
 import { markerStyles } from './MarkerStyles';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { StrokeText } from '@charmy.tech/react-native-stroke-text';
 
 interface MarkerVisualProps {
@@ -11,13 +11,18 @@ interface MarkerVisualProps {
   isSelected?: boolean;
 }
 
-export default function MarkerVisual({ point, showName, isSelected = false }: MarkerVisualProps) {
+/**
+ * Basic marker visual component that renders a marker based on the point type and optionally shows the point name.
+ *
+ * This marker is "Static" because it display icon using app static types instead of fetching it from the backend.
+ */
+export default function MapMarkerVisual({ point, showName, isSelected = false }: MarkerVisualProps) {
   const pointType = point.type !== null ? point.type : 'DEFAULT';
   const style = markerStyles[pointType];
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.markerContainer]}>
+      <View style={[styles.markerContainer]}>
         <View
           style={[
             styles.bubble,
@@ -38,7 +43,7 @@ export default function MarkerVisual({ point, showName, isSelected = false }: Ma
             },
           ]}
         />
-      </Animated.View>
+      </View>
       {showName && (
         <View style={styles.labelContainer}>
           <StrokeText

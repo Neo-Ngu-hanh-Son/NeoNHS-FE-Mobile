@@ -6,10 +6,7 @@ type ManeuverPresentation = {
   label: string;
 };
 
-export const hasCheckinPointsChanged = (
-  current: MapPointCheckin[],
-  next: MapPointCheckin[]
-): boolean => {
+export const hasCheckinPointsChanged = (current: MapPointCheckin[], next: MapPointCheckin[]): boolean => {
   if (current.length !== next.length) return true;
 
   for (let i = 0; i < current.length; i += 1) {
@@ -73,7 +70,6 @@ export const getManeuverPresentation = (maneuver?: Maneuver | null): ManeuverPre
   }
 };
 
-
 export const formatDurationText = (duration?: string): string | undefined => {
   if (!duration) {
     return undefined;
@@ -105,3 +101,56 @@ export const formatDistanceText = (distanceMeters?: number): string | undefined 
 
   return `${(distanceMeters / 1000).toFixed(1)} km`;
 };
+
+export function parseDurationSeconds(duration?: string): number | undefined {
+  if (!duration) {
+    return undefined;
+  }
+
+  const parsed = Number.parseInt(duration.replace('s', ''), 10);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return undefined;
+  }
+
+  return parsed;
+}
+
+export function extractStreetNameFromInstruction(instruction?: string): string | undefined {
+  if (!instruction) return undefined;
+
+  // 1. Normalize + remove noise (EN + VI)
+  const cleaned = instruction
+    .replace(/pass by.*$/i, '')
+    .replace(/đi qua.*$/i, '')
+    .trim();
+  // 2. Try keyword-based extraction (EN + VI)
+  const keywordRegex = /\b(?:onto|on|toward|towards|into|to|vào|trên|đến)\s+([^,.;\n]+)/i;
+  let street = cleaned.match(keywordRegex)?.[1]?.trim();
+  // 3. Fallback: try to extract after last known keyword-like structure
+  if (!street) {
+    const parts = cleaned
+      .split(/,|\n/)
+      .map((p) => p.trim())
+      .filter(Boolean);
+    // Try last meaningful segment
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const part = parts[i];
+      // Skip obvious non-street phrases
+      if (/^(pass by|đi qua)/i.test(part)) continue;
+      street = part;
+      break;
+    }
+  }
+  if (!street) return undefined;
+  // 4. Final cleanup
+  street = street
+    .replace(/^(road|street|st\.?|rd\.?|đường)\s+/i, '') // remove prefixes
+    .replace(/pass by.*$/i, '')
+    .replace(/đi qua.*$/i, '')
+    .trim();
+  // 5. Reject garbage
+  if (street.length < 2 || /^(left|right|straight|rẽ trái|rẽ phải)$/i.test(street)) {
+    return undefined;
+  }
+  return street;
+}

@@ -16,26 +16,28 @@ export default function UserLocationMarker({
   showHeading = true,
   color = '#4285F4',
 }: UserLocationMarkerProps) {
-  // Only purpose is to hope that the marker itself render correctly
-  const [trackChanges, setTrackChanges] = useState(true);
+  const [tracks, setTracks] = useState(true);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      setTrackChanges(false);
-    }, 500);
+    setTracks(true);
+    const t = setTimeout(() => setTracks(false), 500);
+    return () => clearTimeout(t);
+  }, [location]);
 
-    return () => clearTimeout(timeout);
-  }, []);
+  const markerRotation = showHeading && location.heading != null ? location.heading : 0;
 
   return (
     <Marker
+      identifier="user-location-marker"
       coordinate={{
         latitude: location.latitude,
         longitude: location.longitude,
       }}
       anchor={{ x: 0.5, y: 0.5 }}
       flat
-      tracksViewChanges={trackChanges}>
+      rotation={markerRotation}
+      tracksViewChanges={tracks}
+      zIndex={5}>
       <View style={styles.container}>
         {showAccuracyCircle ? (
           <View
@@ -62,6 +64,7 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 10,
   },
   outerGlow: {
     position: 'absolute',

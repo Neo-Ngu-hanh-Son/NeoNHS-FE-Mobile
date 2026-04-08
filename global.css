@@ -67,7 +67,7 @@
        ========================= */
 
     /* Background Layers */
-    --background: 222 25% 8%; /* lifted from pure black */
+    --background: 220, 17%, 7%; /* lifted from pure black */
     --card: 222 20% 12%;
     --popover: 222 20% 12%;
     --sidebar: 222 22% 10%;
@@ -79,7 +79,7 @@
     --sidebar-foreground: 210 40% 96%;
 
     /* Primary - Brighter for dark */
-    --primary: 142 70% 45%;
+    --primary: 142, 71%, 45%;
     --primary-foreground: 140 20% 8%;
 
     --sidebar-primary: 142 76% 40%;

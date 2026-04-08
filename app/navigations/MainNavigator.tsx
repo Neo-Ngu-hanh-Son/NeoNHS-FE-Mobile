@@ -43,6 +43,7 @@ export default function MainNavigator() {
         screenOptions={{
           headerShown: false, // Set default for all screens to keep code DRY
           animation: 'slide_from_right',
+          animationDuration: 300,
         }}>
         {/* Root Tabs */}
         <Stack.Screen name="Tabs" component={TabsNavigator} options={{ animationTypeForReplace: 'pop' }} />
@@ -94,15 +95,11 @@ export default function MainNavigator() {
         <Stack.Screen name="CheckinCamera" component={CheckinCameraScreen} />
         <Stack.Screen name="CheckinComplete" component={CheckinCompleteScreen} />
 
-        <Stack.Screen
-          name="ChatRoom"
-          component={ChatScreen}
-          options={{ headerShown: false }}
-        />
+        <Stack.Screen name="ChatRoom" component={ChatScreen} options={{ headerShown: false }} />
         <Stack.Screen
           name="Notifications"
           component={NotificationsScreen}
-          options={{ headerShown: true, title: "Notifications", headerBackTitle: "Back" }}
+          options={{ headerShown: true, title: 'Notifications', headerBackTitle: 'Back' }}
         />
       </Stack.Navigator>
       <FloatingChatButton />
