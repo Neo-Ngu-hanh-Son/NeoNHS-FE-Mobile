@@ -90,6 +90,7 @@ export type MapRoutes = {
 /* Events */
 export type EventRoutes = {
   EventDetail: { eventId: string };
+  EventTimeLineMap: { eventId: string };
 };
 
 /* Workshops */

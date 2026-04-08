@@ -1,17 +1,18 @@
 import { useMemo } from 'react';
-import { UserLocation } from './useUserLocation';
-import { MapPointCheckin } from '../types';
+import { UserLocation } from '../useUserLocation';
+import { MapPointCheckin } from '../../types';
 import * as turf from '@turf/turf';
-import MAP_CONSTANTS from '../constants';
+import MAP_CONSTANTS from '../../constants';
 
 export const useCheckinProximity = (
   userLocation: UserLocation | null | undefined,
   points: MapPointCheckin[] | null,
   thresholdMeters?: number,
-  isGuidanceMode?: boolean
+  isGuidanceMode?: boolean,
+  isEnabled?: boolean
 ): MapPointCheckin | null => {
   return useMemo(() => {
-    if (isGuidanceMode) return null;
+    if (isGuidanceMode || !isEnabled) return null;
     if (!userLocation || !points || points.length === 0) return null;
 
     const threshold = thresholdMeters ?? MAP_CONSTANTS.CHECKINPOINT_DETECT_RADIUS_M;
@@ -35,5 +36,5 @@ export const useCheckinProximity = (
     }
 
     return null;
-  }, [userLocation, points, thresholdMeters, isGuidanceMode]);
+  }, [userLocation, points, thresholdMeters, isGuidanceMode, isEnabled]);
 };

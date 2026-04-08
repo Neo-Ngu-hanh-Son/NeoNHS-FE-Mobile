@@ -5,8 +5,8 @@ export { markerStyles, getMarkerStyle } from './Marker/MarkerStyles';
 export type { MarkerStyle } from './Marker/MarkerStyles';
 
 // Map components
-export { default as NHSMap } from './Map/NHSMap';
-export type { NHSMapRef } from './Map/NHSMap';
+export { NHSMap } from './Map';
+export type { NHSMapRef, NHSMapProps } from './Map';
 
 // User location components
 export { UserLocationMarker, FollowUserButton, LocationPermissionBanner } from './UserLocation';

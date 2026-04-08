@@ -3,20 +3,22 @@ import { MapPoint, RouteResponse, TravelMode } from '../../types';
 import { parseFloatOrDefault } from '@/utils/parseNumber';
 import { formatDistanceText, formatDurationText } from '../../helpers';
 import { LatLng } from 'react-native-maps';
-import { useDirectionsCacheClient, useDirectionsPreview } from '../useCachedDirections';
+import { useDirectionsPreview } from './useCachedDirections';
 import MAP_CONSTANTS from '../../constants';
-import { MapViewMode, useMapStore } from '../../store/useMapStore';
+import { MapViewMode } from '../../store/useMapStore';
 import { useModal } from '@/app/providers/ModalProvider';
 import { logger } from '@/utils/logger';
 import { NHSMapRef } from '../../components';
 
-interface UseMapNavigationControllerProps {
+interface UseMapNavigationPreviewControllerProps {
   targetNavigationPointId?: string;
   mapPoints: MapPoint[];
   userLocation: { latitude: number; longitude: number } | null;
-  viewMode: MapViewMode;
   navigation: any;
   mapRef: RefObject<NHSMapRef | null>;
+  viewMode: MapViewMode;
+  setViewMode: (mode: MapViewMode) => void;
+  mapIsReady?: boolean;
 }
 
 export const useMapNavigationPreviewController = ({
@@ -25,15 +27,14 @@ export const useMapNavigationPreviewController = ({
   userLocation,
   viewMode,
   navigation,
+  setViewMode,
+  mapIsReady = false,
   mapRef,
-}: UseMapNavigationControllerProps) => {
+}: UseMapNavigationPreviewControllerProps) => {
   const { alert } = useModal();
-  const setViewMode = useMapStore((state) => state.setViewMode);
-  const { fetchDirectionsWithCache } = useDirectionsCacheClient();
   const [confirmedTravelMode, setConfirmedTravelMode] = useState<TravelMode | null>(null);
   const [selectedTravelMode, setSelectedTravelMode] = useState<TravelMode | null>(null);
   const [selectedDirectionsRoute, setSelectedDirectionsRoute] = useState<RouteResponse | null>(null);
-  const mapIsReady = useMapStore((state) => state.isMapReady);
 
   const activeGuidanceTargetPointId = confirmedTravelMode ? targetNavigationPointId : undefined;
 

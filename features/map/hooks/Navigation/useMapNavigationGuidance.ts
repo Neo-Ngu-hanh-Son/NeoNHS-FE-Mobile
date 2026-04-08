@@ -1,6 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { parseFloatOrDefault } from '@/utils/parseNumber';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { logger } from '@/utils/logger';
 import {
   decodeRoutePolyline,
@@ -8,23 +6,20 @@ import {
   formatDistanceText,
   formatDurationText,
   parseDurationSeconds,
-} from '../helpers';
+} from '../../helpers';
 import {
   CurrentNavigationStepData,
   MapPoint,
-  NavigationRouteState,
   NavigationStatusState,
   PolylineCoordinate,
   RouteResponse,
   Step,
   TravelMode,
   TripMetadata,
-} from '../types';
-import type { LocationPermissionStatus, UserLocation } from './useUserLocation';
+} from '../../types';
+import type { LocationPermissionStatus, UserLocation } from '../useUserLocation';
 import { distanceUtils } from '@/utils/distanceUtils';
-import MAP_CONSTANTS from '../constants';
-import { buildDirectionsQueryOptions } from './useCachedDirections';
-import { useMapStore } from '../store/useMapStore';
+import MAP_CONSTANTS from '../../constants';
 
 type UseMapNavigationGuidanceParams = {
   targetNavigationPointId?: string;
@@ -38,6 +33,7 @@ type UseMapNavigationGuidanceParams = {
   clearTargetNavigationParam: () => void;
   previewRouteSummary: RouteResponse | null;
   previewErrorMessage: string | null;
+  viewMode: string;
 };
 
 type UseMapNavigationGuidanceReturn = {
@@ -79,13 +75,13 @@ export function useMapNavigationGuidance({
   clearTargetNavigationParam,
   previewRouteSummary,
   previewErrorMessage,
+  viewMode,
 }: UseMapNavigationGuidanceParams): UseMapNavigationGuidanceReturn {
   const [navigationStatus, setNavigationStatus] = useState<NavigationStatusState>({
     isMapReady: false,
     isUserArrived: false,
   });
 
-  const viewMode = useMapStore((state) => state.viewMode);
   const isGuidanceMode = viewMode === 'NAVIGATING';
   const isDirectionsLoading = previewRouteSummary === null || previewRouteSummary === undefined;
   const isDirectionsReady = previewRouteSummary !== null || previewRouteSummary !== undefined;

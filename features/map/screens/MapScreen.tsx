@@ -45,6 +45,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
 
   // Zustand store for managing map-wide states like view mode
   const viewMode = useMapStore((state) => state.viewMode);
+  const setViewMode = useMapStore((state) => state.setViewMode);
 
   // Map states
   const mapRef = useRef<NHSMapRef>(null);
@@ -104,6 +105,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     userLocation,
     viewMode,
     navigation,
+    setViewMode,
     mapRef,
   });
 
@@ -129,6 +131,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     travelMode: confirmedTravelMode,
     previewRouteSummary,
     previewErrorMessage,
+    viewMode,
   });
 
   const { handleMarkerPress } = controller;
@@ -150,13 +153,6 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     initialPointId,
     targetNavigationPointId,
     mapPoints,
-    // navigationEndpoints:
-    //   previewOrigin && previewDestination
-    //     ? {
-    //         origin: previewOrigin,
-    //         destination: previewDestination,
-    //       }
-    //     : null,
     isDirectionsReady,
     isGuidanceMode,
     handleOpenPointSheet: handleOpenPointSheetModal,
@@ -250,6 +246,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
         isGuidanceMode={isGuidanceMode}
         isMapInteractionEnabled={true}
         markerFilters={markerFilters}
+        enableCheckinMode={true}
       />
 
       {/* Exploring Mode */}

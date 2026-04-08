@@ -9,53 +9,18 @@ import { renderRoutes } from '../../data/mapDataOptimized';
 import MarkerVisual from '../Marker/MarkerVisual';
 import { logger } from '@/utils/logger';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { UserLocation } from '../../hooks/useUserLocation';
 import { UserLocationMarker, FollowUserButton } from '../UserLocation';
-import { MapPointCheckin, PolylineCoordinate } from '../../types';
+import { MapPointCheckin } from '../../types';
 import { hasCheckinPointsChanged } from '../../helpers';
-import { useCheckinProximity } from '../../hooks/useCheckinProximity';
+import { useCheckinProximity } from '../../hooks/Navigation/useCheckinProximity';
 import type { MapMarkerFilters } from '../../hooks';
 import { useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { distanceUtils } from '@/utils/distanceUtils';
 import MAP_CONSTANTS from '../../constants';
 import { useMapStore } from '../../store/useMapStore';
-
-type NHSMapProps = {
-  onMarkerPress?: (point: MapPoint) => void;
-  selectedPointId?: string | null;
-  onMapPress?: () => void;
-  mapPoints?: MapPoint[];
-  userLocation?: UserLocation | null;
-  previousLocation?: UserLocation | null;
-  syncNearbyGeofences?: (latitude: number, longitude: number) => Promise<MapPointCheckin[]>;
-  onActiveCheckinPointChange?: (point: MapPointCheckin | null) => void;
-  isLocationLoading?: boolean;
-  startTrackingCallback?: () => void;
-  onMapReadyCallback?: () => void;
-  navigationPolylineCoordinates: PolylineCoordinate[];
-  isNavPolylineVisible?: boolean;
-  isGuidanceMode?: boolean;
-  isMapInteractionEnabled?: boolean;
-  markerFilters?: MapMarkerFilters;
-};
-
-export interface NHSMapRef {
-  animateToRegion: (region: Region, duration?: number) => void;
-  animateToCoordinate: (
-    coordinate: { latitude: number; longitude: number; latDelta?: number; lngDelta?: number },
-    duration?: number
-  ) => void;
-  fitToCoordinates: (
-    coordinates: { latitude: number; longitude: number }[],
-    edgePadding?: { top: number; right: number; bottom: number; left: number },
-    animated?: boolean
-  ) => void;
-  setFollowUser: (follow: boolean) => void;
-  isFollowingUser: () => boolean;
-  setZoom: (zoom: number) => void;
-  reloadMap: () => void;
-}
+import type { NHSMapProps, NHSMapRef } from './types.ts';
+export type { NHSMapProps, NHSMapRef } from './types.ts';
 
 const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
   (
@@ -75,6 +40,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       isGuidanceMode = false,
       isMapInteractionEnabled = true,
       markerFilters,
+      enableCheckinMode = false,
     },
     ref
   ) => {
@@ -110,7 +76,8 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       userLocation,
       checkinPoints,
       MAP_CONSTANTS.CHECKINPOINT_DETECT_RADIUS_M,
-      isGuidanceMode
+      isGuidanceMode,
+      enableCheckinMode
     );
 
     // Expose methods to parent via ref
@@ -237,7 +204,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
      * useEffect to fetch checkin points near user when the user moves.
      */
     useEffect(() => {
-      if (isGuidanceMode) return;
+      if (isGuidanceMode || !enableCheckinMode) return;
       let isCancelled = false;
 
       const syncCheckinPoints = async () => {
@@ -283,7 +250,7 @@ const NHSMap = forwardRef<NHSMapRef, NHSMapProps>(
       return () => {
         isCancelled = true;
       };
-    }, [userLocation, previousLocation, syncNearbyGeofences, isGuidanceMode]);
+    }, [userLocation, previousLocation, syncNearbyGeofences, isGuidanceMode, enableCheckinMode]);
 
     /**
      * Effect to auto-pan to user location when following

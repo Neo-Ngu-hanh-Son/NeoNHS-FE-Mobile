@@ -212,14 +212,6 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
             timestamp: newLocation.timestamp,
           };
 
-          // Use functional state update so previousLocation always reflects the latest value,
-          // avoiding stale closure reads when the watcher callback keeps running.
-          // OLD method that update everytime new location arrive, delete later ?
-          // setLocation((currentLocation) => {
-          //   setPreviousLocation(currentLocation);
-          //   return userLocation;
-          // });
-
           setLocation((currentLocation) => {
             if (!currentLocation) {
               setPreviousLocation(null);

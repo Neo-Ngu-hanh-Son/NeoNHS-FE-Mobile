@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { LatLng } from 'react-native-maps';
-import { mapDirectionService } from '../services/mapDirectionService';
-import { RouteResponse, TravelMode } from '../types';
+import { mapDirectionService } from '../../services/mapDirectionService';
+import { RouteResponse, TravelMode } from '../../types';
 
 const DIRECTIONS_CACHE_STALE_TIME_MS = 1000 * 60 * 20;
 const DIRECTIONS_CACHE_GC_TIME_MS = 1000 * 60 * 60 * 6;

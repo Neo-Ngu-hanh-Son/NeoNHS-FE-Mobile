@@ -41,7 +41,7 @@ export default function TabsNavigator() {
           fontSize: 11,
           fontWeight: '500',
         },
-        animation: 'none',
+        animation: 'shift',
       }}>
       <Tab.Screen
         name="Home"
