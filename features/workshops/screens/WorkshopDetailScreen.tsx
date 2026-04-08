@@ -29,6 +29,7 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'info' | 'sessions'>('info');
   const [isChatLoading, setIsChatLoading] = useState(false);
+  const [isReviewSheetVisible, setIsReviewSheetVisible] = useState(false);
   const { createOrOpenRoom } = useChatContext();
 
   const {
@@ -192,6 +193,7 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
                       totalRatings: workshop.totalRatings,
                     })
                   }
+                  onSheetVisibilityChange={setIsReviewSheetVisible}
                 />
               </View>
             </View>
@@ -205,54 +207,56 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
         </View>
       </ScrollView>
 
-      {/* Sticky bottom: Consult with Artisan */}
-      <View
-        className="px-5 py-3 border-t flex-row items-center"
-        style={{ borderColor: theme.border, backgroundColor: theme.card }}
-      >
-        <View className="flex-1 mr-3">
-          <Text className="text-xs" style={{ color: theme.mutedForeground }}>Price from</Text>
-          <Text className="text-lg font-bold" style={{ color: theme.foreground }}>
-            {workshop.defaultPrice.toLocaleString('vi-VN')} ₫
-          </Text>
-        </View>
-        <TouchableOpacity
-          onPress={async () => {
-            if (isChatLoading) return;
-            setIsChatLoading(true);
-            try {
-              const thumbnailImg = workshop.images.find(img => img.isThumbnail);
-              const room = await createOrOpenRoom(
-                'VENDOR_CHAT',
-                [workshop.vendorId],
-                workshop.name
-              );
-              navigation.navigate('ChatRoom', {
-                roomId: room.id,
-                workshopSnippet: {
-                  workshopId: workshop.id,
-                  title: workshop.name,
-                  price: workshop.defaultPrice,
-                  thumbnailUrl: thumbnailImg?.imageUrl || (workshop.images[0]?.imageUrl ?? ''),
-                },
-              });
-            } catch (e) {
-              console.error('Failed to open vendor chat', e);
-            } finally {
-              setIsChatLoading(false);
-            }
-          }}
-          className="flex-row items-center rounded-xl px-5 py-3"
-          style={{ backgroundColor: theme.primary }}
-          activeOpacity={0.8}
-          disabled={isChatLoading}
+      {/* Sticky bottom: Consult with Artisan (Hidden when review sheet is open) */}
+      {!isReviewSheetVisible && (
+        <View
+          className="px-5 py-3 border-t flex-row items-center"
+          style={{ borderColor: theme.border, backgroundColor: theme.card }}
         >
-          <Ionicons name="chatbubble-outline" size={18} color="#FFFFFF" />
-          <Text className="ml-2 font-bold text-white">
-            {isChatLoading ? 'Opening...' : 'Chat with Vendor'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+          <View className="flex-1 mr-3">
+            <Text className="text-xs" style={{ color: theme.mutedForeground }}>Price from</Text>
+            <Text className="text-lg font-bold" style={{ color: theme.foreground }}>
+              {workshop.defaultPrice.toLocaleString('vi-VN')} ₫
+            </Text>
+          </View>
+          <TouchableOpacity
+            onPress={async () => {
+              if (isChatLoading) return;
+              setIsChatLoading(true);
+              try {
+                const thumbnailImg = workshop.images.find(img => img.isThumbnail);
+                const room = await createOrOpenRoom(
+                  'VENDOR_CHAT',
+                  [workshop.vendorId],
+                  workshop.name
+                );
+                navigation.navigate('ChatRoom', {
+                  roomId: room.id,
+                  workshopSnippet: {
+                    workshopId: workshop.id,
+                    title: workshop.name,
+                    price: workshop.defaultPrice,
+                    thumbnailUrl: thumbnailImg?.imageUrl || (workshop.images[0]?.imageUrl ?? ''),
+                  },
+                });
+              } catch (e) {
+                console.error('Failed to open vendor chat', e);
+              } finally {
+                setIsChatLoading(false);
+              }
+            }}
+            className="flex-row items-center rounded-xl px-5 py-3"
+            style={{ backgroundColor: theme.primary }}
+            activeOpacity={0.8}
+            disabled={isChatLoading}
+          >
+            <Ionicons name="chatbubble-outline" size={18} color="#FFFFFF" />
+            <Text className="ml-2 font-bold text-white">
+              {isChatLoading ? 'Opening...' : 'Chat with Vendor'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 }

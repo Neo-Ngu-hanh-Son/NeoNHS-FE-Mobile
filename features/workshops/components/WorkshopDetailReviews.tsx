@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef } from 'react';
 import {
   View,
   Image,
@@ -12,7 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { useAuth } from '@/features/auth';
-import { WriteReviewModal } from './WriteReviewModal';
+import { WriteReviewSheet, WriteReviewSheetRef } from './WriteReviewSheet';
 import { useWorkshopReviews, useCreateWorkshopReview, useUpdateWorkshopReview } from '../hooks';
 import type { WorkshopReviewResponse } from '../types';
 
@@ -179,6 +179,7 @@ interface WorkshopDetailReviewsProps {
   averageRating: number;
   totalRatings: number;
   onViewAll: () => void;
+  onSheetVisibilityChange?: (visible: boolean) => void;
 }
 
 export function WorkshopDetailReviews({
@@ -187,12 +188,13 @@ export function WorkshopDetailReviews({
   averageRating,
   totalRatings,
   onViewAll,
+  onSheetVisibilityChange,
 }: WorkshopDetailReviewsProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const { user } = useAuth();
 
-  const [showModal, setShowModal] = useState(false);
+  const sheetRef = useRef<WriteReviewSheetRef>(null);
 
   const { data, isLoading } = useWorkshopReviews(workshopId, 'createdAt,desc');
   const createReviewMutation = useCreateWorkshopReview(workshopId);
@@ -248,7 +250,7 @@ export function WorkshopDetailReviews({
           <TouchableOpacity
             className="flex-row items-center gap-1"
             activeOpacity={0.7}
-            onPress={() => setShowModal(true)}>
+            onPress={() => sheetRef.current?.present()}>
             <Ionicons name={reviewButtonIcon} size={14} color={theme.primary} />
             <Text className="text-sm font-bold" style={{ color: theme.primary }}>
               {reviewButtonLabel}
@@ -288,13 +290,13 @@ export function WorkshopDetailReviews({
         </TouchableOpacity>
       )}
 
-      <WriteReviewModal
-        visible={showModal}
+      <WriteReviewSheet
+        ref={sheetRef}
         workshopName={workshopName}
         initialRating={myReview?.rating}
         initialText={myReview?.comment}
-        onClose={() => setShowModal(false)}
         onSubmit={handleSubmit}
+        onVisibilityChange={onSheetVisibilityChange}
       />
     </View>
   );
