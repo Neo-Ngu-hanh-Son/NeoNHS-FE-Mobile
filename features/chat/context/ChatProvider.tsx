@@ -193,7 +193,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
             const isRead = activeRoomIdRef.current === room.id || message.senderId === currentUserId;
             return {
               ...room,
-              lastMessagePreview: message.messageType === "IMAGE" ? "📷 Photo" : message.content,
+              lastMessagePreview: message.messageType === "IMAGE" ? "📷 Image" : message.content,
               lastMessageAt: message.timestamp,
               lastMessageSenderId: message.senderId,
               unreadCount: isRead ? room.unreadCount : (room.unreadCount || 0) + 1,

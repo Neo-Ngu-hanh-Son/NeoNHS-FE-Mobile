@@ -9,7 +9,7 @@ import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { TicketCatalogResponse } from '../types';
-import { EventImageGallery, EventInfoSection, TicketCatalogList } from '../components';
+import { EventImageGallery, EventInfoSection, TicketCatalogList, EventDetailReviews } from '../components';
 import { useEventDetail } from '../hooks/useEventDetail';
 import { useTicketCatalogs } from '../hooks/useTicketCatalogs';
 
@@ -22,6 +22,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
 
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'info' | 'tickets'>('info');
+  const [isReviewSheetVisible, setIsReviewSheetVisible] = useState(false);
 
   const { data: event, isLoading: loading, refetch: refetchEvent } = useEventDetail(eventId);
 
@@ -164,6 +165,25 @@ export default function EventDetailScreen({ navigation, route }: Props) {
                   No detailed description available.
                 </Text>
               )}
+
+              {/* Reviews */}
+              <View className="mt-6">
+                <EventDetailReviews
+                  eventId={eventId}
+                  eventName={event.name}
+                  averageRating={event.averageRating ?? 0}
+                  totalRatings={event.totalRatings ?? 0}
+                  onViewAll={() =>
+                    navigation.navigate('EventAllReviews', {
+                      eventId,
+                      eventName: event.name,
+                      averageRating: event.averageRating ?? 0,
+                      totalRatings: event.totalRatings ?? 0,
+                    })
+                  }
+                  onSheetVisibilityChange={setIsReviewSheetVisible}
+                />
+              </View>
             </View>
           ) : (
             <TicketCatalogList tickets={tickets ?? []} loading={ticketsLoading} theme={theme} />

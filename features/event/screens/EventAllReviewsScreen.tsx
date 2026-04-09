@@ -4,11 +4,14 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { AllReviewsTemplate } from '@/features/reviews';
 import { useAuth } from '@/features/auth';
-import { useWorkshopReviews, useCreateWorkshopReview, useUpdateWorkshopReview, useWorkshopDetail } from '../hooks';
-import type { ReviewSortKey } from '../hooks';
+import { useEventReviews } from '../hooks/useEventReviews';
+import { useCreateEventReview } from '../hooks/useCreateEventReview';
+import { useUpdateEventReview } from '../hooks/useUpdateEventReview';
+import { useEventDetail } from '../hooks/useEventDetail';
+import type { ReviewSortKey } from '../hooks/useEventReviews';
 import type { ReviewResponse } from '@/features/reviews/types';
 
-type Props = StackScreenProps<MainStackParamList, 'WorkshopAllReviews'>;
+type Props = StackScreenProps<MainStackParamList, 'EventAllReviews'>;
 
 const SORT_OPTIONS: { label: string; value: ReviewSortKey }[] = [
   { label: 'Most Recent', value: 'createdAt,desc' },
@@ -16,14 +19,18 @@ const SORT_OPTIONS: { label: string; value: ReviewSortKey }[] = [
   { label: 'Lowest Rated', value: 'rating,asc' },
 ];
 
-export default function WorkshopAllReviewsScreen({ navigation, route }: Props) {
-  const { workshopId, workshopName, averageRating: initialAvg, totalRatings: initialTotal } = route.params;
+export default function EventAllReviewsScreen({ navigation, route }: Props) {
+  const {
+    eventId,
+    eventName,
+    averageRating: initialAvg,
+    totalRatings: initialTotal,
+  } = route.params;
   const { user } = useAuth();
 
-  // Live workshop detail — refetched automatically after any review mutation
-  const { data: workshop } = useWorkshopDetail(workshopId);
-  const averageRating = workshop?.averageRating ?? initialAvg;
-  const totalRatings = workshop?.totalRatings ?? initialTotal;
+  const { data: event } = useEventDetail(eventId);
+  const averageRating = event?.averageRating ?? initialAvg;
+  const totalRatings = event?.totalRatings ?? initialTotal;
 
   const [activeSort, setActiveSort] = React.useState<ReviewSortKey>('createdAt,desc');
 
@@ -35,21 +42,19 @@ export default function WorkshopAllReviewsScreen({ navigation, route }: Props) {
     hasNextPage,
     fetchNextPage,
     error,
-  } = useWorkshopReviews(workshopId, activeSort);
+  } = useEventReviews(eventId, activeSort);
 
-  const createReviewMutation = useCreateWorkshopReview(workshopId);
-  const updateReviewMutation = useUpdateWorkshopReview(workshopId);
+  const createReviewMutation = useCreateEventReview(eventId);
+  const updateReviewMutation = useUpdateEventReview(eventId);
 
-  // Flatten all pages into a single list
   const allReviews = useMemo(
     () => data?.pages.flatMap((page) => page.content) ?? [],
-    [data]
+    [data],
   );
 
-  // Detect the current user's own review (if any)
   const myReview: ReviewResponse | undefined = useMemo(
-    () => (user ? allReviews.find((r) => r.user.id === user.id) : undefined),
-    [allReviews, user]
+    () => (user ? allReviews.find((r) => r.user?.id === user.id) : undefined),
+    [allReviews, user],
   );
 
   const handleSubmitReview = async (rating: number, text: string): Promise<void> => {
@@ -59,16 +64,13 @@ export default function WorkshopAllReviewsScreen({ navigation, route }: Props) {
         request: { rating, comment: text },
       });
     } else {
-      await createReviewMutation.mutateAsync({
-        rating,
-        comment: text,
-      });
+      await createReviewMutation.mutateAsync({ rating, comment: text });
     }
   };
 
   return (
     <AllReviewsTemplate
-      targetName={workshopName}
+      targetName={eventName}
       averageRating={averageRating}
       totalRatings={totalRatings}
       reviews={allReviews}
@@ -81,14 +83,9 @@ export default function WorkshopAllReviewsScreen({ navigation, route }: Props) {
       activeSort={activeSort}
       onSortChange={(sort) => setActiveSort(sort as ReviewSortKey)}
       sortOptions={SORT_OPTIONS}
-      onLoadMore={() => {
-        if (hasNextPage) {
-          fetchNextPage();
-        }
-      }}
+      onLoadMore={() => { if (hasNextPage) fetchNextPage(); }}
       onSubmitReview={handleSubmitReview}
       onGoBack={() => navigation.goBack()}
     />
   );
 }
-

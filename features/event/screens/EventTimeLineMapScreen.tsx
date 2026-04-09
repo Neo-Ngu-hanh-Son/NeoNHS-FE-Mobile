@@ -39,6 +39,7 @@ import { EventTimelineMapOverlay } from '../components';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { buildEventMapPointsFromGroups, filterEventMapPointsBySearch } from '../utils/helpers';
+import { useEventMapStore } from '../hooks/useEventMapStore';
 
 type EventTimeLineMapScreenProps = StackScreenProps<MainStackParamList, 'EventTimeLineMap'>;
 
@@ -47,10 +48,10 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
-  const viewMode = useMapStore((state) => state.viewMode);
-  const setViewMode = useMapStore((state) => state.setViewMode);
-  const setIsMapReady = useMapStore((state) => state.setIsMapReady);
-  const isMapReady = useMapStore((state) => state.isMapReady);
+  const viewMode = useEventMapStore((state) => state.viewMode);
+  const setViewMode = useEventMapStore((state) => state.setViewMode);
+  const setIsMapReady = useEventMapStore((state) => state.setIsMapReady);
+  const isMapReady = useEventMapStore((state) => state.isMapReady);
 
   const mapRef = useRef<NHSMapRef>(null);
   const navigationStepsSheetRef = useRef<BottomSheet>(null);
@@ -114,16 +115,10 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
   const serverFilterParams = useMemo(
     () => ({
       tagId:
-        timelineController.activeTagId !== timelineController.allTagId
-          ? timelineController.activeTagId
-          : undefined,
+        timelineController.activeTagId !== timelineController.allTagId ? timelineController.activeTagId : undefined,
       search: timelineController.debouncedSearchText || undefined,
     }),
-    [
-      timelineController.activeTagId,
-      timelineController.allTagId,
-      timelineController.debouncedSearchText,
-    ]
+    [timelineController.activeTagId, timelineController.allTagId, timelineController.debouncedSearchText]
   );
 
   const shouldUseServerFilteredGroups = Boolean(serverFilterParams.tagId || serverFilterParams.search);
@@ -135,10 +130,7 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
   );
 
   const effectiveGroupedTimelines = useMemo(
-    () =>
-      shouldUseServerFilteredGroups
-        ? filteredTimelineQuery.data ?? groupedTimelines
-        : groupedTimelines,
+    () => (shouldUseServerFilteredGroups ? (filteredTimelineQuery.data ?? groupedTimelines) : groupedTimelines),
     [filteredTimelineQuery.data, groupedTimelines, shouldUseServerFilteredGroups]
   );
 

@@ -55,6 +55,8 @@ export interface EventResponse {
   currentEnrolled?: number | null;
   status: EventStatus;
   thumbnailUrl?: string | null;
+  averageRating: number;
+  totalRatings: number;
   createdAt: string;
   updatedAt?: string | null;
   tags: TagResponse[];

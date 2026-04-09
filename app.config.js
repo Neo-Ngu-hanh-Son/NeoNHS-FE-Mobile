@@ -37,7 +37,7 @@ export default {
         "ACCESS_COARSE_LOCATION",
         "ACCESS_BACKGROUND_LOCATION"
       ],
-      softwareKeyboardLayoutMode: "pan",
+      softwareKeyboardLayoutMode: "adjustResize",
     },
 
     plugins: [

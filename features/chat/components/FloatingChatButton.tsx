@@ -28,24 +28,27 @@ export function FloatingChatButton() {
   });
 
   const [supportRoomId, setSupportRoomId] = useState<string | null>(null);
+  const preloadAttemptedRef = React.useRef(false);
 
-  // Pre-load the support room ID in the background
+  // Pre-load the support room ID in the background (run once)
   useEffect(() => {
+    if (preloadAttemptedRef.current) return;
+    preloadAttemptedRef.current = true;
+
     const existing = rooms?.find(r => r.roomType === "SYSTEM_SUPPORT");
     if (existing) {
       setSupportRoomId(existing.id);
     } else {
-      // If none exists in active context, attempt to silently create/fetch it
       createOrOpenRoom("SYSTEM_SUPPORT", [], "Customer Support")
         .then(room => setSupportRoomId(room.id))
         .catch(err => console.log("Silent support chat preload failed:", err?.message || err));
     }
-  }, [rooms, createOrOpenRoom]);
+  }, []);
 
   const allowedScreens = ["Home", "Discover", "Tabs", "Main"];
   // Fallback to "Home" on initial load if route name is not yet resolved
   const effectiveRouteName = currentRouteName ?? "Home";
-  
+
   if (!allowedScreens.includes(effectiveRouteName)) {
     return null;
   }

@@ -4,4 +4,3 @@ export { default as WorkshopInfoSection } from "./WorkshopInfoSection";
 export { default as WorkshopSessionCard } from "./WorkshopSessionCard";
 export { default as WorkshopSessionList } from "./WorkshopSessionList";
 export { WorkshopDetailReviews } from "./WorkshopDetailReviews";
-export { WriteReviewModal } from "./WriteReviewModal";
