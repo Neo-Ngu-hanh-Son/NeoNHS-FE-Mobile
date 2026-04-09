@@ -130,7 +130,7 @@ function Divider({ theme }: { theme: typeof THEME.light }) {
 const EventTimelinePointDetailBottomSheet = forwardRef<
   EventTimelinePointDetailSheetRef,
   EventTimelinePointDetailSheetProps
->(({ point, onAfterClose, onStartNavigate, onNavigateFromCurrentLocation }, ref) => {
+>(({ point, onAfterClose, onNavigateFromCurrentLocation }, ref) => {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
@@ -341,7 +341,7 @@ const EventTimelinePointDetailBottomSheet = forwardRef<
         {/* ── CTA button ────────────────────────────────── */}
         <View style={[styles.ctaWrap, { borderTopColor: theme.border }]}>
           <TouchableOpacity
-            onPress={() => onStartNavigate?.(point)}
+            onPress={() => onNavigateFromCurrentLocation?.(point)}
             activeOpacity={0.85}
             style={[styles.cta, { backgroundColor: tagColor }]}
             accessibilityLabel="Start navigation action">
@@ -349,14 +349,14 @@ const EventTimelinePointDetailBottomSheet = forwardRef<
             <Text style={styles.ctaText}>Get Directions</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={() => onNavigateFromCurrentLocation?.(point)}
             activeOpacity={0.85}
             style={[styles.ctaSecondary, { borderColor: tagColor, backgroundColor: theme.background }]}
             accessibilityLabel="Navigate from current location">
             <Ionicons name="locate" size={18} color={tagColor} style={{ marginRight: 8 }} />
             <Text style={[styles.ctaSecondaryText, { color: tagColor }]}>Navigate From Current Location</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </BottomSheetScrollView>
     </BottomSheetModal>
