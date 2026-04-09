@@ -1,5 +1,8 @@
 import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { ScreenLayout } from '@/components/common/ScreenLayout';
+import FullScreenError from '@/components/Loader/FullScreenError';
+import FullScreenLoader from '@/components/Loader/FullScreenLoader';
+import { Text } from '@/components/ui/text';
 import {
   EventMapPoint,
   MapPoint,
@@ -7,7 +10,6 @@ import {
   NHSMapRef,
   PolylineCoordinate,
   useMapNavigationGuidance,
-  useMapSearch,
   useUserLocation,
 } from '@/features/map';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
@@ -15,12 +17,9 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { useMapCameraController } from '@/features/map/hooks/MapCamera/useMapCameraController';
 import { useMapStore } from '@/features/map/store/useMapStore';
 import { LocationAccuracy } from 'expo-location';
-import { useEventDetail } from '../hooks/useEventDetail';
-import { parseFloatOrDefault } from '@/utils/parseNumber';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { decodeRoutePolyline } from '@/features/map/helpers';
 import {
-  MapSearchBar,
   NavigationGuideOverlay,
   NavigationStepsBottomSheet,
   TransportModeSelectorSheet,
@@ -30,14 +29,23 @@ import MapPointDetailModal, {
 } from '@/features/map/components/PointDetailModal/PointDetailModal';
 import { useMapNavigationPreviewController } from '@/features/map/hooks/Navigation/useMapNavigationPreviewController';
 import { useMapScreenController } from '@/features/map/hooks/useMapScreenController';
-import { Keyboard } from 'react-native';
+import { Keyboard, View } from 'react-native';
 import { useModal } from '@/app/providers/ModalProvider';
 import { logger } from '@/utils/logger';
+import { useEventPointTags } from '../hooks/useEventPointTags';
+import { useEventTimelineMapController } from '../hooks/useEventTimelineMapController';
+import { useEventTimelinesGrouped } from '../hooks/useEventTimelinesGrouped';
+import { EventTimelineMapOverlay } from '../components';
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { THEME } from '@/lib/theme';
+import { buildEventMapPointsFromGroups, filterEventMapPointsBySearch } from '../utils/helpers';
 
 type EventTimeLineMapScreenProps = StackScreenProps<MainStackParamList, 'EventTimeLineMap'>;
 
 export default function EventTimeLineMapScreen({ navigation, route }: EventTimeLineMapScreenProps) {
   const { eventId, pointId: initialPointId, targetNavigationPointId } = route.params;
+  const { isDarkColorScheme } = useTheme();
+  const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
   const viewMode = useMapStore((state) => state.viewMode);
   const setViewMode = useMapStore((state) => state.setViewMode);
@@ -49,40 +57,124 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
   const pointDetailSheetRef = useRef<MapPointDetailSheetRef>(null);
   const { alert } = useModal();
 
-  const { data: eventDetail } = useEventDetail(eventId);
+  const groupedTimelineQuery = useEventTimelinesGrouped(eventId);
+  const groupedTimelines = useMemo(() => groupedTimelineQuery.data ?? [], [groupedTimelineQuery.data]);
+  const pointTagQuery = useEventPointTags(eventId, groupedTimelines);
 
-  const mapPoints = useMemo<EventMapPoint[]>(() => {
-    if (!eventDetail) {
-      return [];
+  const fitVisiblePoints = useCallback(
+    (points: EventMapPoint[]) => {
+      if (!isMapReady || !mapRef.current) {
+        return;
+      }
+
+      const coordinates = points
+        .map((point) => ({ latitude: point.latitude, longitude: point.longitude }))
+        .filter(
+          (coordinate) =>
+            Number.isFinite(coordinate.latitude) &&
+            Number.isFinite(coordinate.longitude) &&
+            coordinate.latitude !== -1 &&
+            coordinate.longitude !== -1
+        );
+
+      if (coordinates.length === 0) {
+        return;
+      }
+
+      if (coordinates.length === 1) {
+        mapRef.current.animateToCoordinate(
+          {
+            latitude: coordinates[0].latitude,
+            longitude: coordinates[0].longitude,
+            latDelta: 0.005,
+            lngDelta: 0.005,
+          },
+          550
+        );
+        return;
+      }
+
+      mapRef.current.fitToCoordinates(coordinates, {
+        top: 220,
+        right: 64,
+        bottom: 220,
+        left: 64,
+      });
+    },
+    [isMapReady]
+  );
+
+  const timelineController = useEventTimelineMapController({
+    groupedTimelines,
+    pointTags: pointTagQuery.data,
+    isMapReady,
+    onFitVisiblePoints: fitVisiblePoints,
+  });
+
+  const serverFilterParams = useMemo(
+    () => ({
+      tagId:
+        timelineController.activeTagId !== timelineController.allTagId
+          ? timelineController.activeTagId
+          : undefined,
+      search: timelineController.debouncedSearchText || undefined,
+    }),
+    [
+      timelineController.activeTagId,
+      timelineController.allTagId,
+      timelineController.debouncedSearchText,
+    ]
+  );
+
+  const shouldUseServerFilteredGroups = Boolean(serverFilterParams.tagId || serverFilterParams.search);
+
+  const filteredTimelineQuery = useEventTimelinesGrouped(
+    eventId,
+    shouldUseServerFilteredGroups ? serverFilterParams : undefined,
+    shouldUseServerFilteredGroups
+  );
+
+  const effectiveGroupedTimelines = useMemo(
+    () =>
+      shouldUseServerFilteredGroups
+        ? filteredTimelineQuery.data ?? groupedTimelines
+        : groupedTimelines,
+    [filteredTimelineQuery.data, groupedTimelines, shouldUseServerFilteredGroups]
+  );
+
+  const mapPoints = useMemo(() => {
+    const activeGroup =
+      effectiveGroupedTimelines.find((group) => group.date === timelineController.selectedDate) ??
+      effectiveGroupedTimelines[0];
+
+    if (!activeGroup) {
+      return [] as EventMapPoint[];
     }
 
-    const latitude = parseFloatOrDefault(eventDetail.latitude ?? '', -1);
-    const longitude = parseFloatOrDefault(eventDetail.longitude ?? '', -1);
-    const primaryTag = eventDetail.tags?.[0];
+    let points = buildEventMapPointsFromGroups([activeGroup]);
 
-    return [
-      {
-        id: eventDetail.id,
-        name: eventDetail.name,
-        description: eventDetail.shortDescription ?? eventDetail.fullDescription ?? undefined,
-        shortDescription: eventDetail.shortDescription ?? undefined,
-        thumbnailUrl: eventDetail.thumbnailUrl ?? undefined,
-        latitude,
-        longitude,
-        type: 'EVENT',
-        startTime: eventDetail.startTime ?? undefined,
-        endTime: eventDetail.endTime ?? undefined,
-        maxParticipants: eventDetail.maxParticipants ?? undefined,
-        currentEnrolled: eventDetail.currentEnrolled ?? undefined,
-        eventPointTag: {
-          name: primaryTag?.name ?? 'Event',
-          description: primaryTag?.description,
-          color: primaryTag?.tagColor,
-          iconUrl: primaryTag?.iconUrl,
-        },
-      },
-    ];
-  }, [eventDetail]);
+    if (!shouldUseServerFilteredGroups && timelineController.activeTagId !== timelineController.allTagId) {
+      points = points.filter((point) => point.eventPointTag?.id === timelineController.activeTagId);
+    }
+
+    if (timelineController.debouncedSearchText) {
+      points = filterEventMapPointsBySearch(points, timelineController.debouncedSearchText);
+    }
+
+    return points;
+  }, [
+    effectiveGroupedTimelines,
+    shouldUseServerFilteredGroups,
+    timelineController.activeTagId,
+    timelineController.allTagId,
+    timelineController.debouncedSearchText,
+    timelineController.selectedDate,
+  ]);
+
+  const searchResults = useMemo(
+    () => (timelineController.isSearching ? mapPoints : timelineController.searchResults),
+    [mapPoints, timelineController.isSearching, timelineController.searchResults]
+  );
 
   const {
     location: userLocation,
@@ -177,16 +269,14 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
     pointDetailSheetRef.current?.dismiss();
   }, []);
 
-  const { searchText, setSearchText, clearSearch, isSearching, filteredResults } = useMapSearch(mapPoints);
-
   const handleSelectSearchResult = useCallback(
     (point: EventMapPoint) => {
       Keyboard.dismiss();
       handleOpenPointSheetModal(point);
       focusOnPoint(point);
-      clearSearch();
+      timelineController.clearSearch();
     },
-    [clearSearch, focusOnPoint, handleOpenPointSheetModal]
+    [focusOnPoint, handleOpenPointSheetModal, timelineController]
   );
 
   const lastValidRouteRef = useRef<PolylineCoordinate[] | null>(null);
@@ -212,6 +302,9 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
   }, [navigationPolylineCoordinates]);
 
   const isNavPolylineVisible = navigationPolylineCoordinates.length >= 2;
+  const showEmptyTimelineState = viewMode === 'EXPLORING' && !timelineController.isSearching && mapPoints.length === 0;
+  const showInitialTimelineLoader = groupedTimelineQuery.isLoading && groupedTimelines.length === 0;
+  const showInitialTimelineError = groupedTimelineQuery.isError && groupedTimelines.length === 0;
 
   useEffect(() => {
     requestPermission();
@@ -219,9 +312,32 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
 
   useEffect(() => {
     if (viewMode !== 'EXPLORING') {
-      clearSearch();
+      timelineController.clearSearch();
     }
-  }, [clearSearch, viewMode]);
+  }, [timelineController, viewMode]);
+
+  useEffect(() => {
+    if (!groupedTimelineQuery.isError) {
+      return;
+    }
+
+    logger.error('[EventTimeLineMapScreen] Failed to load grouped timeline', groupedTimelineQuery.error);
+  }, [groupedTimelineQuery.error, groupedTimelineQuery.isError]);
+
+  useEffect(() => {
+    if (!filteredTimelineQuery.isError) {
+      return;
+    }
+
+    logger.error('[EventTimeLineMapScreen] Failed to load filtered grouped timeline', filteredTimelineQuery.error);
+  }, [filteredTimelineQuery.error, filteredTimelineQuery.isError]);
+
+  useEffect(() => {
+    return () => {
+      setViewMode('EXPLORING');
+      setIsMapReady(false);
+    };
+  }, [setIsMapReady, setViewMode]);
 
   const handleOpenNavigationSteps = useCallback(() => {
     if (viewMode !== 'NAVIGATING') return;
@@ -239,6 +355,21 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
     setConfirmedTravelMode(null);
     handleExitGuidance();
   }, [handleCloseNavigationSteps, handleExitGuidance, setConfirmedTravelMode]);
+
+  if (showInitialTimelineLoader) {
+    return <FullScreenLoader message="Loading timeline map..." />;
+  }
+
+  if (showInitialTimelineError) {
+    return (
+      <FullScreenError
+        message="Failed to load timeline data. Pull down or tap retry."
+        onRetry={async () => {
+          await groupedTimelineQuery.refetch();
+        }}
+      />
+    );
+  }
 
   return (
     <ScreenLayout showBackButton={false}>
@@ -263,15 +394,38 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
 
       {viewMode === 'EXPLORING' && (
         <>
-          <MapSearchBar
-            value={searchText}
-            onChangeText={setSearchText}
-            onClear={clearSearch}
-            onSelectResult={handleSelectSearchResult}
-            results={filteredResults}
-            isSearching={isSearching}
+          <EventTimelineMapOverlay
             topInset={controller.insets.top}
+            searchValue={timelineController.searchText}
+            onSearchChange={timelineController.setSearchText}
+            onClearSearch={timelineController.clearSearch}
+            onSelectSearchResult={handleSelectSearchResult}
+            searchResults={searchResults}
+            isSearching={timelineController.isSearching}
+            dayOptions={timelineController.dayOptions}
+            selectedDate={timelineController.selectedDate}
+            onSelectDate={timelineController.setSelectedDate}
+            tagOptions={timelineController.tagOptions}
+            activeTagId={timelineController.activeTagId}
+            onSelectTag={timelineController.setActiveTagId}
           />
+          {showEmptyTimelineState && (
+            <View
+              pointerEvents="none"
+              className="absolute left-4 right-4 z-30 rounded-xl border px-4 py-3"
+              style={{
+                top: controller.insets.top + 168,
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              }}>
+              <Text className="text-sm font-semibold" style={{ color: theme.foreground }}>
+                No timeline points match your current filters.
+              </Text>
+              <Text className="mt-1 text-xs" style={{ color: theme.mutedForeground }}>
+                Try another day or tag to see more event locations.
+              </Text>
+            </View>
+          )}
           <MapPointDetailModal
             ref={pointDetailSheetRef}
             point={controller.selectedPoint}

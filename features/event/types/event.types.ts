@@ -6,16 +6,16 @@
 // ── Enums ──────────────────────────────────────────────
 
 export enum EventStatus {
-  UPCOMING = "UPCOMING",
-  ONGOING = "ONGOING",
-  COMPLETED = "COMPLETED",
-  CANCELLED = "CANCELLED",
+  UPCOMING = 'UPCOMING',
+  ONGOING = 'ONGOING',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
 }
 
 export enum TicketCatalogStatus {
-  ACTIVE = "ACTIVE",
-  INACTIVE = "INACTIVE",
-  SOLD_OUT = "SOLD_OUT",
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  SOLD_OUT = 'SOLD_OUT',
 }
 
 // ── Tag ────────────────────────────────────────────────
@@ -60,6 +60,35 @@ export interface EventResponse {
   tags: TagResponse[];
   /** Only present in detail view (GET /api/events/{id}) */
   images?: EventImageResponse[] | null;
+}
+
+// ── Timeline Map Models ───────────────────────────────
+
+export interface EventTimelineGroupResponse {
+  date: string;
+  events: EventResponse[];
+}
+
+export interface EventTimelinesGroupedResponse {
+  eventId?: string;
+  groups: EventTimelineGroupResponse[];
+}
+
+export interface EventPointTagResponse {
+  id: string;
+  name: string;
+  description?: string | null;
+  tagColor?: string | null;
+  iconUrl?: string | null;
+}
+
+export interface EventTimelinesGroupedParams {
+  date?: string;
+  fromDate?: string;
+  toDate?: string;
+  tagId?: string;
+  search?: string;
+  timezone?: string;
 }
 
 // ── Ticket Catalog ─────────────────────────────────────
@@ -109,5 +138,5 @@ export interface EventFilterParams {
   maxPrice?: number;
   tagIds?: string[];
   sortBy?: string;
-  sortDir?: "asc" | "desc";
+  sortDir?: 'asc' | 'desc';
 }

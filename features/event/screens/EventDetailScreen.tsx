@@ -1,12 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import {
-  View,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
+import { View, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -40,10 +33,9 @@ export default function EventDetailScreen({ navigation, route }: Props) {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    Promise.allSettled([
-      refetchEvent(),
-      ...(activeTab === 'tickets' ? [refetchTickets()] : []),
-    ]).finally(() => setRefreshing(false));
+    Promise.allSettled([refetchEvent(), ...(activeTab === 'tickets' ? [refetchTickets()] : [])]).finally(() =>
+      setRefreshing(false)
+    );
   }, [refetchEvent, refetchTickets, activeTab]);
 
   // ── Buy ticket handler (placeholder for future implementation) ──
@@ -56,6 +48,10 @@ export default function EventDetailScreen({ navigation, route }: Props) {
       [{ text: 'OK' }]
     );
   }, []);
+
+  const handleOpenTimelineMap = useCallback(() => {
+    navigation.navigate('EventTimeLineMap', { eventId });
+  }, [eventId, navigation]);
 
   // ── Loading state ──
 
@@ -98,16 +94,11 @@ export default function EventDetailScreen({ navigation, route }: Props) {
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
       {/* Header */}
-      <View
-        className="flex-row items-center justify-between border-b px-4 py-3"
-        style={{ borderColor: theme.border }}>
+      <View className="flex-row items-center justify-between border-b px-4 py-3" style={{ borderColor: theme.border }}>
         <TouchableOpacity onPress={() => navigation.goBack()} className="-ml-2 p-2">
           <Ionicons name="arrow-back" size={24} color={theme.foreground} />
         </TouchableOpacity>
-        <Text
-          className="ml-2 flex-1 text-lg font-bold"
-          style={{ color: theme.foreground }}
-          numberOfLines={1}>
+        <Text className="ml-2 flex-1 text-lg font-bold" style={{ color: theme.foreground }} numberOfLines={1}>
           {event.name}
         </Text>
         <View className="w-10" />
@@ -134,15 +125,13 @@ export default function EventDetailScreen({ navigation, route }: Props) {
         />
 
         {/* Event Info (title, status, date, location, participants, price, tags) */}
-        <EventInfoSection event={event} theme={theme} />
+        <EventInfoSection event={event} theme={theme} onOpenTimelineMap={handleOpenTimelineMap} />
 
         {/* Tabs */}
         <View className="mt-6 flex-row gap-2 px-5">
           <TouchableOpacity
             onPress={() => setActiveTab('info')}
-            className={`flex-1 items-center rounded-xl py-3 ${
-              activeTab === 'info' ? 'bg-primary' : ''
-            }`}
+            className={`flex-1 items-center rounded-xl py-3 ${activeTab === 'info' ? 'bg-primary' : ''}`}
             style={activeTab !== 'info' ? { backgroundColor: theme.muted } : undefined}>
             <Text
               className={`text-sm font-bold ${activeTab === 'info' ? 'text-white' : ''}`}
@@ -152,9 +141,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setActiveTab('tickets')}
-            className={`flex-1 items-center rounded-xl py-3 ${
-              activeTab === 'tickets' ? 'bg-primary' : ''
-            }`}
+            className={`flex-1 items-center rounded-xl py-3 ${activeTab === 'tickets' ? 'bg-primary' : ''}`}
             style={activeTab !== 'tickets' ? { backgroundColor: theme.muted } : undefined}>
             <Text
               className={`text-sm font-bold ${activeTab === 'tickets' ? 'text-white' : ''}`}

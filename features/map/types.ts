@@ -57,6 +57,7 @@ export interface EventMapPoint extends MapPoint {
 }
 
 export interface EventMapPointTag {
+  id?: string;
   name: string;
   description?: string;
   color?: string; // Hex color code for the tag, e.g., "#FF5733"

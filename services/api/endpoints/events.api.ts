@@ -9,6 +9,10 @@ export const eventEndpoints = {
   getAllEvents: () => `events/all`,
   /** GET /api/events/{id} — Event detail */
   getEventById: (id: string) => `events/${id}`,
+  /** GET /api/events/{id}/timelines/grouped — Grouped timeline for timeline map */
+  getEventTimelinesGrouped: (eventId: string) => `events/${eventId}/timelines/grouped`,
+  /** GET /api/events/{id}/point-tags — Point tag options for timeline map filters */
+  getEventPointTags: (eventId: string) => `events/${eventId}/point-tags`,
   /** GET /api/events/{id}/ticket-catalogs — Ticket catalogs for an event */
   getTicketCatalogs: (eventId: string) => `events/${eventId}/ticket-catalogs`,
 } as const;

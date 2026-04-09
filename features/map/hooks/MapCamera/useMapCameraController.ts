@@ -3,7 +3,6 @@ import { LatLng } from 'react-native-maps';
 import { NHSMapRef } from '@/features/map/components';
 import { parseFloatOrDefault } from '@/utils/parseNumber';
 import { MapPoint } from '../../types';
-import { logger } from '@/utils/logger';
 
 interface UseMapCameraControllerProps {
   mapRef: RefObject<NHSMapRef | null>;
