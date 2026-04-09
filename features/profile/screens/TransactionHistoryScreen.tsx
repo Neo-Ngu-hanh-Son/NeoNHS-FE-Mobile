@@ -6,9 +6,10 @@ import {
     FlatList,
     StatusBar,
     ScrollView,
+    ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialIcons, FontAwesome6 } from '@expo/vector-icons';
+import { MaterialIcons, FontAwesome6 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
@@ -29,44 +30,46 @@ export default function TransactionHistoryScreen() {
     const [activeStatus, setActiveStatus] = useState('All');
     const [transactions, setTransactions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const [page, setPage] = useState(0);
+
+    const fetchTransactions = async (pageNumber: number, currentType: string, currentStatus: string) => {
+        if (pageNumber === 0) setLoading(true);
+        else setLoadingMore(true);
+
+        try {
+            const response = await transactionService.getTransactions(pageNumber, 5, currentType, currentStatus);
+            if (response.data) {
+                const newTransactions = response.data.content || [];
+                if (pageNumber === 0) {
+                    setTransactions(newTransactions);
+                } else {
+                    setTransactions(prev => [...prev, ...newTransactions]);
+                }
+                setHasMore(!response.data.last);
+            }
+        } catch (error) {
+            console.error('Error fetching transactions:', error);
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
+        }
+    };
 
     React.useEffect(() => {
-        const fetchTransactions = async () => {
-            try {
-                const response = await transactionService.getTransactions();
-                if (response.data) {
-                    setTransactions(response.data);
-                }
-            } catch (error) {
-                console.error('Error fetching transactions:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
+        setPage(0);
+        setHasMore(true);
+        fetchTransactions(0, activeTab, activeStatus);
+    }, [activeTab, activeStatus]);
 
-        fetchTransactions();
-    }, []);
-
-    const filteredTransactions = useMemo(() => {
-        return transactions.filter((item) => {
-            // Filter by Tab (Type)
-            // API returns EVENT/WORKSHOP (uppercase), Tabs are Event/Workshop (Title case)
-            // Normalize to uppercase for comparison
-            const itemType = item.type ? item.type.toUpperCase() : '';
-            const tabFilter = activeTab.toUpperCase();
-
-            const matchesTab = activeTab === 'All' || itemType === tabFilter;
-
-            // Filter by Status
-            // API returns SUCCESS, UI uses PAID.
-            let itemStatus = item.status;
-            if (itemStatus === 'SUCCESS') itemStatus = 'PAID';
-
-            const matchesStatus = activeStatus === 'All' || itemStatus === activeStatus;
-
-            return matchesTab && matchesStatus;
-        });
-    }, [activeTab, activeStatus, transactions]);
+    const handleLoadMore = () => {
+        if (!loadingMore && hasMore) {
+            const nextPage = page + 1;
+            setPage(nextPage);
+            fetchTransactions(nextPage, activeTab, activeStatus);
+        }
+    };
 
     const handleDownload = (id: string, e: any) => {
         e.stopPropagation();
@@ -213,15 +216,34 @@ export default function TransactionHistoryScreen() {
             </SafeAreaView>
 
             <FlatList
-                data={filteredTransactions}
+                data={transactions}
                 renderItem={renderItem}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item, index) => `${item.id}-${index}`}
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
+                onEndReached={handleLoadMore}
+                onEndReachedThreshold={0.5}
+                initialNumToRender={5}
+                maxToRenderPerBatch={10}
+                windowSize={5}
+                removeClippedSubviews={true}
+                ListFooterComponent={
+                    loadingMore ? (
+                        <View style={{ padding: 20 }}>
+                            <ActivityIndicator size="small" color="#15803d" />
+                        </View>
+                    ) : null
+                }
                 ListEmptyComponent={
-                    <View style={styles.emptyContainer}>
-                        <Text style={{ color: theme.mutedForeground }}>No transactions found</Text>
-                    </View>
+                    loading ? (
+                        <View style={styles.emptyContainer}>
+                            <ActivityIndicator size="large" color="#15803d" />
+                        </View>
+                    ) : (
+                        <View style={styles.emptyContainer}>
+                            <Text style={{ color: theme.mutedForeground }}>No transactions found</Text>
+                        </View>
+                    )
                 }
             />
         </View>
