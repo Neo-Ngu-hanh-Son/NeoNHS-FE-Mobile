@@ -1,7 +1,8 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import * as MediaLibrary from 'expo-media-library';
+import type BottomSheet from '@gorhom/bottom-sheet';
 
 import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { THEME } from '@/lib/theme';
@@ -23,9 +24,9 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
   const [capturedPhotoUri, setCapturedPhotoUri] = useState<string | null>(null);
   const [capturedCaption, setCapturedCaption] = useState('');
   const [draftImages, setDraftImages] = useState<CheckinDraftImage[]>([]);
-  const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
-  const [isHistorySheetVisible, setIsHistorySheetVisible] = useState(false);
   const [isSavingPhoto, setIsSavingPhoto] = useState(false);
+  const historySheetRef = useRef<BottomSheet>(null);
+  const reviewSheetRef = useRef<BottomSheet>(null);
   const { isSubmitting, submit } = useSubmitUserCheckin();
   const { isDarkColorScheme } = useTheme();
   const { user, updateUser } = useAuth();
@@ -67,15 +68,15 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
         caption: capturedCaption.trim() || undefined,
       },
     ]);
+    reviewSheetRef.current?.close();
     setCapturedPhotoUri(null);
     setCapturedCaption('');
-    setIsReviewModalVisible(false);
   }, [capturedCaption, capturedPhotoUri]);
 
   const handleImageSelected = useCallback((imageUri: string) => {
     setCapturedPhotoUri(imageUri);
     setCapturedCaption('');
-    setIsReviewModalVisible(true);
+    reviewSheetRef.current?.snapToIndex(0);
   }, []);
 
   const handleFinishCheckin = useCallback(async () => {
@@ -98,7 +99,6 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
     ];
 
     try {
-      // TODO: Actually, wait for the server so that user cannot double checkin at a location
       const res = await submit({
         checkinPointId: pointId,
         images: payloadImages,
@@ -139,7 +139,6 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
       alert('No image to save', 'Please capture an image before saving.');
       return;
     }
-
     setIsSavingPhoto(true);
     try {
       const permission = await MediaLibrary.requestPermissionsAsync();
@@ -158,30 +157,53 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
     }
   }, [capturedPhotoUri, alert]);
 
+  const handleSelectHistoryImage = useCallback((image: CheckinSessionGalleryImage) => {
+    setDraftImages((currentImages) => {
+      const matchIndex = currentImages.findIndex(
+        (draft) => draft.localUri === image.uri && (draft.caption ?? '') === (image.caption ?? '')
+      );
+
+      if (matchIndex < 0) {
+        return currentImages;
+      }
+
+      const nextImages = [...currentImages];
+      nextImages.splice(matchIndex, 1);
+      return nextImages;
+    });
+
+    setCapturedPhotoUri(image.uri);
+    setCapturedCaption(image.caption ?? '');
+    reviewSheetRef.current?.snapToIndex(0);
+  }, []);
+
+  const handleOpenHistorySheet = useCallback(() => {
+    historySheetRef.current?.snapToIndex(0);
+  }, []);
+
   return (
     <View className="flex-1" style={{ backgroundColor: theme.background }}>
       <CheckinCameraCapture
         isBusy={isSubmitting}
-        onClose={() => navigation.goBack()}
-        onOpenGallery={() => setIsHistorySheetVisible(true)}
+        onClose={() => navigation.replace('Tabs', { screen: 'Map' })}
+        onOpenGallery={handleOpenHistorySheet}
         onImageSelected={handleImageSelected}
         pointName={pointName}
       />
 
       <CheckinHistoryBottomSheet
-        visible={isHistorySheetVisible}
-        onClose={() => setIsHistorySheetVisible(false)}
+        sheetRef={historySheetRef}
+        onSelectImage={handleSelectHistoryImage}
         images={sessionGalleryImages}
         pointName={pointName}
       />
 
       <CheckinPhotoReviewModal
-        visible={isReviewModalVisible}
+        sheetRef={reviewSheetRef}
         photoUri={capturedPhotoUri}
         caption={capturedCaption}
         isSubmitting={isSubmitting}
         isSavingPhoto={isSavingPhoto}
-        onClose={() => setIsReviewModalVisible(false)}
         onCaptionChange={setCapturedCaption}
         onSavePhoto={handleSavePhoto}
         onTakeAnother={persistCurrentCapture}

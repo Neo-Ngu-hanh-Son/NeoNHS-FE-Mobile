@@ -41,7 +41,7 @@ export const markerStyles: Record<POIType, MarkerStyle> = {
     icon: 'map-marker',
   },
   CHECKIN: {
-    bg: '#dc2626',
+    bg: '#ef4444',
     border: '#fee2e2',
     icon: 'camera',
   },

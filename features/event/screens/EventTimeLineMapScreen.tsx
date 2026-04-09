@@ -2,7 +2,6 @@ import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { ScreenLayout } from '@/components/common/ScreenLayout';
 import FullScreenError from '@/components/Loader/FullScreenError';
 import FullScreenLoader from '@/components/Loader/FullScreenLoader';
-import { Text } from '@/components/ui/text';
 import {
   MapPoint,
   NHSMap,
@@ -11,7 +10,7 @@ import {
   useMapNavigationGuidance,
   useUserLocation,
 } from '@/features/map';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useMapCameraController } from '@/features/map/hooks/MapCamera/useMapCameraController';
 import { LocationAccuracy } from 'expo-location';
@@ -24,27 +23,25 @@ import {
 } from '@/features/map/components';
 import { useMapNavigationPreviewController } from '@/features/map/hooks/Navigation/useMapNavigationPreviewController';
 import { useMapScreenController } from '@/features/map/hooks/useMapScreenController';
-import { Keyboard, View } from 'react-native';
+import { Keyboard } from 'react-native';
 import { useModal } from '@/app/providers/ModalProvider';
 import { logger } from '@/utils/logger';
 import { useEventPointTags } from '../hooks/useEventPointTags';
 import { useEventTimelineMapController } from '../hooks/useEventTimelineMapController';
 import { useEventTimelinesGrouped } from '../hooks/useEventTimelinesGrouped';
-import { EventTimelineMapOverlay, EventTimelinePointDetailSheet } from '../components';
-import { useTheme } from '@/app/providers/ThemeProvider';
-import { THEME } from '@/lib/theme';
+import { EventTimelineMapOverlay, EventTimelinePointDetailBottomSheet } from '../components';
 import { buildEventMapPointsFromGroups } from '../utils/helpers';
 import { useEventMapStore } from '../hooks/useEventMapStore';
 import { EventMapPoint } from '../types';
 import EventTimelineMapMarker from '../components/EventTimelineMapMarker';
-import type { EventTimelinePointDetailSheetRef } from '../components/EventTimelinePointDetailSheet';
+import type { EventTimelinePointDetailSheetRef } from '../components/EventTimelinePointDetailBottomSheet';
 
 type EventTimeLineMapScreenProps = StackScreenProps<MainStackParamList, 'EventTimeLineMap'>;
 
 export default function EventTimeLineMapScreen({ navigation, route }: EventTimeLineMapScreenProps) {
   const { eventId, pointId: initialPointId, targetNavigationPointId } = route.params;
-  const { isDarkColorScheme } = useTheme();
-  const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const [manualTargetNavigationPointId, setManualTargetNavigationPointId] = useState<string | undefined>(undefined);
+  const effectiveTargetNavigationPointId = manualTargetNavigationPointId ?? targetNavigationPointId;
 
   const viewMode = useEventMapStore((state) => state.viewMode);
   const setViewMode = useEventMapStore((state) => state.setViewMode);
@@ -124,12 +121,7 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
     }
 
     return points;
-  }, [
-    groupedTimelines,
-    timelineController.activeTagId,
-    timelineController.allTagId,
-    timelineController.selectedDate,
-  ]);
+  }, [groupedTimelines, timelineController.activeTagId, timelineController.allTagId, timelineController.selectedDate]);
 
   // Search results are used only for the dropdown list, not to filter map markers
   const searchResults = timelineController.searchResults;
@@ -183,12 +175,12 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
     selectedTravelMode,
     confirmedTravelMode,
     handleStartNavigationWithSelectedMode,
-    clearTargetNavigationParam,
+    clearTargetNavigationParam: clearTargetNavigationParamAuto,
     handleTravelModeSelection,
-    handleCancelTransportSelection,
+    handleCancelTransportSelection: handleCancelTransportSelectionAuto,
     setConfirmedTravelMode,
   } = useMapNavigationPreviewController({
-    targetNavigationPointId,
+    targetNavigationPointId: effectiveTargetNavigationPointId,
     mapPoints,
     userLocation,
     viewMode,
@@ -199,6 +191,16 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
     fitCameraToCoordinates,
     focusOnPoint,
   });
+
+  const clearTargetNavigationParam = useCallback(() => {
+    setManualTargetNavigationPointId(undefined);
+    clearTargetNavigationParamAuto();
+  }, [clearTargetNavigationParamAuto]);
+
+  const handleCancelTransportSelection = useCallback(() => {
+    setManualTargetNavigationPointId(undefined);
+    handleCancelTransportSelectionAuto();
+  }, [handleCancelTransportSelectionAuto]);
 
   const {
     directionError,
@@ -227,6 +229,15 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
       eventPointId: point.id,
       timelineId: point.timelineId,
     });
+  }, []);
+
+  const handleNavigateFromCurrentLocation = useCallback((point: EventMapPoint) => {
+    if (!point.id) {
+      return;
+    }
+
+    pointDetailSheetRef.current?.dismiss();
+    setManualTargetNavigationPointId(point.id);
   }, []);
 
   const renderTimelineMarker = useCallback(
@@ -279,7 +290,6 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
   }, [navigationPolylineCoordinates]);
 
   const isNavPolylineVisible = navigationPolylineCoordinates.length >= 2;
-  const showEmptyTimelineState = viewMode === 'EXPLORING' && !timelineController.isSearching && mapPoints.length === 0;
   const showInitialTimelineLoader = groupedTimelineQuery.isLoading && groupedTimelines.length === 0;
   const showInitialTimelineError = groupedTimelineQuery.isError && groupedTimelines.length === 0;
 
@@ -336,8 +346,9 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
     );
   }
 
+  const shouldShowBackButton = viewMode === 'EXPLORING';
   return (
-    <ScreenLayout showBackButton={true}>
+    <ScreenLayout showBackButton={shouldShowBackButton}>
       <NHSMap
         ref={mapRef}
         onMarkerPress={handleOpenPointSheetModal}
@@ -362,7 +373,7 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
         <>
           <EventTimelineMapOverlay
             topInset={controller.insets.top}
-            showBackButton={true}
+            showBackButton={shouldShowBackButton}
             searchValue={timelineController.searchText}
             onSearchChange={timelineController.setSearchText}
             onClearSearch={timelineController.clearSearch}
@@ -376,28 +387,12 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
             activeTagId={timelineController.activeTagId}
             onSelectTag={timelineController.setActiveTagId}
           />
-          {/* {showEmptyTimelineState && (
-            <View
-              pointerEvents="none"
-              className="absolute left-4 right-4 z-30 rounded-xl border px-4 py-3"
-              style={{
-                top: controller.insets.top + 168,
-                backgroundColor: theme.card,
-                borderColor: theme.border,
-              }}>
-              <Text className="text-sm font-semibold" style={{ color: theme.foreground }}>
-                No timeline points match your current filters.
-              </Text>
-              <Text className="mt-1 text-xs" style={{ color: theme.mutedForeground }}>
-                Try another day or tag to see more event locations.
-              </Text>
-            </View>
-          )} */}
-          <EventTimelinePointDetailSheet
+          <EventTimelinePointDetailBottomSheet
             ref={pointDetailSheetRef}
             point={controller.selectedPoint as EventMapPoint | null}
             onAfterClose={controller.handlePointSheetClosed}
             onStartNavigate={handleStartNavigate}
+            onNavigateFromCurrentLocation={handleNavigateFromCurrentLocation}
           />
         </>
       )}

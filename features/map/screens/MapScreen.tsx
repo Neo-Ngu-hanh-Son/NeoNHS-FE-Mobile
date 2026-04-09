@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { MainStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
@@ -28,20 +28,24 @@ import { QUERY_KEYS } from '@/services/api/tanstack/queryKeyConstants';
 import { useMapCameraController } from '../hooks/MapCamera/useMapCameraController';
 import { useMapScreenController } from '../hooks/useMapScreenController';
 
-const USER_LOCATION_OPTIONS = {
-  autoStart: true,
-  updateInterval: MAP_CONSTANTS.UPDATE_USER_LOCATION_THROTTLE_MS,
-  accuracy: LocationAccuracy.High,
-};
-
 type MapScreenProps = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Map'>,
   StackScreenProps<MainStackParamList>
 >;
 export default function MapScreen({ navigation, route }: MapScreenProps) {
+  const USER_LOCATION_OPTIONS = useMemo(() => {
+    return {
+      autoStart: true,
+      updateInterval: MAP_CONSTANTS.UPDATE_USER_LOCATION_THROTTLE_MS,
+      accuracy: LocationAccuracy.High,
+    };
+  }, []);
+
   // Route params
   const initialPointId = route.params?.pointId;
   const targetNavigationPointId = route.params?.targetNavigationPointId;
+  const [manualTargetNavigationPointId, setManualTargetNavigationPointId] = useState<string | undefined>(undefined);
+  const effectiveTargetNavigationPointId = manualTargetNavigationPointId ?? targetNavigationPointId;
 
   // Zustand store for managing map-wide states like view mode
   const viewMode = useMapStore((state) => state.viewMode);
@@ -122,12 +126,12 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     selectedTravelMode,
     confirmedTravelMode,
     handleStartNavigationWithSelectedMode,
-    clearTargetNavigationParam,
+    clearTargetNavigationParam: clearTargetNavigationParamAuto,
     handleTravelModeSelection,
-    handleCancelTransportSelection,
+    handleCancelTransportSelection: handleCancelTransportSelectionAuto,
     setConfirmedTravelMode,
   } = useMapNavigationPreviewController({
-    targetNavigationPointId,
+    targetNavigationPointId: effectiveTargetNavigationPointId,
     mapPoints,
     userLocation,
     viewMode,
@@ -138,6 +142,16 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     focusOnPoint,
     fitCameraToCoordinates,
   });
+
+  const clearTargetNavigationParam = useCallback(() => {
+    setManualTargetNavigationPointId(undefined);
+    clearTargetNavigationParamAuto();
+  }, [clearTargetNavigationParamAuto]);
+
+  const handleCancelTransportSelection = useCallback(() => {
+    setManualTargetNavigationPointId(undefined);
+    handleCancelTransportSelectionAuto();
+  }, [handleCancelTransportSelectionAuto]);
 
   const {
     directionError,
@@ -164,6 +178,18 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
   const handleClosePointSheetModal = useCallback(() => {
     pointDetailSheetRef.current?.dismiss();
   }, []);
+
+  const handleNavigateFromCurrentLocation = useCallback(
+    (point: MapPoint) => {
+      if (!point.id) {
+        return;
+      }
+
+      handleClosePointSheetModal();
+      setManualTargetNavigationPointId(point.id);
+    },
+    [handleClosePointSheetModal]
+  );
 
   const { searchText, setSearchText, clearSearch, isSearching, filteredResults } = useMapSearch(mapPoints);
 
@@ -280,6 +306,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
             onClose={handleClosePointSheetModal}
             onAfterClose={controller.handlePointSheetClosed}
             onViewDetails={controller.handleNavigate}
+            onNavigateFromCurrentLocation={handleNavigateFromCurrentLocation}
           />
           <CheckinCameraButton
             onOpenCamera={controller.handleOpenCheckinCamera}

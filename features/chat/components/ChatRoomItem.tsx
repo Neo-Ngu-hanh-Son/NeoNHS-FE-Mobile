@@ -1,13 +1,14 @@
-import React, { useRef } from "react";
-import { View, TouchableOpacity, Image, Animated } from "react-native";
-import { Swipeable } from "react-native-gesture-handler";
-import { Ionicons } from "@expo/vector-icons";
+import React, { useRef } from 'react';
+import { View, TouchableOpacity, Animated } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
+import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 
-import { Text } from "@/components/ui/text";
-import { useTheme } from "@/app/providers/ThemeProvider";
-import { THEME } from "@/lib/theme";
-import { ChatRoomWithDetails } from "../types";
-import { formatChatRoomTime } from "../utils/helpers";
+import { Text } from '@/components/ui/text';
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { THEME } from '@/lib/theme';
+import { ChatRoomWithDetails } from '../types';
+import { formatChatRoomTime } from '../utils/helpers';
 
 interface ChatRoomItemProps {
   room: ChatRoomWithDetails;
@@ -21,29 +22,31 @@ export function ChatRoomItem({ room, onPress, onHide }: ChatRoomItemProps) {
   const swipeableRef = useRef<Swipeable>(null);
 
   const displayParticipant = room.otherParticipant;
-  const displayName = displayParticipant?.fullname || room.name || "Unknown Chat";
+  const displayName = displayParticipant?.fullname || room.name || 'Unknown Chat';
   const displayAvatar = displayParticipant?.avatarUrl;
   const formattedTime = formatChatRoomTime(room.lastMessageAt);
   const unreadCount = room.unreadCount ?? 0;
   const hasUnread = unreadCount > 0;
 
   // ── Swipe right action (reveals "Hide") ──────────────
-  const renderRightActions = (_progress: Animated.AnimatedInterpolation<number>, dragX: Animated.AnimatedInterpolation<number>) => {
-    const scale = dragX.interpolate({ inputRange: [-80, 0], outputRange: [1, 0.5], extrapolate: "clamp" });
+  const renderRightActions = (
+    _progress: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>
+  ) => {
+    const scale = dragX.interpolate({ inputRange: [-80, 0], outputRange: [1, 0.5], extrapolate: 'clamp' });
 
     return (
       <TouchableOpacity
         className="items-center justify-center px-5"
-        style={{ backgroundColor: "#EF4444" }}
+        style={{ backgroundColor: '#EF4444' }}
         onPress={() => {
           swipeableRef.current?.close();
           onHide?.();
         }}
-        activeOpacity={0.7}
-      >
+        activeOpacity={0.7}>
         <Animated.View style={{ transform: [{ scale }] }} className="items-center">
           <Ionicons name="eye-off-outline" size={22} color="#FFFFFF" />
-          <Text className="text-white text-xs mt-1 font-medium">Hide</Text>
+          <Text className="mt-1 text-xs font-medium text-white">Hide</Text>
         </Animated.View>
       </TouchableOpacity>
     );
@@ -55,45 +58,44 @@ export function ChatRoomItem({ room, onPress, onHide }: ChatRoomItemProps) {
         className="flex-row items-center px-4 py-3"
         onPress={onPress}
         activeOpacity={0.7}
-        style={{ borderBottomWidth: 1, borderBottomColor: theme.border, backgroundColor: theme.background }}
-      >
+        style={{ borderBottomWidth: 1, borderBottomColor: theme.border, backgroundColor: theme.background }}>
         {/* Avatar + badge */}
         <View className="relative">
           {displayAvatar ? (
-            <Image source={{ uri: displayAvatar }} className="w-14 h-14 rounded-full bg-gray-200" />
+            <Image source={{ uri: displayAvatar }} className="h-14 w-14 rounded-full bg-gray-200" />
           ) : (
-            <View className="w-14 h-14 rounded-full items-center justify-center" style={{ backgroundColor: theme.muted }}>
+            <View
+              className="h-14 w-14 items-center justify-center rounded-full"
+              style={{ backgroundColor: theme.muted }}>
               <Ionicons name="person" size={24} color={theme.mutedForeground} />
             </View>
           )}
           {hasUnread && (
             <View
-              className="absolute -top-1 -right-1 items-center justify-center"
+              className="absolute -right-1 -top-1 items-center justify-center"
               style={{
-                backgroundColor: "red",
+                backgroundColor: 'red',
                 minWidth: 22,
                 height: 22,
                 borderRadius: 11,
                 paddingHorizontal: 4,
                 borderWidth: 2,
                 borderColor: theme.background,
-              }}
-            >
-              <Text className="text-white text-xs font-bold" style={{ fontSize: 10 }}>
-                {unreadCount > 99 ? "99+" : unreadCount}
+              }}>
+              <Text className="text-xs font-bold text-white" style={{ fontSize: 10 }}>
+                {unreadCount > 99 ? '99+' : unreadCount}
               </Text>
             </View>
           )}
         </View>
 
         {/* Text content */}
-        <View className="flex-1 ml-4 justify-center">
-          <View className="flex-row justify-between items-center mb-1">
+        <View className="ml-4 flex-1 justify-center">
+          <View className="mb-1 flex-row items-center justify-between">
             <Text
-              className={`text-base flex-1 mr-2 ${hasUnread ? "font-extrabold" : "font-bold"}`}
+              className={`mr-2 flex-1 text-base ${hasUnread ? 'font-extrabold' : 'font-bold'}`}
               style={{ color: theme.foreground }}
-              numberOfLines={1}
-            >
+              numberOfLines={1}>
               {displayName}
             </Text>
             {formattedTime && (
@@ -103,15 +105,10 @@ export function ChatRoomItem({ room, onPress, onHide }: ChatRoomItemProps) {
             )}
           </View>
           <Text
-            className={`text-sm ${hasUnread ? "font-semibold" : ""}`}
+            className={`text-sm ${hasUnread ? 'font-semibold' : ''}`}
             style={{ color: hasUnread ? theme.foreground : theme.mutedForeground }}
-            numberOfLines={1}
-          >
-            {room.lastMessagePreview
-              ? room.lastMessagePreview
-              : room.lastMessageAt
-                ? "📷 Image"
-                : "No messages yet"}
+            numberOfLines={1}>
+            {room.lastMessagePreview ? room.lastMessagePreview : room.lastMessageAt ? '📷 Image' : 'No messages yet'}
           </Text>
         </View>
       </TouchableOpacity>

@@ -21,6 +21,7 @@ interface EventInfoSectionProps {
 }
 
 export default function EventInfoSection({ event, theme, onOpenTimelineMap }: EventInfoSectionProps) {
+  const hasEventTimeline = event.timelineCount && event.timelineCount > 0;
   return (
     <View>
       {/* Title & Status */}
@@ -137,10 +138,20 @@ export default function EventInfoSection({ event, theme, onOpenTimelineMap }: Ev
         <View className="mt-4 px-5">
           <TouchableOpacity
             onPress={onOpenTimelineMap}
-            className="flex-row items-center justify-center gap-2 rounded-xl px-4 py-3"
-            style={{ backgroundColor: theme.primary }}>
-            <Ionicons name="map-outline" size={18} color="#ffffff" />
-            <Text className="text-sm font-bold text-white">Open Timeline Map</Text>
+            className={`flex-row items-center justify-center gap-2 rounded-xl px-4 py-3 ${hasEventTimeline ? '' : 'opacity-50'}`}
+            style={{ backgroundColor: hasEventTimeline ? theme.primary : theme.muted }}
+            disabled={!hasEventTimeline}>
+            {hasEventTimeline ? (
+              <>
+                <Ionicons name="map-outline" size={18} color="#ffffff" />
+                <Text className="text-sm font-bold text-white">Open Timeline Map</Text>
+              </>
+            ) : (
+              <>
+                <Ionicons name="map-outline" size={18} className="text-muted-foreground" />
+                <Text className="text-sm font-bold text-muted-foreground">No Timeline Available</Text>
+              </>
+            )}
           </TouchableOpacity>
         </View>
       )}

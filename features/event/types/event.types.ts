@@ -64,6 +64,7 @@ export interface EventResponse {
   tags: TagResponse[];
   /** Only present in detail view (GET /api/events/{id}) */
   images?: EventImageResponse[] | null;
+  timelineCount?: number;
 }
 
 // ── Timeline Map Models ───────────────────────────────

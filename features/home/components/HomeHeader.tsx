@@ -1,11 +1,12 @@
-import { View, TouchableOpacity, Image } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { SmartImage } from '@/components/ui/smart-image';
-import { useAuth } from "@/features/auth/context/AuthContext";
+import { useAuth } from '@/features/auth/context/AuthContext';
 
 type HomeHeaderProps = {
   onNotificationPress?: () => void;
@@ -13,11 +14,7 @@ type HomeHeaderProps = {
   userAvatar?: string;
 };
 
-export default function HomeHeader({
-  onNotificationPress,
-  onProfilePress,
-  userAvatar,
-}: HomeHeaderProps) {
+export default function HomeHeader({ onNotificationPress, onProfilePress, userAvatar }: HomeHeaderProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const normalizedUserAvatar = userAvatar?.trim();
@@ -28,10 +25,7 @@ export default function HomeHeader({
       {/* Logo */}
       <View className="flex-row items-center gap-2">
         <View className="elevation-md h-9 w-9 items-center justify-center rounded-full border border-black">
-          <Image
-            source={require('@/assets/images/NeoNHSLogo.png')}
-            className="h-9 w-9 rounded-full object-cover"
-          />
+          <Image source={require('@/assets/images/NeoNHSLogo.png')} className="h-9 w-9 rounded-full object-cover" />
         </View>
         <Text className="text-xl font-bold" style={{ color: theme.primary }}>
           NeoNHS
@@ -40,11 +34,11 @@ export default function HomeHeader({
 
       {/* Right Actions */}
       <View className="flex-row items-center gap-3">
-        <Button variant="ghost" size="icon" onPress={onNotificationPress} className="rounded-full relative">
+        <Button variant="ghost" size="icon" onPress={onNotificationPress} className="relative rounded-full">
           <Ionicons name="notifications-outline" size={20} color={theme.foreground} />
           {unreadNotificationCount > 0 && (
-            <View className="absolute top-1 right-2 bg-red-500 rounded-full min-w-[16px] h-[16px] items-center justify-center px-1">
-              <Text className="text-white text-[10px] font-bold">
+            <View className="absolute right-2 top-1 h-[16px] min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1">
+              <Text className="text-[10px] font-bold text-white">
                 {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
               </Text>
             </View>

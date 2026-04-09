@@ -53,7 +53,7 @@ class ApiClient {
     this.axiosInstance.interceptors.request.use(
       async (config) => {
         // Log the request config
-        // logger.debug(`[ApiClient] ${config.method?.toUpperCase()} ${config.baseURL}/${config.url}`);
+        logger.debug(`[ApiClient] ${config.method?.toUpperCase()} ${config.baseURL}/${config.url}`);
 
         // Guard against invalid pagination sent by callers.
         if (config.params && typeof config.params === 'object' && 'page' in config.params) {
