@@ -82,6 +82,48 @@ export const useMapCameraController = ({
     [mapRef]
   );
 
+  const fitCameraToAllLatLngPoints = useCallback(
+    (points: LatLng[]) => {
+      if (!isMapReady || !mapRef.current) {
+        return;
+      }
+
+      const coordinates = points
+        .map((point) => ({ latitude: point.latitude, longitude: point.longitude }))
+        .filter(
+          (coordinate) =>
+            Number.isFinite(coordinate.latitude) &&
+            Number.isFinite(coordinate.longitude) &&
+            coordinate.latitude !== -1 &&
+            coordinate.longitude !== -1
+        );
+
+      if (coordinates.length === 0) {
+        return;
+      }
+
+      if (coordinates.length === 1) {
+        mapRef.current.animateToCoordinate(
+          {
+            latitude: coordinates[0].latitude,
+            longitude: coordinates[0].longitude,
+            latDelta: 0.005,
+            lngDelta: 0.005,
+          },
+          550
+        );
+        return;
+      }
+
+      mapRef.current.fitToCoordinates(coordinates, {
+        top: 220,
+        right: 64,
+        bottom: 220,
+        left: 64,
+      });
+    },
+    [isMapReady, mapRef]
+  );
   /**
    * Fit the camera of the map to the specific coordiantes
    *
@@ -106,5 +148,6 @@ export const useMapCameraController = ({
   return {
     focusOnPoint,
     fitCameraToCoordinates,
+    fitCameraToAllLatLngPoints,
   };
 };

@@ -8,11 +8,7 @@ import { logger } from '@/utils/logger';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { CompositeScreenProps, useFocusEffect, useNavigation } from '@react-navigation/native';
-import {
-  MainStackParamList,
-  RootStackParamList,
-  TabsStackParamList,
-} from '@/app/navigations/NavigationParamTypes';
+import { MainStackParamList, RootStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { StackScreenProps } from '@react-navigation/stack';
 import { fetchStats } from '@/services/api/common/statsService';
 import { StatsResponse } from '@/types/common';
@@ -51,37 +47,31 @@ export default function ExploreSection() {
   });
   const { isDarkColorScheme } = useTheme();
 
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     const startFetch = async () => {
-  //       try {
-  //         const response = await fetchStats();
-  //         if (response.success) {
-  //           setStats(response.data);
-  //         } else {
-  //           logger.error('Failed to fetch stats');
-  //         }
-  //       } catch (error) {
-  //         logger.error('Error fetching stats:', error);
-  //       }
-  //     };
-  //     startFetch();
-  //   }, [])
-  // );
-
   const handleNavigate = (item: ExploreItem) => {
     switch (item.key) {
       case 'destinations':
-        logger.info('Navigate to Destinations');
+        navigate('Main', {
+          screen: 'AllDestinations',
+          params: { initialTab: 'Points' },
+        });
         break;
       case 'workshops':
-        logger.info('Navigate to Workshops');
+        navigate('Main', {
+          screen: 'AllDestinations',
+          params: { initialTab: 'Workshops' },
+        });
         break;
       case 'events':
-        logger.info('Navigate to Events');
+        navigate('Main', {
+          screen: 'AllDestinations',
+          params: { initialTab: 'Events' },
+        });
         break;
       case 'blogs':
-        navigate('Main', { screen: 'BlogList' });
+        navigate('Main', {
+          screen: 'AllDestinations',
+          params: { initialTab: 'Points' },
+        });
         break;
     }
   };
@@ -119,9 +109,7 @@ export default function ExploreSection() {
             <Pressable
               key={item.key}
               onPressIn={() => setActiveItemKey(item.key)}
-              onPressOut={() =>
-                setActiveItemKey((current) => (current === item.key ? null : current))
-              }
+              onPressOut={() => setActiveItemKey((current) => (current === item.key ? null : current))}
               onPress={() => handleNavigate(item)}
               className="items-center"
               style={{ marginRight: index === exploreItems.length - 1 ? 0 : 20 }}>
@@ -149,11 +137,7 @@ export default function ExploreSection() {
                       borderRadius: 24,
                       backgroundColor: 'transparent',
                     }}
-                    color={
-                      isDarkColorScheme
-                        ? THEME.dark.primaryForeground
-                        : THEME.light.primaryForeground
-                    }
+                    color={isDarkColorScheme ? THEME.dark.primaryForeground : THEME.light.primaryForeground}
                   />
                 </View>
               </View>

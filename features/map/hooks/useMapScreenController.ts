@@ -76,12 +76,17 @@ export const useMapScreenController = ({ navigation, pointDetailSheetRef }: Prop
       return;
     }
 
+    if (!activePoint?.id) {
+      alert('No check-in point nearby', 'Move closer to a check-in location, then try opening the camera again.');
+      return;
+    }
+
     navigation.navigate('CheckinCamera', {
       pointId: activePoint?.id,
       pointName: activePoint?.name ?? '',
       pointRewardPoints: activePoint?.rewardPoints ?? 0,
     });
-  }, [activePoint, dismissPointDetailSheet, isAuthenticated, navigation]);
+  }, [activePoint, alert, dismissPointDetailSheet, isAuthenticated, navigation]);
 
   return {
     // state

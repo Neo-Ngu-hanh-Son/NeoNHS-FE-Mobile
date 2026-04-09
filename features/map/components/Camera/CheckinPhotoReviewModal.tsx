@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Image, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { Image } from 'expo-image';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,12 +11,12 @@ import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 
 type CheckinPhotoReviewModalProps = {
-  visible: boolean;
+  sheetRef: React.RefObject<BottomSheet | null>;
   photoUri: string | null;
   caption: string;
   isSubmitting: boolean;
   isSavingPhoto?: boolean;
-  onClose: () => void;
+  onClose?: () => void;
   onCaptionChange: (value: string) => void;
   onSavePhoto?: () => void;
   onTakeAnother: () => void;
@@ -23,7 +24,7 @@ type CheckinPhotoReviewModalProps = {
 };
 
 export default function CheckinPhotoReviewModal({
-  visible,
+  sheetRef,
   photoUri,
   caption,
   isSubmitting,
@@ -52,16 +53,22 @@ export default function CheckinPhotoReviewModal({
 
   const handleSheetChange = useCallback(
     (index: number) => {
-      if (index === -1 && visible) {
-        onClose();
+      if (index === -1) {
+        onClose?.();
       }
     },
-    [onClose, visible]
+    [onClose]
   );
+
+  const handleTakeAnotherPress = useCallback(() => {
+    sheetRef.current?.close();
+    onTakeAnother();
+  }, [onTakeAnother, sheetRef]);
 
   return (
     <BottomSheet
-      index={visible ? 0 : -1}
+      ref={sheetRef}
+      index={-1}
       snapPoints={snapPoints}
       enablePanDownToClose
       onChange={handleSheetChange}
@@ -80,7 +87,7 @@ export default function CheckinPhotoReviewModal({
         <View className="mb-4 flex-row items-center justify-between">
           <Text className="text-lg font-semibold text-foreground">Review photo</Text>
           <TouchableOpacity
-            onPress={onClose}
+            onPress={() => sheetRef.current?.close()}
             disabled={isSubmitting}
             className="h-9 w-9 items-center justify-center rounded-full bg-muted">
             <Ionicons name="close" size={20} color={theme.foreground} />
@@ -92,8 +99,8 @@ export default function CheckinPhotoReviewModal({
             key={photoUri}
             source={{ uri: photoUri }}
             className="max-h-screen-safe-offset-0 mb-4 aspect-[3/4] w-full rounded-2xl"
-            resizeMode="contain"
-            fadeDuration={0}
+            contentFit="contain"
+            transition={0}
             onError={() => setHasPreviewError(true)}
           />
         ) : (
@@ -123,7 +130,7 @@ export default function CheckinPhotoReviewModal({
             </Button>
           ) : null}
           <Button
-            onPress={onTakeAnother}
+            onPress={handleTakeAnotherPress}
             variant="outline"
             disabled={isSubmitting || isSavingPhoto || !photoUri}
             className="h-12 rounded-xl">

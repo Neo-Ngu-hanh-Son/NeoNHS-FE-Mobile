@@ -360,7 +360,7 @@ export function useMapNavigationGuidance({
       if (shouldEnterContinueStraight) {
         const streetName = extractStreetNameFromInstruction(baseInstruction);
         currentManeuver = 'STRAIGHT';
-        currentInstructionText = streetName ? `Continue on ${streetName}` : 'Continue straight';
+        currentInstructionText = streetName ? `Follow the road` : 'Follow the road';
       }
 
       // Show dynamic remaining distance to current maneuver in the top card metadata.

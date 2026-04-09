@@ -1,6 +1,11 @@
 import { useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import { reviewService } from '@/features/reviews/services/reviewService';
-import { ReviewTypeFlg, type ReviewPageResponse, type ReviewSortBy, type ReviewSortDir } from '@/features/reviews/types';
+import {
+  ReviewTypeFlg,
+  type ReviewPageResponse,
+  type ReviewSortBy,
+  type ReviewSortDir,
+} from '@/features/reviews/types';
 import { reviewsQueryKeyRoot } from '@/features/reviews/utils';
 
 export type ReviewSortKey = `${ReviewSortBy},${ReviewSortDir}`;
@@ -14,8 +19,13 @@ function normalizePage(raw: any): ReviewPageResponse {
   if (raw.data && Array.isArray(raw.data.content)) return flattenPageMeta(raw.data);
   if (Array.isArray(raw)) {
     return {
-      content: raw, totalElements: raw.length, totalPages: 1,
-      size: raw.length, last: true, first: true, empty: raw.length === 0,
+      content: raw,
+      totalElements: raw.length,
+      totalPages: 1,
+      size: raw.length,
+      last: true,
+      first: true,
+      empty: raw.length === 0,
     };
   }
 
@@ -34,7 +44,7 @@ function flattenPageMeta(page: any): ReviewPageResponse {
     page: typeof page.page === 'number' ? page.page : undefined,
     first: page.first ?? nested?.first,
     last: page.last ?? nested?.last,
-    empty: page.empty ?? nested?.empty ?? (page.content?.length === 0),
+    empty: page.empty ?? nested?.empty ?? page.content?.length === 0,
   };
 }
 
@@ -54,7 +64,10 @@ export function useEventReviews(eventId: string, sort: ReviewSortKey = 'createdA
     queryKey: [...root, sort],
     queryFn: async ({ pageParam = 0 }) => {
       const response = await reviewService.getEventReviews(eventId, {
-        page: pageParam as number, size: PAGE_SIZE, sortBy, sortDir,
+        page: pageParam as number,
+        size: PAGE_SIZE,
+        sortBy,
+        sortDir,
       });
       return normalizePage(response.data);
     },
@@ -63,7 +76,8 @@ export function useEventReviews(eventId: string, sort: ReviewSortKey = 'createdA
       if (lastPage.last === true || lastPage.empty === true) return undefined;
       const currentPage =
         (typeof lastPage.page === 'number' ? lastPage.page : undefined) ??
-        (typeof lastPage.number === 'number' ? lastPage.number : undefined) ?? 0;
+        (typeof lastPage.number === 'number' ? lastPage.number : undefined) ??
+        0;
       const totalPages = lastPage.totalPages ?? 1;
       if (currentPage + 1 >= totalPages) return undefined;
       return currentPage + 1;

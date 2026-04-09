@@ -70,14 +70,14 @@ export const useMapNavigationPreviewController = ({
 
   const shouldFetchPreviewRoute = Boolean(targetNavigationPointId && viewMode === 'PREVIEWING_NAVIGATION');
 
-  const buildPreviewRouteQuery = () => {
+  const buildPreviewRouteQuery = useCallback(() => {
     if (!previewOrigin || !previewDestination || !selectedTravelMode) return null;
     return {
       origin: previewOrigin,
       destination: previewDestination,
       travelMode: selectedTravelMode,
     };
-  };
+  }, [previewOrigin, previewDestination, selectedTravelMode]);
 
   const previewRouteQuery = useDirectionsPreview(buildPreviewRouteQuery(), shouldFetchPreviewRoute);
   const previewRouteSummary = previewRouteQuery.data ?? null;

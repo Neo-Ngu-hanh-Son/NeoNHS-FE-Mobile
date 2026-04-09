@@ -1,9 +1,10 @@
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View, Animated } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View, Animated, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { Text } from '@/components/ui/text';
 import type { EventTimelineTagOption } from '../hooks/useEventTimelineMapController';
+import { Button } from '@/components/ui/button';
 
 type EventTimelineTagChipsProps = {
   options: EventTimelineTagOption[];
@@ -48,7 +49,7 @@ function Chip({
         },
         isActive && styles.activeBorder,
       ]}>
-      <Pressable
+      <TouchableOpacity
         onPress={() => onSelectTag(option.id)}
         accessibilityRole="button"
         accessibilityState={{ selected: isActive }}
@@ -57,7 +58,7 @@ function Chip({
         <Text style={styles.chipText} numberOfLines={1}>
           {option.name}
         </Text>
-      </Pressable>
+      </TouchableOpacity>
     </Animated.View>
   );
 }

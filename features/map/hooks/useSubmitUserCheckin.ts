@@ -81,7 +81,8 @@ export function useSubmitUserCheckin() {
         logger.info('[useSubmitUserCheckin] Submitting check-in', { payload });
 
         const response = await mutateAsync(payload);
-        const isSuccess = response?.status === 200 || Boolean(response?.success);
+        const statusCode = response?.status ?? 0;
+        const isSuccess = (statusCode >= 200 && statusCode < 300) || Boolean(response?.success);
 
         if (!isSuccess) {
           throw new Error(response?.message ?? 'Unable to complete check-in right now.');

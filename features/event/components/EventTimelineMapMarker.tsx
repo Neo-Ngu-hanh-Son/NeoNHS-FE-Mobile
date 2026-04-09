@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import { Marker } from 'react-native-maps';
 import { StrokeText } from '@charmy.tech/react-native-stroke-text';
 import type { EventMapPoint } from '../types';
+import { defaultListStyleSpecs } from 'react-native-render-html';
 
 type EventTimelineMapMarkerProps = {
   point: EventMapPoint;
@@ -48,6 +49,7 @@ export default function EventTimelineMapMarker({
               <View style={styles.fallbackDot} />
             )}
           </View>
+          <View style={styles.arrow} />
         </View>
 
         {showName && (
@@ -91,9 +93,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   bubble: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: '#ffffff',
     overflow: 'hidden',
@@ -114,5 +116,15 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
     backgroundColor: '#ffffff',
+  },
+  arrow: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderTopWidth: 8,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    marginTop: -2,
   },
 });

@@ -12,15 +12,17 @@ import CheckinGalleryViewerModal from './CheckinGalleryViewerModal';
 import { CheckinSessionGalleryImage } from '../../types';
 
 type CheckinHistoryBottomSheetProps = {
-  visible: boolean;
-  onClose: () => void;
+  sheetRef: React.RefObject<BottomSheet | null>;
+  onClose?: () => void;
+  onSelectImage?: (image: CheckinSessionGalleryImage) => void;
   images: CheckinSessionGalleryImage[];
   pointName?: string;
 };
 
 export default function CheckinHistoryBottomSheet({
-  visible,
+  sheetRef,
   onClose,
+  onSelectImage,
   images,
   pointName,
 }: CheckinHistoryBottomSheetProps) {
@@ -41,11 +43,11 @@ export default function CheckinHistoryBottomSheet({
 
   const handleSheetChange = useCallback(
     (index: number) => {
-      if (index === -1 && visible) {
-        onClose();
+      if (index === -1) {
+        onClose?.();
       }
     },
-    [onClose, visible]
+    [onClose]
   );
 
   const handleOpenViewer = useCallback((index: number) => {
@@ -57,7 +59,16 @@ export default function CheckinHistoryBottomSheet({
     ({ item, index }: { item: CheckinSessionGalleryImage; index: number }) => (
       <Pressable
         style={[styles.card, { borderColor: theme.border, backgroundColor: theme.card }]}
-        onPress={() => handleOpenViewer(index)}>
+        onPress={() => {
+          if (onSelectImage) {
+            onSelectImage(item);
+            sheetRef.current?.close();
+            return;
+          }
+
+          handleOpenViewer(index);
+        }}
+        onLongPress={() => handleOpenViewer(index)}>
         <SmartImage uri={item.uri} style={styles.cardImage} contentFit="cover" />
         <View style={styles.cardBody}>
           <Text className="text-xs font-medium text-foreground" numberOfLines={2}>
@@ -69,13 +80,14 @@ export default function CheckinHistoryBottomSheet({
         </View>
       </Pressable>
     ),
-    [handleOpenViewer, theme.border, theme.card]
+    [handleOpenViewer, onSelectImage, sheetRef, theme.border, theme.card]
   );
 
   return (
     <>
       <BottomSheet
-        index={visible ? 0 : -1}
+        ref={sheetRef}
+        index={-1}
         snapPoints={snapPoints}
         onChange={handleSheetChange}
         enablePanDownToClose
@@ -94,7 +106,7 @@ export default function CheckinHistoryBottomSheet({
             </Text>
           </View>
           <TouchableOpacity
-            onPress={onClose}
+            onPress={() => sheetRef.current?.close()}
             className="h-9 w-9 items-center justify-center rounded-full bg-muted"
             accessibilityRole="button"
             accessibilityLabel="Close check-in gallery">

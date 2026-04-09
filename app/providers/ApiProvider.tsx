@@ -31,25 +31,22 @@ export default function ApiProvider({ children }: { children: ReactNode }) {
     refreshAuthRef.current = refreshAuth;
   }, [refreshAuth]);
 
-  const handleTokenRefresh = useCallback(
-    async (currentRefreshToken: string): Promise<TokenRefreshResult | null> => {
-      try {
-        logger.info('[ApiProvider] Attempting to refresh token...');
-        const response = await authService.refreshToken(currentRefreshToken);
+  const handleTokenRefresh = useCallback(async (currentRefreshToken: string): Promise<TokenRefreshResult | null> => {
+    try {
+      logger.info('[ApiProvider] Attempting to refresh token...');
+      const response = await authService.refreshToken(currentRefreshToken);
 
-        if (response.data) {
-          return {
-            ...response.data,
-          };
-        }
-        return null;
-      } catch (error) {
-        logger.error('[ApiProvider] Token refresh failed:', error);
-        return null;
+      if (response.data) {
+        return {
+          ...response.data,
+        };
       }
-    },
-    []
-  );
+      return null;
+    } catch (error) {
+      logger.error('[ApiProvider] Token refresh failed:', error);
+      return null;
+    }
+  }, []);
 
   useEffect(() => {
     logger.info(`[ApiProvider] Using API URL: ${API_URL}`);
