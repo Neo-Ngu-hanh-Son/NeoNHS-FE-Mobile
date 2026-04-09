@@ -1,17 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { eventService } from '../services/eventService';
-import type { EventTimelinesGroupedParams } from '../types';
 import { normalizeEventTimelineGroups } from '../utils/helpers';
 
-export function useEventTimelinesGrouped(
-  eventId: string,
-  params?: EventTimelinesGroupedParams,
-  enabled = true
-) {
+export function useEventTimelinesGrouped(eventId: string, enabled = true) {
   return useQuery({
-    queryKey: ['event-timelines-grouped', eventId, params],
+    queryKey: ['event-timelines-grouped', eventId],
     queryFn: async () => {
-      const response = await eventService.getEventTimelinesGrouped(eventId, params);
+      const response = await eventService.getEventTimelinesGrouped(eventId);
       return normalizeEventTimelineGroups(response.data);
     },
     enabled: !!eventId && enabled,

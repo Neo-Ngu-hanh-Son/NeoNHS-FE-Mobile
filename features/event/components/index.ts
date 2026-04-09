@@ -6,3 +6,4 @@ export { EventDetailReviews } from './EventDetailReviews';
 export { default as EventTimelineDaySelector } from './EventTimelineDaySelector';
 export { default as EventTimelineTagChips } from './EventTimelineTagChips';
 export { default as EventTimelineMapOverlay } from './EventTimelineMapOverlay';
+export { default as EventTimelinePointDetailSheet } from './EventTimelinePointDetailSheet';

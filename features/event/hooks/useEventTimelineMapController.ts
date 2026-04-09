@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { EventMapPoint } from '@/features/map';
-import type { EventPointTagResponse, EventTimelineGroupResponse } from '../types';
+import type { EventMapPoint, EventPointTagResponse, EventTimelineGroupResponse } from '../types';
 import {
   buildEventMapPointsFromGroups,
   buildEventTimelineDayOptions,
@@ -20,6 +19,8 @@ export type EventTimelineDayOption = {
 export type EventTimelineTagOption = {
   id: string;
   name: string;
+  /** Tag brand color (hex). Undefined for the synthetic 'All' option. */
+  color?: string | null;
 };
 
 interface UseEventTimelineMapControllerProps {
@@ -103,10 +104,11 @@ export function useEventTimelineMapController({
       .map((tag) => ({
         id: tag.id,
         name: tag.name,
+        color: tag.tagColor ?? null,
       }))
       .filter((tag) => tag.id && tag.name);
 
-    return [{ id: ALL_TAG_ID, name: 'All' }, ...mapped];
+    return [{ id: ALL_TAG_ID, name: 'All', color: null }, ...mapped];
   }, [resolvedTags]);
 
   useEffect(() => {
@@ -136,6 +138,9 @@ export function useEventTimelineMapController({
       return [] as EventMapPoint[];
     }
 
+    /**
+     * Search here
+     */
     return filterEventMapPointsBySearch(visiblePoints, debouncedSearchText);
   }, [debouncedSearchText, isSearching, visiblePoints]);
 
@@ -147,10 +152,6 @@ export function useEventTimelineMapController({
   const hasAutoFittedRef = useRef(false);
   useEffect(() => {
     if (!onFitVisiblePoints || !isMapReady) {
-      return;
-    }
-
-    if (searchText.trim().length > 0) {
       return;
     }
 
@@ -171,7 +172,7 @@ export function useEventTimelineMapController({
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [isMapReady, onFitVisiblePoints, searchText, selectedDate, activeTagId, visiblePoints]);
+  }, [isMapReady, onFitVisiblePoints, selectedDate, activeTagId, visiblePoints]);
 
   return {
     allTagId: ALL_TAG_ID,

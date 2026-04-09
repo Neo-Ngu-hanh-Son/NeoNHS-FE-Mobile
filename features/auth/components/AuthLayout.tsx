@@ -1,7 +1,8 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { View, Image, StyleSheet, ViewStyle, StyleProp, Dimensions, ImageSourcePropType } from 'react-native';
+import { View, StyleSheet, ViewStyle, StyleProp, Dimensions, ImageSourcePropType } from 'react-native';
+import { Image } from 'expo-image';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 
@@ -43,7 +44,7 @@ export default function AuthLayout({
           <Image
             source={imageSource || require('@/assets/images/Mountain.png')}
             style={styles.image}
-            resizeMode="cover"
+            contentFit="cover"
           />
         </View>
 

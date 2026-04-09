@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Image, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,11 +27,7 @@ export function ReviewCard({ item, isOwn, onEdit, onReport }: ReviewCardProps) {
         <View className="flex-row items-start justify-between">
           <View className="flex-row items-center gap-3">
             {avatarUri ? (
-              <Image
-                source={{ uri: avatarUri }}
-                className="h-10 w-10 rounded-full"
-                resizeMode="cover"
-              />
+              <Image source={{ uri: avatarUri }} className="h-10 w-10 rounded-full" contentFit="cover" />
             ) : (
               <View
                 style={{
@@ -59,42 +56,30 @@ export function ReviewCard({ item, isOwn, onEdit, onReport }: ReviewCardProps) {
                   </View>
                 )}
               </View>
-              <Text className="text-[11px] text-muted-foreground">
-                {formatTimeAgo(item.createdAt)}
-              </Text>
+              <Text className="text-[11px] text-muted-foreground">{formatTimeAgo(item.createdAt)}</Text>
             </View>
           </View>
-          {/* Action Button: Edit for own reviews, Report for others */
-          isOwn && onEdit ? (
-            <TouchableOpacity
-              className="p-1"
-              onPress={onEdit}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Ionicons name="pencil-outline" size={16} color={theme.primary} />
-            </TouchableOpacity>
-          ) : !isOwn && onReport ? (
-            <TouchableOpacity
-              className="p-1"
-              onPress={onReport}>
-              <Ionicons name="ellipsis-vertical" size={16} color={theme.mutedForeground} />
-            </TouchableOpacity>
-          ) : null}
+          {
+            /* Action Button: Edit for own reviews, Report for others */
+            isOwn && onEdit ? (
+              <TouchableOpacity className="p-1" onPress={onEdit} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Ionicons name="pencil-outline" size={16} color={theme.primary} />
+              </TouchableOpacity>
+            ) : !isOwn && onReport ? (
+              <TouchableOpacity className="p-1" onPress={onReport}>
+                <Ionicons name="ellipsis-vertical" size={16} color={theme.mutedForeground} />
+              </TouchableOpacity>
+            ) : null
+          }
         </View>
 
         <View className="flex-row gap-0.5">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Ionicons
-              key={i}
-              name={i < item.rating ? 'star' : 'star-outline'}
-              size={12}
-              color="#f97316"
-            />
+            <Ionicons key={i} name={i < item.rating ? 'star' : 'star-outline'} size={12} color="#f97316" />
           ))}
         </View>
 
-        {!!item.comment && (
-          <Text className="text-sm leading-6 text-muted-foreground">{item.comment}</Text>
-        )}
+        {!!item.comment && <Text className="text-sm leading-6 text-muted-foreground">{item.comment}</Text>}
 
         {item.imageUrls && item.imageUrls.length > 0 && (
           <View className="flex-row flex-wrap gap-2">
@@ -103,7 +88,7 @@ export function ReviewCard({ item, isOwn, onEdit, onReport }: ReviewCardProps) {
                 key={idx}
                 source={{ uri: url }}
                 style={{ width: 64, height: 64, borderRadius: 8 }}
-                resizeMode="cover"
+                contentFit="cover"
               />
             ))}
           </View>
