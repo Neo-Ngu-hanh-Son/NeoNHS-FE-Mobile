@@ -8,12 +8,14 @@ import { useTheme } from "@/app/providers/ThemeProvider";
 import { THEME } from "@/lib/theme";
 import { Text } from "@/components/ui/text";
 import { useChatContext } from "../context/ChatProvider";
+import { useAuth } from "@/features/auth";
 
 export function FloatingChatButton() {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const insets = useSafeAreaInsets();
   const { supportUnreadCount, createOrOpenRoom, rooms } = useChatContext();
+  const { isAuthenticated } = useAuth();
   const navigation = useNavigation<any>();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -30,9 +32,9 @@ export function FloatingChatButton() {
   const [supportRoomId, setSupportRoomId] = useState<string | null>(null);
   const preloadAttemptedRef = React.useRef(false);
 
-  // Pre-load the support room ID in the background (run once)
+  // Pre-load the support room ID in the background (only when authenticated)
   useEffect(() => {
-    if (preloadAttemptedRef.current) return;
+    if (!isAuthenticated || preloadAttemptedRef.current) return;
     preloadAttemptedRef.current = true;
 
     const existing = rooms?.find(r => r.roomType === "SYSTEM_SUPPORT");
@@ -43,7 +45,7 @@ export function FloatingChatButton() {
         .then(room => setSupportRoomId(room.id))
         .catch(err => console.log("Silent support chat preload failed:", err?.message || err));
     }
-  }, []);
+  }, [isAuthenticated]);
 
   const allowedScreens = ["Home", "Discover", "Tabs", "Main"];
   // Fallback to "Home" on initial load if route name is not yet resolved
