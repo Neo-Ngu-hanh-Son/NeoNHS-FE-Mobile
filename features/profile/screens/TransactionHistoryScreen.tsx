@@ -21,6 +21,74 @@ import { transactionService } from '../services/transactionService';
 const TABS = ['All', 'Event', 'Workshop'];
 const STATUS_FILTERS = ['All', 'PENDING', 'PAID', 'CANCELLED', 'FAILED'];
 
+const getStatusColor = (status: string, theme: any) => {
+    const normalizedStatus = status === 'SUCCESS' ? 'PAID' : status;
+    switch (normalizedStatus) {
+        case 'PAID': return '#15803d';
+        case 'PENDING': return '#b45309';
+        case 'CANCELLED': return '#b91c1c';
+        case 'FAILED': return '#b91c1c';
+        default: return theme.mutedForeground;
+    }
+};
+
+const getStatusBg = (status: string, theme: any) => {
+    const normalizedStatus = status === 'SUCCESS' ? 'PAID' : status;
+    switch (normalizedStatus) {
+        case 'PAID': return '#effcf6';
+        case 'PENDING': return '#fffbeb';
+        case 'CANCELLED': return '#fef2f2';
+        case 'FAILED': return '#fef2f2';
+        default: return theme.muted;
+    }
+};
+
+const getIconForType = (type: string) => {
+    const lowerType = type ? type.toLowerCase() : '';
+    if (lowerType === 'event') return 'sailboat';
+    if (lowerType === 'workshop') return 'hands-holding-circle';
+    if (lowerType === 'mixed') return 'cart-shopping';
+    return 'receipt';
+};
+
+const TransactionCard = React.memo(({ item, theme, onPress }: { item: any, theme: any, onPress: (id: string) => void }) => {
+    const displayStatus = item.status === 'SUCCESS' ? 'PAID' : item.status;
+    const formattedDate = new Date(item.transactionDate).toLocaleDateString('vi-VN', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    const formattedAmount = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.amount);
+
+    return (
+        <TouchableOpacity
+            style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}
+            onPress={() => onPress(item.id)}
+            activeOpacity={0.8}>
+            <View style={styles.cardHeader}>
+                <View style={styles.iconContainer}>
+                    <FontAwesome6 name={getIconForType(item.type)} size={20} color={getStatusColor(displayStatus, theme)} />
+                </View>
+                <View style={styles.cardInfo}>
+                    <Text style={[styles.cardTitle, { color: theme.foreground }]} numberOfLines={2}>
+                        {item.type === 'MIXED' ? 'CART checkout' : `${item.type} payment`}
+                    </Text>
+                    <Text style={{ color: theme.mutedForeground, fontSize: 12, marginBottom: 4 }}>Order #{item.orderId?.slice(0, 8)}</Text>
+                    <View style={styles.statusRow}>
+                        <View style={[styles.statusBadge, { backgroundColor: getStatusBg(displayStatus, theme) }]}>
+                            <Text style={[styles.statusText, { color: getStatusColor(displayStatus, theme) }]}>{displayStatus}</Text>
+                        </View>
+                        <Text style={{ color: theme.mutedForeground, fontSize: 12 }}>{formattedDate}</Text>
+                    </View>
+                </View>
+                <Text style={[styles.amount, { color: theme.foreground }]}>{formattedAmount}</Text>
+            </View>
+        </TouchableOpacity>
+    );
+});
+
 export default function TransactionHistoryScreen() {
     const navigation = useNavigation<any>();
     const { isDarkColorScheme } = useTheme();
@@ -64,96 +132,20 @@ export default function TransactionHistoryScreen() {
     }, [activeTab, activeStatus]);
 
     const handleLoadMore = () => {
-        if (!loadingMore && hasMore) {
+        if (!loading && !loadingMore && hasMore && transactions.length > 0) {
             const nextPage = page + 1;
             setPage(nextPage);
             fetchTransactions(nextPage, activeTab, activeStatus);
         }
     };
 
-    const handleDownload = (id: string, e: any) => {
-        e.stopPropagation();
-        console.log('Download', id);
-    };
+    const handlePressCard = React.useCallback((transactionId: string) => {
+        navigation.navigate('TransactionDetails', { transactionId });
+    }, [navigation]);
 
-    const getStatusColor = (status: string) => {
-        const normalizedStatus = status === 'SUCCESS' ? 'PAID' : status;
-        switch (normalizedStatus) {
-            case 'PAID': return '#15803d'; // green-700
-            case 'PENDING': return '#b45309'; // amber-700
-            case 'CANCELLED': return '#b91c1c'; // red-700
-            case 'FAILED': return '#b91c1c'; // red-700
-            default: return theme.mutedForeground;
-        }
-    };
-
-    const getStatusBg = (status: string) => {
-        const normalizedStatus = status === 'SUCCESS' ? 'PAID' : status;
-        switch (normalizedStatus) {
-            case 'PAID': return '#effcf6';
-            case 'PENDING': return '#fffbeb';
-            case 'CANCELLED': return '#fef2f2';
-            case 'FAILED': return '#fef2f2';
-            default: return theme.muted;
-        }
-    };
-
-    const getIconForType = (type: string) => {
-        const lowerType = type ? type.toLowerCase() : '';
-        if (lowerType === 'event') return 'sailboat';
-        if (lowerType === 'workshop') return 'hands-holding-circle';
-        if (lowerType === 'mixed') return 'cart-shopping';
-        return 'receipt';
-    };
-
-    const renderItem = ({ item }: { item: any }) => {
-        const displayStatus = item.status === 'SUCCESS' ? 'PAID' : item.status;
-        const formattedDate = new Date(item.transactionDate).toLocaleDateString('vi-VN', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-        const formattedAmount = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.amount);
-
-        return (
-            <TouchableOpacity
-                style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}
-                onPress={() => navigation.navigate('TransactionDetails', { transactionId: item.id })}
-                activeOpacity={0.8}>
-                <View style={styles.cardHeader}>
-                    <View style={styles.iconContainer}>
-                        <FontAwesome6 name={getIconForType(item.type)} size={20} color={getStatusColor(displayStatus)} />
-                    </View>
-                    <View style={styles.cardInfo}>
-                        <Text style={[styles.cardTitle, { color: theme.foreground }]} numberOfLines={2}>
-                            {item.type === 'MIXED' ? 'CART checkout' : `${item.type} payment`}
-                        </Text>
-                        <Text style={{ color: theme.mutedForeground, fontSize: 12, marginBottom: 4 }}>Order #{item.orderId?.slice(0, 8)}</Text>
-                        <View style={styles.statusRow}>
-                            <View style={[styles.statusBadge, { backgroundColor: getStatusBg(displayStatus) }]}>
-                                <Text style={[styles.statusText, { color: getStatusColor(displayStatus) }]}>{displayStatus}</Text>
-                            </View>
-                            <Text style={{ color: theme.mutedForeground, fontSize: 12 }}>{formattedDate}</Text>
-                        </View>
-                    </View>
-                    <Text style={[styles.amount, { color: theme.foreground }]}>{formattedAmount}</Text>
-                </View>
-
-                {/* {displayStatus === 'PAID' && (
-                    <TouchableOpacity
-                        style={[styles.downloadButton, { backgroundColor: getStatusColor(displayStatus) }]}
-                        onPress={(e) => handleDownload(item.id, e)}
-                        activeOpacity={0.8}>
-                        <MaterialIcons name="picture-as-pdf" size={18} color="white" />
-                        <Text style={styles.downloadText}>Download Receipt</Text>
-                    </TouchableOpacity>
-                )
-                } */}
-            </TouchableOpacity>
-        )
-    };
+    const renderItem = React.useCallback(({ item }: { item: any }) => {
+        return <TransactionCard item={item} theme={theme} onPress={handlePressCard} />;
+    }, [theme, handlePressCard]);
 
     return (
         <View style={[styles.container, { backgroundColor: isDarkColorScheme ? theme.background : '#F7F9FC' }]}>
