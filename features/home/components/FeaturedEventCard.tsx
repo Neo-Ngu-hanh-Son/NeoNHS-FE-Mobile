@@ -13,22 +13,10 @@ type FeaturedEventCardProps = {
   onPress?: () => void;
 };
 
-export default function FeaturedCard({
-  tag = 'EVENT',
-  title,
-  description,
-  imageUrl,
-  onPress,
-}: FeaturedEventCardProps) {
+export default function FeaturedCard({ tag = 'EVENT', title, description, imageUrl, onPress }: FeaturedEventCardProps) {
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.9}
-      className="mx-4 h-80 overflow-hidden rounded-2xl">
-      <SmartImageBackground
-        uri={imageUrl}
-        className="flex-1"
-        imageStyle={{ borderRadius: 16 }}>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.9} className="mx-4 h-80 overflow-hidden rounded-2xl">
+      <SmartImageBackground uri={imageUrl} className="flex-1" imageStyle={{ borderRadius: 16 }}>
         <LinearGradient colors={['transparent', 'rgba(0,0,0,0.7)']} className="flex-1 justify-end">
           <View className="p-4">
             {/* Tag */}
@@ -47,10 +35,7 @@ export default function FeaturedCard({
             </Text>
 
             {/* CTA Button */}
-            <Button
-              onPress={onPress}
-              className="h-auto self-start rounded-full px-4 py-2"
-              size="sm">
+            <Button onPress={onPress} className="h-auto self-start rounded-full px-4 py-2" size="sm">
               <Text className="text-sm font-semibold text-white">Start Exploring</Text>
               <Ionicons name="arrow-forward" size={16} color="#fff" />
             </Button>

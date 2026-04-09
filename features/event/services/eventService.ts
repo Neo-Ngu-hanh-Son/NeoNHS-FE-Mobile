@@ -5,6 +5,8 @@
 import { apiClient, endpoints, ApiResponse } from '@/services/api';
 import {
   EventResponse,
+  EventTimelinesGroupedResponse,
+  EventPointTagResponse,
   TicketCatalogResponse,
   PageResponse,
   EventFilterParams,
@@ -15,9 +17,7 @@ export const eventService = {
    * Get paginated list of events
    * GET /api/events
    */
-  getEvents: async (
-    params?: EventFilterParams
-  ): Promise<ApiResponse<PageResponse<EventResponse>>> => {
+  getEvents: async (params?: EventFilterParams): Promise<ApiResponse<PageResponse<EventResponse>>> => {
     // Build query params, filtering out undefined values
     const queryParams: Record<string, string | number | boolean> = {};
     if (params) {
@@ -60,13 +60,31 @@ export const eventService = {
   },
 
   /**
+   * Get grouped event timeline for timeline map.
+   * GET /api/events/{id}/timelines/grouped
+   */
+  getEventTimelinesGrouped: async (eventId: string): Promise<ApiResponse<EventTimelinesGroupedResponse>> => {
+    return await apiClient.get<EventTimelinesGroupedResponse>(endpoints.events.getEventTimelinesGrouped(eventId), {
+      requiresAuth: false,
+    });
+  },
+
+  /**
+   * Get point tags for event timeline map.
+   * GET /api/events/{id}/point-tags
+   */
+  getEventPointTags: async (eventId: string): Promise<ApiResponse<EventPointTagResponse[]>> => {
+    return await apiClient.get<EventPointTagResponse[]>(endpoints.events.getEventPointTags(eventId), {
+      requiresAuth: false,
+    });
+  },
+
+  /**
    * Get ticket catalogs for an event
    * GET /api/events/{id}/ticket-catalogs
    */
   getTicketCatalogs: async (eventId: string): Promise<ApiResponse<TicketCatalogResponse[]>> => {
-    return await apiClient.get<TicketCatalogResponse[]>(
-      endpoints.events.getTicketCatalogs(eventId)
-    );
+    return await apiClient.get<TicketCatalogResponse[]>(endpoints.events.getTicketCatalogs(eventId));
   },
 };
 

@@ -16,6 +16,10 @@ type MapSearchBarProps<TPoint extends MapPoint = MapPoint> = {
   results: TPoint[];
   isSearching: boolean;
   topInset?: number;
+  /** Extra left offset in px (e.g. to clear a back button). Defaults to 0. */
+  leftOffset?: number;
+  /** Custom renderer for each search result row. Falls back to the default marker-based renderer. */
+  renderSearchResult?: (item: TPoint, onSelect: (point: TPoint) => void) => React.ReactElement;
 };
 
 export default function MapSearchBar<TPoint extends MapPoint = MapPoint>({
@@ -26,11 +30,13 @@ export default function MapSearchBar<TPoint extends MapPoint = MapPoint>({
   results,
   isSearching,
   topInset = 0,
+  leftOffset = 0,
+  renderSearchResult,
 }: MapSearchBarProps<TPoint>) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
-  const renderItem = useCallback(
+  const defaultRenderItem = useCallback(
     ({ item }: { item: TPoint }) => {
       const markerStyle = getMarkerStyle(item.type);
 
@@ -63,10 +69,23 @@ export default function MapSearchBar<TPoint extends MapPoint = MapPoint>({
     [isDarkColorScheme, onSelectResult, theme.foreground, theme.mutedForeground]
   );
 
+  const renderItem = useCallback(
+    ({ item }: { item: TPoint }) => {
+      if (renderSearchResult) {
+        return renderSearchResult(item, onSelectResult);
+      }
+      return defaultRenderItem({ item });
+    },
+    [defaultRenderItem, onSelectResult, renderSearchResult]
+  );
+
   const keyExtractor = useCallback((item: TPoint) => item.id, []);
 
   return (
-    <View pointerEvents="box-none" className="absolute left-0 right-0 z-50 px-4" style={{ top: topInset + 8 }}>
+    <View
+      pointerEvents="box-none"
+      className="absolute right-0 z-50 px-4"
+      style={{ top: topInset + 8, left: leftOffset }}>
       <View
         className="flex-row items-center rounded-xl border px-3"
         style={{

@@ -7,12 +7,12 @@ import {
   Platform,
   TouchableOpacity,
   Alert,
-  Image,
   StatusBar,
   ActivityIndicator,
   Modal,
   FlatList,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';

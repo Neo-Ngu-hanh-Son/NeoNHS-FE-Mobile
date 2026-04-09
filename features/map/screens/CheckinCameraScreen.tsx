@@ -98,8 +98,8 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
     ];
 
     try {
-      // TODO: DO NOT WAIT FOR THE SUBMIT, just display that user earned some points and that's all, when they visit the profile, it will get auto fetched from the server again.
-      submit({
+      // TODO: Actually, wait for the server so that user cannot double checkin at a location
+      const res = await submit({
         checkinPointId: pointId,
         images: payloadImages,
       });
@@ -111,15 +111,28 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
         ...user,
         userPoint: newPoint,
       });
+
       navigation.replace('CheckinComplete', {
-        rewardPoints: pointRewardPoints ?? 0,
-        userTotalPoints: newPoint,
+        rewardPoints: res.earnedPoints,
+        userTotalPoints: res.userTotalPoints,
+        imageUrl: res.imageUrl,
       });
     } catch (error) {
       logger.error('[CheckinCameraScreen] Failed to finish check-in', error);
       alert('Check-in failed', error instanceof Error ? error.message : 'Unable to complete check-in right now.');
     }
-  }, [capturedCaption, capturedPhotoUri, draftImages, navigation, pointId, submit, alert]);
+  }, [
+    pointId,
+    capturedPhotoUri,
+    draftImages,
+    capturedCaption,
+    alert,
+    submit,
+    user,
+    pointRewardPoints,
+    updateUser,
+    navigation,
+  ]);
 
   const handleSavePhoto = useCallback(async () => {
     if (!capturedPhotoUri) {

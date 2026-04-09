@@ -3,19 +3,21 @@
  * Based on NeoNHS Backend API specification
  */
 
+import { MapPoint } from '@/features/map/types';
+
 // ── Enums ──────────────────────────────────────────────
 
 export enum EventStatus {
-  UPCOMING = "UPCOMING",
-  ONGOING = "ONGOING",
-  COMPLETED = "COMPLETED",
-  CANCELLED = "CANCELLED",
+  UPCOMING = 'UPCOMING',
+  ONGOING = 'ONGOING',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
 }
 
 export enum TicketCatalogStatus {
-  ACTIVE = "ACTIVE",
-  INACTIVE = "INACTIVE",
-  SOLD_OUT = "SOLD_OUT",
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  SOLD_OUT = 'SOLD_OUT',
 }
 
 // ── Tag ────────────────────────────────────────────────
@@ -62,6 +64,101 @@ export interface EventResponse {
   tags: TagResponse[];
   /** Only present in detail view (GET /api/events/{id}) */
   images?: EventImageResponse[] | null;
+}
+
+// ── Timeline Map Models ───────────────────────────────
+
+export interface EventPointTagResponse {
+  id: string;
+  name: string;
+  description?: string | null;
+  tagColor?: string | null;
+  iconUrl?: string | null;
+}
+
+export interface EventPointResponse {
+  id: string;
+  name: string;
+  description?: string | null;
+  imageList?: string | null;
+  latitude?: string | number | null;
+  longitude?: string | number | null;
+  address?: string | null;
+  eventPointTag?: EventPointTagResponse | null;
+}
+
+export interface EventTimelineResponse {
+  id: string;
+  name: string;
+  description?: string | null;
+  organizer?: string | null;
+  coOrganizer?: string | null;
+  date: string;
+  lunarDate?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
+  eventPoint: EventPointResponse;
+  eventId: string;
+}
+
+export interface EventTimelineGroupResponse {
+  date: string;
+  lunarDate?: string | null;
+  dayLabel?: string | null;
+  timelines: EventTimelineResponse[];
+}
+
+export type EventTimelinesGroupedResponse = EventTimelineGroupResponse[];
+
+export interface EventMapPointTag {
+  id?: string;
+  name: string;
+  description?: string | null;
+  tagColor?: string | null;
+  color?: string;
+  iconUrl?: string | null;
+}
+
+export interface EventMapPoint extends MapPoint {
+  id: string;
+  name: string;
+  description?: string;
+  /** Raw imageList string from backend */
+  imageList?: string;
+  /** Parsed image URL array derived from imageList */
+  pointImages?: string[];
+  latitude: number;
+  longitude: number;
+  address?: string;
+  eventId?: string;
+  /** Physical point name (the location/venue name) */
+  pointName?: string;
+  pointDescription?: string;
+  // ── Timeline fields ───────────────────────────
+  timelineId?: string;
+  timelineName?: string;
+  timelineDescription?: string;
+  timelineDate?: string;
+  /** Lunar date from the timeline entry */
+  timelineLunarDate?: string;
+  /** Lunar date from the parent group (day-level) */
+  groupLunarDate?: string;
+  timelineStartTime?: string;
+  timelineEndTime?: string;
+  timelineOrganizer?: string;
+  timelineCoOrganizer?: string;
+  eventPointTag?: EventMapPointTag;
+}
+
+export type EventTimeLineResponse = EventTimelineResponse;
+
+export interface EventTimelinesGroupedParams {
+  date?: string;
+  fromDate?: string;
+  toDate?: string;
+  tagId?: string;
+  search?: string;
+  timezone?: string;
 }
 
 // ── Ticket Catalog ─────────────────────────────────────
@@ -111,5 +208,5 @@ export interface EventFilterParams {
   maxPrice?: number;
   tagIds?: string[];
   sortBy?: string;
-  sortDir?: "asc" | "desc";
+  sortDir?: 'asc' | 'desc';
 }

@@ -22,6 +22,7 @@ import ActiveNavigationScreen from '@/features/discover/screens/ActiveNavigation
 import ArrivalConfirmationScreen from '@/features/discover/screens/ArrivalConfirmationScreen';
 import EventDetailScreen from '@/features/event/screens/EventDetailScreen';
 import EventAllReviewsScreen from '@/features/event/screens/EventAllReviewsScreen';
+import EventTimeLineMapScreen from '@/features/event/screens/EventTimeLineMapScreen';
 import { WorkshopListScreen, WorkshopDetailScreen } from '@/features/workshops/screens';
 import WorkshopAllReviewsScreen from '@/features/workshops/screens/WorkshopAllReviewsScreen';
 import BlogListScreen from '@/features/blog/screens/BlogListScreen';
@@ -84,6 +85,7 @@ export default function MainNavigator() {
         {/* Events & Workshops */}
         <Stack.Screen name="EventDetail" component={EventDetailScreen} />
         <Stack.Screen name="EventAllReviews" component={EventAllReviewsScreen} />
+        <Stack.Screen name="EventTimeLineMap" component={EventTimeLineMapScreen} />
         <Stack.Screen name="WorkshopList" component={WorkshopListScreen} />
         <Stack.Screen name="WorkshopDetail" component={WorkshopDetailScreen} />
         <Stack.Screen name="WorkshopAllReviews" component={WorkshopAllReviewsScreen} />
