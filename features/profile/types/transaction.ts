@@ -1,6 +1,16 @@
 export type TransactionStatus = 'SUCCESS' | 'PENDING' | 'CANCELLED' | 'FAILED';
 export type TransactionType = 'EVENT' | 'WORKSHOP' | 'MIXED' | 'ENTRANCE';
 
+export interface PageResponse<T> {
+    content: T[];
+    pageable: any;
+    last: boolean;
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+}
+
 export interface Transaction {
     id: string;
     amount: number;

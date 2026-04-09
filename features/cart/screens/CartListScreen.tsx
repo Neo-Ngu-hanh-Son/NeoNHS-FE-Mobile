@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, FlatList, Alert } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ export default function CartListScreen() {
     const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
     const [showVoucherModal, setShowVoucherModal] = useState(false);
     const [loadingVouchers, setLoadingVouchers] = useState(false);
+    const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const fetchCart = async () => {
         setLoading(true);
@@ -85,19 +86,45 @@ export default function CartListScreen() {
             selectedVoucherId: selectedVoucher?.userVoucherId
         });
     };
-    const handleUpdateQuantity = async (itemId: string, newQuantity: number) => {
+    const handleUpdateQuantity = (itemId: string, newQuantity: number) => {
         if (newQuantity < 1) return;
 
-        try {
-            const response = await cartService.updateCartItem(itemId, newQuantity);
-            if (response.success) {
-                fetchCart();
-            } else {
-                Alert.alert("Error", response.message || "Failed to update quantity");
-            }
-        } catch (error: any) {
-            Alert.alert("Error", error.message || "Failed to update quantity");
+        // 1. Optimistic Update UI lập tức
+        setCart(prevCart => {
+            if (!prevCart) return prevCart;
+
+            const updatedItems = prevCart.items.map(item => {
+                if (item.id === itemId) {
+                    return {
+                        ...item,
+                        quantity: newQuantity,
+                        totalPrice: (item.price * newQuantity)
+                    };
+                }
+                return item;
+            });
+
+            return { ...prevCart, items: updatedItems };
+        });
+
+        // 2. Clear timer cũ (Debounce)
+        if (debounceTimer.current) {
+            clearTimeout(debounceTimer.current);
         }
+
+        // 3. Gọi ngầm API sau độ trễ 500ms
+        debounceTimer.current = setTimeout(async () => {
+            try {
+                const response = await cartService.updateCartItem(itemId, newQuantity);
+                if (!response.success) {
+                    Alert.alert("Error", response.message || "Failed to update quantity");
+                    fetchCart(); // Gọi lại giỏ hàng từ server nếu lỗi để Rollback dữ liệu
+                }
+            } catch (error: any) {
+                Alert.alert("Error", error.message || "Failed to update quantity");
+                fetchCart(); // Rollback dữ liệu
+            }
+        }, 500);
     };
 
     const handleRemoveItem = (itemId: string) => {
@@ -110,21 +137,30 @@ export default function CartListScreen() {
                     text: "Remove",
                     style: "destructive",
                     onPress: async () => {
+                        // 1. Cập nhật UI ngay lập tức
+                        setCart(prevCart => {
+                            if (!prevCart) return prevCart;
+                            const remainingItems = prevCart.items.filter(item => item.id !== itemId);
+                            return { ...prevCart, items: remainingItems };
+                        });
+
+                        // Xóa khỏi selectedItems nếu đã được chọn
+                        if (selectedItems.has(itemId)) {
+                            const newSelection = new Set(selectedItems);
+                            newSelection.delete(itemId);
+                            setSelectedItems(newSelection);
+                        }
+
+                        // 2. Chạy ngầm API
                         try {
                             const response = await cartService.removeCartItem(itemId);
-                            if (response.success) {
-                                // Remove from selected items if it was selected
-                                if (selectedItems.has(itemId)) {
-                                    const newSelection = new Set(selectedItems);
-                                    newSelection.delete(itemId);
-                                    setSelectedItems(newSelection);
-                                }
-                                fetchCart();
-                            } else {
+                            if (!response.success) {
                                 Alert.alert("Error", response.message || "Failed to remove item");
+                                fetchCart(); // Rollback lấy lại dữ liệu nếu lỗi
                             }
                         } catch (error: any) {
                             Alert.alert("Error", error.message || "Failed to remove item");
+                            fetchCart(); // Rollback
                         }
                     }
                 }

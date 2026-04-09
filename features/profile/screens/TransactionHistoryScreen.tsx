@@ -6,9 +6,10 @@ import {
     FlatList,
     StatusBar,
     ScrollView,
+    ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialIcons, FontAwesome6 } from '@expo/vector-icons';
+import { MaterialIcons, FontAwesome6 } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
@@ -20,6 +21,74 @@ import { transactionService } from '../services/transactionService';
 const TABS = ['All', 'Event', 'Workshop'];
 const STATUS_FILTERS = ['All', 'PENDING', 'PAID', 'CANCELLED', 'FAILED'];
 
+const getStatusColor = (status: string, theme: any) => {
+    const normalizedStatus = status === 'SUCCESS' ? 'PAID' : status;
+    switch (normalizedStatus) {
+        case 'PAID': return '#15803d';
+        case 'PENDING': return '#b45309';
+        case 'CANCELLED': return '#b91c1c';
+        case 'FAILED': return '#b91c1c';
+        default: return theme.mutedForeground;
+    }
+};
+
+const getStatusBg = (status: string, theme: any) => {
+    const normalizedStatus = status === 'SUCCESS' ? 'PAID' : status;
+    switch (normalizedStatus) {
+        case 'PAID': return '#effcf6';
+        case 'PENDING': return '#fffbeb';
+        case 'CANCELLED': return '#fef2f2';
+        case 'FAILED': return '#fef2f2';
+        default: return theme.muted;
+    }
+};
+
+const getIconForType = (type: string) => {
+    const lowerType = type ? type.toLowerCase() : '';
+    if (lowerType === 'event') return 'sailboat';
+    if (lowerType === 'workshop') return 'hands-holding-circle';
+    if (lowerType === 'mixed') return 'cart-shopping';
+    return 'receipt';
+};
+
+const TransactionCard = React.memo(({ item, theme, onPress }: { item: any, theme: any, onPress: (id: string) => void }) => {
+    const displayStatus = item.status === 'SUCCESS' ? 'PAID' : item.status;
+    const formattedDate = new Date(item.transactionDate).toLocaleDateString('vi-VN', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    const formattedAmount = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.amount);
+
+    return (
+        <TouchableOpacity
+            style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}
+            onPress={() => onPress(item.id)}
+            activeOpacity={0.8}>
+            <View style={styles.cardHeader}>
+                <View style={styles.iconContainer}>
+                    <FontAwesome6 name={getIconForType(item.type)} size={20} color={getStatusColor(displayStatus, theme)} />
+                </View>
+                <View style={styles.cardInfo}>
+                    <Text style={[styles.cardTitle, { color: theme.foreground }]} numberOfLines={2}>
+                        {item.type === 'MIXED' ? 'CART checkout' : `${item.type} payment`}
+                    </Text>
+                    <Text style={{ color: theme.mutedForeground, fontSize: 12, marginBottom: 4 }}>Order #{item.orderId?.slice(0, 8)}</Text>
+                    <View style={styles.statusRow}>
+                        <View style={[styles.statusBadge, { backgroundColor: getStatusBg(displayStatus, theme) }]}>
+                            <Text style={[styles.statusText, { color: getStatusColor(displayStatus, theme) }]}>{displayStatus}</Text>
+                        </View>
+                        <Text style={{ color: theme.mutedForeground, fontSize: 12 }}>{formattedDate}</Text>
+                    </View>
+                </View>
+                <Text style={[styles.amount, { color: theme.foreground }]}>{formattedAmount}</Text>
+            </View>
+        </TouchableOpacity>
+    );
+});
+
 export default function TransactionHistoryScreen() {
     const navigation = useNavigation<any>();
     const { isDarkColorScheme } = useTheme();
@@ -29,128 +98,54 @@ export default function TransactionHistoryScreen() {
     const [activeStatus, setActiveStatus] = useState('All');
     const [transactions, setTransactions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const [page, setPage] = useState(0);
+
+    const fetchTransactions = async (pageNumber: number, currentType: string, currentStatus: string) => {
+        if (pageNumber === 0) setLoading(true);
+        else setLoadingMore(true);
+
+        try {
+            const response = await transactionService.getTransactions(pageNumber, 5, currentType, currentStatus);
+            if (response.data) {
+                const newTransactions = response.data.content || [];
+                if (pageNumber === 0) {
+                    setTransactions(newTransactions);
+                } else {
+                    setTransactions(prev => [...prev, ...newTransactions]);
+                }
+                setHasMore(!response.data.last);
+            }
+        } catch (error) {
+            console.error('Error fetching transactions:', error);
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
+        }
+    };
 
     React.useEffect(() => {
-        const fetchTransactions = async () => {
-            try {
-                const response = await transactionService.getTransactions();
-                if (response.data) {
-                    setTransactions(response.data);
-                }
-            } catch (error) {
-                console.error('Error fetching transactions:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
+        setPage(0);
+        setHasMore(true);
+        fetchTransactions(0, activeTab, activeStatus);
+    }, [activeTab, activeStatus]);
 
-        fetchTransactions();
-    }, []);
-
-    const filteredTransactions = useMemo(() => {
-        return transactions.filter((item) => {
-            // Filter by Tab (Type)
-            // API returns EVENT/WORKSHOP (uppercase), Tabs are Event/Workshop (Title case)
-            // Normalize to uppercase for comparison
-            const itemType = item.type ? item.type.toUpperCase() : '';
-            const tabFilter = activeTab.toUpperCase();
-
-            const matchesTab = activeTab === 'All' || itemType === tabFilter;
-
-            // Filter by Status
-            // API returns SUCCESS, UI uses PAID.
-            let itemStatus = item.status;
-            if (itemStatus === 'SUCCESS') itemStatus = 'PAID';
-
-            const matchesStatus = activeStatus === 'All' || itemStatus === activeStatus;
-
-            return matchesTab && matchesStatus;
-        });
-    }, [activeTab, activeStatus, transactions]);
-
-    const handleDownload = (id: string, e: any) => {
-        e.stopPropagation();
-        console.log('Download', id);
-    };
-
-    const getStatusColor = (status: string) => {
-        const normalizedStatus = status === 'SUCCESS' ? 'PAID' : status;
-        switch (normalizedStatus) {
-            case 'PAID': return '#15803d'; // green-700
-            case 'PENDING': return '#b45309'; // amber-700
-            case 'CANCELLED': return '#b91c1c'; // red-700
-            case 'FAILED': return '#b91c1c'; // red-700
-            default: return theme.mutedForeground;
+    const handleLoadMore = () => {
+        if (!loading && !loadingMore && hasMore && transactions.length > 0) {
+            const nextPage = page + 1;
+            setPage(nextPage);
+            fetchTransactions(nextPage, activeTab, activeStatus);
         }
     };
 
-    const getStatusBg = (status: string) => {
-        const normalizedStatus = status === 'SUCCESS' ? 'PAID' : status;
-        switch (normalizedStatus) {
-            case 'PAID': return '#effcf6';
-            case 'PENDING': return '#fffbeb';
-            case 'CANCELLED': return '#fef2f2';
-            case 'FAILED': return '#fef2f2';
-            default: return theme.muted;
-        }
-    };
+    const handlePressCard = React.useCallback((transactionId: string) => {
+        navigation.navigate('TransactionDetails', { transactionId });
+    }, [navigation]);
 
-    const getIconForType = (type: string) => {
-        const lowerType = type ? type.toLowerCase() : '';
-        if (lowerType === 'event') return 'sailboat';
-        if (lowerType === 'workshop') return 'hands-holding-circle';
-        if (lowerType === 'mixed') return 'cart-shopping';
-        return 'receipt';
-    };
-
-    const renderItem = ({ item }: { item: any }) => {
-        const displayStatus = item.status === 'SUCCESS' ? 'PAID' : item.status;
-        const formattedDate = new Date(item.transactionDate).toLocaleDateString('vi-VN', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-        const formattedAmount = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.amount);
-
-        return (
-            <TouchableOpacity
-                style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}
-                onPress={() => navigation.navigate('TransactionDetails', { transactionId: item.id })}
-                activeOpacity={0.8}>
-                <View style={styles.cardHeader}>
-                    <View style={styles.iconContainer}>
-                        <FontAwesome6 name={getIconForType(item.type)} size={20} color={getStatusColor(displayStatus)} />
-                    </View>
-                    <View style={styles.cardInfo}>
-                        <Text style={[styles.cardTitle, { color: theme.foreground }]} numberOfLines={2}>
-                            {item.type === 'MIXED' ? 'CART checkout' : `${item.type} payment`}
-                        </Text>
-                        <Text style={{ color: theme.mutedForeground, fontSize: 12, marginBottom: 4 }}>Order #{item.orderId?.slice(0, 8)}</Text>
-                        <View style={styles.statusRow}>
-                            <View style={[styles.statusBadge, { backgroundColor: getStatusBg(displayStatus) }]}>
-                                <Text style={[styles.statusText, { color: getStatusColor(displayStatus) }]}>{displayStatus}</Text>
-                            </View>
-                            <Text style={{ color: theme.mutedForeground, fontSize: 12 }}>{formattedDate}</Text>
-                        </View>
-                    </View>
-                    <Text style={[styles.amount, { color: theme.foreground }]}>{formattedAmount}</Text>
-                </View>
-
-                {/* {displayStatus === 'PAID' && (
-                    <TouchableOpacity
-                        style={[styles.downloadButton, { backgroundColor: getStatusColor(displayStatus) }]}
-                        onPress={(e) => handleDownload(item.id, e)}
-                        activeOpacity={0.8}>
-                        <MaterialIcons name="picture-as-pdf" size={18} color="white" />
-                        <Text style={styles.downloadText}>Download Receipt</Text>
-                    </TouchableOpacity>
-                )
-                } */}
-            </TouchableOpacity>
-        )
-    };
+    const renderItem = React.useCallback(({ item }: { item: any }) => {
+        return <TransactionCard item={item} theme={theme} onPress={handlePressCard} />;
+    }, [theme, handlePressCard]);
 
     return (
         <View style={[styles.container, { backgroundColor: isDarkColorScheme ? theme.background : '#F7F9FC' }]}>
@@ -213,15 +208,34 @@ export default function TransactionHistoryScreen() {
             </SafeAreaView>
 
             <FlatList
-                data={filteredTransactions}
+                data={transactions}
                 renderItem={renderItem}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item, index) => `${item.id}-${index}`}
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
+                onEndReached={handleLoadMore}
+                onEndReachedThreshold={0.5}
+                initialNumToRender={5}
+                maxToRenderPerBatch={10}
+                windowSize={5}
+                removeClippedSubviews={true}
+                ListFooterComponent={
+                    loadingMore ? (
+                        <View style={{ padding: 20 }}>
+                            <ActivityIndicator size="small" color="#15803d" />
+                        </View>
+                    ) : null
+                }
                 ListEmptyComponent={
-                    <View style={styles.emptyContainer}>
-                        <Text style={{ color: theme.mutedForeground }}>No transactions found</Text>
-                    </View>
+                    loading ? (
+                        <View style={styles.emptyContainer}>
+                            <ActivityIndicator size="large" color="#15803d" />
+                        </View>
+                    ) : (
+                        <View style={styles.emptyContainer}>
+                            <Text style={{ color: theme.mutedForeground }}>No transactions found</Text>
+                        </View>
+                    )
                 }
             />
         </View>

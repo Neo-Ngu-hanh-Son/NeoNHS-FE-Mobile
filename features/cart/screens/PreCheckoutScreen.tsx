@@ -61,6 +61,7 @@ export default function PreCheckoutScreen() {
 
     const [loading, setLoading] = useState(false);
     const [preCheckoutData, setPreCheckoutData] = useState<PreCheckoutResponse | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const groupedItems = useMemo(() => {
         if (!preCheckoutData) return [];
@@ -95,8 +96,9 @@ export default function PreCheckoutScreen() {
     };
 
     const handleCreatePaymentLink = async () => {
-        if (!preCheckoutData) return;
+        if (!preCheckoutData || isSubmitting) return;
 
+        setIsSubmitting(true);
         setLoading(true);
         try {
             const payload = {
@@ -113,10 +115,12 @@ export default function PreCheckoutScreen() {
                 });
             } else {
                 Alert.alert("Error", response.message || "Failed to create payment link");
+                setIsSubmitting(false);
             }
         } catch (error: any) {
             logger.error("Create payment link error", error);
             Alert.alert("Error", error.message || "Failed to create payment link");
+            setIsSubmitting(false);
         } finally {
             setLoading(false);
         }
@@ -200,8 +204,8 @@ export default function PreCheckoutScreen() {
             </ScrollView>
 
             <View style={[styles.footer, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
-                <Button onPress={handleCreatePaymentLink}>
-                    <Text style={{ color: 'white' }}>Confirm Payment</Text>
+                <Button onPress={handleCreatePaymentLink} disabled={isSubmitting || loading}>
+                    <Text style={{ color: 'white' }}>{isSubmitting ? "Processing..." : "Confirm Payment"}</Text>
                 </Button>
             </View>
         </SafeAreaView>

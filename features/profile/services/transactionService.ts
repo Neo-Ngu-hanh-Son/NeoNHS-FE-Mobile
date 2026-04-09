@@ -1,14 +1,22 @@
 import { apiClient } from "@/services/api/client";
 import { endpoints } from "@/services/api/endpoints/endpoints";
 import { ApiResponse } from "@/services/api/types";
-import { Transaction, TransactionDetail } from "../types/transaction";
+import { Transaction, TransactionDetail, PageResponse } from "../types/transaction";
 
 export const transactionService = {
     /**
      * Get all transactions for the current user
      */
-    async getTransactions(): Promise<ApiResponse<Transaction[]>> {
-        return apiClient.get<Transaction[]>(endpoints.transactions.getTransactions());
+    async getTransactions(page: number = 0, size: number = 10, type: string = 'All', status: string = 'All'): Promise<ApiResponse<PageResponse<Transaction>>> {
+        let url = `${endpoints.transactions.getTransactions()}?page=${page}&size=${size}`;
+        if (type !== 'All') {
+            url += `&type=${type.toUpperCase()}`;
+        }
+        if (status !== 'All') {
+            const beStatus = status === 'PAID' ? 'SUCCESS' : status;
+            url += `&status=${beStatus}`;
+        }
+        return apiClient.get<PageResponse<Transaction>>(url);
     },
 
     /**
