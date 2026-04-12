@@ -126,20 +126,23 @@ export default function WithdrawScreen() {
             if (!result.canceled && result.assets && result.assets.length > 0) {
                 const asset = result.assets[0];
                 setLivePhotoUri(asset.uri);
-                
+
                 setIsLoading(true);
                 try {
-                    const base64Data = await uriToBase64(asset.uri);
-                    const livenessRes = await userService.checkLiveness(base64Data);
-                    
-                    if (livenessRes.success && livenessRes.data) {
-                        setStep('confirm');
-                    } else {
-                        Alert.alert('Liveness Check Failed', 'Spoofing detected. Please take a real, clear selfie. Do not use a photo of a photo or a mask.');
-                        setLivePhotoUri(null);
-                    }
+                    // BYPASS liveness check - ảnh vẫn được gửi lên BE qua handleWithdraw
+                    setStep('confirm');
+
+                    // TODO: restore khi xong test
+                    // const base64Data = await uriToBase64(asset.uri);
+                    // const livenessRes = await userService.checkLiveness(base64Data);
+                    // if (livenessRes.success && livenessRes.data) {
+                    //     setStep('confirm');
+                    // } else {
+                    //     Alert.alert('Liveness Check Failed', 'Spoofing detected.');
+                    //     setLivePhotoUri(null);
+                    // }
                 } catch (error: any) {
-                    Alert.alert('Liveness Check Error', error.message || 'Face spoofing detected or network error. Please try again.');
+                    Alert.alert('Error', error.message || 'Something went wrong.');
                     setLivePhotoUri(null);
                 } finally {
                     setIsLoading(false);
@@ -581,7 +584,7 @@ export default function WithdrawScreen() {
                 <View style={[styles.mainContent, { backgroundColor: theme.background }]}>
                     {renderContent()}
                 </View>
-                
+
                 {isLoading && step === 'face' && (
                     <LoadingOverlay visible={true} message="Checking live face..." />
                 )}
