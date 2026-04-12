@@ -1,10 +1,9 @@
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View, Animated, TouchableOpacity } from 'react-native';
+import { ScrollView, StyleSheet, Animated, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { Text } from '@/components/ui/text';
 import type { EventTimelineTagOption } from '../hooks/useEventTimelineMapController';
-import { Button } from '@/components/ui/button';
 
 type EventTimelineTagChipsProps = {
   options: EventTimelineTagOption[];
@@ -85,21 +84,23 @@ export default function EventTimelineTagChips({ options, activeTagId, onSelectTa
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingHorizontal: 4,
-    paddingVertical: 2,
+    paddingHorizontal: 2,
+    paddingVertical: 1,
     alignItems: 'center',
   },
   chipWrap: {
     borderRadius: 999,
-    marginRight: 8,
+    marginRight: 6,
   },
   chipPressable: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
+    minHeight: 44,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    justifyContent: 'center',
     borderRadius: 999,
   },
   chipText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '700',
     letterSpacing: 0.1,
     color: '#ffffff',

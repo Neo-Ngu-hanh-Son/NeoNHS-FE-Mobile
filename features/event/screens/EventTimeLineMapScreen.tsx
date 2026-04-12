@@ -224,13 +224,6 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
     viewMode,
   });
 
-  const handleStartNavigate = useCallback((point: EventMapPoint) => {
-    logger.debug('[EventTimeLineMapScreen] Start navigate tapped', {
-      eventPointId: point.id,
-      timelineId: point.timelineId,
-    });
-  }, []);
-
   const handleNavigateFromCurrentLocation = useCallback((point: EventMapPoint) => {
     if (!point.id) {
       return;
@@ -391,7 +384,6 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
             ref={pointDetailSheetRef}
             point={controller.selectedPoint as EventMapPoint | null}
             onAfterClose={controller.handlePointSheetClosed}
-            onStartNavigate={handleStartNavigate}
             onNavigateFromCurrentLocation={handleNavigateFromCurrentLocation}
           />
         </>

@@ -11,12 +11,23 @@ type Props = {
   tagColor: string;
   tagIconUrl?: string | null;
   name: string;
+  subtitle?: string;
   address?: string;
 };
 
-export default function EvtMapSearchResultComponent({ onSelect, item, tagColor, tagIconUrl, name, address }: Props) {
+export default function EvtMapSearchResultComponent({
+  onSelect,
+  item,
+  tagColor,
+  tagIconUrl,
+  name,
+  subtitle,
+  address,
+}: Props) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const secondary = subtitle || address;
+
   return (
     <Pressable
       onPress={() => onSelect(item)}
@@ -36,9 +47,9 @@ export default function EvtMapSearchResultComponent({ onSelect, item, tagColor, 
         <Text style={[resultStyles.nameText, { color: theme.foreground }]} numberOfLines={1}>
           {name}
         </Text>
-        {address ? (
+        {secondary ? (
           <Text style={[resultStyles.addressText, { color: theme.mutedForeground }]} numberOfLines={1}>
-            {address}
+            {secondary}
           </Text>
         ) : null}
       </View>
@@ -50,13 +61,14 @@ const resultStyles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 11,
+    minHeight: 44,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     gap: 12,
   },
   iconWrap: {
-    width: 36,
-    height: 36,
+    width: 34,
+    height: 34,
     borderRadius: 10,
     borderWidth: 1,
     alignItems: 'center',
@@ -73,10 +85,10 @@ const resultStyles = StyleSheet.create({
     gap: 2,
   },
   nameText: {
-    fontSize: 13,
+    fontSize: 16,
     fontWeight: '600',
   },
   addressText: {
-    fontSize: 11,
+    fontSize: 14,
   },
 });

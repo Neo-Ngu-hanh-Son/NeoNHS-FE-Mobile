@@ -96,9 +96,9 @@ export default function EventTimelineDaySelector({
 
 const styles = StyleSheet.create({
   scrollContent: {
-    gap: 8,
+    gap: 6,
     paddingHorizontal: 2,
-    paddingVertical: 2,
+    paddingVertical: 1,
     alignItems: 'center',
   },
   chipWrap: {
@@ -107,12 +107,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   chipPressable: {
-    paddingHorizontal: 13,
+    minHeight: 44,
+    paddingHorizontal: 10,
     paddingVertical: 8,
+    justifyContent: 'center',
     minWidth: 72,
   },
   dayLabel: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '700',
     letterSpacing: 0.1,
   },
@@ -127,7 +129,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   countLabel: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '500',
   },
 });

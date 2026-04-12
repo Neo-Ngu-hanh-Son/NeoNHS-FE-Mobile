@@ -13,7 +13,6 @@ import React, {
 import { MapPoint } from '../..';
 import MapView, { Camera, Marker, Polyline, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { MAP_CENTER } from '../../data';
-// import MapView from 'react-native-map-clustering';
 import { renderRoutes } from '../../data/mapDataOptimized';
 import MapMarkerVisual from '../Marker/MapMarkerVisual';
 import { logger } from '@/utils/logger';
@@ -29,7 +28,6 @@ import { distanceUtils } from '@/utils/distanceUtils';
 import MAP_CONSTANTS from '../../constants';
 import { useMapStore } from '../../store/useMapStore';
 import type { NHSMapProps, NHSMapRef } from './types.ts';
-export type { NHSMapProps, NHSMapRef } from './types.ts';
 
 const NHSMapInner = <T extends MapPoint>(
   {
@@ -346,6 +344,7 @@ const NHSMapInner = <T extends MapPoint>(
 
   // 2. Memoize the map points
   const memoizedMarkers = useMemo(() => {
+    console.log('Memmoizing markers ran');
     if (!isMapReady || !mapPoints) return null;
 
     const parentMarkers = mapPoints
@@ -356,7 +355,7 @@ const NHSMapInner = <T extends MapPoint>(
         }
         return (
           <Marker
-            key={`${poi.id}-${markerEpoch}`}
+            key={`${poi.id}`}
             tracksViewChanges={true}
             coordinate={{
               latitude: poi.latitude,
@@ -414,7 +413,7 @@ const NHSMapInner = <T extends MapPoint>(
               return (
                 <Marker
                   tracksViewChanges={true}
-                  key={`checkin-${checkin.id}-${markerEpoch}`}
+                  key={`checkin-${checkin.id}`}
                   coordinate={{
                     latitude: checkin.latitude,
                     longitude: checkin.longitude,
@@ -449,7 +448,6 @@ const NHSMapInner = <T extends MapPoint>(
     effectiveMarkerFilters.showCheckin,
     isGuidanceMode,
     renderMarker,
-    markerEpoch,
   ]);
 
   return (
@@ -461,7 +459,6 @@ const NHSMapInner = <T extends MapPoint>(
         provider={PROVIDER_GOOGLE}
         initialRegion={lastMapInteractionLocation}
         // clusterColor={theme.primary}
-        // radius={10}
         mapType="standard"
         scrollEnabled={isMapInteractionEnabled}
         zoomEnabled={isMapInteractionEnabled}
@@ -469,13 +466,13 @@ const NHSMapInner = <T extends MapPoint>(
         pitchEnabled={isMapInteractionEnabled}
         showsUserLocation={false}
         showsMyLocationButton={false} // We use custom button
-        onRegionChangeComplete={handleRegionChangeComplete}
+        onRegionChangeComplete={handleRegionChangeComplete} // Temporary disable this to test performance
         toolbarEnabled={false}
         onMapReady={() => {
           setIsMapReady(true);
           onMapReadyCallback?.();
         }}
-        onPanDrag={isMapInteractionEnabled ? handleMapInteraction : undefined} // Detect when user drags the map
+        onPanDrag={handleMapInteraction} // Detect when user drags the map
         customMapStyle={MAP_CONSTANTS.GOOGLE_MAP_STYLE}>
         {/* Polylines */}
         {memoizedRoutes}
