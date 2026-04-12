@@ -8,7 +8,7 @@ const MAP_CONSTANTS = {
   ARRIVAL_RADIUS_M: 10, // Radius to consider user has arrived at the destination
 
   // The minimum time interval between user location updates to prevent excessive re-renders and computations
-  UPDATE_USER_LOCATION_THROTTLE_MS: 1500,
+  UPDATE_USER_LOCATION_THROTTLE_MS: 3000,
 
   DISTANCE_BEFORE_UPDATE_USER_LOCATION_M: 3, // Minimum distance in meters that the user must move
   ADVANCE_THRESHOLD_M: 0.5, // The distance in meters threshold for advancing to the next step

@@ -49,7 +49,7 @@ export default function EventTimelineMapMarker({
               <View style={styles.fallbackDot} />
             )}
           </View>
-          <View style={styles.arrow} />
+          <View style={[styles.arrow, { borderColor: point.eventPointTag?.color ?? '#000000' }]} />
         </View>
 
         {showName && (

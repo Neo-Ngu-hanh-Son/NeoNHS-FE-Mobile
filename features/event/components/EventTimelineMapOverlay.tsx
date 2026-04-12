@@ -50,13 +50,15 @@ export default function EventTimelineMapOverlay({
   const hasTags = tagOptions.length > 0;
   const hasDays = dayOptions.length > 0;
 
-  /** Custom search result row for event timeline: tag icon · timeline name · address */
+  /** Search result row: location name + timeline count + address */
   const renderSearchResult = useCallback(
     (item: EventMapPoint, onSelect: (point: EventMapPoint) => void) => {
       const tagColor = item.eventPointTag?.tagColor ?? item.eventPointTag?.color ?? theme.primary;
       const tagIconUrl = item.eventPointTag?.iconUrl;
-      const name = item.timelineName ?? item.name;
+      const name = item.pointName?.trim() || item.name;
       const address = item.address;
+      const timelineCount = item.timelineInfos?.length ?? 0;
+      const subtitle = timelineCount > 0 ? `${timelineCount} ${timelineCount === 1 ? 'timeline' : 'timelines'}` : '';
 
       return (
         <EvtMapSearchResultComponent
@@ -65,6 +67,7 @@ export default function EventTimelineMapOverlay({
           tagColor={tagColor}
           tagIconUrl={tagIconUrl}
           name={name}
+          subtitle={subtitle}
           address={address}
         />
       );

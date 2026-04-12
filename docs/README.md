@@ -9,6 +9,7 @@ This folder contains consolidated documentation for the NeoNHS project.
 - **[FOLDER_STRUCTURE.md](./FOLDER_STRUCTURE.md)** - Project folder structure overview
 - **[ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md)** - Environment variables configuration
 - **[NAVIGATION_GUIDE.md](./NAVIGATION_GUIDE.md)** - How to implement navigation for new screens
+- **[USER_GUIDE_SETUP.md](./USER_GUIDE_SETUP.md)** - User-manual version of system requirements and installation
 
 ## Quick Links
 
@@ -31,3 +32,7 @@ This folder contains consolidated documentation for the NeoNHS project.
 ### For Navigation
 
 → See [NAVIGATION_GUIDE.md](./NAVIGATION_GUIDE.md)
+
+### For User Manual Setup Section
+
+→ See [USER_GUIDE_SETUP.md](./USER_GUIDE_SETUP.md)

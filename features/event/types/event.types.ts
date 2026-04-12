@@ -135,6 +135,13 @@ export interface EventMapPoint extends MapPoint {
   /** Physical point name (the location/venue name) */
   pointName?: string;
   pointDescription?: string;
+  // Note: Many event timeline can happen in the same day in the same location, therefore we will
+  // need to display that correctly here.
+  timelineInfos?: EventMapPointTimelineInfo[];
+  eventPointTag?: EventMapPointTag;
+}
+
+export interface EventMapPointTimelineInfo {
   // ── Timeline fields ───────────────────────────
   timelineId?: string;
   timelineName?: string;
@@ -148,7 +155,6 @@ export interface EventMapPoint extends MapPoint {
   timelineEndTime?: string;
   timelineOrganizer?: string;
   timelineCoOrganizer?: string;
-  eventPointTag?: EventMapPointTag;
 }
 
 export type EventTimeLineResponse = EventTimelineResponse;

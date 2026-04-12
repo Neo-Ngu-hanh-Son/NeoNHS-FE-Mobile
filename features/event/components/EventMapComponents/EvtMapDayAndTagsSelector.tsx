@@ -37,7 +37,7 @@ export default function EvtMapDayAndTagsSelector({
       style={[
         styles.panel,
         {
-          top: topInset + 66,
+          top: topInset + 62,
           backgroundColor: isDarkColorScheme ? 'rgba(17,19,28,0.9)' : 'rgba(255,255,255,0.95)',
           borderColor: isDarkColorScheme ? `${theme.primary}` : `${theme.primary}`,
           shadowColor: theme.primary,
@@ -76,24 +76,24 @@ const styles = StyleSheet.create({
     left: 16,
     right: 16,
     zIndex: 40,
-    borderRadius: 18,
+    borderRadius: 16,
     borderWidth: 1,
     overflow: 'hidden',
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
+    shadowOpacity: 0.14,
+    shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 8,
+    elevation: 6,
   },
   accentStripe: {
-    height: 3,
+    height: 2,
     width: '100%',
   },
   sectionRow: {
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
   },
   divider: {
     height: 1,
-    marginHorizontal: 12,
+    marginHorizontal: 8,
   },
 });
