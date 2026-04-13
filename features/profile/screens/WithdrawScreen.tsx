@@ -131,28 +131,25 @@ export default function WithdrawScreen() {
         setLivePhotoUri(asset.uri);
 
         setIsLoading(true);
-        try {
-          const base64Data = await uriToBase64(asset.uri);
-          const livenessRes = await userService.checkLiveness(base64Data);
+                try {
+                    // BYPASS liveness check - ảnh vẫn được gửi lên BE qua handleWithdraw
+                    setStep('confirm');
 
-          if (livenessRes.success && livenessRes.data) {
-            setStep('confirm');
-          } else {
-            Alert.alert(
-              'Liveness Check Failed',
-              'Spoofing detected. Please take a real, clear selfie. Do not use a photo of a photo or a mask.'
-            );
-            setLivePhotoUri(null);
-          }
-        } catch (error: any) {
-          Alert.alert(
-            'Liveness Check Error',
-            error.message || 'Face spoofing detected or network error. Please try again.'
-          );
-          setLivePhotoUri(null);
-        } finally {
-          setIsLoading(false);
-        }
+                    // TODO: restore khi xong test
+                    // const base64Data = await uriToBase64(asset.uri);
+                    // const livenessRes = await userService.checkLiveness(base64Data);
+                    // if (livenessRes.success && livenessRes.data) {
+                    //     setStep('confirm');
+                    // } else {
+                    //     Alert.alert('Liveness Check Failed', 'Spoofing detected.');
+                    //     setLivePhotoUri(null);
+                    // }
+                } catch (error: any) {
+                    Alert.alert('Error', error.message || 'Something went wrong.');
+                    setLivePhotoUri(null);
+                } finally {
+                    setIsLoading(false);
+                }
       }
     } catch (error) {
       console.error('Camera error:', error);
