@@ -93,41 +93,59 @@ export default function NotificationsScreen() {
     }
   };
 
+  const getNotificationIcon = (type: string): { name: keyof typeof Ionicons.glyphMap; color: string } => {
+    switch (type?.toUpperCase()) {
+      case 'EVENT':
+        return { name: 'calendar', color: '#6366f1' };
+      case 'CHECKIN_SUCCESS':
+        return { name: 'location', color: '#22c55e' };
+      case 'ORDER_SUCCESS':
+        return { name: 'card', color: '#f59e0b' };
+      case 'REPORT_RESOLVED':
+        return { name: 'checkmark-circle', color: '#10b981' };
+      case 'REPORT_REJECTED':
+        return { name: 'document-text', color: '#8b5cf6' };
+      default:
+        return { name: 'notifications', color: theme.primary };
+    }
+  };
+
   const handlePress = async (item: Notification) => {
     await markAsRead(item.id, item.isRead);
 
     if (item.type?.toUpperCase() === 'EVENT' && item.referenceId) {
-      navigation.navigate('Main', { screen: 'EventDetail', params: { eventId: item.referenceId } } as any);
+      navigation.navigate('EventDetail', { eventId: item.referenceId } as any);
+    } else {
+      navigation.navigate('NotificationDetail', { notification: item } as any);
     }
   };
 
-  const renderItem = ({ item }: { item: Notification }) => (
-    <TouchableOpacity
-      style={[
-        styles.notificationItem,
-        {
-          backgroundColor: item.isRead ? theme.background : isDarkColorScheme ? '#1e293b' : '#f0fdf4',
-          borderColor: theme.border,
-        },
-      ]}
-      onPress={() => handlePress(item)}>
-      <View style={styles.iconContainer}>
-        {item.type === 'EVENT' ? (
-          <Ionicons name="calendar" size={24} color={theme.primary} />
-        ) : (
-          <Ionicons name="notifications" size={24} color={theme.primary} />
-        )}
-      </View>
-      <View style={styles.textContainer}>
-        <Text style={[styles.title, { color: theme.foreground }]}>{item.title}</Text>
-        <Text style={[styles.message, { color: theme.mutedForeground }]} numberOfLines={2}>
-          {item.message}
-        </Text>
-        <Text style={[styles.time, { color: theme.mutedForeground }]}>{new Date(item.createdAt).toLocaleString()}</Text>
-      </View>
-      {!item.isRead && <View style={[styles.unreadDot, { backgroundColor: theme.primary }]} />}
-    </TouchableOpacity>
-  );
+  const renderItem = ({ item }: { item: Notification }) => {
+    const icon = getNotificationIcon(item.type);
+    return (
+      <TouchableOpacity
+        style={[
+          styles.notificationItem,
+          {
+            backgroundColor: item.isRead ? theme.background : isDarkColorScheme ? '#1e293b' : '#f0fdf4',
+            borderColor: theme.border,
+          },
+        ]}
+        onPress={() => handlePress(item)}>
+        <View style={[styles.iconContainer, { backgroundColor: icon.color + '15' }]}>
+          <Ionicons name={icon.name} size={24} color={icon.color} />
+        </View>
+        <View style={styles.textContainer}>
+          <Text style={[styles.title, { color: theme.foreground }]}>{item.title}</Text>
+          <Text style={[styles.message, { color: theme.mutedForeground }]} numberOfLines={2}>
+            {item.message}
+          </Text>
+          <Text style={[styles.time, { color: theme.mutedForeground }]}>{new Date(item.createdAt).toLocaleString()}</Text>
+        </View>
+        {!item.isRead && <View style={[styles.unreadDot, { backgroundColor: theme.primary }]} />}
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['bottom', 'left', 'right']}>
@@ -179,6 +197,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 16,
   },
   textContainer: {
