@@ -140,12 +140,9 @@ const NHSMapInner = <T extends MapPoint>(
     },
   }));
 
+  // This will be used for the marker keys to ensure consistency
   useEffect(() => {
     if (!isFocused) return;
-
-    // Soft-refresh: bump epoch so marker/polyline keys change, forcing React to
-    // recreate the lightweight <Marker> wrappers. The native MapView stays alive,
-    // avoiding the expensive teardown/setup cycle that leaks GPU memory.
     logger.info('[NHSMap] Soft-refreshing markers on focus');
     setMarkerEpoch((prev) => prev + 1);
   }, [isFocused]);
@@ -228,12 +225,14 @@ const NHSMapInner = <T extends MapPoint>(
         latitude: previousLocation?.latitude ?? userLocation.latitude,
         longitude: previousLocation?.longitude ?? userLocation.longitude,
       };
+
       const distanceMoved = distanceUtils.calculateDistance(
         { latitude: userLocation.latitude, longitude: userLocation.longitude },
         { latitude: previousCoords.latitude, longitude: previousCoords.longitude }
       );
 
       if (distanceMoved <= MAP_CONSTANTS.DISTANCE_LIMIT_BEFORE_REFETCH_M && previousLocation) {
+        logger.debug(`[NHSMap] Distance moved: ${distanceMoved.toFixed(2)}m. Skipping fetch.`);
         return;
       }
 
@@ -241,6 +240,7 @@ const NHSMapInner = <T extends MapPoint>(
 
       try {
         const nearbyCheckinPoints = await syncNearbyGeofences(userLocation.latitude, userLocation.longitude);
+        logger.info(`[NHSMap] Checkin point near user: ${nearbyCheckinPoints.length}`);
 
         if (!isCancelled) {
           setCheckinPoints((currentPoints) =>

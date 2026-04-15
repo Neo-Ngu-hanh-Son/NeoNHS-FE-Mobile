@@ -12,6 +12,8 @@ import ChatRoomListScreen from '@/features/chat/screens/ChatRoomListScreen';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import type { TabsStackParamList } from './NavigationParamTypes';
+import CustomTabBarButton from './components/MapTabBarButton';
+import { useIsFocused } from '@react-navigation/native';
 
 const Tab = createBottomTabNavigator<TabsStackParamList>();
 
@@ -68,11 +70,26 @@ export default function TabsNavigator() {
         component={MapScreen}
         options={{
           title: 'Map',
+          tabBarIcon: ({ focused, size }) => (
+            <Ionicons name={focused ? 'map' : 'map-outline'} size={size} color="#FFFFFF" />
+          ),
+          // Use the custom button wrapper here
+          tabBarButton: (props) => {
+            return <CustomTabBarButton {...props} onPress={props.onPress} theme={theme}></CustomTabBarButton>;
+          },
+          tabBarLabel: () => null, // Optional: Hide label for the special button
+        }}
+      />
+      {/*<Tab.Screen
+        name="Map"
+        component={MapScreen}
+        options={{
+          title: 'Map',
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? 'map' : 'map-outline'} color={color} size={size} />
           ),
         }}
-      />
+      />*/}
       <Tab.Screen
         name="Bookings"
         component={BookingsScreen}

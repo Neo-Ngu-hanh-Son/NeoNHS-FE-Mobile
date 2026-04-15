@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
-import { Ionicons } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
@@ -136,7 +136,7 @@ export default function CheckinCameraCapture({
                 onPress={handlePickImage}
                 disabled={isBusy}
                 className="h-10 w-10 items-center justify-center rounded-full bg-black/40">
-                <Ionicons name="image" size={22} color="white" />
+                <Feather name="upload" size={24} color="white" />
               </TouchableOpacity>
             </View>
           </View>
