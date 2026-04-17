@@ -13,7 +13,6 @@ import React, {
 import { MapPoint } from '../..';
 import MapView, { Camera, Marker, Polyline, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { MAP_CENTER } from '../../data';
-// import MapView from 'react-native-map-clustering';
 import { renderRoutes } from '../../data/mapDataOptimized';
 import MapMarkerVisual from '../Marker/MapMarkerVisual';
 import { logger } from '@/utils/logger';
@@ -29,7 +28,6 @@ import { distanceUtils } from '@/utils/distanceUtils';
 import MAP_CONSTANTS from '../../constants';
 import { useMapStore } from '../../store/useMapStore';
 import type { NHSMapProps, NHSMapRef } from './types.ts';
-export type { NHSMapProps, NHSMapRef } from './types.ts';
 
 const NHSMapInner = <T extends MapPoint>(
   {
@@ -59,6 +57,9 @@ const NHSMapInner = <T extends MapPoint>(
   const [isMapReady, setIsMapReady] = useState(false);
   const [isFollowingUser, setIsFollowingUser] = useState(false);
   const [mapKey, setMapKey] = useState(0);
+  // Lightweight refresh counter: changing this forces marker/polyline re-creation
+  // without destroying the expensive native MapView instance.
+  const [markerEpoch, setMarkerEpoch] = useState(0);
   const [checkinPoints, setCheckinPoints] = useState<MapPointCheckin[]>([]);
 
   const isSyncingNearbyCheckinsRef = useRef(false);
@@ -142,8 +143,11 @@ const NHSMapInner = <T extends MapPoint>(
   useEffect(() => {
     if (!isFocused) return;
 
-    logger.info('[NHSMap] Map reload triggered by focus change');
-    setMapKey((prev) => prev + 1);
+    // Soft-refresh: bump epoch so marker/polyline keys change, forcing React to
+    // recreate the lightweight <Marker> wrappers. The native MapView stays alive,
+    // avoiding the expensive teardown/setup cycle that leaks GPU memory.
+    logger.info('[NHSMap] Soft-refreshing markers on focus');
+    setMarkerEpoch((prev) => prev + 1);
   }, [isFocused]);
 
   const handleRegionChangeComplete = useCallback((region: Region) => {
@@ -276,19 +280,25 @@ const NHSMapInner = <T extends MapPoint>(
     }
   }, [isMapReady, isFollowingUser, userLocation, isFocused]);
 
-  // 1. Memoize the routes of Thuy Son mountain
+  // Memoize the routes of Thuy Son mountain
+  // markerEpoch in key forces polyline re-creation on focus to fix stale rendering
   const memoizedRoutes = useMemo((): React.ReactNode[] => {
     return renderRoutes.map((line) => (
-      <Polyline key={line.id} coordinates={line.coordinates} strokeColor="#fafafa50" strokeWidth={8} />
+      <Polyline
+        key={`${line.id}-${markerEpoch}`}
+        coordinates={line.coordinates}
+        strokeColor="#fafafa50"
+        strokeWidth={8}
+      />
     ));
-  }, []);
+  }, [markerEpoch]);
 
-  // 2. Memoize the navigation route
+  // Memoize the navigation route
   const memoizedNavigationRoute = useMemo(() => {
-    // const hasPoints = navigationPolylineCoordinates && navigationPolylineCoordinates.length >= 2;
     // Instead of returing null, modify the polyline to be transparent when not visible
     return (
       <Polyline
+        key={`nav-route-${markerEpoch}`}
         coordinates={navigationPolylineCoordinates}
         strokeColor={isNavPolylineVisible ? theme.primary : `${theme.primary}00`}
         strokeWidth={isNavPolylineVisible ? 6 : 0}
@@ -297,7 +307,7 @@ const NHSMapInner = <T extends MapPoint>(
         zIndex={40}
       />
     );
-  }, [isNavPolylineVisible, navigationPolylineCoordinates, theme.primary]);
+  }, [markerEpoch, isNavPolylineVisible, navigationPolylineCoordinates, theme.primary]);
 
   const effectiveMarkerFilters = useMemo<MapMarkerFilters>(() => {
     return (
@@ -334,6 +344,7 @@ const NHSMapInner = <T extends MapPoint>(
 
   // 2. Memoize the map points
   const memoizedMarkers = useMemo(() => {
+    console.log('Memmoizing markers ran');
     if (!isMapReady || !mapPoints) return null;
 
     const parentMarkers = mapPoints
@@ -344,7 +355,7 @@ const NHSMapInner = <T extends MapPoint>(
         }
         return (
           <Marker
-            key={poi.id}
+            key={`${poi.id}`}
             tracksViewChanges={true}
             coordinate={{
               latitude: poi.latitude,
@@ -371,7 +382,9 @@ const NHSMapInner = <T extends MapPoint>(
     const checkinMarkers = canShowCheckinMarkers
       ? mapPoints.flatMap((parentPoint) =>
           (parentPoint.checkinPoints ?? [])
-            .filter((checkin) => checkin.isActive !== false && checkin.latitude !== -1 && checkin.longitude !== -1)
+            .filter(
+              (checkin) => checkin && checkin.isActive !== false && checkin.latitude !== -1 && checkin.longitude !== -1
+            )
             .map((checkin) => {
               const isUserCheckedIn = checkin.isUserCheckedIn ?? false;
               let pointType = checkin.type ?? 'CHECKIN';
@@ -446,7 +459,6 @@ const NHSMapInner = <T extends MapPoint>(
         provider={PROVIDER_GOOGLE}
         initialRegion={lastMapInteractionLocation}
         // clusterColor={theme.primary}
-        // radius={10}
         mapType="standard"
         scrollEnabled={isMapInteractionEnabled}
         zoomEnabled={isMapInteractionEnabled}
@@ -454,12 +466,13 @@ const NHSMapInner = <T extends MapPoint>(
         pitchEnabled={isMapInteractionEnabled}
         showsUserLocation={false}
         showsMyLocationButton={false} // We use custom button
-        onRegionChangeComplete={handleRegionChangeComplete}
+        onRegionChangeComplete={handleRegionChangeComplete} // Temporary disable this to test performance
+        toolbarEnabled={false}
         onMapReady={() => {
           setIsMapReady(true);
           onMapReadyCallback?.();
         }}
-        onPanDrag={isMapInteractionEnabled ? handleMapInteraction : undefined} // Detect when user drags the map
+        onPanDrag={handleMapInteraction} // Detect when user drags the map
         customMapStyle={MAP_CONSTANTS.GOOGLE_MAP_STYLE}>
         {/* Polylines */}
         {memoizedRoutes}

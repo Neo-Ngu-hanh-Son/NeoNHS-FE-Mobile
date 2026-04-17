@@ -1,8 +1,10 @@
 import {
   EventMapPoint,
+  EventMapPointTimelineInfo,
   EventPointResponse,
   EventPointTagResponse,
   EventTimelineGroupResponse,
+  EventTimeLineResponse,
   EventTimelineResponse,
   TicketCatalogStatus,
 } from '../types';
@@ -338,7 +340,8 @@ function parsePointImages(imageList?: string | null): string[] {
   return [imageList];
 }
 
-function mapTimelineToMapPoint(timeline: EventTimelineResponse, groupLunarDate?: string | null): EventMapPoint {
+// Map the timeline reverse to the map point here so we can display the map point correctly.
+function mapTimelineToMapPoint(timeline: EventTimelineResponse): EventMapPoint {
   const point = timeline.eventPoint;
   const tag = point.eventPointTag;
   const images = parsePointImages(point.imageList);
@@ -353,23 +356,10 @@ function mapTimelineToMapPoint(timeline: EventTimelineResponse, groupLunarDate?:
     latitude: parseCoordinate(point.latitude),
     longitude: parseCoordinate(point.longitude),
     type: 'EVENT',
-    startTime: timeline.startTime ?? undefined,
-    endTime: timeline.endTime ?? undefined,
-    shortDescription: timeline.description ?? point.description ?? undefined,
-    eventId: timeline.eventId,
     address: point.address ?? undefined,
     pointName: point.name,
     pointDescription: point.description ?? undefined,
-    timelineId: timeline.id,
-    timelineName: timeline.name,
-    timelineDescription: timeline.description ?? undefined,
-    timelineDate: timeline.date,
-    timelineLunarDate: timeline.lunarDate ?? undefined,
-    groupLunarDate: groupLunarDate ?? undefined,
-    timelineStartTime: timeline.startTime ?? undefined,
-    timelineEndTime: timeline.endTime ?? undefined,
-    timelineOrganizer: timeline.organizer ?? undefined,
-    timelineCoOrganizer: timeline.coOrganizer ?? undefined,
+    timelineInfos: [],
     eventPointTag: {
       id: tag?.id ?? 'default-event-tag',
       name: tag?.name ?? 'Event',
@@ -381,24 +371,51 @@ function mapTimelineToMapPoint(timeline: EventTimelineResponse, groupLunarDate?:
   };
 }
 
-/**
- * Builds deduplicated event map points from grouped timelines.
- */
 export function buildEventMapPointsFromGroups(groups: EventTimelineGroupResponse[]): EventMapPoint[] {
   const pointMap = new Map<string, EventMapPoint>();
 
-  groups.forEach((group) => {
-    group.timelines.forEach((timeline) => {
-      const pointId = timeline.eventPoint?.id;
-      if (!pointId) {
-        return;
+  for (const group of groups) {
+    for (const timeline of group.timelines) {
+      const { eventPoint } = timeline;
+      if (!eventPoint) continue;
+
+      // 1. Initialize the point in the map if it doesn't exist
+      if (!pointMap.has(eventPoint.id)) {
+        pointMap.set(eventPoint.id, {
+          ...mapTimelineToMapPoint(timeline),
+          timelineInfos: [],
+        });
       }
 
-      pointMap.set(pointId, mapTimelineToMapPoint(timeline, group.lunarDate));
-    });
-  });
+      const existingPoint = pointMap.get(eventPoint.id)!;
 
-  return Array.from(pointMap.values());
+      // 2. Map the timeline info and push to the array
+      const newTimelineInfo: EventMapPointTimelineInfo = {
+        timelineId: timeline.id,
+        timelineName: timeline.name,
+        timelineDescription: timeline.description ?? undefined,
+        timelineDate: timeline.date,
+        timelineLunarDate: timeline.lunarDate ?? undefined,
+        timelineStartTime: timeline.startTime ?? undefined,
+        timelineEndTime: timeline.endTime ?? undefined,
+        groupLunarDate: group.lunarDate ?? undefined,
+        timelineCoOrganizer: timeline.coOrganizer ?? undefined,
+        timelineOrganizer: timeline.organizer ?? undefined,
+      };
+
+      existingPoint.timelineInfos?.push(newTimelineInfo);
+    }
+  }
+
+  // 3. Final Pass: Sort and return values
+  return Array.from(pointMap.values()).map((point) => {
+    point.timelineInfos?.sort((a, b) => {
+      const timeA = a.timelineStartTime ?? a.timelineDate ?? '';
+      const timeB = b.timelineStartTime ?? b.timelineDate ?? '';
+      return timeA.localeCompare(timeB);
+    });
+    return point;
+  });
 }
 
 /**
@@ -455,7 +472,6 @@ export function buildEventTimelineDayOptions(groups: EventTimelineGroupResponse[
  * Example: "Lễ khai kinh" → "le khai kinh"
  */
 function removeDiacritics(text: string): string {
-  // eslint-disable-next-line no-control-regex
   return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
@@ -466,27 +482,31 @@ function normalizeForSearch(text?: string | null): string {
 
 /**
  * Lightweight search filter for event map points.
- * Searches across timeline name, point name, general name, description, and address.
- * Supports Vietnamese diacritics-insensitive matching
- * (e.g. searching "le khai" will match "Lễ khai kinh").
+ * Support searches both the point name and it's associated nested event name.
  */
 export function filterEventMapPointsBySearch(points: EventMapPoint[], query: string): EventMapPoint[] {
   const normalizedQuery = normalizeForSearch(query);
 
+  // If query is empty, return everything (or [] if you prefer your current logic)
   if (!normalizedQuery) {
-    return [];
+    return points;
   }
 
   return points.filter((point) => {
-    const fields = [
-      point.timelineName,
-      point.pointName,
-      point.name,
-      point.description,
-      point.timelineDescription,
-      point.address,
+    // 1. Collect all searchable text into one array
+    const searchableTexts = [
+      point.pointName ?? '',
+      point.name ?? '',
+      point.description ?? '',
+      point.address ?? '',
+      ...(point.timelineInfos?.map((info) => info.timelineName) ?? []),
+      ...(point.timelineInfos?.map((info) => info.timelineDescription) ?? []),
     ];
 
-    return fields.some((field) => normalizeForSearch(field).includes(normalizedQuery));
+    // 2. Join them once and normalize the whole string once
+    const combinedContent = normalizeForSearch(searchableTexts.join(' '));
+
+    // 3. Perform the check
+    return combinedContent.includes(normalizedQuery);
   });
 }

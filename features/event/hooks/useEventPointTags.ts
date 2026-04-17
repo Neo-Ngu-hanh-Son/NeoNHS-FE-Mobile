@@ -9,8 +9,5 @@ export function useEventPointTags(_eventId: string, fallbackGroups: EventTimelin
 
   return {
     data,
-    isLoading: false,
-    isError: false,
-    error: null,
   };
 }

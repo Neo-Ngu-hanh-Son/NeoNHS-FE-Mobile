@@ -60,19 +60,15 @@ export const mapService = {
   },
 
   getCheckinPointById: async (pointId: string, checkinId: string) => {
-    return await apiClient.get<MapPointCheckin>(
-      endpoints.map.getCheckinPointById(pointId, checkinId),
-      {
-        requiresAuth: false,
-      }
-    );
+    return await apiClient.get<MapPointCheckin>(endpoints.map.getCheckinPointById(pointId, checkinId), {
+      requiresAuth: false,
+    });
   },
 
   getMapPoints: async () => {
     const res = await apiClient.get<MapPoint[]>(endpoints.map.getMapPoints(), {
       requiresAuth: true,
     });
-    // logger.info('Map points', res.data);
     return res;
   },
 };

@@ -1,30 +1,22 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  View,
-  FlatList,
-  TextInput,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  Image,
-  Alert,
-} from 'react-native';
+import { View, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { Image } from 'expo-image';
 
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 
-import { ChatMessageBubble } from "../components/ChatMessageBubble";
-import { TypingIndicator } from "../components/TypingIndicator";
-import { formatChatMessageTime, shouldShowTimestamp } from "../utils/helpers";
-import { ChatMessage, ProductSnippetParams } from "../types";
-import { useAuth } from "@/features/auth/context/AuthContext";
-import { useChatContext } from "../context/ChatProvider";
-import { ChatRestService } from "../services/chatApiService";
-import { SmartImage } from "@/components/ui/smart-image";
+import { ChatMessageBubble } from '../components/ChatMessageBubble';
+import { TypingIndicator } from '../components/TypingIndicator';
+import { formatChatMessageTime, shouldShowTimestamp } from '../utils/helpers';
+import { ChatMessage, ProductSnippetParams } from '../types';
+import { useAuth } from '@/features/auth/context/AuthContext';
+import { useChatContext } from '../context/ChatProvider';
+import { ChatRestService } from '../services/chatApiService';
+import { SmartImage } from '@/components/ui/smart-image';
 
 /** Maps backend role strings to user-facing labels. */
 function formatParticipantRole(role?: string): string {
@@ -189,37 +181,37 @@ export default function ChatScreen({ route, navigation }: any) {
         id: placeholderId,
         chatRoomId: roomId,
         senderId: currentUserId,
-        content: "",
+        content: '',
         timestamp: new Date().toISOString(),
-        status: "SENT",
-        messageType: "IMAGE",
+        status: 'SENT',
+        messageType: 'IMAGE',
         mediaUrl: null,
         _isUploading: true,
         _localUri: localUri,
       };
 
       // Insert placeholder into messages (inverted list, index 0 = newest)
-      setMessagesByRoom(prev => ({
+      setMessagesByRoom((prev) => ({
         ...prev,
         [roomId]: [placeholder, ...(prev[roomId] || [])],
       }));
 
       setIsUploading(true);
       const mediaUrl = await ChatRestService.uploadMedia(localUri);
-      sendWsMessage(roomId, "", "IMAGE", mediaUrl, null);
+      sendWsMessage(roomId, '', 'IMAGE', mediaUrl, null);
 
       // Remove the placeholder — the real message will arrive via WebSocket
-      setMessagesByRoom(prev => ({
+      setMessagesByRoom((prev) => ({
         ...prev,
-        [roomId]: (prev[roomId] || []).filter(m => m.id !== placeholderId),
+        [roomId]: (prev[roomId] || []).filter((m) => m.id !== placeholderId),
       }));
     } catch (e) {
-      Alert.alert("Upload failed", "Could not upload image. Please try again.");
-      console.error("Image upload error", e);
+      Alert.alert('Upload failed', 'Could not upload image. Please try again.');
+      console.error('Image upload error', e);
       // Remove any lingering placeholders on error
-      setMessagesByRoom(prev => ({
+      setMessagesByRoom((prev) => ({
         ...prev,
-        [roomId]: (prev[roomId] || []).filter(m => !m._isUploading),
+        [roomId]: (prev[roomId] || []).filter((m) => !m._isUploading),
       }));
     } finally {
       setIsUploading(false);
@@ -314,7 +306,7 @@ export default function ChatScreen({ route, navigation }: any) {
             {workshopSnippet.thumbnailUrl && (
               <SmartImage
                 uri={workshopSnippet.thumbnailUrl}
-                className="w-14 h-14 rounded-lg"
+                className="h-14 w-14 rounded-lg"
                 alt={workshopSnippet.title}
               />
             )}

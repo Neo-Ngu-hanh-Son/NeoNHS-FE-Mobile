@@ -1,4 +1,4 @@
-import { View, Pressable, Image } from 'react-native';
+import { View, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
 import { Card } from '@/components/ui/card';

@@ -109,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Gửi push token lên server bất cứ khi nào user được xác thực và có token
   useEffect(() => {
     if (state.isAuthenticated && expoPushToken) {
-      apiClient.post('/notifications/push-token', { token: expoPushToken })
+      apiClient.post('notifications/push-token', { token: expoPushToken })
         .then(() => logger.info('[AuthContext] Successfully uploaded Expo Push Token to Backend'))
         .catch(err => logger.error('[AuthContext] Error sending Push Token', err));
     }
@@ -119,14 +119,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!state.isAuthenticated || !state.user?.email) return;
 
+    let isFirstFetch = true;
+
     const fetchNotifications = async () => {
       try {
-        const response = await apiClient.get<any>('/notifications', {
+        const response = await apiClient.get<any>('notifications', {
           params: { email: state.user!.email, page: 0, size: 20 }
         });
         const unreadItems = response.data.content.filter((n: any) => !n.isRead);
 
-        if (unreadItems.length > previousUnreadCountRef.current) {
+        if (!isFirstFetch && unreadItems.length > previousUnreadCountRef.current) {
           // Send a local push notification for the newest one
           const newest = unreadItems[0];
           import('expo-notifications').then(Notifications => {
@@ -141,6 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
         }
 
+        isFirstFetch = false;
         previousUnreadCountRef.current = unreadItems.length;
         setUnreadNotificationCount(unreadItems.length);
       } catch (err) {

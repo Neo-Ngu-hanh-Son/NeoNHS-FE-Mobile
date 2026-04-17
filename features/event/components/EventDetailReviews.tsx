@@ -26,18 +26,15 @@ export function EventDetailReviews({
 }: EventDetailReviewsProps) {
   const { user } = useAuth();
 
-  const { data, isLoading } = useEventReviews(eventId, 'createdAt,desc');
+  const { data, isLoading, error } = useEventReviews(eventId, 'createdAt,desc');
   const createReviewMutation = useCreateEventReview(eventId);
   const updateReviewMutation = useUpdateEventReview(eventId);
 
-  const allLoaded = useMemo(
-    () => data?.pages.flatMap((p) => p.content) ?? [],
-    [data],
-  );
+  const allLoaded = useMemo(() => data?.pages.flatMap((p) => p.content) ?? [], [data]);
 
   const myReview: ReviewResponse | undefined = useMemo(
     () => (user ? allLoaded.find((r) => r.user?.id === user.id) : undefined),
-    [allLoaded, user],
+    [allLoaded, user]
   );
 
   const handleSubmit = async (rating: number, text: string): Promise<void> => {

@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, StyleSheet, Image, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { Callout } from 'react-native-maps';
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { MapPoint } from '../../types';
+import { Image } from 'expo-image';
 
 interface MarkerCalloutProps {
   point: MapPoint;
@@ -41,9 +42,7 @@ export default function MarkerCallout({ point, onPress }: MarkerCalloutProps) {
         )}
 
         {/* CTA */}
-        <Pressable
-          style={[styles.button, { backgroundColor: theme.primary }]}
-          onPress={() => onPress?.(point)}>
+        <Pressable style={[styles.button, { backgroundColor: theme.primary }]} onPress={() => onPress?.(point)}>
           <Text style={styles.buttonText}>View Destination</Text>
         </Pressable>
       </View>
