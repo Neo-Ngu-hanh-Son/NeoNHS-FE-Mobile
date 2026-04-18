@@ -4,17 +4,20 @@ import type { ApiResponse } from '@/services/api/types';
 import type { CheckinGalleryImage, UserCheckinGalleryResponse } from '@/features/profile/types';
 
 export const checkinGalleryService = {
-  async getMyCheckinGallery(): Promise<ApiResponse<CheckinGalleryImage[]>> {
+  async getMyCheckinGallery(params?: { checkinPointId?: string }): Promise<ApiResponse<CheckinGalleryImage[]>> {
+    const requestParams = {
+      ...(params?.checkinPointId ? { checkinPointId: params.checkinPointId } : {}),
+    };
+
     const response = await apiClient.get<UserCheckinGalleryResponse | CheckinGalleryImage[]>(
       endpoints.users.getMyCheckinGallery(),
       {
         requiresAuth: true,
+        params: requestParams,
       }
     );
 
-    const normalizedItems = Array.isArray(response.data)
-      ? response.data
-      : (response.data?.items ?? []);
+    const normalizedItems = Array.isArray(response.data) ? response.data : (response.data?.items ?? []);
 
     return {
       ...response,

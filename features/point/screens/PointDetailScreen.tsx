@@ -77,7 +77,7 @@ export default function PointDetailScreen({ navigation, route }: Props) {
   const handleNavigate = () => {
     navigation.navigate('Tabs', {
       screen: 'Map',
-      params: { targetNavigationPointId: pointId, transportMode: MAP_CONSTANTS.DEFAULT_TRAVEL_MODE },
+      params: { targetNavigationPointId: pointId },
     });
   };
 

@@ -4,10 +4,10 @@
  */
 
 /** 1: Workshop, 2: Event, 3: Point */
-export const  ReviewTypeFlg = {
-  WORKSHOP: 1,
-  EVENT: 2,
-  POINT: 3,
+export const ReviewTypeFlg = {
+  WORKSHOP: 'WORKSHOP',
+  EVENT: 'EVENT',
+  POINT: 'POINT',
 } as const;
 
 export type ReviewTypeFlgValue = (typeof ReviewTypeFlg)[keyof typeof ReviewTypeFlg];
@@ -23,7 +23,7 @@ export interface ReviewUser {
 /** Single review from GET/POST/PUT */
 export interface ReviewResponse {
   id: string;
-  reviewTypeFlg: number;
+  reviewTypeFlg: ReviewTypeFlgValue;
   reviewTypeId: string;
   user: ReviewUser;
   rating: number;
@@ -46,7 +46,7 @@ export interface ReviewPageResponse {
 }
 
 export interface CreateReviewRequest {
-  reviewTypeFlg: number;
+  reviewTypeFlg: ReviewTypeFlgValue;
   reviewTypeId: string;
   rating: number;
   comment?: string;

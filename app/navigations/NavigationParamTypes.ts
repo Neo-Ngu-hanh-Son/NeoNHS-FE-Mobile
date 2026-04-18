@@ -73,8 +73,18 @@ export type MapRoutes = {
   AudioGuide: { pointId: string };
   PointHistoryAudio: { pointId: string };
   Panorama: { pointId: string };
-  CheckinCamera: { pointId?: string | null; pointName: string; pointRewardPoints?: number };
-  CheckinComplete: { imageUrl?: string; rewardPoints?: number; userTotalPoints?: number };
+};
+
+export type CheckinRoutes = {
+  CheckinCamera: { checkinPointId?: string | null; pointName: string; pointRewardPoints?: number };
+  CheckinComplete: {
+    imageUrl?: string;
+    rewardPoints?: number;
+    userTotalPoints?: number;
+    destinationName?: string;
+    checkinPointId?: string;
+    parentCheckinPointId?: string;
+  };
 };
 
 /* Events */
@@ -144,6 +154,7 @@ export type MainStackParamList = BaseMainRoutes &
   TicketRoutes &
   DestinationRoutes &
   MapRoutes &
+  CheckinRoutes &
   EventRoutes &
   WorkshopRoutes &
   CheckoutRoutes &

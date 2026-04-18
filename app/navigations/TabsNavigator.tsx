@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import HomeScreen from '@/features/home/screens/HomeScreen';
 import { DiscoverScreen } from '@/features/discover/screens';
-import { MapScreen } from '@/features/map/screens';
+import { CheckinCompleteScreen, MapScreen } from '@/features/map/screens';
 import { BookingsScreen } from '@/features/bookings/screens';
 import ProfileScreen from '@/features/profile/screens/ProfileScreen';
 import CartListScreen from '@/features/cart/screens/CartListScreen';
@@ -13,7 +13,6 @@ import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import type { TabsStackParamList } from './NavigationParamTypes';
 import CustomTabBarButton from './components/MapTabBarButton';
-import { useIsFocused } from '@react-navigation/native';
 
 const Tab = createBottomTabNavigator<TabsStackParamList>();
 
@@ -66,6 +65,16 @@ export default function TabsNavigator() {
         }}
       />
       <Tab.Screen
+        name="Bookings"
+        component={BookingsScreen}
+        options={{
+          title: 'Bookings',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'briefcase' : 'briefcase-outline'} color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen
         name="Map"
         component={MapScreen}
         options={{
@@ -77,37 +86,7 @@ export default function TabsNavigator() {
           tabBarButton: (props) => {
             return <CustomTabBarButton {...props} onPress={props.onPress} theme={theme}></CustomTabBarButton>;
           },
-          tabBarLabel: () => null, // Optional: Hide label for the special button
-        }}
-      />
-      {/*<Tab.Screen
-        name="Map"
-        component={MapScreen}
-        options={{
-          title: 'Map',
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? 'map' : 'map-outline'} color={color} size={size} />
-          ),
-        }}
-      />*/}
-      <Tab.Screen
-        name="Bookings"
-        component={BookingsScreen}
-        options={{
-          title: 'Bookings',
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? 'briefcase' : 'briefcase-outline'} color={color} size={size} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} color={color} size={size} />
-          ),
+          tabBarLabel: () => null, // Hide the label for the Map tab
         }}
       />
       <Tab.Screen
@@ -120,6 +99,7 @@ export default function TabsNavigator() {
           ),
         }}
       />
+
       <Tab.Screen
         name="Chat"
         component={ChatRoomListScreen}
@@ -127,6 +107,17 @@ export default function TabsNavigator() {
           title: 'Chat',
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? 'chatbubble' : 'chatbubble-outline'} color={color} size={size} />
+          ),
+        }}
+      />
+
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'person' : 'person-outline'} color={color} size={size} />
           ),
         }}
       />

@@ -144,6 +144,8 @@ export interface UserCheckinRequest {
 export type UserCheckinResultResponse = {
   earnedPoints: number;
   userTotalPoints: number;
+  checkinPointId?: string;
+  parentCheckinPointId?: string;
 };
 
 /**
@@ -288,4 +290,7 @@ export type CheckinSessionGalleryImage = {
   uri: string;
   caption?: string;
   label: string;
+  uploadStatus?: 'pending' | 'uploaded' | 'failed';
+  draftId?: string;
+  publicId?: string;
 };

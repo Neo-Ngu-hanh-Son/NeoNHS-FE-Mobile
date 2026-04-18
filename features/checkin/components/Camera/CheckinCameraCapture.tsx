@@ -7,7 +7,7 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { logger } from '@/utils/logger';
-import CheckinCameraCenterHint from '@/features/map/components/Camera/CheckinCameraCenterHint';
+import CheckinCameraCenterHint from '@/features/checkin/components/Camera/CheckinCameraCenterHint';
 import { CameraIcon } from 'lucide-react-native';
 
 type CheckinCameraCaptureProps = {
@@ -43,8 +43,7 @@ export default function CheckinCameraCapture({
 
     try {
       const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.9,
-        skipProcessing: true,
+        quality: 1,
       });
       if (!photo?.uri) {
         Alert.alert('Capture failed', 'Could not capture photo. Please try again.');
@@ -58,7 +57,7 @@ export default function CheckinCameraCapture({
     }
   };
 
-  const handlePickImage = async () => {
+  const handleUploadImageFromLib = async () => {
     if (isBusy) {
       return;
     }
@@ -115,7 +114,7 @@ export default function CheckinCameraCapture({
         facing={cameraFacing}
         onCameraReady={() => setCameraReady(true)}
       />
-      <View style={styles.overlay}>
+      <View style={styles.overlay} pointerEvents="box-none">
         <View className="px-5 pt-14">
           <View className="flex-row items-center">
             <TouchableOpacity
@@ -133,10 +132,10 @@ export default function CheckinCameraCapture({
 
             <View className="flex-row items-center gap-2">
               <TouchableOpacity
-                onPress={handlePickImage}
+                onPress={handleUploadImageFromLib}
                 disabled={isBusy}
                 className="h-10 w-10 items-center justify-center rounded-full bg-black/40">
-                <Feather name="upload" size={24} color="white" />
+                <Feather name="upload" size={26} color="white" />
               </TouchableOpacity>
             </View>
           </View>
@@ -145,25 +144,25 @@ export default function CheckinCameraCapture({
 
       <CheckinCameraCenterHint />
 
-      <View className="absolute bottom-9 left-0 right-0 w-full items-center">
+      <View className="absolute bottom-9 left-0 right-0 w-full items-center" pointerEvents="box-none">
         <View className="flex-1 flex-row items-center justify-between gap-12">
           <TouchableOpacity
             onPress={onOpenGallery}
             disabled={isBusy}
-            className="h-14 w-14 items-center justify-center rounded-full bg-black/40">
-            <Ionicons name="images" size={32} color="white" />
+            className="h-10 w-10 items-center justify-center rounded-full bg-black/40">
+            <Ionicons name="images" size={26} color="white" />
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.captureButton, isBusy ? styles.captureButtonDisabled : null]}
             onPress={handleTakePicture}
             disabled={isBusy || !cameraReady}>
-            <CameraIcon size={32} color="white" />
+            <CameraIcon size={26} color="white" />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleToggleCameraFacing}
             disabled={isBusy}
-            className="h-14 w-14 items-center justify-center rounded-full bg-black/40">
-            <Ionicons name="camera-reverse" size={32} color="white" />
+            className="h-10 w-10 items-center justify-center rounded-full bg-black/40">
+            <Ionicons name="camera-reverse" size={26} color="white" />
           </TouchableOpacity>
         </View>
       </View>

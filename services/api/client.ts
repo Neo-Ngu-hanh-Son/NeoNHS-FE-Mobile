@@ -27,10 +27,9 @@ class ApiClient {
     this.axiosInstance = axios.create({
       baseURL: config?.baseURL || API_CONFIG.BASE_URL,
       timeout: config?.timeout || API_CONFIG.TIMEOUT,
-      headers: {
-        'Content-Type': 'application/json',
-        ...config?.headers,
-      },
+      // headers: config?.headers || {
+      //   'Content-Type': 'application/json',
+      // },
     });
 
     // Store callbacks
@@ -53,8 +52,7 @@ class ApiClient {
     this.axiosInstance.interceptors.request.use(
       async (config) => {
         // Log the request config
-        logger.debug(`[ApiClient] ${config.method?.toUpperCase()} ${config.baseURL}/${config.url}`);
-
+        // logger.debug(`[ApiClient] ${config.method?.toUpperCase()} ${config.baseURL}/${config.url}`);
         // Guard against invalid pagination sent by callers.
         if (config.params && typeof config.params === 'object' && 'page' in config.params) {
           const pageValue = (config.params as Record<string, unknown>).page;
@@ -81,7 +79,6 @@ class ApiClient {
           }
         }
 
-        // Remove custom requiresAuth property before sending
         if ((config as RequestConfig).requiresAuth !== undefined) {
           delete (config as RequestConfig).requiresAuth;
         }
@@ -89,6 +86,12 @@ class ApiClient {
         if ((config as any)._retry !== undefined) {
           delete (config as any)._retry;
         }
+
+        if (config.data instanceof FormData) {
+          delete config.headers['Content-Type'];
+          (config.headers as any)['Content-Type'] = undefined;
+        }
+
         return config;
       },
       (error) => {
