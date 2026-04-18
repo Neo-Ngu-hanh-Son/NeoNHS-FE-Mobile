@@ -41,7 +41,7 @@ export default function TabsNavigator() {
           fontSize: 11,
           fontWeight: '500',
         },
-        animation: 'shift',
+        // animation: 'shift',
       }}>
       <Tab.Screen
         name="Home"
@@ -73,7 +73,7 @@ export default function TabsNavigator() {
           ),
         }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Bookings"
         component={BookingsScreen}
         options={{
@@ -82,17 +82,7 @@ export default function TabsNavigator() {
             <Ionicons name={focused ? 'briefcase' : 'briefcase-outline'} color={color} size={size} />
           ),
         }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} color={color} size={size} />
-          ),
-        }}
-      />
+      /> */}
       <Tab.Screen
         name="TestCart"
         component={CartListScreen}
@@ -110,6 +100,16 @@ export default function TabsNavigator() {
           title: 'Chat',
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? 'chatbubble' : 'chatbubble-outline'} color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'person' : 'person-outline'} color={color} size={size} />
           ),
         }}
       />
