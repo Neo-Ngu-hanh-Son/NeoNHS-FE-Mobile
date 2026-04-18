@@ -35,6 +35,7 @@ import CheckinGalleryScreen from '@/features/profile/screens/CheckinGalleryScree
 import ChatScreen from '@/features/chat/screens/ChatScreen';
 import { FloatingChatButton } from '@/features/chat/components/FloatingChatButton';
 import NotificationsScreen from '@/features/notifications/screens/NotificationsScreen';
+import NotificationDetailScreen from '@/features/notifications/screens/NotificationDetailScreen';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -104,6 +105,11 @@ export default function MainNavigator() {
           name="Notifications"
           component={NotificationsScreen}
           options={{ headerShown: true, title: 'Notifications', headerBackTitle: 'Back' }}
+        />
+        <Stack.Screen
+          name="NotificationDetail"
+          component={NotificationDetailScreen}
+          options={{ headerShown: true, title: 'Details', headerBackTitle: 'Back' }}
         />
       </Stack.Navigator>
       <FloatingChatButton />

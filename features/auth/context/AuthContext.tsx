@@ -119,6 +119,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!state.isAuthenticated || !state.user?.email) return;
 
+    let isFirstFetch = true;
+
     const fetchNotifications = async () => {
       try {
         const response = await apiClient.get<any>('notifications', {
@@ -126,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         const unreadItems = response.data.content.filter((n: any) => !n.isRead);
 
-        if (unreadItems.length > previousUnreadCountRef.current) {
+        if (!isFirstFetch && unreadItems.length > previousUnreadCountRef.current) {
           // Send a local push notification for the newest one
           const newest = unreadItems[0];
           import('expo-notifications').then(Notifications => {
@@ -141,6 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
         }
 
+        isFirstFetch = false;
         previousUnreadCountRef.current = unreadItems.length;
         setUnreadNotificationCount(unreadItems.length);
       } catch (err) {
