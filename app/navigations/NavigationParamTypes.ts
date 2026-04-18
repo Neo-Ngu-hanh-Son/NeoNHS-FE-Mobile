@@ -67,6 +67,12 @@ export type DestinationRoutes = {
 /* Map / Points */
 export type MapRoutes = {
   PointDetail: { pointId: string };
+  PointAllReviews: {
+    pointId: string;
+    pointName: string;
+    averageRating: number;
+    totalRatings: number;
+  };
   PointMapSelection: { pointId: string };
   ActiveNavigation: { pointId: string };
   ArrivalConfirmation: { pointId: string };
@@ -146,6 +152,17 @@ type BaseMainRoutes = {
 /* Notifications */
 export type NotificationRoutes = {
   Notifications: undefined;
+  NotificationDetail: {
+    notification: {
+      id: string;
+      title: string;
+      message: string;
+      type: string;
+      referenceId: string | null;
+      isRead: boolean;
+      createdAt: string;
+    };
+  };
 };
 
 export type MainStackParamList = BaseMainRoutes &

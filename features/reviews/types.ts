@@ -20,6 +20,13 @@ export interface ReviewUser {
   role?: string;
 }
 
+export interface ReviewImage {
+  imageUrl: string;
+  authorName?: string | null;
+  authorId?: string | null;
+  takenDate?: string | null;
+}
+
 /** Single review from GET/POST/PUT */
 export interface ReviewResponse {
   id: string;
@@ -30,6 +37,11 @@ export interface ReviewResponse {
   comment: string | null;
   createdAt: string;
   imageUrls: string[];
+  reviewImages?: ReviewImage[];
+}
+
+export interface PointReviewResponse extends Omit<ReviewResponse, 'imageUrls' | 'reviewImages'> {
+  reviewImages: ReviewImage[];
 }
 
 /** Spring-style page wrapper returned by all review listing endpoints. */

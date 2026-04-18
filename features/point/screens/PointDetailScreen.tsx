@@ -23,7 +23,6 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { logger } from '@/utils/logger';
 import { usePanorama } from '@/app/providers/PanoramaProvider';
-import MAP_CONSTANTS from '@/features/map/constants';
 
 type Props = CompositeScreenProps<
   StackScreenProps<MainStackParamList, 'PointDetail'>,
@@ -151,7 +150,20 @@ export default function PointDetailScreen({ navigation, route }: Props) {
           <PointDetailGallery />
 
           {/* Reviews */}
-          <PointDetailReviews />
+          <PointDetailReviews
+            pointId={pointId}
+            pointName={point.name}
+            averageRating={point.averageRating ?? 0}
+            totalRatings={point.totalRatings ?? 0}
+            onViewAll={() =>
+              navigation.navigate('PointAllReviews', {
+                pointId,
+                pointName: point.name,
+                averageRating: point.averageRating ?? 0,
+                totalRatings: point.totalRatings ?? 0,
+              })
+            }
+          />
         </View>
       </RefreshableScrollView>
 

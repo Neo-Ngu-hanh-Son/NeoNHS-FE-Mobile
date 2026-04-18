@@ -17,6 +17,7 @@ import PreCheckoutScreen from '@/features/cart/screens/PreCheckoutScreen';
 import PaymentScreen from '@/features/cart/screens/PaymentScreen';
 import AllDestinationsScreen from '@/features/discover/screens/AllDestinationsScreen';
 import PointDetailScreen from '@/features/point/screens/PointDetailScreen';
+import PointAllReviewsScreen from '@/features/point/screens/PointAllReviewsScreen';
 import PointMapSelectionScreen from '@/features/discover/screens/PointMapSelectionScreen';
 import ActiveNavigationScreen from '@/features/discover/screens/ActiveNavigationScreen';
 import ArrivalConfirmationScreen from '@/features/discover/screens/ArrivalConfirmationScreen';
@@ -35,6 +36,7 @@ import CheckinGalleryScreen from '@/features/profile/screens/CheckinGalleryScree
 import ChatScreen from '@/features/chat/screens/ChatScreen';
 import { FloatingChatButton } from '@/features/chat/components/FloatingChatButton';
 import NotificationsScreen from '@/features/notifications/screens/NotificationsScreen';
+import NotificationDetailScreen from '@/features/notifications/screens/NotificationDetailScreen';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -69,6 +71,7 @@ export default function MainNavigator() {
         {/* Discover & Points */}
         <Stack.Screen name="AllDestinations" component={AllDestinationsScreen} />
         <Stack.Screen name="PointDetail" component={PointDetailScreen} />
+        <Stack.Screen name="PointAllReviews" component={PointAllReviewsScreen} />
         <Stack.Screen name="PointMapSelection" component={PointMapSelectionScreen} />
         <Stack.Screen name="ActiveNavigation" component={ActiveNavigationScreen} />
         <Stack.Screen name="ArrivalConfirmation" component={ArrivalConfirmationScreen} />
@@ -104,6 +107,11 @@ export default function MainNavigator() {
           name="Notifications"
           component={NotificationsScreen}
           options={{ headerShown: true, title: 'Notifications', headerBackTitle: 'Back' }}
+        />
+        <Stack.Screen
+          name="NotificationDetail"
+          component={NotificationDetailScreen}
+          options={{ headerShown: true, title: 'Details', headerBackTitle: 'Back' }}
         />
       </Stack.Navigator>
       <FloatingChatButton />

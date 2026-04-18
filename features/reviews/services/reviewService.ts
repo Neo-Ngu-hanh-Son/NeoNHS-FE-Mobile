@@ -9,13 +9,14 @@
  * Mutations:
  *   POST /api/reviews  |  PUT /api/reviews/{id}
  */
-import { apiClient, endpoints, ApiResponse } from '@/services/api';
+import { apiClient, endpoints, ApiResponse, PageResponse } from '@/services/api';
 import type {
   CreateReviewRequest,
   ReviewListParams,
   ReviewPageResponse,
   ReviewResponse,
   UpdateReviewRequest,
+  PointReviewResponse,
 } from '../types';
 
 function buildQueryParams(params?: ReviewListParams): Record<string, string | number> {
@@ -31,49 +32,34 @@ function buildQueryParams(params?: ReviewListParams): Record<string, string | nu
 export const reviewService = {
   getWorkshopReviews: async (
     workshopTemplateId: string,
-    params?: ReviewListParams,
+    params?: ReviewListParams
   ): Promise<ApiResponse<ReviewPageResponse>> =>
-    apiClient.get<ReviewPageResponse>(
-      endpoints.reviews.getWorkshopReviews(workshopTemplateId),
-      { params: buildQueryParams(params), requiresAuth: false },
-    ),
+    apiClient.get<ReviewPageResponse>(endpoints.reviews.getWorkshopReviews(workshopTemplateId), {
+      params: buildQueryParams(params),
+      requiresAuth: false,
+    }),
 
-  getEventReviews: async (
-    eventId: string,
-    params?: ReviewListParams,
-  ): Promise<ApiResponse<ReviewPageResponse>> =>
-    apiClient.get<ReviewPageResponse>(
-      endpoints.reviews.getEventReviews(eventId),
-      { params: buildQueryParams(params), requiresAuth: false },
-    ),
+  getEventReviews: async (eventId: string, params?: ReviewListParams): Promise<ApiResponse<ReviewPageResponse>> =>
+    apiClient.get<ReviewPageResponse>(endpoints.reviews.getEventReviews(eventId), {
+      params: buildQueryParams(params),
+      requiresAuth: false,
+    }),
 
   getPointReviews: async (
     pointId: string,
-    params?: ReviewListParams,
-  ): Promise<ApiResponse<ReviewPageResponse>> =>
-    apiClient.get<ReviewPageResponse>(
-      endpoints.reviews.getPointReviews(pointId),
-      { params: buildQueryParams(params), requiresAuth: false },
-    ),
+    params?: ReviewListParams
+  ): Promise<ApiResponse<PageResponse<PointReviewResponse>>> => {
+    return await apiClient.get<PageResponse<PointReviewResponse>>(endpoints.reviews.getPointReviews(pointId), {
+      params: buildQueryParams(params),
+      requiresAuth: false,
+    });
+  },
 
-  createReview: async (
-    request: CreateReviewRequest,
-  ): Promise<ApiResponse<ReviewResponse>> =>
-    apiClient.post<ReviewResponse>(
-      endpoints.reviews.createReview(),
-      request,
-      { requiresAuth: true },
-    ),
+  createReview: async (request: CreateReviewRequest): Promise<ApiResponse<ReviewResponse>> =>
+    apiClient.post<ReviewResponse>(endpoints.reviews.createReview(), request, { requiresAuth: true }),
 
-  updateReview: async (
-    reviewId: string,
-    request: UpdateReviewRequest,
-  ): Promise<ApiResponse<ReviewResponse>> =>
-    apiClient.put<ReviewResponse>(
-      endpoints.reviews.updateReview(reviewId),
-      request,
-      { requiresAuth: true },
-    ),
+  updateReview: async (reviewId: string, request: UpdateReviewRequest): Promise<ApiResponse<ReviewResponse>> =>
+    apiClient.put<ReviewResponse>(endpoints.reviews.updateReview(reviewId), request, { requiresAuth: true }),
 };
 
 export default reviewService;
