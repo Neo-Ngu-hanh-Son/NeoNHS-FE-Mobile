@@ -14,15 +14,17 @@ interface ChatRoomItemProps {
   room: ChatRoomWithDetails;
   onPress: () => void;
   onHide?: () => void;
+  onMarkAsRead?: () => void;
 }
 
-export function ChatRoomItem({ room, onPress, onHide }: ChatRoomItemProps) {
+export function ChatRoomItem({ room, onPress, onHide, onMarkAsRead }: ChatRoomItemProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const swipeableRef = useRef<Swipeable>(null);
 
+  const isAiRoom = room.roomType === 'AI_CHAT';
   const displayParticipant = room.otherParticipant;
-  const displayName = displayParticipant?.fullname || room.name || 'Unknown Chat';
+  const displayName = isAiRoom ? 'Trợ lý NeoNHS' : (displayParticipant?.fullname || room.name || 'Unknown Chat');
   const displayAvatar = displayParticipant?.avatarUrl;
   const formattedTime = formatChatRoomTime(room.lastMessageAt);
   const unreadCount = room.unreadCount ?? 0;
@@ -52,8 +54,32 @@ export function ChatRoomItem({ room, onPress, onHide }: ChatRoomItemProps) {
     );
   };
 
+  // ── Swipe left action (reveals "Read") ───────────────
+  const renderLeftActions = (
+    _progress: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>
+  ) => {
+    const scale = dragX.interpolate({ inputRange: [0, 80], outputRange: [0.5, 1], extrapolate: 'clamp' });
+
+    return (
+      <TouchableOpacity
+        className="items-center justify-center px-5"
+        style={{ backgroundColor: '#3B82F6' }}
+        onPress={() => {
+          swipeableRef.current?.close();
+          if (onMarkAsRead) onMarkAsRead();
+        }}
+        activeOpacity={0.7}>
+        <Animated.View style={{ transform: [{ scale }] }} className="items-center">
+          <Ionicons name="checkmark-done-outline" size={22} color="#FFFFFF" />
+          <Text className="mt-1 text-xs font-medium text-white">Read</Text>
+        </Animated.View>
+      </TouchableOpacity>
+    );
+  };
+
   return (
-    <Swipeable ref={swipeableRef} renderRightActions={renderRightActions} overshootRight={false}>
+    <Swipeable ref={swipeableRef} renderRightActions={renderRightActions} renderLeftActions={renderLeftActions} overshootRight={false} overshootLeft={false}>
       <TouchableOpacity
         className="flex-row items-center px-4 py-3"
         onPress={onPress}
@@ -61,7 +87,13 @@ export function ChatRoomItem({ room, onPress, onHide }: ChatRoomItemProps) {
         style={{ borderBottomWidth: 1, borderBottomColor: theme.border, backgroundColor: theme.background }}>
         {/* Avatar + badge */}
         <View className="relative">
-          {displayAvatar ? (
+          {isAiRoom ? (
+            <View
+              className="h-14 w-14 items-center justify-center rounded-full"
+              style={{ backgroundColor: '#6366f1' }}>
+              <Ionicons name="sparkles" size={28} color="#FFFFFF" />
+            </View>
+          ) : displayAvatar ? (
             <Image source={{ uri: displayAvatar }} className="h-14 w-14 rounded-full bg-gray-200" />
           ) : (
             <View

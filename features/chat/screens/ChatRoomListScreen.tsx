@@ -9,7 +9,6 @@ import { THEME } from "@/lib/theme";
 
 import { ChatRoomItem } from "../components/ChatRoomItem";
 import { useChatContext } from "../context/ChatProvider";
-import { RoomType } from "../types";
 
 type TabKey = "all" | "support" | "artist";
 const TABS: { key: TabKey; label: string }[] = [
@@ -22,7 +21,7 @@ export default function ChatRoomListScreen({ navigation }: any) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
-  const { rooms, isLoadingRooms, hideRoom } = useChatContext();
+  const { rooms, isLoadingRooms, hideRoom, resetUnreadCount } = useChatContext();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<TabKey>("all");
 
@@ -31,7 +30,7 @@ export default function ChatRoomListScreen({ navigation }: any) {
     let list = rooms.filter(r => !r.isHidden); // hide archived rooms
 
     // Tab filter
-    if (activeTab === "support") list = list.filter(r => r.roomType === "SYSTEM_SUPPORT");
+    if (activeTab === "support") list = list.filter(r => r.roomType === "SYSTEM_SUPPORT" || r.roomType === "AI_CHAT");
     else if (activeTab === "artist") list = list.filter(r => r.roomType === "VENDOR_CHAT");
 
     // Search filter
@@ -116,6 +115,9 @@ export default function ChatRoomListScreen({ navigation }: any) {
             room={item}
             onPress={() => navigation.navigate("ChatRoom", { roomId: item.id })}
             onHide={() => hideRoom(item.id)}
+            onMarkAsRead={() => {
+              resetUnreadCount(item.id);
+            }}
           />
         )}
         ListHeaderComponent={renderHeader}

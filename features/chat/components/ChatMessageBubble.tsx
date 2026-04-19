@@ -6,6 +6,7 @@ import { Image } from 'expo-image';
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
+import Markdown from 'react-native-markdown-display';
 import { ChatMessage } from '../types';
 
 export interface ChatMessageBubbleProps {
@@ -60,6 +61,40 @@ export function ChatMessageBubble({
 
   const msgType = message.messageType ?? 'TEXT';
 
+  const markdownStyle = {
+    body: {
+      color: isMine ? '#FFFFFF' : theme.foreground,
+      fontSize: 15,
+      lineHeight: 20,
+    },
+    paragraph: {
+      marginTop: 0,
+      marginBottom: 0,
+    },
+    link: {
+      color: isMine ? '#E5E7EB' : theme.primary,
+      textDecorationLine: 'underline',
+    },
+    strong: {
+      fontWeight: 'bold',
+    },
+    em: {
+      fontStyle: 'italic',
+    },
+    code_inline: {
+      backgroundColor: isMine ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.05)',
+      borderRadius: 4,
+      paddingHorizontal: 4,
+    },
+    image: {
+      borderRadius: 12,
+      width: SCREEN_WIDTH * 0.65,
+      height: 180,
+      marginTop: 8,
+      marginBottom: 8,
+    },
+  } as any;
+
   // ── Render bubble content by type ────────────────────
   const renderContent = () => {
     switch (msgType) {
@@ -113,9 +148,9 @@ export function ChatMessageBubble({
               />
             </TouchableOpacity>
             {message.content ? (
-              <Text className="mt-1.5 text-[15px] leading-5" style={{ color: isMine ? '#FFFFFF' : theme.foreground }}>
-                {message.content}
-              </Text>
+              <View className="mt-1.5 px-2">
+                <Markdown style={markdownStyle}>{message.content}</Markdown>
+              </View>
             ) : null}
 
             {/* Full-screen image modal */}
@@ -164,8 +199,37 @@ export function ChatMessageBubble({
                 </Text>
               )}
               {message.content ? (
-                <Text className="mt-1.5 text-xs" style={{ color: isMine ? '#D1D5DB' : theme.mutedForeground }}>
-                  {message.content}
+                <View className="mt-1.5">
+                  <Markdown style={{ ...markdownStyle, body: { ...markdownStyle.body, fontSize: 13 } }}>
+                    {message.content}
+                  </Markdown>
+                </View>
+              ) : null}
+            </View>
+          </TouchableOpacity>
+        );
+      }
+
+      case 'LOCATION': {
+        const meta = message.metadata;
+        return (
+          <TouchableOpacity
+            activeOpacity={0.8}
+            className="flex-row items-center p-2 min-w-[200px]"
+            onPress={() => {
+              // TODO: Navigate or open Map view
+              // e.g. navigation.navigate('MapScreen', { lat: meta?.lat, lng: meta?.lng })
+            }}>
+            <View className="h-12 w-12 items-center justify-center rounded-xl bg-black/10 dark:bg-white/10 mr-3">
+              <Ionicons name="location" size={26} color={isMine ? '#FFFFFF' : theme.primary} />
+            </View>
+            <View className="flex-1">
+              <Text className="text-sm font-bold" style={{ color: isMine ? '#FFFFFF' : theme.foreground }}>
+                Vị trí đã chia sẻ
+              </Text>
+              {meta?.address ? (
+                <Text className="text-xs mt-0.5" style={{ color: isMine ? '#E5E7EB' : theme.mutedForeground }} numberOfLines={2}>
+                  {meta.address}
                 </Text>
               ) : null}
             </View>
@@ -175,12 +239,17 @@ export function ChatMessageBubble({
 
       default: // TEXT
         return (
-          <Text className="text-[15px] leading-5" style={{ color: isMine ? '#FFFFFF' : theme.foreground }}>
-            {message.content}
-          </Text>
+          <Markdown style={markdownStyle}>{message.content}</Markdown>
         );
     }
   };
+
+  const msgContent = message.content?.trim();
+  const hasMedia = message.mediaUrl || message.metadata || message.messageType === 'IMAGE' || message.messageType === 'LOCATION' || message.messageType === 'PRODUCT_SNIPPET' || message._isUploading;
+
+  if (!msgContent && !hasMedia) {
+    return null;
+  }
 
   return (
     <View className="mb-1">
@@ -199,7 +268,11 @@ export function ChatMessageBubble({
         {!isMine && (
           <View className="mr-2">
             {showAvatar ? (
-              participantAvatar ? (
+              message.senderId === 'AI_ASSISTANT' ? (
+                <View className="h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: '#6366f1' }}>
+                  <Ionicons name="sparkles" size={16} color="#FFFFFF" />
+                </View>
+              ) : participantAvatar ? (
                 <Image source={{ uri: participantAvatar }} className="h-8 w-8 rounded-full bg-gray-200" />
               ) : (
                 <View className="h-8 w-8 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700">
@@ -214,9 +287,8 @@ export function ChatMessageBubble({
 
         {/* Bubble */}
         <View
-          className={`max-w-[75%] rounded-2xl ${isMine ? 'rounded-br-sm' : 'rounded-bl-sm'} ${
-            msgType === 'IMAGE' || msgType === 'PRODUCT_SNIPPET' ? 'overflow-hidden p-1' : 'px-4 py-2.5'
-          }`}
+          className={`max-w-[75%] rounded-2xl ${isMine ? 'rounded-br-sm' : 'rounded-bl-sm'} ${msgType === 'IMAGE' || msgType === 'PRODUCT_SNIPPET' ? 'overflow-hidden p-1' : 'px-4 py-2.5'
+            }`}
           style={{ backgroundColor: isMine ? theme.primary : theme.muted }}>
           {renderContent()}
 

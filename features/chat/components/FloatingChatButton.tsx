@@ -37,11 +37,11 @@ export function FloatingChatButton() {
     if (!isAuthenticated || preloadAttemptedRef.current) return;
     preloadAttemptedRef.current = true;
 
-    const existing = rooms?.find(r => r.roomType === "SYSTEM_SUPPORT");
+    const existing = rooms?.find(r => r.roomType === "AI_CHAT");
     if (existing) {
       setSupportRoomId(existing.id);
     } else {
-      createOrOpenRoom("SYSTEM_SUPPORT", [], "Customer Support")
+      createOrOpenRoom("AI_CHAT", [], "Trợ lý AI")
         .then(room => setSupportRoomId(room.id))
         .catch(err => console.log("Silent support chat preload failed:", err?.message || err));
     }
@@ -69,7 +69,7 @@ export function FloatingChatButton() {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const room = await createOrOpenRoom("SYSTEM_SUPPORT", [], "Customer Support");
+      const room = await createOrOpenRoom("AI_CHAT", [], "Trợ lý AI");
       setSupportRoomId(room.id);
       navigation.navigate("Main", {
         screen: "ChatRoom",
