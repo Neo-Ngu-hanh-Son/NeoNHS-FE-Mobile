@@ -8,6 +8,7 @@ import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import Markdown from 'react-native-markdown-display';
 import { ChatMessage } from '../types';
+import { hasTransferMarker, stripTransferMarker } from '../utils/transferHuman';
 
 export interface ChatMessageBubbleProps {
   message: ChatMessage;
@@ -60,6 +61,12 @@ export function ChatMessageBubble({
   const [imageModalVisible, setImageModalVisible] = useState(false);
 
   const msgType = message.messageType ?? 'TEXT';
+
+  const displayTextContent = (raw: string | undefined) => {
+    const text = raw ?? '';
+    if (hasTransferMarker(text)) return stripTransferMarker(text);
+    return text;
+  };
 
   const markdownStyle = {
     body: {
@@ -149,7 +156,7 @@ export function ChatMessageBubble({
             </TouchableOpacity>
             {message.content ? (
               <View className="mt-1.5 px-2">
-                <Markdown style={markdownStyle}>{message.content}</Markdown>
+                <Markdown style={markdownStyle}>{displayTextContent(message.content)}</Markdown>
               </View>
             ) : null}
 
@@ -201,7 +208,7 @@ export function ChatMessageBubble({
               {message.content ? (
                 <View className="mt-1.5">
                   <Markdown style={{ ...markdownStyle, body: { ...markdownStyle.body, fontSize: 13 } }}>
-                    {message.content}
+                    {displayTextContent(message.content)}
                   </Markdown>
                 </View>
               ) : null}
@@ -239,7 +246,7 @@ export function ChatMessageBubble({
 
       default: // TEXT
         return (
-          <Markdown style={markdownStyle}>{message.content}</Markdown>
+          <Markdown style={markdownStyle}>{displayTextContent(message.content)}</Markdown>
         );
     }
   };

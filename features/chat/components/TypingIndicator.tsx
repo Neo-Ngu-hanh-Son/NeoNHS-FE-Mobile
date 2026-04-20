@@ -50,14 +50,14 @@ export function TypingIndicator() {
   });
 
   return (
-    <View className="flex-row items-center px-16 py-2">
+    <View className="flex-row items-center px-10 py-2">
       <View
         className="flex-row items-center rounded-2xl px-4 py-3"
         style={{ backgroundColor: theme.muted }}
       >
         <RNAnimated.View style={dotStyle(dot1)} />
         <RNAnimated.View style={dotStyle(dot2)} />
-        <RNAnimated.View style={dotStyle(dot3)} />
+        <RNAnimated.View style={dotStyle(dot3)} /> 
       </View>
     </View>
   );

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { View, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,7 +14,12 @@ import { THEME } from '@/lib/theme';
 import { ChatMessageBubble } from '../components/ChatMessageBubble';
 import { TypingIndicator } from '../components/TypingIndicator';
 import { QuickReplies } from '../components/QuickReplies';
-import { formatChatMessageTime, shouldShowTimestamp } from '../utils/helpers';
+import { formatChatMessageTime, mergeServerChatHistory, shouldShowTimestamp } from '../utils/helpers';
+import {
+  hasTransferMarker,
+  isTransferOfferMessage,
+  stripTransferMarker,
+} from '../utils/transferHuman';
 import { ChatMessage, ProductSnippetParams } from '../types';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { useChatContext } from '../context/ChatProvider';
@@ -56,6 +62,8 @@ export default function ChatScreen({ route, navigation }: any) {
     sendTypingStop,
     subscribeToRoomTyping,
     sendReadReceipt,
+    createOrOpenRoom,
+    refetchRooms,
   } = useChatContext();
 
   const [messageText, setMessageText] = useState('');
@@ -63,6 +71,8 @@ export default function ChatScreen({ route, navigation }: any) {
   const [isUploading, setIsUploading] = useState(false);
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [aiStreamingText, setAiStreamingText] = useState('');
+  /** True after SSE `transfer` until WS shows an offer message or user acts (covers generic AI text without marker). */
+  const [aiTransferOfferPending, setAiTransferOfferPending] = useState(false);
   const [refreshingMessages, setRefreshingMessages] = useState(false);
   const abortAiRef = useRef<(() => void) | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -77,6 +87,24 @@ export default function ChatScreen({ route, navigation }: any) {
 
   const messages = messagesByRoom[roomId] || [];
 
+  // Room opened from transfer / deep link may be missing from context until list refetch
+  useFocusEffect(
+    useCallback(() => {
+      if (!roomId) return;
+      if (rooms.some((r) => r.id === roomId)) return;
+      void refetchRooms();
+    }, [roomId, rooms, refetchRooms])
+  );
+
+  // Drop SSE-only pending flag once the persisted AI handover message is in the list
+  useEffect(() => {
+    if (!isAiRoom || !messages[0]) return;
+    const head = messages[0];
+    if (head.senderId === 'AI_ASSISTANT' && isTransferOfferMessage(head, currentUserId)) {
+      setAiTransferOfferPending(false);
+    }
+  }, [isAiRoom, messages, currentUserId]);
+
   const loadRoomHistory = useCallback(async () => {
     if (!roomId) return;
     try {
@@ -85,13 +113,7 @@ export default function ChatScreen({ route, navigation }: any) {
 
       setMessagesByRoom((prev) => {
         const current = prev[roomId] || [];
-        const msgMap = new Map<string, ChatMessage>();
-        historyMsgs.forEach((m) => msgMap.set(m.id, m));
-        current.forEach((m) => msgMap.set(m.id, m));
-
-        const merged = Array.from(msgMap.values()).sort(
-          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-        );
+        const merged = mergeServerChatHistory(historyMsgs, current);
         return { ...prev, [roomId]: merged };
       });
 
@@ -177,6 +199,7 @@ export default function ChatScreen({ route, navigation }: any) {
   const handleSendToAi = (text: string) => {
     if (!roomId || isAiThinking) return;
 
+    setAiTransferOfferPending(false);
     setIsAiThinking(true);
     setAiStreamingText('');
 
@@ -187,8 +210,8 @@ export default function ChatScreen({ route, navigation }: any) {
         if (chunk.type === 'message' && chunk.text) {
           setAiStreamingText((prev) => prev + chunk.text);
         } else if (chunk.type === 'transfer') {
-          // AI handed over to admin
           setAiStreamingText('');
+          setAiTransferOfferPending(true);
         }
       },
       (_fullText) => {
@@ -199,6 +222,7 @@ export default function ChatScreen({ route, navigation }: any) {
       (error) => {
         setIsAiThinking(false);
         setAiStreamingText('');
+        setAiTransferOfferPending(false);
         Alert.alert('AI Error', error || 'Could not get AI response. Please try again.');
 
         // Optionally remove the optimistic message on error if it failed to save
@@ -221,17 +245,21 @@ export default function ChatScreen({ route, navigation }: any) {
 
   const handleTransferYes = async () => {
     if (!roomId) return;
+    setAiTransferOfferPending(false);
     try {
       setIsAiThinking(true); // show loading state visually
-      // Create new support room
-      const newRoom = await ChatRestService.createRoom("SYSTEM_SUPPORT", [], "Customer Support");
+      // Use context so the room (and admin otherParticipant) is in `rooms` before navigation
+      const newRoom = await createOrOpenRoom("SYSTEM_SUPPORT", [], "Customer Support");
 
-      // Find the last unanswered user question
-      const transferPromptText = "Câu hỏi vượt quá khả năng trả lời của tôi bạn có muốn trò chuyện với Admin để được giải đáp không";
-      const transferPromptIndex = messages.findIndex(m => m.content === transferPromptText);
       let unansweredMessageStr = "Khách hàng muốn chuyển sang gặp Admin hỗ trợ.";
-      if (transferPromptIndex !== -1 && messages[transferPromptIndex + 1]) {
-        unansweredMessageStr = `[Chuyển từ Trợ lý AI]: ${messages[transferPromptIndex + 1].content}`;
+      const transferIdx = messages.findIndex((m) => isTransferOfferMessage(m, currentUserId));
+      if (transferIdx !== -1) {
+        const userFollowUp = messages[transferIdx + 1];
+        if (userFollowUp?.senderId === currentUserId) {
+          unansweredMessageStr = `[Chuyển từ Trợ lý AI]: ${userFollowUp.content}`;
+        }
+      } else if (messages[0]?.senderId === currentUserId) {
+        unansweredMessageStr = `[Chuyển từ Trợ lý AI]: ${messages[0].content}`;
       }
 
       // Navigate to the new room
@@ -250,6 +278,7 @@ export default function ChatScreen({ route, navigation }: any) {
 
   const handleTransferNo = () => {
     if (!roomId) return;
+    setAiTransferOfferPending(false);
     handleSendToAi('Không, cảm ơn.');
   };
 
@@ -439,18 +468,59 @@ export default function ChatScreen({ route, navigation }: any) {
             />
           }
           ListHeaderComponent={
-            isOtherTyping ? <TypingIndicator /> :
-              isAiThinking ? (
-                <View className="px-4 py-2">
-                  {aiStreamingText ? (
+            isOtherTyping ? (
+              <TypingIndicator />
+            ) : isAiThinking ? (
+              <View className="px-4 py-2">
+                {aiStreamingText ? (
+                  <>
                     <View className="max-w-[80%] rounded-2xl rounded-bl-sm px-4 py-3" style={{ backgroundColor: theme.muted }}>
-                      <Text className="text-sm" style={{ color: theme.foreground }}>{aiStreamingText}</Text>
+                      <Text className="text-sm" style={{ color: theme.foreground }}>
+                        {stripTransferMarker(aiStreamingText)}
+                      </Text>
                     </View>
-                  ) : (
-                    <TypingIndicator />
-                  )}
+                    {isAiRoom && hasTransferMarker(aiStreamingText) && (
+                      <View className="mt-2 flex-row items-center">
+                        <TouchableOpacity
+                          onPress={handleTransferYes}
+                          className="mr-2 rounded-full px-4 py-2"
+                          style={{ backgroundColor: theme.primary }}>
+                          <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>Sẵn lòng</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={handleTransferNo}
+                          className="rounded-full border px-4 py-2"
+                          style={{ borderColor: theme.border, backgroundColor: theme.muted }}>
+                          <Text style={{ color: theme.foreground, fontWeight: 'bold' }}>Không cần</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </>
+                ) : (
+                  <TypingIndicator />
+                )}
+              </View>
+            ) : isAiRoom &&
+              aiTransferOfferPending &&
+              messages[0] &&
+              messages[0].senderId === currentUserId ? (
+              <View className="px-4 py-2">
+                <View className="mt-1 flex-row items-center">
+                  <TouchableOpacity
+                    onPress={handleTransferYes}
+                    className="mr-2 rounded-full px-4 py-2"
+                    style={{ backgroundColor: theme.primary }}>
+                    <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>Sẵn lòng</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleTransferNo}
+                    className="rounded-full border px-4 py-2"
+                    style={{ borderColor: theme.border, backgroundColor: theme.muted }}>
+                    <Text style={{ color: theme.foreground, fontWeight: 'bold' }}>Không cần</Text>
+                  </TouchableOpacity>
                 </View>
-              ) : null
+              </View>
+            ) : null
           }
           renderItem={({ item, index }) => {
             const isMine = item.senderId === currentUserId && item.senderId !== 'AI_ASSISTANT';
@@ -467,6 +537,13 @@ export default function ChatScreen({ route, navigation }: any) {
               }
             }
 
+            const showHumanTransferRow =
+              isAiRoom &&
+              index === 0 &&
+              !isMine &&
+              (isTransferOfferMessage(item, currentUserId) ||
+                (aiTransferOfferPending && item.senderId === 'AI_ASSISTANT'));
+
             return (
               <View>
                 <ChatMessageBubble
@@ -478,20 +555,18 @@ export default function ChatScreen({ route, navigation }: any) {
                   participantAvatar={displayAvatar}
                   onProductSnippetPress={(workshopId) => navigation.navigate('WorkshopDetail', { workshopId })}
                 />
-                {!isMine && item.content === "Câu hỏi vượt quá khả năng trả lời của tôi bạn có muốn trò chuyện với Admin để được giải đáp không" && index === 0 && (
-                  <View className="flex-row items-center ml-[44px] mt-1 mb-2">
+                {showHumanTransferRow && (
+                  <View className="ml-[44px] mt-1 mb-2 flex-row items-center">
                     <TouchableOpacity
                       onPress={handleTransferYes}
                       className="mr-2 rounded-full px-4 py-2"
-                      style={{ backgroundColor: theme.primary }}
-                    >
+                      style={{ backgroundColor: theme.primary }}>
                       <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>Sẵn lòng</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={handleTransferNo}
                       className="rounded-full border px-4 py-2"
-                      style={{ borderColor: theme.border, backgroundColor: theme.muted }}
-                    >
+                      style={{ borderColor: theme.border, backgroundColor: theme.muted }}>
                       <Text style={{ color: theme.foreground, fontWeight: 'bold' }}>Không cần</Text>
                     </TouchableOpacity>
                   </View>

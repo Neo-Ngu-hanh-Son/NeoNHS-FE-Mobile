@@ -49,6 +49,8 @@ export interface ChatMessage {
     lat?: number;
     lng?: number;
     address?: string;
+    /** When true, show transfer-to-human CTAs (set by backend on AI handover). */
+    transferToHuman?: boolean;
     [key: string]: any;
   } | null;
 
