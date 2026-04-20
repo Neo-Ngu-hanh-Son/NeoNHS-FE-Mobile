@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, Modal, Dimensions } from 'react-native';
+import { View, TouchableOpacity, Modal, Dimensions, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 
@@ -17,7 +17,8 @@ export interface ChatMessageBubbleProps {
   showTimestamp: boolean;
   timestampString: string;
   participantAvatar?: string | null;
-  onProductSnippetPress?: (workshopId: string) => void;
+  onProductSnippetPress?: (id: string, type?: 'workshop' | 'event') => void;
+  onGoToCart?: () => void;
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -55,18 +56,13 @@ export function ChatMessageBubble({
   timestampString,
   participantAvatar,
   onProductSnippetPress,
+  onGoToCart,
 }: ChatMessageBubbleProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const [imageModalVisible, setImageModalVisible] = useState(false);
 
   const msgType = message.messageType ?? 'TEXT';
-
-  const displayTextContent = (raw: string | undefined) => {
-    const text = raw ?? '';
-    if (hasTransferMarker(text)) return stripTransferMarker(text);
-    return text;
-  };
 
   const markdownStyle = {
     body: {
@@ -96,9 +92,10 @@ export function ChatMessageBubble({
     image: {
       borderRadius: 12,
       width: SCREEN_WIDTH * 0.65,
-      height: 180,
+      height: 150,
       marginTop: 8,
       marginBottom: 8,
+      backgroundColor: isDarkColorScheme ? '#374151' : '#F3F4F6',
     },
   } as any;
 
@@ -156,7 +153,76 @@ export function ChatMessageBubble({
             </TouchableOpacity>
             {message.content ? (
               <View className="mt-1.5 px-2">
-                <Markdown style={markdownStyle}>{displayTextContent(message.content)}</Markdown>
+                <Markdown
+                  style={markdownStyle}
+                  onLinkPress={(url) => {
+                    if (url.startsWith('neo-nhs://')) {
+                      const parts = url.replace('neo-nhs://', '').split('/');
+                      const type = parts[0] === 'event' ? 'event' : 'workshop';
+                      const id = parts[1];
+                      if (id) onProductSnippetPress?.(id, type);
+                      return false;
+                    }
+                    Linking.openURL(url).catch(() => { });
+                    return true;
+                  }}
+                  rules={{
+                    image: (node: any) => {
+                      const { src, alt } = node.attributes;
+                      const parts = alt ? alt.split('|') : [];
+                      const title = parts[0]?.trim();
+                      const idPart = parts.find((p: string) => p.trim().toUpperCase().startsWith('ID:'));
+                      const typePart = parts.find((p: string) => p.trim().toUpperCase().startsWith('TYPE:'));
+
+                      const id = idPart ? idPart.split(':')[1]?.trim() : null;
+                      const type = typePart ? typePart.split(':')[1]?.trim().toLowerCase() : 'workshop';
+
+                      if (id) {
+                        return (
+                          <TouchableOpacity
+                            key={node.key}
+                            activeOpacity={0.8}
+                            onPress={() => onProductSnippetPress?.(id, type as any)}
+                            className="flex-row items-center p-2 my-2 rounded-xl border"
+                            style={{
+                              width: '100%',
+                              backgroundColor: isDarkColorScheme ? 'rgba(255,255,255,0.05)' : '#FFFFFF',
+                              borderColor: theme.border,
+                            }}>
+                            <Image
+                              source={{ uri: src }}
+                              className="rounded-lg"
+                              contentFit="cover"
+                              style={{ width: 60, height: 60 }}
+                            />
+                            <View className="flex-1 ml-3">
+                              <Text
+                                className="text-xs font-bold"
+                                style={{ color: theme.foreground }}
+                                numberOfLines={2}>
+                                {title}
+                              </Text>
+                              <Text className="text-[10px] font-bold mt-1" style={{ color: theme.primary }}>
+                                Nhấn để xem chi tiết →
+                              </Text>
+                            </View>
+                          </TouchableOpacity>
+                        );
+                      }
+
+                      return (
+                        <Image
+                          key={node.key}
+                          source={{ uri: src }}
+                          style={markdownStyle.image}
+                          contentFit="cover"
+                        />
+                      );
+                    },
+                  }}
+                >
+                  {message.content}
+                </Markdown>
               </View>
             ) : null}
 
@@ -181,39 +247,117 @@ export function ChatMessageBubble({
       case 'PRODUCT_SNIPPET': {
         const meta = message.metadata;
         return (
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => meta?.workshopId && onProductSnippetPress?.(meta.workshopId)}
-            style={{ width: SCREEN_WIDTH * 0.6 }}>
-            {meta?.thumbnailUrl && (
-              <Image
-                source={{ uri: meta.thumbnailUrl }}
-                className="rounded-t-xl"
-                contentFit="cover"
-                style={{ width: '100%', height: 120 }}
-              />
-            )}
-            <View className="p-3">
-              <Text
-                className="text-sm font-bold"
-                style={{ color: isMine ? '#FFFFFF' : theme.foreground }}
-                numberOfLines={2}>
-                {meta?.title ?? 'Workshop'}
-              </Text>
-              {meta?.price != null && (
-                <Text className="mt-1 text-xs" style={{ color: isMine ? '#E5E7EB' : theme.mutedForeground }}>
-                  {meta.price.toLocaleString('vi-VN')} ₫
-                </Text>
+          <View className="p-1">
+            {/* Clickable Card Snippet */}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                const id = meta?.workshopId || meta?.eventId;
+                const type = meta?.workshopId ? 'workshop' : 'event';
+                if (id) onProductSnippetPress?.(id, type as any);
+              }}
+              className="flex-row items-center p-2 rounded-xl border"
+              style={{
+                width: '100%',
+                backgroundColor: isDarkColorScheme ? 'rgba(255,255,255,0.05)' : '#FFFFFF',
+                borderColor: theme.border,
+              }}>
+              {meta?.thumbnailUrl && (
+                <Image
+                  source={{ uri: meta.thumbnailUrl }}
+                  className="rounded-lg"
+                  contentFit="cover"
+                  style={{ width: 60, height: 60 }}
+                />
               )}
-              {message.content ? (
-                <View className="mt-1.5">
-                  <Markdown style={{ ...markdownStyle, body: { ...markdownStyle.body, fontSize: 13 } }}>
-                    {displayTextContent(message.content)}
-                  </Markdown>
+              <View className="flex-1 ml-3">
+                <Text
+                  className="text-xs font-bold"
+                  style={{ color: isMine ? '#FFFFFF' : theme.foreground }}
+                  numberOfLines={2}>
+                  {meta?.title ?? 'Workshop'}
+                </Text>
+                {meta?.price != null && (
+                  <Text className="mt-1 text-[11px] font-semibold" style={{ color: theme.primary }}>
+                    {typeof meta.price === 'number' ? meta.price.toLocaleString('vi-VN') : meta.price} ₫
+                  </Text>
+                )}
+                <View className="mt-1">
+                  <Text className="text-[10px] font-bold" style={{ color: theme.primary }}>
+                    Nhấn để xem chi tiết →
+                  </Text>
                 </View>
-              ) : null}
-            </View>
-          </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+
+            {/* AI Explanation Text */}
+            {message.content ? (
+              <View className="mt-3 px-2 pb-1">
+                <Markdown
+                  style={{ ...markdownStyle, body: { ...markdownStyle.body, fontSize: 14, lineHeight: 20 } }}
+                  onLinkPress={(url) => {
+                    if (url.startsWith('neo-nhs://')) {
+                      const parts = url.replace('neo-nhs://', '').split('/');
+                      const type = parts[0] === 'event' ? 'event' : 'workshop';
+                      const id = parts[1];
+                      if (id) onProductSnippetPress?.(id, type);
+                      return false;
+                    }
+                    Linking.openURL(url).catch(() => { });
+                    return true;
+                  }}
+                  rules={{
+                    image: (node: any) => {
+                      const { src, alt } = node.attributes;
+                      const parts = alt ? alt.split('|') : [];
+                      const title = parts[0]?.trim();
+                      const idPart = parts.find((p: string) => p.trim().toUpperCase().startsWith('ID:'));
+                      const typePart = parts.find((p: string) => p.trim().toUpperCase().startsWith('TYPE:'));
+
+                      const id = idPart ? idPart.split(':')[1]?.trim() : null;
+                      const type = typePart ? typePart.split(':')[1]?.trim().toLowerCase() : 'workshop';
+
+                      if (id) {
+                        return (
+                          <TouchableOpacity
+                            key={node.key}
+                            activeOpacity={0.8}
+                            onPress={() => onProductSnippetPress?.(id, type as any)}
+                            className="flex-row items-center p-2 my-2 rounded-xl border"
+                            style={{
+                              width: '100%',
+                              backgroundColor: isDarkColorScheme ? 'rgba(255,255,255,0.05)' : '#FFFFFF',
+                              borderColor: theme.border,
+                            }}>
+                            <Image
+                              source={{ uri: src }}
+                              className="rounded-lg"
+                              contentFit="cover"
+                              style={{ width: 60, height: 60 }}
+                            />
+                            <View className="flex-1 ml-3">
+                              <Text
+                                className="text-xs font-bold"
+                                style={{ color: theme.foreground }}
+                                numberOfLines={2}>
+                                {title}
+                              </Text>
+                              <Text className="text-[10px] font-bold mt-1" style={{ color: theme.primary }}>
+                                Nhấn để xem chi tiết →
+                              </Text>
+                            </View>
+                          </TouchableOpacity>
+                        );
+                      }
+                      return null;
+                    },
+                  }}
+                >
+                  {message.content}
+                </Markdown>
+              </View>
+            ) : null}
+          </View>
         );
       }
 
@@ -246,7 +390,87 @@ export function ChatMessageBubble({
 
       default: // TEXT
         return (
-          <Markdown style={markdownStyle}>{displayTextContent(message.content)}</Markdown>
+          <View>
+            <Markdown
+              style={markdownStyle}
+              onLinkPress={(url) => {
+                if (url.startsWith('neo-nhs://')) {
+                  const parts = url.replace('neo-nhs://', '').split('/');
+                  const type = parts[0] === 'event' ? 'event' : 'workshop';
+                  const id = parts[1];
+                  if (id) onProductSnippetPress?.(id, type);
+                  return false;
+                }
+                Linking.openURL(url).catch(() => { });
+                return true;
+              }}
+              rules={{
+                image: (node: any) => {
+                  const { src, alt } = node.attributes;
+                  const parts = alt ? alt.split('|') : [];
+                  const title = parts[0]?.trim();
+                  const idPart = parts.find((p: string) => p.trim().toUpperCase().startsWith('ID:'));
+                  const typePart = parts.find((p: string) => p.trim().toUpperCase().startsWith('TYPE:'));
+
+                  const id = idPart ? idPart.split(':')[1]?.trim() : null;
+                  const type = typePart ? typePart.split(':')[1]?.trim().toLowerCase() : 'workshop';
+
+                  if (id) {
+                    return (
+                      <TouchableOpacity
+                        key={node.key}
+                        activeOpacity={0.8}
+                        onPress={() => onProductSnippetPress?.(id, type as any)}
+                        className="flex-row items-center p-2 my-2 rounded-xl border"
+                        style={{
+                          width: '100%',
+                          backgroundColor: isDarkColorScheme ? 'rgba(255,255,255,0.05)' : '#FFFFFF',
+                          borderColor: theme.border,
+                        }}>
+                        <Image
+                          source={{ uri: src }}
+                          className="rounded-lg"
+                          contentFit="cover"
+                          style={{ width: 60, height: 60 }}
+                        />
+                        <View className="flex-1 ml-3">
+                          <Text
+                            className="text-xs font-bold"
+                            style={{ color: theme.foreground }}
+                            numberOfLines={2}>
+                            {title}
+                          </Text>
+                          <Text className="text-[10px] font-bold mt-1" style={{ color: theme.primary }}>
+                            Nhấn để xem chi tiết →
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  }
+
+                  return (
+                    <Image
+                      key={node.key}
+                      source={{ uri: src }}
+                      style={markdownStyle.image}
+                      contentFit="cover"
+                    />
+                  );
+                },
+              }}
+            >
+              {message.content}
+            </Markdown>
+            {message.metadata?.redirectToCart && (
+              <TouchableOpacity
+                onPress={onGoToCart}
+                className="mt-3 p-3 rounded-xl flex-row items-center justify-center shadow-sm"
+                style={{ backgroundColor: theme.primary }}>
+                <Ionicons name="cart" size={18} color="#FFF" />
+                <Text className="ml-2 text-white font-bold text-sm">Tới Giỏ hàng Ngay</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         );
     }
   };

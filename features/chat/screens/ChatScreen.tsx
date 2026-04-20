@@ -553,7 +553,17 @@ export default function ChatScreen({ route, navigation }: any) {
                   showTimestamp={showTs}
                   timestampString={formatChatMessageTime(item.timestamp)}
                   participantAvatar={displayAvatar}
-                  onProductSnippetPress={(workshopId) => navigation.navigate('WorkshopDetail', { workshopId })}
+                  onProductSnippetPress={(id, type) => {
+                    if (type === 'event') {
+                      navigation.navigate('EventDetail', { eventId: id });
+                    } else {
+                      navigation.navigate('WorkshopDetail', { workshopId: id });
+                    }
+                  }}
+                  onGoToCart={() => {
+                    // @ts-ignore
+                    navigation.navigate('TestCart');
+                  }}
                 />
                 {showHumanTransferRow && (
                   <View className="ml-[44px] mt-1 mb-2 flex-row items-center">
