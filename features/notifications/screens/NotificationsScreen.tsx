@@ -3,11 +3,12 @@ import { View, Text, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity, 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
-import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
+//import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { apiClient } from '@/services/api/client';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { THEME } from '@/lib/theme';
 import { useTheme } from '@/app/providers/ThemeProvider';
+import { useTranslation } from 'react-i18next';
 
 type Notification = {
   id: string;
@@ -33,6 +34,7 @@ export default function NotificationsScreen() {
   const navigation = useNavigation<any>();
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const { t } = useTranslation();
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -162,7 +164,7 @@ export default function NotificationsScreen() {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Ionicons name="notifications-off-outline" size={64} color={theme.mutedForeground} />
-              <Text style={[styles.emptyText, { color: theme.mutedForeground }]}>No notifications yet</Text>
+              <Text style={[styles.emptyText, { color: theme.mutedForeground }]}>{t('notifications.empty')}</Text>
             </View>
           }
           contentContainerStyle={notifications.length === 0 ? styles.emptyList : styles.listContent}

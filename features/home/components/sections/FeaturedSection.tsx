@@ -8,6 +8,7 @@ import SectionHeader from '../SectionHeader';
 import FeaturedCard from '../FeaturedEventCard';
 import BlogCardSkeleton from '@/components/common/BlogCardSkeleton';
 import SectionStateMessage from './SectionStateMessage';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   featuredBlog: BlogResponse | null | undefined;
@@ -22,6 +23,7 @@ type HomeScreenProps = CompositeScreenProps<
 
 export default function FeaturedSection({ featuredBlog, loading, error }: Props) {
   const { navigate } = useNavigation<HomeScreenProps['navigation']>();
+  const { t } = useTranslation();
 
   function handleHeroPress(): void {
     if (!featuredBlog?.id) {
@@ -34,7 +36,7 @@ export default function FeaturedSection({ featuredBlog, loading, error }: Props)
   if (error) {
     return (
       <View className="mb-4">
-        <SectionHeader title="Featured" />
+        <SectionHeader title={t('home.featured')} />
         <SectionStateMessage
           tone="error"
           message="Failed to fetch featured content. Please pull to refresh."
@@ -46,7 +48,7 @@ export default function FeaturedSection({ featuredBlog, loading, error }: Props)
   if (loading) {
     return (
       <View className="mb-4">
-        <SectionHeader title="Featured" />
+        <SectionHeader title={t('home.featured')} />
         <BlogCardSkeleton horizontal />
       </View>
     );
@@ -55,7 +57,7 @@ export default function FeaturedSection({ featuredBlog, loading, error }: Props)
   if (!featuredBlog) {
     return (
       <View className="mb-4">
-        <SectionHeader title="Featured" />
+        <SectionHeader title={t('home.featured')} />
         <SectionStateMessage message="No featured content found." />
       </View>
     );
@@ -63,7 +65,7 @@ export default function FeaturedSection({ featuredBlog, loading, error }: Props)
 
   return (
     <View className="mb-4">
-      <SectionHeader title="Featured" />
+      <SectionHeader title={t('home.featured')} />
       <FeaturedCard
         tag={featuredBlog.blogCategory?.name || 'General'}
         title={featuredBlog.title}

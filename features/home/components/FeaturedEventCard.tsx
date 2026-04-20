@@ -4,6 +4,7 @@ import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SmartImageBackground } from '@/components/ui/smart-image';
+import { useTranslation } from 'react-i18next';
 
 type FeaturedEventCardProps = {
   tag?: string;
@@ -14,6 +15,8 @@ type FeaturedEventCardProps = {
 };
 
 export default function FeaturedCard({ tag = 'EVENT', title, description, imageUrl, onPress }: FeaturedEventCardProps) {
+  const { t } = useTranslation();
+
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.9} className="mx-4 h-80 overflow-hidden rounded-2xl">
       <SmartImageBackground uri={imageUrl} className="flex-1" imageStyle={{ borderRadius: 16 }}>
@@ -36,7 +39,7 @@ export default function FeaturedCard({ tag = 'EVENT', title, description, imageU
 
             {/* CTA Button */}
             <Button onPress={onPress} className="h-auto self-start rounded-full px-4 py-2" size="sm">
-              <Text className="text-sm font-semibold text-white">Start Exploring</Text>
+              <Text className="text-sm font-semibold text-white">{t('home.start_exploring')}</Text>
               <Ionicons name="arrow-forward" size={16} color="#fff" />
             </Button>
           </View>

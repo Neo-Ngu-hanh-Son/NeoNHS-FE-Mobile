@@ -13,6 +13,7 @@ import { BLOG_DEFAULT_FILTERS } from '@/features/blog/types';
 import type { Blog, BlogFilters } from '@/features/blog/types';
 import { Button } from '@/components/ui/button';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 type Props = StackScreenProps<MainStackParamList, 'BlogList'>;
 
@@ -21,6 +22,7 @@ export default function BlogListScreen({ navigation }: Props) {
   const [isFilterModalVisible, setFilterModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const listRef = useRef<FlatList<Blog>>(null);
+  const { t } = useTranslation();
 
   const { currentFilters, setFilters } = useBlogFilters(BLOG_DEFAULT_FILTERS);
 
@@ -81,7 +83,7 @@ export default function BlogListScreen({ navigation }: Props) {
           className="rounded-full bg-black/30">
           <Ionicons name="arrow-back" size={22} color="white" />
         </Button>
-        <Text className="px-4 pt-3 text-2xl font-bold text-foreground">Blogs</Text>
+        <Text className="px-4 pt-3 text-2xl font-bold text-foreground">{t('blog.title')}</Text>
       </View>
       <BlogListHeader
         search={search}

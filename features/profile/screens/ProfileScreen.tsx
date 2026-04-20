@@ -16,6 +16,9 @@ import { logger } from '@/utils/logger';
 import type { RootStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { userService } from '../services/userService';
 import ActionCard from '../components/ActionCard';
+import { useLanguage } from '@/app/providers/LanguageProvider';
+import { useTranslation } from 'react-i18next';
+import { useModal } from '@/app/providers/ModalProvider';
 
 type ProfileNavigationProp = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Profile'>,
@@ -29,6 +32,10 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
   const isFocused = useIsFocused();
   const isFetchingProfileRef = useRef(false);
   const lastFetchAtRef = useRef(0);
+  
+  const { language, setLanguage } = useLanguage();
+  const { t } = useTranslation();
+  const { alert } = useModal();
 
   // Minimum interval between profile fetches to prevent excessive re-renders
   const PROFILE_FETCH_COOLDOWN_MS = 30_000;
@@ -71,10 +78,10 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
   }, [fetchProfile, isAuthenticated, isFocused]);
 
   const handleLogout = () => {
-    Alert.alert('Sign Out', 'Are you sure?', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('profile.sign_out_confirm_title'), t('profile.sign_out_confirm_message'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Sign Out',
+        text: t('profile.sign_out'),
         style: 'destructive',
         onPress: async () => {
           try {
@@ -97,15 +104,15 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
         <View style={styles.contentGuest}>
           <Text className="mb-6 text-2xl font-bold" style={{ color: theme.foreground }}>
-            Profile
+            {t('profile.title')}
           </Text>
           <View style={[styles.guestCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Ionicons name="person-outline" size={48} color={theme.mutedForeground} />
             <Text className="mt-4 text-xl font-semibold" style={{ color: theme.foreground }}>
-              Welcome, Guest!
+              {t('profile.guest_welcome')}
             </Text>
             <Button className="mt-6 w-full" onPress={handleLogin}>
-              <Text style={{ color: '#fff' }}>Sign In</Text>
+              <Text style={{ color: '#fff' }}>{t('common.sign_in')}</Text>
             </Button>
           </View>
         </View>
@@ -121,7 +128,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
         style={[styles.blueHeader, { backgroundColor: isDarkColorScheme ? theme.background : THEME.light.primary }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <MaterialIcons name="chevron-left" size={28} color="white" />
-          <Text className="text-lg font-medium text-white">Back</Text>
+          <Text className="text-lg font-medium text-white">{t('common.back')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
 
@@ -143,7 +150,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
                   {user.fullname || 'User'}
                 </Text>
                 <TouchableOpacity onPress={handleEditProfile}>
-                  <Text className="text-xs font-medium text-primary">Edit Profile</Text>
+                  <Text className="text-xs font-medium text-primary">{t('profile.edit_profile')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -154,7 +161,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
                 <MaterialIcons name="stars" size={16} color="white" />
               </View>
               <View>
-                <Text style={styles.pointsLabel}>Your Points</Text>
+                <Text style={styles.pointsLabel}>{t('profile.your_points')}</Text>
                 <Text style={styles.pointsValue}>{(user.userPoint ?? 0).toLocaleString('en-US')}</Text>
               </View>
             </View>
@@ -171,9 +178,9 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
                   <MaterialIcons name="verified-user" size={24} color={THEME.light.primary} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.cardTitle, { color: theme.foreground }]}>Verify Account</Text>
+                  <Text style={[styles.cardTitle, { color: theme.foreground }]}>{t('profile.kyc.verify_account')}</Text>
                   <Text style={[styles.cardDesc, { color: theme.mutedForeground }]}>
-                    Verify your identity with CCCD for payback
+                    {t('profile.kyc.verify_desc')}
                   </Text>
                 </View>
               </View>
@@ -186,8 +193,8 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
                   <MaterialIcons name="check-circle" size={24} color="#22C55E" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.cardTitle, { color: theme.foreground }]}>Account Verified</Text>
-                  <Text style={[styles.cardDesc, { color: '#22C55E' }]}>Your identity has been verified</Text>
+                  <Text style={[styles.cardTitle, { color: theme.foreground }]}>{t('profile.kyc.verified')}</Text>
+                  <Text style={[styles.cardDesc, { color: '#22C55E' }]}>{t('profile.kyc.verified_desc')}</Text>
                 </View>
               </View>
               <MaterialIcons name="verified" size={22} color="#22C55E" />
@@ -197,10 +204,12 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
           {/* Admin/Vendor Actions */}
           {(user.role === 'ADMIN' || user.role === 'VENDOR') && (
             <View style={{ marginBottom: 20 }}>
-              <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>MANAGEMENT</Text>
+              <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>
+                {t('profile.sections.management').toUpperCase()}
+              </Text>
               <ActionCard
-                title="Verify Ticket"
-                desc="Scan QR code to verify customer tickets"
+                title={t('profile.actions.verify_ticket')}
+                desc={t('profile.actions.verify_ticket_desc')}
                 rightIcon={<MaterialIcons name="qr-code-scanner" size={20} color={theme.primary} />}
                 themeCard={theme.card}
                 themeBorder={theme.border}
@@ -213,10 +222,12 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
 
           {/* Wallet Section */}
           <View style={{ marginBottom: 8 }}>
-            <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>WALLET</Text>
+            <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>
+              {t('profile.sections.wallet').toUpperCase()}
+            </Text>
             <ActionCard
-              title="Withdraw Money"
-              desc="Transfer your balance to your bank account"
+              title={t('profile.actions.withdraw')}
+              desc={t('profile.actions.withdraw_desc')}
               rightIcon={<MaterialIcons name="account-balance-wallet" size={20} color={theme.primary} />}
               themeCard={theme.card}
               themeBorder={theme.border}
@@ -228,8 +239,8 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
 
           {/* Các mục chức năng */}
           <ActionCard
-            title="Your Order"
-            desc="View your order and transaction history here"
+            title={t('profile.actions.your_order')}
+            desc={t('profile.actions.your_order_desc')}
             themeCard={theme.card}
             themeBorder={theme.border}
             themeForeground={theme.foreground}
@@ -237,8 +248,8 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
             onPress={() => navigation.navigate('Main', { screen: 'TransactionHistory' })}
           />
           <ActionCard
-            title="Check-in Photos"
-            desc="Browse all your check-in images grouped by destination or date"
+            title={t('profile.actions.checkin_photos')}
+            desc={t('profile.actions.checkin_photos_desc')}
             rightIcon={<Ionicons name="images-outline" size={20} color={theme.primary} />}
             themeCard={theme.card}
             themeBorder={theme.border}
@@ -247,8 +258,8 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
             onPress={() => navigation.navigate('Main', { screen: 'CheckinGallery' })}
           />
           <ActionCard
-            title="Payment Method"
-            desc="Save your preferred payment method for smoother transactions"
+            title={t('profile.actions.payment_method')}
+            desc={t('profile.actions.payment_method_desc')}
             themeCard={theme.card}
             themeBorder={theme.border}
             themeForeground={theme.foreground}
@@ -256,8 +267,8 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
             onPress={() => {}}
           />
           <ActionCard
-            title="Coupon & Voucher"
-            desc="Claim vouchers and discounts for reduced prices or free shipping"
+            title={t('profile.actions.coupon_voucher')}
+            desc={t('profile.actions.coupon_voucher_desc')}
             themeCard={theme.card}
             themeBorder={theme.border}
             themeForeground={theme.foreground}
@@ -265,8 +276,8 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
             onPress={() => {}}
           />
           <ActionCard
-            title="Support Center"
-            desc="Find the best answer to your question"
+            title={t('profile.actions.support_center')}
+            desc={t('profile.actions.support_center_desc')}
             themeCard={theme.card}
             themeBorder={theme.border}
             themeForeground={theme.foreground}
@@ -275,10 +286,12 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
           />
 
           <View style={styles.settingsSection}>
-            <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>SECURITY</Text>
+            <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>
+              {t('profile.sections.security').toUpperCase()}
+            </Text>
             <ActionCard
-              title="Change Password"
-              desc="Update your account password for better security"
+              title={t('profile.actions.change_password')}
+              desc={t('profile.actions.change_password_desc')}
               rightIcon={<Ionicons name="chevron-forward" size={16} color={theme.mutedForeground} />}
               themeCard={theme.card}
               themeBorder={theme.border}
@@ -289,11 +302,13 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
           </View>
 
           <View style={styles.settingsSection}>
-            <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>PREFERENCES</Text>
+            <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>
+              {t('profile.sections.preferences').toUpperCase()}
+            </Text>
 
             <ActionCard
-              title="Dark Mode"
-              desc="Toggle between light and dark visual themes"
+              title={t('profile.actions.dark_mode')}
+              desc={t('profile.actions.dark_mode_desc')}
               rightIcon={<Switch checked={isDarkColorScheme} onCheckedChange={toggleColorScheme} />}
               themeCard={theme.card}
               themeBorder={theme.border}
@@ -303,11 +318,13 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
 
             <View style={{ marginTop: 12 }}>
               <ActionCard
-                title="Language"
-                desc="Choose your preferred language"
+                title={t('profile.actions.language')}
+                desc={t('profile.actions.language_desc')}
                 rightIcon={
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={{ color: theme.mutedForeground, fontSize: 12, marginRight: 4 }}>English</Text>
+                    <Text style={{ color: theme.mutedForeground, fontSize: 12, marginRight: 4 }}>
+                      {t(`language.${language}`)}
+                    </Text>
                     <Ionicons name="chevron-forward" size={16} color={theme.mutedForeground} />
                   </View>
                 }
@@ -315,13 +332,26 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
                 themeBorder={theme.border}
                 themeForeground={theme.foreground}
                 themeMutedForeground={theme.mutedForeground}
-                onPress={() => {}}
+                onPress={() => {
+                  alert(
+                    t('language.title'),
+                    '',
+                    [
+                      { text: t('language.vi'), onPress: () => setLanguage('vi') },
+                      { text: t('language.en'), onPress: () => setLanguage('en') },
+                      { text: t('language.ja'), onPress: () => setLanguage('ja') },
+                      { text: t('language.ko'), onPress: () => setLanguage('ko') },
+                      { text: t('common.cancel'), style: 'cancel' }
+                    ],
+                    { cancelable: true }
+                  );
+                }}
               />
             </View>
           </View>
 
           <Button variant="destructive" className="mb-10 mt-6" onPress={handleLogout}>
-            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Sign Out</Text>
+            <Text style={{ color: '#fff', fontWeight: 'bold' }}>{t('profile.sign_out')}</Text>
           </Button>
         </ScrollView>
       </View>

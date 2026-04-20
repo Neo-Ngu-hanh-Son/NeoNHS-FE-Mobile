@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { THEME } from "@/lib/theme";
+import { useTranslation } from "react-i18next";
 
 type RegisterFormProps = {
   isLoading: boolean;
@@ -15,6 +16,7 @@ type RegisterFormProps = {
 export default function RegisterForm({ isLoading, onSubmit }: RegisterFormProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const { t } = useTranslation();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -30,40 +32,40 @@ export default function RegisterForm({ isLoading, onSubmit }: RegisterFormProps)
 
   const validateName = (value: string) => {
     if (!value.trim()) {
-      return "Name is required";
+      return t("auth.validation.fullname_required", "Name is required");
     }
     if (value.trim().length < 2) {
-      return "Name must be at least 2 characters";
+      return t("auth.validation.fullname_min_length", "Name must be at least 2 characters");
     }
     return "";
   };
 
   const validateEmail = (value: string) => {
     if (!value.trim()) {
-      return "Email is required";
+      return t("auth.validation.email_required");
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-      return "Please enter a valid email address";
+      return t("auth.validation.email_invalid");
     }
     return "";
   };
 
   const validatePassword = (value: string) => {
     if (!value) {
-      return "Password is required";
+      return t("auth.validation.password_required");
     }
     if (value.length < 6) {
-      return "Password must be at least 6 characters";
+      return t("auth.validation.password_min_length");
     }
     return "";
   };
 
   const validateConfirmPassword = (value: string) => {
     if (!value) {
-      return "Please confirm your password";
+      return t("auth.validation.confirm_password_required");
     }
     if (value !== password) {
-      return "Passwords do not match";
+      return t("auth.validation.passwords_not_match");
     }
     return "";
   };
@@ -88,9 +90,9 @@ export default function RegisterForm({ isLoading, onSubmit }: RegisterFormProps)
     <View style={styles.form}>
       {/* Name Input */}
       <View style={styles.inputGroup}>
-        <Label style={styles.label}>Full Name</Label>
+        <Label style={styles.label}>{t('auth.form.fullname_label')}</Label>
         <Input
-          placeholder="Enter your full name"
+          placeholder={t('auth.form.fullname_placeholder')}
           autoCapitalize="words"
           autoCorrect={false}
           autoComplete="name"
@@ -108,9 +110,9 @@ export default function RegisterForm({ isLoading, onSubmit }: RegisterFormProps)
 
       {/* Email Input */}
       <View style={styles.inputGroup}>
-        <Label style={styles.label}>Email</Label>
+        <Label style={styles.label}>{t('auth.form.email_label')}</Label>
         <Input
-          placeholder="Enter your email"
+          placeholder={t('auth.form.email_placeholder')}
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
@@ -129,9 +131,9 @@ export default function RegisterForm({ isLoading, onSubmit }: RegisterFormProps)
 
       {/* Password Input */}
       <View style={styles.inputGroup}>
-        <Label style={styles.label}>Password</Label>
+        <Label style={styles.label}>{t('auth.form.password_label')}</Label>
         <Input
-          placeholder="Create a password"
+          placeholder={t('auth.form.password_placeholder')}
           secureTextEntry
           autoCapitalize="none"
           autoCorrect={false}
@@ -141,7 +143,7 @@ export default function RegisterForm({ isLoading, onSubmit }: RegisterFormProps)
             setPassword(text);
             if (passwordError) setPasswordError("");
             if (confirmPassword && text !== confirmPassword) {
-              setConfirmPasswordError("Passwords do not match");
+              setConfirmPasswordError(t("auth.validation.passwords_not_match"));
             } else if (confirmPassword) {
               setConfirmPasswordError("");
             }
@@ -155,9 +157,9 @@ export default function RegisterForm({ isLoading, onSubmit }: RegisterFormProps)
 
       {/* Confirm Password Input */}
       <View style={styles.inputGroup}>
-        <Label style={styles.label}>Confirm Password</Label>
+        <Label style={styles.label}>{t('auth.form.confirm_password_label')}</Label>
         <Input
-          placeholder="Confirm your password"
+          placeholder={t('auth.form.confirm_password_placeholder')}
           secureTextEntry
           autoCapitalize="none"
           autoCorrect={false}
@@ -176,9 +178,9 @@ export default function RegisterForm({ isLoading, onSubmit }: RegisterFormProps)
 
       {/* Phone Number Input */}
       <View style={styles.inputGroup}>
-        <Label style={styles.label}>Phone Number</Label>
+        <Label style={styles.label}>{t('auth.form.phone_label')}</Label>
         <Input
-          placeholder="Enter your phone number"
+          placeholder={t('auth.form.phone_placeholder')}
           autoCapitalize="none"
           autoCorrect={false}
           autoComplete="tel"
@@ -203,7 +205,7 @@ export default function RegisterForm({ isLoading, onSubmit }: RegisterFormProps)
         className="mt-4"
       >
         <Text className="text-primary-foreground font-semibold text-base">
-          Create Account
+          {t('auth.button.register')}
         </Text>
       </Button>
     </View>

@@ -12,11 +12,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { TouchableOpacity, Modal } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 export default function CartListScreen() {
     const { isDarkColorScheme } = useTheme();
     const theme = isDarkColorScheme ? THEME.dark : THEME.light;
     const navigation = useNavigation<any>();
+    const { t } = useTranslation();
 
     const [loading, setLoading] = useState(false);
     const [cart, setCart] = useState<Cart | null>(null);
@@ -201,12 +203,12 @@ export default function CartListScreen() {
                     </View>
 
                     <View style={styles.row}>
-                        <Text style={{ color: theme.mutedForeground }}>Price:</Text>
+                        <Text style={{ color: theme.mutedForeground }}>{t('cart.price', 'Price:')}</Text>
                         <Text style={{ color: theme.foreground }}>{item.price.toLocaleString()} VND</Text>
                     </View>
 
                     <View style={[styles.row, { alignItems: 'center', marginTop: 4 }]}>
-                        <Text style={{ color: theme.mutedForeground }}>Quantity:</Text>
+                        <Text style={{ color: theme.mutedForeground }}>{t('cart.quantity')}:</Text>
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8, borderWidth: 1, borderColor: theme.border, borderRadius: 6 }}>
                             <TouchableOpacity
                                 onPress={() => handleUpdateQuantity(item.id, item.quantity - 1)}
@@ -225,7 +227,7 @@ export default function CartListScreen() {
                     </View>
 
                     <View style={[styles.row, { marginTop: 4 }]}>
-                        <Text style={{ color: theme.mutedForeground }}>Total:</Text>
+                        <Text style={{ color: theme.mutedForeground }}>{t('cart.subtotal', 'Total:')}</Text>
                         <Text style={{ color: theme.primary, fontWeight: 'bold' }}>{item.totalPrice.toLocaleString()} VND</Text>
                     </View>
                 </View>
@@ -243,9 +245,9 @@ export default function CartListScreen() {
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
             <View style={styles.header}>
-                <Text style={[styles.title, { color: theme.foreground }]}>My Cart</Text>
+                <Text style={[styles.title, { color: theme.foreground }]}>{t('cart.title')}</Text>
                 <Button size="sm" variant="outline" onPress={fetchCart}>
-                    <Text>Refresh</Text>
+                    <Text>{t('common.refresh')}</Text>
                 </Button>
             </View>
 
@@ -256,7 +258,7 @@ export default function CartListScreen() {
                 contentContainerStyle={styles.listContent}
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Text style={{ color: theme.mutedForeground }}>Your cart is empty</Text>
+                        <Text style={{ color: theme.mutedForeground }}>{t('cart.empty')}</Text>
                     </View>
                 }
             />
@@ -346,9 +348,9 @@ export default function CartListScreen() {
                 </TouchableOpacity>
 
                 <View style={styles.totalRow}>
-                    <Text style={{ color: theme.foreground }}>Selected: {validSelectedCount}</Text>
+                    <Text style={{ color: theme.foreground }}>{t('cart.selected', 'Selected')}: {validSelectedCount}</Text>
                     <Text style={{ color: theme.foreground, fontWeight: 'bold' }}>
-                        Total: {
+                        {t('cart.total')}: {
                             validSelectedItems
                                 .reduce((sum, item) => sum + item.totalPrice, 0)
                                 .toLocaleString() || 0
@@ -356,11 +358,11 @@ export default function CartListScreen() {
                     </Text>
                 </View>
                 <Button onPress={handleProceedToPreCheckout} disabled={validSelectedCount === 0}>
-                    <Text style={{ color: 'white' }}>Proceed to Checkout</Text>
+                    <Text style={{ color: 'white' }}>{t('cart.checkout')}</Text>
                 </Button>
             </View>
 
-            <LoadingOverlay visible={loading} message="Loading Cart..." />
+            <LoadingOverlay visible={loading} message={t('common.loading')} />
         </SafeAreaView>
     );
 }
