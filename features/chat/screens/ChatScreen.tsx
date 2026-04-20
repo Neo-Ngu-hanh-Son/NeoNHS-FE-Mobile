@@ -441,11 +441,35 @@ export default function ChatScreen({ route, navigation }: any) {
           ListHeaderComponent={
             isOtherTyping ? <TypingIndicator /> :
               isAiThinking ? (
-                <View className="px-4 py-2">
+                <View className="flex-1">
                   {aiStreamingText ? (
-                    <View className="max-w-[80%] rounded-2xl rounded-bl-sm px-4 py-3" style={{ backgroundColor: theme.muted }}>
-                      <Text className="text-sm" style={{ color: theme.foreground }}>{aiStreamingText}</Text>
-                    </View>
+                    <ChatMessageBubble
+                      message={{
+                        id: 'streaming',
+                        chatRoomId: roomId,
+                        senderId: 'AI_ASSISTANT',
+                        content: aiStreamingText,
+                        timestamp: new Date().toISOString(),
+                        status: 'SENT',
+                        messageType: 'TEXT',
+                      }}
+                      isMine={false}
+                      showAvatar={true}
+                      showTimestamp={false}
+                      timestampString=""
+                      participantAvatar={displayAvatar}
+                      onProductSnippetPress={(id, type) => {
+                        if (type === 'event') {
+                          navigation.navigate('EventDetail', { eventId: id });
+                        } else {
+                          navigation.navigate('WorkshopDetail', { workshopId: id });
+                        }
+                      }}
+                      onGoToCart={() => {
+                        // @ts-ignore
+                        navigation.navigate('TestCart');
+                      }}
+                    />
                   ) : (
                     <TypingIndicator />
                   )}
@@ -476,7 +500,17 @@ export default function ChatScreen({ route, navigation }: any) {
                   showTimestamp={showTs}
                   timestampString={formatChatMessageTime(item.timestamp)}
                   participantAvatar={displayAvatar}
-                  onProductSnippetPress={(workshopId) => navigation.navigate('WorkshopDetail', { workshopId })}
+                  onProductSnippetPress={(id, type) => {
+                    if (type === 'event') {
+                      navigation.navigate('EventDetail', { eventId: id });
+                    } else {
+                      navigation.navigate('WorkshopDetail', { workshopId: id });
+                    }
+                  }}
+                  onGoToCart={() => {
+                    // @ts-ignore
+                    navigation.navigate('TestCart');
+                  }}
                 />
                 {!isMine && item.content === "Câu hỏi vượt quá khả năng trả lời của tôi bạn có muốn trò chuyện với Admin để được giải đáp không" && index === 0 && (
                   <View className="flex-row items-center ml-[44px] mt-1 mb-2">
