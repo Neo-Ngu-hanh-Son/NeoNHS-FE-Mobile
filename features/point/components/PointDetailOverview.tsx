@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { MapPoint } from '../../map/types';
+import { useTranslation } from 'react-i18next';
 
 type PointDetailOverviewProps = {
   point: MapPoint;
@@ -19,12 +20,13 @@ export function PointDetailOverview({
 }: PointDetailOverviewProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const { t } = useTranslation();
 
   return (
     <View className="gap-3">
-      <Text className="text-xl font-black tracking-tight">Overview</Text>
+      <Text className="text-xl font-black tracking-tight">{t('point.tabs.overview')}</Text>
       <Text className="text-[15px] leading-7 text-muted-foreground">
-        {point.description || 'No description available.'}
+        {point.description || t('point.no_description')}
         {isReadMore && point.history && (
           <Text className="text-[15px] leading-7 text-muted-foreground">
             {'\n\n'}
@@ -37,7 +39,7 @@ export function PointDetailOverview({
       {point.history && (
         <Button variant="link" onPress={onToggleReadMore} className="self-start px-0">
           <Text className="text-sm font-bold" style={{ color: theme.primary }}>
-            {isReadMore ? 'Show less' : 'Read about history'}
+            {isReadMore ? t('point.show_less') : t('point.read_history')}
           </Text>
         </Button>
       )}

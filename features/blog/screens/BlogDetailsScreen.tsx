@@ -10,6 +10,7 @@ import type { MainStackParamList } from '@/app/navigations/NavigationParamTypes'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FullScreenLoader from '@/components/Loader/FullScreenLoader';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { blogService } from '../services/blogService';
 import { BLOG_MINIMUM_READING_TIME_SECONDS } from '../constants';
 
@@ -17,6 +18,7 @@ type Props = StackScreenProps<MainStackParamList, 'BlogDetails'>;
 
 export default function BlogDetailsScreen({ route }: Props) {
   const { blogId } = route.params;
+  const { t } = useTranslation();
 
   const { data: blog, isLoading, isError, error, refetch } = useBlogDetail(blogId);
 
@@ -31,15 +33,15 @@ export default function BlogDetailsScreen({ route }: Props) {
   }, [blogId]);
 
   if (isLoading) {
-    return <FullScreenLoader message="Loading blog post..." />;
+    return <FullScreenLoader message={t('common.loading')} />;
   }
 
   if (isError || !blog) {
     return (
       <View className="flex-1 items-center justify-center gap-4 bg-background px-6">
-        <Text variant="muted">{error?.message ?? 'Blog post not found.'}</Text>
+        <Text variant="muted">{error?.message ?? t('blog.not_found')}</Text>
         <Button variant="outline" onPress={() => refetch()}>
-          <Text>Retry</Text>
+          <Text>{t('common.retry')}</Text>
         </Button>
       </View>
     );

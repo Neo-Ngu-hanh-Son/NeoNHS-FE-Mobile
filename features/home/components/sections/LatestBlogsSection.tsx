@@ -7,7 +7,8 @@ import { RootStackParamList, TabsStackParamList } from '@/app/navigations/Naviga
 import BlogCard from '../BlogCard';
 import SectionHeader from '../SectionHeader';
 import SectionStateMessage from './SectionStateMessage';
-import { logger } from '@/utils/logger';
+//import { logger } from '@/utils/logger';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   blogs: BlogResponse[];
@@ -22,6 +23,8 @@ type HomeScreenProps = CompositeScreenProps<
 
 export default function LatestBlogsSection({ blogs, loading, error }: Props) {
   const { navigate } = useNavigation<HomeScreenProps['navigation']>();
+  const { t } = useTranslation();
+
   function handleViewAllBlogs(): void {
     navigate('Main', { screen: 'BlogList' });
   }
@@ -33,7 +36,7 @@ export default function LatestBlogsSection({ blogs, loading, error }: Props) {
   if (error) {
     return (
       <View className="mb-4">
-        <SectionHeader title="Latest Blogs" showSeeAll onSeeAllPress={handleViewAllBlogs} />
+        <SectionHeader title={t('home.latest_blogs')} showSeeAll onSeeAllPress={handleViewAllBlogs} />
         <SectionStateMessage
           tone="error"
           message="Failed to fetch latest blogs. Please pull to refresh."
@@ -45,7 +48,7 @@ export default function LatestBlogsSection({ blogs, loading, error }: Props) {
   if (!loading && (blogs == null || blogs.length === 0)) {
     return (
       <View className="mb-4">
-        <SectionHeader title="Latest Blogs" showSeeAll onSeeAllPress={handleViewAllBlogs} />
+        <SectionHeader title={t('home.latest_blogs')} showSeeAll onSeeAllPress={handleViewAllBlogs} />
         <SectionStateMessage message="No blogs found." />
       </View>
     );
@@ -53,7 +56,7 @@ export default function LatestBlogsSection({ blogs, loading, error }: Props) {
 
   return (
     <View className="mb-4">
-      <SectionHeader title="Latest Blogs" showSeeAll onSeeAllPress={handleViewAllBlogs} />
+      <SectionHeader title={t('home.latest_blogs')} showSeeAll onSeeAllPress={handleViewAllBlogs} />
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

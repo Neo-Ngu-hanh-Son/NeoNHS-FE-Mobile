@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 type PointDetailBottomBarProps = {
   pointId: string;
@@ -23,6 +24,7 @@ export function PointDetailBottomBar({
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   return (
     <View
@@ -36,7 +38,7 @@ export function PointDetailBottomBar({
         <Button onPress={onNavigate} className="h-14 flex-1 rounded-2xl" size="lg">
           <View className="flex-row items-center gap-2">
             <Ionicons name="navigate" size={18} color="white" />
-            <Text className="text-base font-bold text-primary-foreground">Take me there</Text>
+            <Text className="text-base font-bold text-primary-foreground">{t('point.take_me_there')}</Text>
           </View>
         </Button>
 

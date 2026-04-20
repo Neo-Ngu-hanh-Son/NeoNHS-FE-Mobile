@@ -12,6 +12,7 @@ import { AuthStackParamList } from "@/app/navigations/NavigationParamTypes";
 import { authService } from "../services/authService";
 import AuthLayout from "../components/AuthLayout";
 import AppLink from "@/components/Navigator/AppLink";
+import { useTranslation } from "react-i18next";
 
 type VerifyEmailScreenProps = StackScreenProps<AuthStackParamList, "VerifyEmail">;
 
@@ -20,6 +21,7 @@ type VerificationStep = "email" | "otp";
 export default function VerifyEmailScreen({ navigation, route }: VerifyEmailScreenProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const { t } = useTranslation();
 
   // Get params from navigation
   const initialEmail = route.params?.email ?? "";
@@ -57,20 +59,20 @@ export default function VerifyEmailScreen({ navigation, route }: VerifyEmailScre
 
   const validateEmail = (value: string) => {
     if (!value.trim()) {
-      return "Email is required";
+      return t("auth.validation.email_required");
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-      return "Please enter a valid email address";
+      return t("auth.validation.email_invalid");
     }
     return "";
   };
 
   const validateOtp = (value: string) => {
     if (!value.trim()) {
-      return "Verification code is required";
+      return t("auth.validation.verification_code_required");
     }
     if (value.trim().length < 4) {
-      return "Please enter a valid verification code";
+      return t("auth.validation.verification_code_invalid");
     }
     return "";
   };
@@ -102,8 +104,8 @@ export default function VerifyEmailScreen({ navigation, route }: VerifyEmailScre
     });
 
     Alert.alert(
-      "Code Sent",
-      "A verification code is being sent to your email. Please check your inbox."
+      t("auth.alert.code_sent_title"),
+      t("auth.alert.code_sent_message")
     );
   };
 
@@ -118,19 +120,19 @@ export default function VerifyEmailScreen({ navigation, route }: VerifyEmailScre
     try {
       await authService.verifyEmail(email.trim(), otp.trim());
       Alert.alert(
-        "Verification Successful",
-        "Your email has been verified. You can now sign in to your account.",
+        t("auth.alert.verification_successful_title"),
+        t("auth.alert.verification_successful_message"),
         [
           {
-            text: "Sign In",
+            text: t("auth.button.login"),
             onPress: () => navigation.replace("Login"),
           },
         ]
       );
     } catch (error) {
       Alert.alert(
-        "Verification Failed",
-        (error as Error).message || "Invalid verification code. Please try again."
+        t("auth.alert.verification_failed_title"),
+        (error as Error).message || t("auth.alert.verification_failed_message")
       );
     } finally {
       setIsLoading(false);
@@ -154,12 +156,12 @@ export default function VerifyEmailScreen({ navigation, route }: VerifyEmailScre
         {/* Header */}
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.foreground }]}>
-            Verify Your Email
+            {t("auth.verify_email")}
           </Text>
           <Text style={[styles.subtitle, { color: theme.mutedForeground }]}>
             {step === "email"
-              ? "Enter your email address to receive a verification code."
-              : `We've sent a verification code to ${email}. Please enter it below.`}
+              ? t("auth.verify_email_subtitle_email")
+              : t("auth.verify_email_subtitle_otp", { email })}
           </Text>
         </View>
 
@@ -169,9 +171,9 @@ export default function VerifyEmailScreen({ navigation, route }: VerifyEmailScre
             <>
               {/* Email Input */}
               <View style={styles.inputGroup}>
-                <Label style={styles.label}>Email</Label>
+                <Label style={styles.label}>{t("auth.form.email_label")}</Label>
                 <Input
-                  placeholder="Enter your email"
+                  placeholder={t("auth.form.email_placeholder")}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -198,7 +200,7 @@ export default function VerifyEmailScreen({ navigation, route }: VerifyEmailScre
                 className="mt-4"
               >
                 <Text className="text-primary-foreground font-semibold text-base">
-                  Send Verification Code
+                  {t("auth.button.send_verification_code")}
                 </Text>
               </Button>
             </>
@@ -206,9 +208,9 @@ export default function VerifyEmailScreen({ navigation, route }: VerifyEmailScre
             <>
               {/* OTP Input */}
               <View style={styles.inputGroup}>
-                <Label style={styles.label}>Verification Code</Label>
+                <Label style={styles.label}>{t("auth.form.verification_code_label")}</Label>
                 <Input
-                  placeholder="Enter the code"
+                  placeholder={t("auth.form.verification_code_placeholder")}
                   keyboardType="number-pad"
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -234,25 +236,25 @@ export default function VerifyEmailScreen({ navigation, route }: VerifyEmailScre
                 className="mt-4"
               >
                 <Text className="text-primary-foreground font-semibold text-base">
-                  Verify Email
+                  {t("auth.button.verify_email")}
                 </Text>
               </Button>
 
               {/* Resend Code */}
               <View style={styles.resendContainer}>
                 <Text style={[styles.resendText, { color: theme.mutedForeground }]}>
-                  Didn't receive the code?{" "}
+                  {t("auth.resend.no_code")}{" "}
                 </Text>
                 {resendCooldown > 0 ? (
                   <Text style={[styles.cooldownText, { color: theme.mutedForeground }]}>
-                    Resend in {resendCooldown}s
+                    {t("auth.resend.resend_in", { seconds: resendCooldown })}
                   </Text>
                 ) : (
                   <Text
                     style={[styles.linkText, { color: theme.primary }]}
                     onPress={handleResendOtp}
                   >
-                    Resend
+                    {t("auth.resend.resend")}
                   </Text>
                 )}
               </View>
@@ -260,13 +262,13 @@ export default function VerifyEmailScreen({ navigation, route }: VerifyEmailScre
               {/* Change Email */}
               <View style={styles.changeEmailContainer}>
                 <Text style={[styles.resendText, { color: theme.mutedForeground }]}>
-                  Wrong email?{" "}
+                  {t("auth.resend.wrong_email")}{" "}
                 </Text>
                 <Text
                   style={[styles.linkText, { color: theme.primary }]}
                   onPress={handleChangeEmail}
                 >
-                  Change email
+                  {t("auth.resend.change_email")}
                 </Text>
               </View>
             </>
@@ -276,10 +278,10 @@ export default function VerifyEmailScreen({ navigation, route }: VerifyEmailScre
         {/* Back to Login */}
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: theme.mutedForeground }]}>
-            Already verified?{" "}
+            {t("auth.already_verified")}{" "}
           </Text>
           <AppLink screen="Login" params={{}}>
-            Sign In
+            {t("auth.button.login")}
           </AppLink>
         </View>
       </View>

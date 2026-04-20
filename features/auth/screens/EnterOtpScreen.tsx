@@ -11,8 +11,7 @@ import { THEME } from "@/lib/theme";
 import { AuthStackParamList } from "@/app/navigations/NavigationParamTypes";
 import { authService } from "../services/authService";
 import AuthLayout from "../components/AuthLayout";
-
-// Thêm màn hình nhập OTP
+import { useTranslation } from "react-i18next";
 
 type EnterOtpScreenProps = StackScreenProps<AuthStackParamList, "EnterOtp">;
 
@@ -20,6 +19,7 @@ export default function EnterOtpScreen({ navigation, route }: EnterOtpScreenProp
     const email = route.params?.email || "";
     const { isDarkColorScheme } = useTheme();
     const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+    const { t } = useTranslation();
 
     const [otp, setOtp] = useState("");
     const [otpError, setOtpError] = useState("");
@@ -27,10 +27,10 @@ export default function EnterOtpScreen({ navigation, route }: EnterOtpScreenProp
 
     const validateOtp = (value: string) => {
         if (!value.trim()) {
-            return "OTP code is required";
+            return t("auth.validation.otp_required");
         }
         if (value.trim().length < 4) {
-            return "Please enter a valid OTP code";
+            return t("auth.validation.otp_invalid");
         }
         return "";
     };
@@ -41,14 +41,12 @@ export default function EnterOtpScreen({ navigation, route }: EnterOtpScreenProp
         if (otpErr) return;
         setIsLoading(true);
         try {
-            // Gọi API verify OTP
             await authService.verifyOtp(email, otp.trim());
-            // Nếu thành công, chuyển sang màn nhập mật khẩu mới, chỉ truyền email
             navigation.navigate("ForgotPasswordOtp", { email });
         } catch (error) {
             Alert.alert(
-                "Verification Failed",
-                (error as Error).message || "Unable to verify code. Please try again."
+                t("auth.alert.verification_failed_title"),
+                (error as Error).message || t("auth.alert.verification_failed_message")
             );
         } finally {
             setIsLoading(false);
@@ -60,14 +58,14 @@ export default function EnterOtpScreen({ navigation, route }: EnterOtpScreenProp
             <View style={styles.container}>
                 {/* Header */}
                 <View style={styles.header}>
-                    <Text style={[styles.title, { color: theme.foreground }]}>OTP Verification</Text>
-                    <Text style={[styles.subtitle, { color: theme.mutedForeground }]}>Please enter a code from email</Text>
+                    <Text style={[styles.title, { color: theme.foreground }]}>{t("auth.otp_verification")}</Text>
+                    <Text style={[styles.subtitle, { color: theme.mutedForeground }]}>{t("auth.enter_code_from_email")}</Text>
                 </View>
                 {/* OTP Input */}
                 <View style={styles.inputGroup}>
-                    <Label style={styles.label}>Your code</Label>
+                    <Label style={styles.label}>{t("auth.form.otp_label")}</Label>
                     <Input
-                        placeholder="Enter code"
+                        placeholder={t("auth.form.otp_placeholder")}
                         keyboardType="number-pad"
                         autoCapitalize="none"
                         autoCorrect={false}
@@ -90,7 +88,7 @@ export default function EnterOtpScreen({ navigation, route }: EnterOtpScreenProp
                     className="mt-4"
                 >
                     <Text className="text-primary-foreground font-semibold text-base">
-                        Verification
+                        {t("auth.button.verify_otp")}
                     </Text>
                 </Button>
             </View>

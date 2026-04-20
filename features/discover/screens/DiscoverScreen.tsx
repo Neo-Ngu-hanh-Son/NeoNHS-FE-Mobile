@@ -7,6 +7,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
+import { useTranslation } from 'react-i18next';
 import { MainStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -71,6 +72,7 @@ function getStatusColor(status: string): string {
 export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const { t } = useTranslation();
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -263,7 +265,7 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
   const renderHeader = () => (
     <View className="sticky top-0 bg-white/80 px-5 pb-1 pt-6 backdrop-blur-md dark:bg-slate-900/80">
       <Text className="text-3xl font-bold tracking-tight" style={{ color: theme.foreground }}>
-        Discover
+        {t('discover.title')}
       </Text>
     </View>
   );
@@ -275,7 +277,7 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
       </Text>
       <TouchableOpacity onPress={onSeeAll} className="flex-row items-center gap-1">
         <Text className="font-medium" style={{ color: theme.primary }}>
-          See all
+          {t('discover.see_all')}
         </Text>
         <Ionicons name="arrow-forward" size={14} color={theme.primary} />
       </TouchableOpacity>
@@ -300,7 +302,7 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
 
         {/* Popular Points (Using Attractions for now) */}
         <SectionHeader
-          title="Popular Destinations"
+          title={t('discover.popular_destinations')}
           onSeeAll={() => navigation.navigate('AllDestinations', { initialTab: 'Points' })}
         />
         <View>
@@ -324,14 +326,14 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
             <View
               className="mx-5 h-64 w-72 items-center justify-center rounded-2xl border bg-muted/20"
               style={{ borderColor: theme.border }}>
-              <Text style={{ color: theme.mutedForeground }}>No destinations found</Text>
+              <Text style={{ color: theme.mutedForeground }}>{t('discover.no_destinations')}</Text>
             </View>
           )}
         </View>
 
         {/* Workshops */}
         <SectionHeader
-          title="Workshops"
+          title={t('discover.workshops')}
           onSeeAll={() => navigation.navigate('AllDestinations', { initialTab: 'Workshops' })}
         />
         <View>
@@ -355,14 +357,14 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
             <View
               className="mx-5 h-52 w-44 items-center justify-center rounded-2xl border bg-muted/20"
               style={{ borderColor: theme.border }}>
-              <Text style={{ color: theme.mutedForeground }}>No workshops found</Text>
+              <Text style={{ color: theme.mutedForeground }}>{t('discover.no_workshops')}</Text>
             </View>
           )}
         </View>
 
         {/* Upcoming Events — from API */}
         <SectionHeader
-          title="Upcoming Events"
+          title={t('discover.upcoming_events')}
           onSeeAll={() => navigation.navigate('AllDestinations', { initialTab: 'Events' })}
         />
         <View>
@@ -388,7 +390,7 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
               style={{ borderColor: theme.border }}>
               <Ionicons name="calendar-outline" size={32} color={theme.mutedForeground} />
               <Text className="mt-2 text-sm" style={{ color: theme.mutedForeground }}>
-                No upcoming events
+                {t('discover.no_events')}
               </Text>
             </View>
           )}
@@ -396,7 +398,7 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
 
         {/* Travel Blogs */}
         <SectionHeader
-          title="Travel Blogs"
+          title={t('discover.travel_blogs')}
           onSeeAll={() => navigation.navigate('AllDestinations', { initialTab: 'Blogs' })}
         />
         <FlatList

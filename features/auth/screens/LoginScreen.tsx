@@ -17,6 +17,7 @@ import {
 } from '@react-native-google-signin/google-signin';
 import { logger } from '@/utils/logger';
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type LoginScreenProps = CompositeScreenProps<
   StackScreenProps<AuthStackParamList, 'Login'>,
@@ -30,6 +31,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
   const { isDarkColorScheme } = useTheme();
   const { alert } = useModal();
+  const { t } = useTranslation();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
   const handleLogin = async (email: string, password: string) => {
@@ -61,15 +63,15 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         errorMessage.toLowerCase().includes('not verified')
       ) {
         alert(
-          'Email Not Verified',
-          'Your account has not been verified yet. Please verify your email to continue.',
+          t('auth.alert.email_not_verified_title'),
+          t('auth.alert.email_not_verified_message'),
           [
             {
-              text: 'Cancel',
+              text: t('common.cancel'),
               style: 'cancel',
             },
             {
-              text: 'Verify Now',
+              text: t('auth.alert.verify_now'),
               onPress: () => navigation.navigate('VerifyEmail', { email: email.trim() }),
             },
           ]
@@ -77,7 +79,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         return;
       }
 
-      alert('Login Failed', errorMessage || 'Unable to sign in. Please try again.');
+      alert(t('auth.alert.login_failed_title'), errorMessage || t('auth.alert.login_failed_message'));
     } finally {
       loginingRef.current = false;
       setLoading(false);
@@ -118,7 +120,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       );
     } catch (error) {
       logger.error('[LoginScreen] Google login failed:', error);
-      alert('Google Login Failed', 'Unable to sign in with Google. Please try again.');
+      alert(t('auth.alert.google_login_failed_title'), t('auth.alert.google_login_failed_message'));
     } finally {
       loginingRef.current = false;
     }
@@ -133,9 +135,9 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.foreground }]}>Welcome Back</Text>
+          <Text style={[styles.title, { color: theme.foreground }]}>{t('auth.welcome_back')}</Text>
           <Text style={[styles.subtitle, { color: theme.mutedForeground }]}>
-            Sign in to continue exploring
+            {t('auth.sign_in_subtitle')}
           </Text>
         </View>
 
@@ -145,7 +147,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         <View style={styles.dividerContainer}>
           <Separator className="flex-1" />
           <Text style={[styles.dividerText, { color: theme.mutedForeground }]}>
-            or continue with
+            {t('auth.or_continue_with')}
           </Text>
           <Separator className="flex-1" />
         </View>
@@ -165,10 +167,10 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         {/* Register Link */}
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: theme.mutedForeground }]}>
-            Don&apos;t have an account?{' '}
+            {t('auth.no_account')}{' '}
           </Text>
           <AppLink screen="Register" params={{}}>
-            Sign Up
+            {t('auth.button.register')}
           </AppLink>
         </View>
       </View>

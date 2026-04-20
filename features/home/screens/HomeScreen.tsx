@@ -11,7 +11,8 @@ import { RootStackParamList, TabsStackParamList } from '@/app/navigations/Naviga
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { Ionicons } from '@expo/vector-icons';
-import { logger } from '@/utils/logger';
+//import { logger } from '@/utils/logger';
+import { useTranslation } from 'react-i18next';
 
 import { useBlogList } from '@/features/blog';
 import useGuides from '../hooks/useGuides';
@@ -40,6 +41,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -200,7 +202,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         <View className="mt-4 px-4">
           <Button variant="outline" className="w-full" onPress={handleExploreAllDestinations}>
             <Ionicons name="compass-outline" size={18} color={theme.foreground} />
-            <Text className="ml-2 font-medium">Explore All Destinations</Text>
+            <Text className="ml-2 font-medium">{t('home.explore_all_destinations')}</Text>
           </Button>
         </View>
 
