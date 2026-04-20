@@ -29,6 +29,24 @@ export default function CartListScreen() {
     const [loadingVouchers, setLoadingVouchers] = useState(false);
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    // Format discount value based on type
+    const formatDiscount = (voucher: Voucher): string => {
+        if (voucher.discountType === 'PERCENT') {
+            return `-${voucher.discountValue}%`;
+        }
+        return `-${voucher.discountValue.toLocaleString()} VND`;
+    };
+
+    // Applicable product label + color
+    const getApplicableLabel = (ap: Voucher['applicableProduct']) => {
+        switch (ap) {
+            case 'EVENT_TICKET': return { label: 'Event Ticket', color: '#3b82f6' };
+            case 'WORKSHOP': return { label: 'Workshop', color: '#a855f7' };
+            case 'TICKET': return { label: 'Ticket', color: '#f59e0b' };
+            default: return { label: 'All Items', color: '#22c55e' };
+        }
+    };
+
     const fetchCart = async () => {
         setLoading(true);
         try {
@@ -284,28 +302,56 @@ export default function CartListScreen() {
                             <FlatList
                                 data={vouchers}
                                 keyExtractor={(item) => item.userVoucherId}
-                                renderItem={({ item }) => (
-                                    <TouchableOpacity
-                                        style={{
-                                            padding: 16,
-                                            borderBottomWidth: 1,
-                                            borderBottomColor: theme.border,
-                                            flexDirection: 'row',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center'
-                                        }}
-                                        onPress={() => {
-                                            setSelectedVoucher(item);
-                                            setShowVoucherModal(false);
-                                        }}
-                                    >
-                                        <View>
-                                            <Text style={{ fontWeight: 'bold', color: theme.foreground }}>{item.code}</Text>
-                                            <Text style={{ color: theme.mutedForeground, fontSize: 12 }}>Min Order: {item.minOrderValue.toLocaleString()} VND</Text>
-                                        </View>
-                                        <Text style={{ color: theme.primary, fontWeight: 'bold' }}>-{item.discountValue.toLocaleString()} VND</Text>
-                                    </TouchableOpacity>
-                                )}
+                                renderItem={({ item }) => {
+                                    const apInfo = getApplicableLabel(item.applicableProduct);
+                                    return (
+                                        <TouchableOpacity
+                                            style={{
+                                                padding: 14,
+                                                borderBottomWidth: 1,
+                                                borderBottomColor: theme.border,
+                                                flexDirection: 'row',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'flex-start',
+                                                gap: 12,
+                                            }}
+                                            onPress={() => {
+                                                setSelectedVoucher(item);
+                                                setShowVoucherModal(false);
+                                            }}
+                                        >
+                                            {/* Left info */}
+                                            <View style={{ flex: 1, gap: 4 }}>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                                    <Text style={{ fontWeight: 'bold', color: theme.foreground, fontSize: 15 }}>{item.code}</Text>
+                                                    {/* Applicable badge */}
+                                                    <View style={{ backgroundColor: apInfo.color + '22', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                                                        <Text style={{ color: apInfo.color, fontSize: 10, fontWeight: '600' }}>{apInfo.label}</Text>
+                                                    </View>
+                                                </View>
+                                                <View style={{ flexDirection: 'row', gap: 12, flexWrap: 'wrap' }}>
+                                                    {/* <Text style={{ color: theme.mutedForeground, fontSize: 11 }}>
+                                                        Min: {item.minOrderValue.toLocaleString()} VND
+                                                    </Text> */}
+                                                    {item.maxDiscountValue ? (
+                                                        <Text style={{ color: theme.mutedForeground, fontSize: 11 }}>
+                                                            Max save: {item.maxDiscountValue.toLocaleString()} VND
+                                                        </Text>
+                                                    ) : null}
+                                                    {item.endDate ? (
+                                                        <Text style={{ color: '#f59e0b', fontSize: 11 }}>
+                                                            Exp: {new Date(item.endDate).toLocaleDateString()}
+                                                        </Text>
+                                                    ) : null}
+                                                </View>
+                                            </View>
+                                            {/* Discount badge */}
+                                            <View style={{ alignItems: 'flex-end' }}>
+                                                <Text style={{ color: '#22c55e', fontWeight: 'bold', fontSize: 16 }}>{formatDiscount(item)}</Text>
+                                            </View>
+                                        </TouchableOpacity>
+                                    );
+                                }}
                                 ListEmptyComponent={<Text style={{ textAlign: 'center', padding: 20, color: theme.mutedForeground }}>No vouchers found</Text>}
                             />
                         )}
@@ -334,7 +380,7 @@ export default function CartListScreen() {
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <MaterialIcons name="local-offer" size={20} color={theme.primary} style={{ marginRight: 8 }} />
                         <Text style={{ color: selectedVoucher ? theme.primary : theme.mutedForeground }}>
-                            {selectedVoucher ? `${selectedVoucher.code} (-${selectedVoucher.discountValue.toLocaleString()} VND)` : "Select Voucher / Coupon"}
+                            {selectedVoucher ? `${selectedVoucher.code} (${formatDiscount(selectedVoucher)})` : "Select Voucher / Coupon"}
                         </Text>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>

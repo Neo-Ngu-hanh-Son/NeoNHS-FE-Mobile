@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { cartService } from '../services/cartService';
-import { PreCheckoutResponse, CartItem } from '../types';
+import { PreCheckoutResponse, CartItem, Voucher, ApplicableProduct } from '../types';
 import LoadingOverlay from '@/components/Loader/LoadingOverlay';
 import { logger } from '@/utils/logger';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -69,6 +69,17 @@ export default function PreCheckoutScreen() {
         if (!preCheckoutData) return [];
         return groupCartItems(preCheckoutData.cartItems);
     }, [preCheckoutData]);
+
+    // Calculate how much discount applies to each group
+    const getGroupDiscount = (groupType: 'event' | 'workshop' | 'other'): number => {
+        const voucher = preCheckoutData?.appliedVoucher;
+        if (!voucher || preCheckoutData.discountValue <= 0) return 0;
+        const ap: ApplicableProduct = voucher.applicableProduct;
+        if (ap === 'ALL') return 0; // shown globally in Payment Summary
+        if (ap === 'EVENT_TICKET' && groupType === 'event') return preCheckoutData.discountValue;
+        if (ap === 'WORKSHOP' && groupType === 'workshop') return preCheckoutData.discountValue;
+        return 0;
+    };
 
 
 
@@ -170,6 +181,20 @@ export default function PreCheckoutScreen() {
                                     <Text style={{ color: theme.foreground }}>{item.totalPrice.toLocaleString()} VND</Text>
                                 </View>
                             ))}
+                            {/* Per-group voucher discount indicator */}
+                            {getGroupDiscount(group.groupType) > 0 && (
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, paddingLeft: 8 }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                        <MaterialIcons name="local-offer" size={13} color="#22c55e" />
+                                        <Text style={{ color: '#22c55e', fontSize: 12 }}>
+                                            {preCheckoutData!.appliedVoucher!.code}
+                                        </Text>
+                                    </View>
+                                    <Text style={{ color: '#22c55e', fontWeight: '600', fontSize: 13 }}>
+                                        -{getGroupDiscount(group.groupType).toLocaleString()} VND
+                                    </Text>
+                                </View>
+                            )}
                         </View>
                     ))}
                 </View>

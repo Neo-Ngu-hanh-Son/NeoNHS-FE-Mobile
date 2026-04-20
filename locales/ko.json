@@ -21,7 +21,8 @@
     "explore": "탐색",
     "see_all": "모두 보기",
     "no_data": "데이터가 없습니다",
-    "changing": "변경 중..."
+    "changing": "변경 중...",
+    "refresh": "새로고침"
   },
   "auth": {
     "welcome_back": "다시 오셨군요",

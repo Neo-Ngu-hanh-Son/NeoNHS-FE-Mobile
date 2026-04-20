@@ -21,7 +21,8 @@
     "explore": "Khám phá",
     "see_all": "Xem tất cả",
     "no_data": "Không có dữ liệu",
-    "changing": "Đang thay đổi..."
+    "changing": "Đang thay đổi...",
+    "refresh": "Làm mới"
   },
   "auth": {
     "welcome_back": "Chào mừng trở lại",
