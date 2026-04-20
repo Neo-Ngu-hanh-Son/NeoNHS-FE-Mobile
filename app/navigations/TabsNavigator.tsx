@@ -43,7 +43,7 @@ export default function TabsNavigator() {
           fontSize: 11,
           fontWeight: '500',
         },
-        animation: 'shift',
+        // animation: 'shift',
       }}>
       <Tab.Screen
         name="Home"
@@ -86,16 +86,6 @@ export default function TabsNavigator() {
         }}
       /> */}
       <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          title: t('tabs.profile'),
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} color={color} size={size} />
-          ),
-        }}
-      />
-      <Tab.Screen
         name="TestCart"
         component={CartListScreen}
         options={{
@@ -112,6 +102,16 @@ export default function TabsNavigator() {
           title: t('tabs.chat'),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? 'chatbubble' : 'chatbubble-outline'} color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'person' : 'person-outline'} color={color} size={size} />
           ),
         }}
       />
