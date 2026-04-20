@@ -3,6 +3,7 @@
   "main": "index.tsx",
   "version": "1.0.0",
   "scripts": {
+    "postinstall": "patch-package",
     "start": "expo start",
     "dev": "expo start --dev-client",
     "android": "expo run:android",

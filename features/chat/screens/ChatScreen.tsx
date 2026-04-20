@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
+import { View, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -63,6 +63,7 @@ export default function ChatScreen({ route, navigation }: any) {
   const [isUploading, setIsUploading] = useState(false);
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [aiStreamingText, setAiStreamingText] = useState('');
+  const [refreshingMessages, setRefreshingMessages] = useState(false);
   const abortAiRef = useRef<(() => void) | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -76,45 +77,53 @@ export default function ChatScreen({ route, navigation }: any) {
 
   const messages = messagesByRoom[roomId] || [];
 
+  const loadRoomHistory = useCallback(async () => {
+    if (!roomId) return;
+    try {
+      const page = await ChatRestService.getRoomMessages(roomId, 0, 50);
+      const historyMsgs = page.content;
+
+      setMessagesByRoom((prev) => {
+        const current = prev[roomId] || [];
+        const msgMap = new Map<string, ChatMessage>();
+        historyMsgs.forEach((m) => msgMap.set(m.id, m));
+        current.forEach((m) => msgMap.set(m.id, m));
+
+        const merged = Array.from(msgMap.values()).sort(
+          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
+        return { ...prev, [roomId]: merged };
+      });
+
+      if (historyMsgs.length > 0) {
+        const newest = historyMsgs.reduce((a, b) =>
+          new Date(a.timestamp).getTime() > new Date(b.timestamp).getTime() ? a : b
+        );
+        if (newest.senderId !== currentUserId) {
+          sendReadReceipt(roomId, newest.id);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load history', e);
+    }
+  }, [roomId, currentUserId, setMessagesByRoom, sendReadReceipt]);
+
   // ── Fetch history + mark active ──────────────────────
   useEffect(() => {
     if (!roomId) return;
     setActiveRoomId(roomId);
-
-    const fetchHistory = async () => {
-      try {
-        const page = await ChatRestService.getRoomMessages(roomId, 0, 50);
-        const historyMsgs = page.content;
-
-        setMessagesByRoom((prev) => {
-          const current = prev[roomId] || [];
-          const msgMap = new Map<string, ChatMessage>();
-          historyMsgs.forEach((m) => msgMap.set(m.id, m));
-          current.forEach((m) => msgMap.set(m.id, m));
-
-          const merged = Array.from(msgMap.values()).sort(
-            (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-          );
-          return { ...prev, [roomId]: merged };
-        });
-
-        // Send read receipt for the latest message
-        if (historyMsgs.length > 0) {
-          const newest = historyMsgs.reduce((a, b) =>
-            new Date(a.timestamp).getTime() > new Date(b.timestamp).getTime() ? a : b
-          );
-          if (newest.senderId !== currentUserId) {
-            sendReadReceipt(roomId, newest.id);
-          }
-        }
-      } catch (e) {
-        console.error('Failed to load history', e);
-      }
-    };
-    fetchHistory();
-
+    void loadRoomHistory();
     return () => setActiveRoomId(null);
-  }, [roomId]);
+  }, [roomId, loadRoomHistory, setActiveRoomId]);
+
+  const handleRefreshMessages = useCallback(async () => {
+    setRefreshingMessages(true);
+    try {
+      await loadRoomHistory();
+    } finally {
+      setRefreshingMessages(false);
+    }
+  }, [loadRoomHistory]);
 
   // ── Subscribe to room typing ─────────────────────────
   useEffect(() => {
@@ -421,6 +430,14 @@ export default function ChatScreen({ route, navigation }: any) {
           inverted
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingVertical: 16 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshingMessages}
+              onRefresh={handleRefreshMessages}
+              tintColor={theme.primary}
+              colors={[theme.primary]}
+            />
+          }
           ListHeaderComponent={
             isOtherTyping ? <TypingIndicator /> :
               isAiThinking ? (

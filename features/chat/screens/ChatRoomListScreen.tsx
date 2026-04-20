@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from "react";
-import { View, FlatList, TextInput, TouchableOpacity, ScrollView } from "react-native";
+import React, { useState, useMemo, useCallback } from "react";
+import { View, FlatList, TextInput, TouchableOpacity, ScrollView, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -21,9 +21,19 @@ export default function ChatRoomListScreen({ navigation }: any) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
-  const { rooms, isLoadingRooms, hideRoom, resetUnreadCount } = useChatContext();
+  const { rooms, hideRoom, resetUnreadCount, refetchRooms } = useChatContext();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<TabKey>("all");
+  const [refreshingRooms, setRefreshingRooms] = useState(false);
+
+  const handleRefreshRooms = useCallback(async () => {
+    setRefreshingRooms(true);
+    try {
+      await refetchRooms();
+    } finally {
+      setRefreshingRooms(false);
+    }
+  }, [refetchRooms]);
 
   // ── Filtering logic ──────────────────────────────────
   const filteredRooms = useMemo(() => {
@@ -110,6 +120,14 @@ export default function ChatRoomListScreen({ navigation }: any) {
       <FlatList
         data={filteredRooms}
         keyExtractor={(item) => item.id}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshingRooms}
+            onRefresh={handleRefreshRooms}
+            tintColor={theme.primary}
+            colors={[theme.primary]}
+          />
+        }
         renderItem={({ item }) => (
           <ChatRoomItem
             room={item}
