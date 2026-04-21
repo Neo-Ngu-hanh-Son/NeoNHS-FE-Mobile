@@ -153,14 +153,10 @@ export default function PointDetailScreen({ navigation, route }: Props) {
           <PointDetailReviews
             pointId={pointId}
             pointName={point.name}
-            averageRating={point.averageRating ?? 0}
-            totalRatings={point.totalRatings ?? 0}
             onViewAll={() =>
               navigation.navigate('PointAllReviews', {
                 pointId,
                 pointName: point.name,
-                averageRating: point.averageRating ?? 0,
-                totalRatings: point.totalRatings ?? 0,
               })
             }
           />

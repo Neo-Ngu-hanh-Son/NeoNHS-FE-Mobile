@@ -62,18 +62,15 @@ export type DestinationRoutes = {
     initialTab?: 'Points' | 'Workshops' | 'Events' | 'Blogs';
     selectedAttractionId?: string;
   };
-};
-
-/* Map / Points */
-export type MapRoutes = {
   PointDetail: { pointId: string };
   PointAllReviews: {
     pointId: string;
     pointName: string;
-    averageRating: number;
-    totalRatings: number;
   };
-  PointMapSelection: { pointId: string };
+};
+
+/* Map / Points */
+export type MapRoutes = {
   ActiveNavigation: { pointId: string };
   ArrivalConfirmation: { pointId: string };
   AudioGuide: { pointId: string };
@@ -90,6 +87,7 @@ export type CheckinRoutes = {
     destinationName?: string;
     checkinPointId?: string;
     parentCheckinPointId?: string;
+    imageUrls?: string[];
   };
 };
 

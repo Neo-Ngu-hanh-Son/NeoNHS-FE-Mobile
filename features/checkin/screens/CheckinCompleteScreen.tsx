@@ -20,13 +20,14 @@ import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { AfterCheckinReviewModal } from '../components/CheckinReview/AfterCheckinReviewModal';
+import { CheckinSocialShareActions } from '../components/CheckinComplete/CheckinSocialShareActions';
 import { ReviewTypeFlg } from '@/features/reviews/types';
 import { useCreateReview } from '@/features/reviews/hooks/useReview';
 
 type CheckinCompleteScreenProps = StackScreenProps<MainStackParamList, 'CheckinComplete'>;
 
 export default function CheckinCompleteScreen({ navigation, route }: CheckinCompleteScreenProps) {
-  const { rewardPoints, userTotalPoints, imageUrl, destinationName, checkinPointId, parentCheckinPointId } =
+  const { rewardPoints, userTotalPoints, imageUrl, destinationName, checkinPointId, parentCheckinPointId, imageUrls } =
     route.params;
   const { getCurrentTheme } = useTheme();
   const theme = getCurrentTheme();
@@ -97,7 +98,11 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
             <Ionicons name="close" size={22} color={theme.foreground} />
           </TouchableOpacity>
           <Text className="text-lg font-bold tracking-tight">Checkin Completed!</Text>
-          <View className="h-10 w-10" />
+          <CheckinSocialShareActions
+            destinationName={destinationName}
+            hashtags={['NeoNHS', 'DaNang']}
+            imageUrls={imageUrls?.length ? imageUrls : imageUrl ? [imageUrl] : undefined}
+          />
         </View>
 
         <View className="px-6 py-4">

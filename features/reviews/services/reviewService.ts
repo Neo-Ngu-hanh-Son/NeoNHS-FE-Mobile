@@ -13,10 +13,11 @@ import { apiClient, endpoints, ApiResponse, PageResponse } from '@/services/api'
 import type {
   CreateReviewRequest,
   ReviewListParams,
-  ReviewPageResponse,
   ReviewResponse,
   UpdateReviewRequest,
   PointReviewResponse,
+  PointReviewResponseWrapper,
+  ReviewPageResponse,
 } from '../types';
 
 function buildQueryParams(params?: ReviewListParams): Record<string, string | number> {
@@ -48,8 +49,8 @@ export const reviewService = {
   getPointReviews: async (
     pointId: string,
     params?: ReviewListParams
-  ): Promise<ApiResponse<PageResponse<PointReviewResponse>>> => {
-    return await apiClient.get<PageResponse<PointReviewResponse>>(endpoints.reviews.getPointReviews(pointId), {
+  ): Promise<ApiResponse<PointReviewResponseWrapper>> => {
+    return await apiClient.get<PointReviewResponseWrapper>(endpoints.reviews.getPointReviews(pointId), {
       params: buildQueryParams(params),
       requiresAuth: false,
     });

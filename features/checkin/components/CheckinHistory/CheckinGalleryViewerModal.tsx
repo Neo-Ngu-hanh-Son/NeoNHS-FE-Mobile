@@ -1,14 +1,15 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Modal, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { GestureViewer, useGestureViewerState } from 'react-native-gesture-image-viewer';
-
+import * as MediaLibrary from 'expo-media-library';
 import { SmartImage } from '@/components/ui/smart-image';
 import { Text } from '@/components/ui/text';
 import { CheckinSessionGalleryImage } from '../../../map/types';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { useModal } from '@/app/providers/ModalProvider';
+import { logger } from '@/utils/logger';
 
 type CheckinGalleryViewerModalProps = {
   visible: boolean;
@@ -35,7 +36,7 @@ export default function CheckinGalleryViewerModal({
   const [isEditingCaption, setIsEditingCaption] = useState(false);
   const [captionInput, setCaptionInput] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
-
+  const [isSavingPhoto, setIsSavingPhoto] = useState(false);
   const safeInitialIndex = useMemo(() => {
     if (!images.length) {
       return 0;
@@ -52,9 +53,27 @@ export default function CheckinGalleryViewerModal({
     return images[index] ?? images[safeInitialIndex] ?? null;
   }, [currentIndex, images, safeInitialIndex]);
 
-  if (!images.length) {
-    return null;
-  }
+  const handleDownloadImage = useCallback(async () => {
+    if (!activeImage) {
+      return;
+    }
+    setIsSavingPhoto(true);
+    try {
+      const permission = await MediaLibrary.requestPermissionsAsync();
+      if (!permission.granted) {
+        alert('Permission required', 'Please allow media library permission to save photos.');
+        return;
+      }
+
+      await MediaLibrary.saveToLibraryAsync(activeImage.uri);
+      alert('Saved', 'Photo has been saved to your device.');
+    } catch (error) {
+      logger.error('[CheckinCameraScreen] Failed to save review photo', error);
+      alert('Save failed', 'Could not save this photo right now.');
+    } finally {
+      setIsSavingPhoto(false);
+    }
+  }, [activeImage, alert]);
 
   const handleOpenCaptionEditor = () => {
     if (!activeImage) {
@@ -126,6 +145,10 @@ export default function CheckinGalleryViewerModal({
 
             {isMenuVisible ? (
               <View style={[styles.menuContainer, { backgroundColor: theme.card }]}>
+                <TouchableOpacity style={styles.menuItem} onPress={handleDownloadImage}>
+                  <Ionicons name="download" size={18} color={theme.foreground} />
+                  <Text className="text-sm text-foreground">Download image</Text>
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.menuItem} onPress={handleOpenCaptionEditor}>
                   <Ionicons name="create-outline" size={18} color={theme.foreground} />
                   <Text className="text-sm text-foreground">Change caption</Text>

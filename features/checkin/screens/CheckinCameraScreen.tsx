@@ -299,6 +299,14 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
           userPoint: res.userTotalPoints,
         });
 
+        // Get all image that user uploaded
+        let imageUrls: string[] = [];
+        draftImages.forEach((image) => {
+          if (image.imageUrl) {
+            imageUrls.push(image.imageUrl);
+          }
+        });
+
         navigation.replace('CheckinComplete', {
           rewardPoints: res.earnedPoints,
           userTotalPoints: res.userTotalPoints,
@@ -306,6 +314,7 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
           destinationName: pointName,
           checkinPointId,
           parentCheckinPointId: res.parentCheckinPointId,
+          imageUrls: imageUrls,
         });
       } catch (error) {
         logger.error('[CheckinCameraScreen] Failed to finish check-in', error);

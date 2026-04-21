@@ -3,14 +3,12 @@ import { Alert } from 'react-native';
 
 import { useAuth } from '@/features/auth';
 import { ReviewSection } from '@/features/reviews';
-import type { ReviewResponse } from '@/features/reviews/types';
 import { useCreatePointReview, usePointReviews, useUpdatePointReview } from '@/features/point/hooks';
+import { logger } from '@/utils/logger';
 
 interface PointDetailReviewsProps {
   pointId: string;
   pointName: string;
-  averageRating: number;
-  totalRatings: number;
   onViewAll: () => void;
   onSheetVisibilityChange?: (visible: boolean) => void;
 }
@@ -18,23 +16,23 @@ interface PointDetailReviewsProps {
 export function PointDetailReviews({
   pointId,
   pointName,
-  averageRating,
-  totalRatings,
   onViewAll,
   onSheetVisibilityChange,
 }: PointDetailReviewsProps) {
   const { user } = useAuth();
 
-  const { data, isLoading } = usePointReviews(pointId, 'createdAt,desc');
+  const { data, isLoading, fetchNextPage } = usePointReviews(pointId, 'createdAt,desc');
   const createReviewMutation = useCreatePointReview(pointId);
   const updateReviewMutation = useUpdatePointReview(pointId);
 
-  const allLoaded = useMemo(() => data?.pages.flatMap((page) => page.content) ?? [], [data]);
-
-  const myReview: ReviewResponse | undefined = useMemo(
-    () => (user ? allLoaded.find((review) => review.user.id === user.id) : undefined),
-    [allLoaded, user]
+  const allReviews = useMemo(() => data?.pages.flatMap((page) => page.reviews.content) ?? [], [data]);
+  const myReview = useMemo(
+    () => (user ? allReviews.find((review) => review.id === user.id) : undefined),
+    [allReviews, user]
   );
+
+  const avgRating = useMemo(() => data?.pages[0].avgRating ?? 0, [data]);
+  const totalRatings = useMemo(() => data?.pages[0].totalReviews ?? 0, [data]);
 
   const handleSubmit = async (rating: number, text: string): Promise<void> => {
     if (myReview) {
@@ -57,11 +55,11 @@ export function PointDetailReviews({
     <ReviewSection
       targetId={pointId}
       targetName={pointName}
-      averageRating={averageRating}
+      averageRating={avgRating}
       totalRatings={totalRatings}
-      reviews={allLoaded}
+      reviews={allReviews}
       isLoading={isLoading}
-      myReview={myReview}
+      myReview={myReview ?? undefined}
       onSubmitReview={handleSubmit}
       onViewAll={onViewAll}
       onSheetVisibilityChange={onSheetVisibilityChange}

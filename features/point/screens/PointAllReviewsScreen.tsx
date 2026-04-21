@@ -1,11 +1,8 @@
 import React, { useMemo } from 'react';
 import { StackScreenProps } from '@react-navigation/stack';
-import { useQuery } from '@tanstack/react-query';
-
 import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { AllReviewsTemplate } from '@/features/reviews';
 import { useAuth } from '@/features/auth';
-import { discoverService } from '@/features/discover/services/discoverServices';
 import { useCreatePointReview, usePointReviews, useUpdatePointReview } from '@/features/point/hooks';
 import type { ReviewSortKey } from '@/features/point/hooks';
 import type { ReviewResponse } from '@/features/reviews/types';
@@ -19,22 +16,10 @@ const SORT_OPTIONS: { label: string; value: ReviewSortKey }[] = [
 ];
 
 export default function PointAllReviewsScreen({ navigation, route }: Props) {
-  const { pointId, pointName, averageRating: initialAvg, totalRatings: initialTotal } = route.params;
+  const { pointId, pointName } = route.params;
   const { user } = useAuth();
 
   const [activeSort, setActiveSort] = React.useState<ReviewSortKey>('createdAt,desc');
-
-  const { data: point } = useQuery({
-    queryKey: ['pointDetail', pointId],
-    queryFn: async () => {
-      const response = await discoverService.getPointById(pointId);
-      return response.data;
-    },
-    enabled: Boolean(pointId),
-  });
-
-  const averageRating = Number((point as { averageRating?: number } | undefined)?.averageRating ?? initialAvg ?? 0);
-  const totalRatings = Number((point as { totalRatings?: number } | undefined)?.totalRatings ?? initialTotal ?? 0);
 
   const { data, isLoading, isFetching, isFetchingNextPage, hasNextPage, fetchNextPage, error } = usePointReviews(
     pointId,
@@ -44,8 +29,10 @@ export default function PointAllReviewsScreen({ navigation, route }: Props) {
   const createReviewMutation = useCreatePointReview(pointId);
   const updateReviewMutation = useUpdatePointReview(pointId);
 
-  const allReviews = useMemo(() => data?.pages.flatMap((page) => page.content) ?? [], [data]);
+  const avgRating = useMemo(() => data?.pages[0].avgRating ?? 0, [data]);
+  const totalRatings = useMemo(() => data?.pages[0].totalReviews ?? 0, [data]);
 
+  const allReviews = useMemo(() => data?.pages.flatMap((page) => page.reviews.content) ?? [], [data]);
   const myReview: ReviewResponse | undefined = useMemo(
     () => (user ? allReviews.find((review) => review.user.id === user.id) : undefined),
     [allReviews, user]
@@ -69,7 +56,7 @@ export default function PointAllReviewsScreen({ navigation, route }: Props) {
   return (
     <AllReviewsTemplate
       targetName={pointName}
-      averageRating={averageRating}
+      averageRating={avgRating}
       totalRatings={totalRatings}
       reviews={allReviews}
       myReview={myReview}

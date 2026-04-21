@@ -92,7 +92,7 @@ export interface PageResponse<T> {
   totalElements: number;
   totalPages: number;
   size: number;
-  number: number;
+  page: number;
   first: boolean;
   last: boolean;
   empty: boolean;

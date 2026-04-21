@@ -3,6 +3,8 @@
  * @see REVIEW_UPDATE_GUIDE.md
  */
 
+import { PageResponse } from '@/services/api';
+
 /** 1: Workshop, 2: Event, 3: Point */
 export const ReviewTypeFlg = {
   WORKSHOP: 'WORKSHOP',
@@ -40,21 +42,25 @@ export interface ReviewResponse {
   reviewImages?: ReviewImage[];
 }
 
-export interface PointReviewResponse extends Omit<ReviewResponse, 'imageUrls' | 'reviewImages'> {
+export interface PointReviewResponse extends ReviewResponse {
   reviewImages: ReviewImage[];
 }
 
-/** Spring-style page wrapper returned by all review listing endpoints. */
 export interface ReviewPageResponse {
   content: ReviewResponse[];
-  page?: number;
-  number?: number;
-  size: number;
   totalElements: number;
   totalPages: number;
-  first?: boolean;
-  last?: boolean;
-  empty?: boolean;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
+}
+
+export interface PointReviewResponseWrapper {
+  reviews: PageResponse<PointReviewResponse>;
+  totalReviews: number;
+  avgRating: number;
 }
 
 export interface CreateReviewRequest {

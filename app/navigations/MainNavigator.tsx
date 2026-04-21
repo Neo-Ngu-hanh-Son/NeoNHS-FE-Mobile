@@ -18,7 +18,6 @@ import PaymentScreen from '@/features/cart/screens/PaymentScreen';
 import AllDestinationsScreen from '@/features/discover/screens/AllDestinationsScreen';
 import PointDetailScreen from '@/features/point/screens/PointDetailScreen';
 import PointAllReviewsScreen from '@/features/point/screens/PointAllReviewsScreen';
-import PointMapSelectionScreen from '@/features/discover/screens/PointMapSelectionScreen';
 import ActiveNavigationScreen from '@/features/discover/screens/ActiveNavigationScreen';
 import ArrivalConfirmationScreen from '@/features/discover/screens/ArrivalConfirmationScreen';
 import EventDetailScreen from '@/features/event/screens/EventDetailScreen';
@@ -72,7 +71,6 @@ export default function MainNavigator() {
         <Stack.Screen name="AllDestinations" component={AllDestinationsScreen} />
         <Stack.Screen name="PointDetail" component={PointDetailScreen} />
         <Stack.Screen name="PointAllReviews" component={PointAllReviewsScreen} />
-        <Stack.Screen name="PointMapSelection" component={PointMapSelectionScreen} />
         <Stack.Screen name="ActiveNavigation" component={ActiveNavigationScreen} />
         <Stack.Screen name="ArrivalConfirmation" component={ArrivalConfirmationScreen} />
         <Stack.Screen
