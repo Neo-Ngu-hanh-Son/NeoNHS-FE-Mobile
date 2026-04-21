@@ -160,7 +160,10 @@ export type MainStackParamList = BaseMainRoutes &
   CheckoutRoutes &
   BlogRoutes &
   NotificationRoutes &
-  ChatRoutes;
+  ChatRoutes & {
+    MapDirection: { pointId?: string; targetNavigationPointId?: string };
+    Cart: undefined;
+  };
 
 /* ============================================================
    ROOT STACK

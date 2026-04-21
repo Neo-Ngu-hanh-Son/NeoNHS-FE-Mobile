@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { View, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -86,6 +86,21 @@ export default function ChatScreen({ route, navigation }: any) {
   const displayAvatar = displayParticipant?.avatarUrl;
 
   const messages = messagesByRoom[roomId] || [];
+
+  // Deduplicate: If we have a real message from CURRENT_USER, remove any optimistic placeholder with the same content
+  const displayMessages = useMemo(() => {
+    const realMsgContents = new Set(
+      messages
+        .filter((m) => !m.id.startsWith('__user_') && m.senderId === currentUserId)
+        .map((m) => m.content.trim())
+    );
+
+    return messages.filter((m) => {
+      if (!m.id.startsWith('__user_')) return true;
+      // If a real message exists with exact same content (or it's the newest message which is now real), hide the optimistic one
+      return !realMsgContents.has(m.content.trim());
+    });
+  }, [messages, currentUserId]);
 
   // Room opened from transfer / deep link may be missing from context until list refetch
   useFocusEffect(
@@ -202,6 +217,23 @@ export default function ChatScreen({ route, navigation }: any) {
     setAiTransferOfferPending(false);
     setIsAiThinking(true);
     setAiStreamingText('');
+
+    // Optimistic UI: Prepend the user's message to local state so it appears immediately
+    if (roomId) {
+      const optimisticUserMsg: ChatMessage = {
+        id: `__user_${Date.now()}`,
+        chatRoomId: roomId,
+        senderId: currentUserId,
+        content: text,
+        timestamp: new Date().toISOString(),
+        status: 'SENT',
+        messageType: 'TEXT',
+      };
+      setMessagesByRoom((prev) => ({
+        ...prev,
+        [roomId]: [optimisticUserMsg, ...(prev[roomId] || [])],
+      }));
+    }
 
     abortAiRef.current = streamAiReply(
       roomId,
@@ -452,7 +484,7 @@ export default function ChatScreen({ route, navigation }: any) {
         {renderHeader()}
 
         <FlatList
-          data={messages}
+          data={displayMessages}
           keyExtractor={(item) => item.id}
           inverted
           showsVerticalScrollIndicator={false}
@@ -500,8 +532,8 @@ export default function ChatScreen({ route, navigation }: any) {
               </View>
             ) : isAiRoom &&
               aiTransferOfferPending &&
-              messages[0] &&
-              messages[0].senderId === currentUserId ? (
+              displayMessages[0] &&
+              displayMessages[0].senderId === currentUserId ? (
               <View className="px-4 py-2">
                 <View className="mt-1 flex-row items-center">
                   <TouchableOpacity
@@ -522,8 +554,8 @@ export default function ChatScreen({ route, navigation }: any) {
           }
           renderItem={({ item, index }) => {
             const isMine = item.senderId === currentUserId && item.senderId !== 'AI_ASSISTANT';
-            const prevMsg = messages[index + 1];
-            const nextMsg = messages[index - 1];
+            const prevMsg = displayMessages[index + 1];
+            const nextMsg = displayMessages[index - 1];
 
             let showTs = true;
             if (prevMsg) showTs = shouldShowTimestamp(item.timestamp, prevMsg.timestamp);
@@ -559,8 +591,16 @@ export default function ChatScreen({ route, navigation }: any) {
                     }
                   }}
                   onGoToCart={() => {
-                    // @ts-ignore
-                    navigation.navigate('Tabs', { screen: 'TestCart' });
+                    // Navigate to Cart stack screen (not the tab) so that Back button works correctly
+                    navigation.navigate('Cart');
+                  }}
+                  onGoToMap={(pointId) => {
+                    // Navigate to MapDirection stack screen instead of switching Tab
+                    // This allows the "Back" button to return to the ChatRoom
+                    navigation.navigate('MapDirection', {
+                      pointId: pointId,
+                      targetNavigationPointId: pointId
+                    });
                   }}
                 />
                 {showHumanTransferRow && (

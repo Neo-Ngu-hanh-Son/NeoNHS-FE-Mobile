@@ -243,7 +243,14 @@ export default function CartListScreen() {
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
             <View style={styles.header}>
-                <Text style={[styles.title, { color: theme.foreground }]}>My Cart</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    {navigation.canGoBack() && (
+                        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
+                            <Ionicons name="arrow-back" size={24} color={theme.foreground} />
+                        </TouchableOpacity>
+                    )}
+                    <Text style={[styles.title, { color: theme.foreground }]}>My Cart</Text>
+                </View>
                 <Button size="sm" variant="outline" onPress={fetchCart}>
                     <Text>Refresh</Text>
                 </Button>

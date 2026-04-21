@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, TouchableOpacity, Modal, Dimensions, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-
+import { SmartImage } from '@/components/ui/smart-image';
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import Markdown from 'react-native-markdown-display';
+
 import { ChatMessage } from '../types';
 import { hasTransferMarker, stripTransferMarker } from '../utils/transferHuman';
 
@@ -19,6 +20,7 @@ export interface ChatMessageBubbleProps {
   participantAvatar?: string | null;
   onProductSnippetPress?: (id: string, type?: 'workshop' | 'event') => void;
   onGoToCart?: () => void;
+  onGoToMap?: (pointId: string) => void;
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -48,7 +50,7 @@ function StatusTicks({ status }: { status: ChatMessage['status'] }) {
 }
 
 // ── Main component ─────────────────────────────────────
-export function ChatMessageBubble({
+const ChatMessageBubbleBase = ({
   message,
   isMine,
   showAvatar,
@@ -57,14 +59,15 @@ export function ChatMessageBubble({
   participantAvatar,
   onProductSnippetPress,
   onGoToCart,
-}: ChatMessageBubbleProps) {
+  onGoToMap,
+}: ChatMessageBubbleProps) => {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const [imageModalVisible, setImageModalVisible] = useState(false);
 
   const msgType = message.messageType ?? 'TEXT';
 
-  const markdownStyle = {
+  const markdownStyle = useMemo(() => ({
     body: {
       color: isMine ? '#FFFFFF' : theme.foreground,
       fontSize: 15,
@@ -76,13 +79,13 @@ export function ChatMessageBubble({
     },
     link: {
       color: isMine ? '#E5E7EB' : theme.primary,
-      textDecorationLine: 'underline',
+      textDecorationLine: 'underline' as const,
     },
     strong: {
-      fontWeight: 'bold',
+      fontWeight: 'bold' as const,
     },
     em: {
-      fontStyle: 'italic',
+      fontStyle: 'italic' as const,
     },
     code_inline: {
       backgroundColor: isMine ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.05)',
@@ -97,7 +100,82 @@ export function ChatMessageBubble({
       marginBottom: 8,
       backgroundColor: isDarkColorScheme ? '#374151' : '#F3F4F6',
     },
-  } as any;
+  }), [isMine, theme, isDarkColorScheme]);
+
+  const markdownRules = useMemo(() => ({
+    image: (node: any) => {
+      const { src, alt } = node.attributes;
+      const parts = alt ? alt.split('|') : [];
+      const title = parts[0]?.trim();
+      const idPart = parts.find((p: string) => p.trim().toUpperCase().startsWith('ID:'));
+      const typePart = parts.find((p: string) => p.trim().toUpperCase().startsWith('TYPE:'));
+
+      const id = idPart ? idPart.split(':')[1]?.trim() : null;
+      const type = typePart ? typePart.split(':')[1]?.trim().toLowerCase() : 'workshop';
+      const isPoint = type === 'point';
+      const isMapImage = alt?.toLowerCase().includes('map') || alt?.toLowerCase().includes('vị trí') || alt?.toLowerCase().includes('chỉ đường') || alt?.toLowerCase().includes('direction');
+
+      if (id) {
+        return (
+          <TouchableOpacity
+            key={node.key}
+            activeOpacity={0.8}
+            onPress={() => {
+              if (isPoint) {
+                onGoToMap?.(id);
+              } else {
+                onProductSnippetPress?.(id, type as any);
+              }
+            }}
+            className="flex-row items-center p-2 my-2 rounded-xl border"
+            style={{
+              width: '100%',
+              backgroundColor: isDarkColorScheme ? 'rgba(255,255,255,0.05)' : '#FFFFFF',
+              borderColor: theme.border,
+            }}>
+            <SmartImage
+              uri={src}
+              className="rounded-lg"
+              style={{ width: 60, height: 60 }}
+            />
+            <View className="flex-1 ml-3">
+              <Text
+                className="text-xs font-bold"
+                style={{ color: theme.foreground }}
+                numberOfLines={2}>
+                {title}
+              </Text>
+              <Text className="text-[10px] font-bold mt-1" style={{ color: theme.primary }}>
+                {isPoint ? 'Nhấn để xem đường đi →' : 'Nhấn để xem chi tiết →'}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        );
+      }
+
+      if (isMapImage) {
+        return (
+          <View key={node.key} className="my-2 items-start">
+            <SmartImage
+              uri={src}
+              className="rounded-xl"
+              style={{ width: 120, height: 90 }}
+            />
+            {title ? <Text className="text-[10px] mt-1" style={{ color: theme.mutedForeground }}>{title}</Text> : null}
+          </View>
+        );
+      }
+
+      return (
+        <SmartImage
+          key={node.key}
+          uri={src}
+          className="rounded-xl"
+          style={(markdownStyle as any).image}
+        />
+      );
+    },
+  }), [theme, isDarkColorScheme, onGoToMap, onProductSnippetPress, markdownStyle]);
 
   // ── Render bubble content by type ────────────────────
   const renderContent = () => {
@@ -155,7 +233,7 @@ export function ChatMessageBubble({
               <View className="mt-1.5 px-2">
                 <Markdown
                   style={markdownStyle}
-                  onLinkPress={(url) => {
+                  onLinkPress={(url: string) => {
                     if (url.startsWith('neo-nhs://')) {
                       const parts = url.replace('neo-nhs://', '').split('/');
                       const type = parts[0] === 'event' ? 'event' : 'workshop';
@@ -166,60 +244,7 @@ export function ChatMessageBubble({
                     Linking.openURL(url).catch(() => { });
                     return true;
                   }}
-                  rules={{
-                    image: (node: any) => {
-                      const { src, alt } = node.attributes;
-                      const parts = alt ? alt.split('|') : [];
-                      const title = parts[0]?.trim();
-                      const idPart = parts.find((p: string) => p.trim().toUpperCase().startsWith('ID:'));
-                      const typePart = parts.find((p: string) => p.trim().toUpperCase().startsWith('TYPE:'));
-
-                      const id = idPart ? idPart.split(':')[1]?.trim() : null;
-                      const type = typePart ? typePart.split(':')[1]?.trim().toLowerCase() : 'workshop';
-
-                      if (id) {
-                        return (
-                          <TouchableOpacity
-                            key={node.key}
-                            activeOpacity={0.8}
-                            onPress={() => onProductSnippetPress?.(id, type as any)}
-                            className="flex-row items-center p-2 my-2 rounded-xl border"
-                            style={{
-                              width: '100%',
-                              backgroundColor: isDarkColorScheme ? 'rgba(255,255,255,0.05)' : '#FFFFFF',
-                              borderColor: theme.border,
-                            }}>
-                            <Image
-                              source={{ uri: src }}
-                              className="rounded-lg"
-                              contentFit="cover"
-                              style={{ width: 60, height: 60 }}
-                            />
-                            <View className="flex-1 ml-3">
-                              <Text
-                                className="text-xs font-bold"
-                                style={{ color: theme.foreground }}
-                                numberOfLines={2}>
-                                {title}
-                              </Text>
-                              <Text className="text-[10px] font-bold mt-1" style={{ color: theme.primary }}>
-                                Nhấn để xem chi tiết →
-                              </Text>
-                            </View>
-                          </TouchableOpacity>
-                        );
-                      }
-
-                      return (
-                        <Image
-                          key={node.key}
-                          source={{ uri: src }}
-                          style={markdownStyle.image}
-                          contentFit="cover"
-                        />
-                      );
-                    },
-                  }}
+                  rules={markdownRules}
                 >
                   {message.content}
                 </Markdown>
@@ -252,9 +277,15 @@ export function ChatMessageBubble({
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => {
-                const id = meta?.workshopId || meta?.eventId;
-                const type = meta?.workshopId ? 'workshop' : 'event';
-                if (id) onProductSnippetPress?.(id, type as any);
+                const id = meta?.workshopId || meta?.eventId || meta?.pointId;
+                const type = meta?.pointId ? 'point' : meta?.workshopId ? 'workshop' : 'event';
+                if (id) {
+                  if (type === 'point') {
+                    onGoToMap?.(id);
+                  } else {
+                    onProductSnippetPress?.(id, type as any);
+                  }
+                }
               }}
               className="flex-row items-center p-2 rounded-xl border"
               style={{
@@ -275,7 +306,7 @@ export function ChatMessageBubble({
                   className="text-xs font-bold"
                   style={{ color: isMine ? '#FFFFFF' : theme.foreground }}
                   numberOfLines={2}>
-                  {meta?.title ?? 'Workshop'}
+                  {meta?.title ?? 'Product'}
                 </Text>
                 {meta?.price != null && (
                   <Text className="mt-1 text-[11px] font-semibold" style={{ color: theme.primary }}>
@@ -284,7 +315,7 @@ export function ChatMessageBubble({
                 )}
                 <View className="mt-1">
                   <Text className="text-[10px] font-bold" style={{ color: theme.primary }}>
-                    Nhấn để xem chi tiết →
+                    {meta?.pointId ? 'Nhấn để xem đường đi →' : 'Nhấn để xem chi tiết →'}
                   </Text>
                 </View>
               </View>
@@ -295,63 +326,24 @@ export function ChatMessageBubble({
               <View className="mt-3 px-2 pb-1">
                 <Markdown
                   style={{ ...markdownStyle, body: { ...markdownStyle.body, fontSize: 14, lineHeight: 20 } }}
-                  onLinkPress={(url) => {
+                  onLinkPress={(url: string) => {
                     if (url.startsWith('neo-nhs://')) {
                       const parts = url.replace('neo-nhs://', '').split('/');
-                      const type = parts[0] === 'event' ? 'event' : 'workshop';
+                      const type = parts[0]?.toLowerCase();
                       const id = parts[1];
-                      if (id) onProductSnippetPress?.(id, type);
+                      if (id) {
+                        if (type === 'point') {
+                          onGoToMap?.(id);
+                        } else {
+                          onProductSnippetPress?.(id, type as any);
+                        }
+                      }
                       return false;
                     }
                     Linking.openURL(url).catch(() => { });
                     return true;
                   }}
-                  rules={{
-                    image: (node: any) => {
-                      const { src, alt } = node.attributes;
-                      const parts = alt ? alt.split('|') : [];
-                      const title = parts[0]?.trim();
-                      const idPart = parts.find((p: string) => p.trim().toUpperCase().startsWith('ID:'));
-                      const typePart = parts.find((p: string) => p.trim().toUpperCase().startsWith('TYPE:'));
-
-                      const id = idPart ? idPart.split(':')[1]?.trim() : null;
-                      const type = typePart ? typePart.split(':')[1]?.trim().toLowerCase() : 'workshop';
-
-                      if (id) {
-                        return (
-                          <TouchableOpacity
-                            key={node.key}
-                            activeOpacity={0.8}
-                            onPress={() => onProductSnippetPress?.(id, type as any)}
-                            className="flex-row items-center p-2 my-2 rounded-xl border"
-                            style={{
-                              width: '100%',
-                              backgroundColor: isDarkColorScheme ? 'rgba(255,255,255,0.05)' : '#FFFFFF',
-                              borderColor: theme.border,
-                            }}>
-                            <Image
-                              source={{ uri: src }}
-                              className="rounded-lg"
-                              contentFit="cover"
-                              style={{ width: 60, height: 60 }}
-                            />
-                            <View className="flex-1 ml-3">
-                              <Text
-                                className="text-xs font-bold"
-                                style={{ color: theme.foreground }}
-                                numberOfLines={2}>
-                                {title}
-                              </Text>
-                              <Text className="text-[10px] font-bold mt-1" style={{ color: theme.primary }}>
-                                Nhấn để xem chi tiết →
-                              </Text>
-                            </View>
-                          </TouchableOpacity>
-                        );
-                      }
-                      return null;
-                    },
-                  }}
+                  rules={markdownRules}
                 >
                   {message.content}
                 </Markdown>
@@ -393,71 +385,24 @@ export function ChatMessageBubble({
           <View>
             <Markdown
               style={markdownStyle}
-              onLinkPress={(url) => {
+              onLinkPress={(url: string) => {
                 if (url.startsWith('neo-nhs://')) {
                   const parts = url.replace('neo-nhs://', '').split('/');
-                  const type = parts[0] === 'event' ? 'event' : 'workshop';
+                  const type = parts[0]?.toLowerCase();
                   const id = parts[1];
-                  if (id) onProductSnippetPress?.(id, type);
+                  if (id) {
+                    if (type === 'point') {
+                      onGoToMap?.(id);
+                    } else {
+                      onProductSnippetPress?.(id, type as any);
+                    }
+                  }
                   return false;
                 }
                 Linking.openURL(url).catch(() => { });
                 return true;
               }}
-              rules={{
-                image: (node: any) => {
-                  const { src, alt } = node.attributes;
-                  const parts = alt ? alt.split('|') : [];
-                  const title = parts[0]?.trim();
-                  const idPart = parts.find((p: string) => p.trim().toUpperCase().startsWith('ID:'));
-                  const typePart = parts.find((p: string) => p.trim().toUpperCase().startsWith('TYPE:'));
-
-                  const id = idPart ? idPart.split(':')[1]?.trim() : null;
-                  const type = typePart ? typePart.split(':')[1]?.trim().toLowerCase() : 'workshop';
-
-                  if (id) {
-                    return (
-                      <TouchableOpacity
-                        key={node.key}
-                        activeOpacity={0.8}
-                        onPress={() => onProductSnippetPress?.(id, type as any)}
-                        className="flex-row items-center p-2 my-2 rounded-xl border"
-                        style={{
-                          width: '100%',
-                          backgroundColor: isDarkColorScheme ? 'rgba(255,255,255,0.05)' : '#FFFFFF',
-                          borderColor: theme.border,
-                        }}>
-                        <Image
-                          source={{ uri: src }}
-                          className="rounded-lg"
-                          contentFit="cover"
-                          style={{ width: 60, height: 60 }}
-                        />
-                        <View className="flex-1 ml-3">
-                          <Text
-                            className="text-xs font-bold"
-                            style={{ color: theme.foreground }}
-                            numberOfLines={2}>
-                            {title}
-                          </Text>
-                          <Text className="text-[10px] font-bold mt-1" style={{ color: theme.primary }}>
-                            Nhấn để xem chi tiết →
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  }
-
-                  return (
-                    <Image
-                      key={node.key}
-                      source={{ uri: src }}
-                      style={markdownStyle.image}
-                      contentFit="cover"
-                    />
-                  );
-                },
-              }}
+              rules={markdownRules}
             >
               {message.content}
             </Markdown>
@@ -529,4 +474,6 @@ export function ChatMessageBubble({
       </View>
     </View>
   );
-}
+};
+
+export const ChatMessageBubble = React.memo(ChatMessageBubbleBase);
