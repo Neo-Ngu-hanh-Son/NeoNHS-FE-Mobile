@@ -7,6 +7,7 @@ import { RootStackParamList, TabsStackParamList } from '@/app/navigations/Naviga
 import ExperienceCard from '../ExperienceCard';
 import SectionHeader from '../SectionHeader';
 import SectionStateMessage from './SectionStateMessage';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   events: EventResponse[];
@@ -21,6 +22,7 @@ type HomeScreenProps = CompositeScreenProps<
 
 export default function UpcomingEventsSection({ events, loading, error }: Props) {
   const { navigate } = useNavigation<HomeScreenProps['navigation']>();
+  const { t } = useTranslation();
 
   function handleSeeMoreExperiences(): void {
     navigate('Main', { screen: 'AllDestinations', params: { initialTab: 'Events' } });
@@ -33,7 +35,7 @@ export default function UpcomingEventsSection({ events, loading, error }: Props)
   if (error) {
     return (
       <View className="mb-4">
-        <SectionHeader title="Upcoming events" showSeeAll onSeeAllPress={handleSeeMoreExperiences} />
+        <SectionHeader title={t('home.upcoming_events')} showSeeAll onSeeAllPress={handleSeeMoreExperiences} />
         <SectionStateMessage
           tone="error"
           message="Failed to fetch upcoming events. Please pull to refresh."
@@ -45,7 +47,7 @@ export default function UpcomingEventsSection({ events, loading, error }: Props)
   if (!loading && (events == null || events.length === 0)) {
     return (
       <View className="mb-4">
-        <SectionHeader title="Upcoming events" showSeeAll onSeeAllPress={handleSeeMoreExperiences} />
+        <SectionHeader title={t('home.upcoming_events')} showSeeAll onSeeAllPress={handleSeeMoreExperiences} />
         <SectionStateMessage message="No upcoming events found." />
       </View>
     );
@@ -53,7 +55,7 @@ export default function UpcomingEventsSection({ events, loading, error }: Props)
 
   return (
     <View className="mb-4">
-      <SectionHeader title="Upcoming events" showSeeAll onSeeAllPress={handleSeeMoreExperiences} />
+      <SectionHeader title={t('home.upcoming_events')} showSeeAll onSeeAllPress={handleSeeMoreExperiences} />
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

@@ -13,6 +13,7 @@ import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { useAuth } from '@/features/auth';
+import { useTranslation } from 'react-i18next';
 
 import { RatingSummary } from './RatingSummary';
 import { ReviewCard } from './ReviewCard';
@@ -62,6 +63,7 @@ export function AllReviewsTemplate({
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   const sheetRef = useRef<WriteReviewSheetRef>(null);
   const [activeStar, setActiveStar] = useState<FilterStar>(0);
@@ -163,7 +165,7 @@ export function AllReviewsTemplate({
                     fontWeight: '600',
                     color: activeStar === 0 ? '#fff' : theme.mutedForeground,
                   }}>
-                  All
+                  {t('review.filter.all')}
                 </Text>
               ) : (
                 <>
@@ -192,7 +194,7 @@ export function AllReviewsTemplate({
         <View className="items-center py-10 gap-2 mx-4">
           <Ionicons name="cloud-offline-outline" size={36} color={theme.mutedForeground} />
           <Text style={{ color: theme.mutedForeground, fontSize: 13, textAlign: 'center' }}>
-            Could not load reviews. Pull down to retry.
+            {t('review.load_error')}
           </Text>
         </View>
       )}
@@ -201,7 +203,7 @@ export function AllReviewsTemplate({
         <View className="items-center py-16 gap-3">
           <Ionicons name="chatbubble-outline" size={40} color={theme.mutedForeground} />
           <Text style={{ color: theme.mutedForeground, fontSize: 14 }}>
-            {activeStar === 0 ? 'No reviews yet. Be the first!' : 'No reviews for this rating.'}
+            {activeStar === 0 ? t('review.be_first') : t('review.no_reviews_for_rating')}
           </Text>
         </View>
       )}
@@ -224,7 +226,7 @@ export function AllReviewsTemplate({
           <Ionicons name="arrow-back" size={24} color={theme.foreground} />
         </TouchableOpacity>
         <Text className="flex-1 ml-2 text-lg font-bold" style={{ color: theme.foreground }}>
-          Reviews
+          {t('review.title')}
         </Text>
         {user && (
           <TouchableOpacity
@@ -241,7 +243,7 @@ export function AllReviewsTemplate({
             }}>
             <Ionicons name={myReview ? 'pencil-outline' : 'create-outline'} size={15} color="#fff" />
             <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700' }}>
-              {myReview ? 'Edit' : 'Write'}
+              {myReview ? t('review.edit') : t('review.write')}
             </Text>
           </TouchableOpacity>
         )}
@@ -250,7 +252,7 @@ export function AllReviewsTemplate({
       {isLoading ? (
         <View className="flex-1 items-center justify-center gap-3">
           <ActivityIndicator size="large" color={theme.primary} />
-          <Text style={{ color: theme.mutedForeground, fontSize: 13 }}>Loading reviews…</Text>
+          <Text style={{ color: theme.mutedForeground, fontSize: 13 }}>{t('review.loading')}</Text>
         </View>
       ) : (
         <FlatList
@@ -264,7 +266,7 @@ export function AllReviewsTemplate({
                 item={item}
                 isOwn={item.user.id === user?.id}
                 onEdit={() => sheetRef.current?.present()}
-                onReport={() => Alert.alert('Report', 'Report this review as inappropriate?')}
+                onReport={() => Alert.alert(t('review.alert.report_title'), t('review.alert.report_message'))}
               />
             </View>
           )}

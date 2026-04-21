@@ -6,12 +6,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { SmartImage } from '@/components/ui/smart-image';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
+import { useTranslation } from 'react-i18next';
 
 /* ─── Rating Summary ─── */
 
 function RatingSummary() {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const { t } = useTranslation();
 
   return (
     <Card className="rounded-2xl py-5">
@@ -25,7 +27,7 @@ function RatingSummary() {
             ))}
             <Ionicons name="star-half" size={12} color={theme.primary} />
           </View>
-          <Text className="mt-1.5 text-[11px] text-muted-foreground">324 reviews</Text>
+          <Text className="mt-1.5 text-[11px] text-muted-foreground">324 {t('point.reviews_count')}</Text>
         </View>
 
         {/* Bar chart */}
@@ -91,15 +93,16 @@ function ReviewCard() {
 export function PointDetailReviews() {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const { t } = useTranslation();
 
   return (
     <View className="gap-4">
       {/* Header */}
       <View className="flex-row items-center justify-between">
-        <Text className="text-xl font-black tracking-tight">Reviews</Text>
+        <Text className="text-xl font-black tracking-tight">{t('point.tabs.reviews')}</Text>
         <TouchableOpacity className="flex-row items-center gap-1" activeOpacity={0.7}>
           <Text className="text-sm font-bold" style={{ color: theme.primary }}>
-            Write a review
+            {t('point.write_review')}
           </Text>
           <Ionicons name="arrow-forward" size={14} color={theme.primary} />
         </TouchableOpacity>
@@ -114,7 +117,7 @@ export function PointDetailReviews() {
       {/* View all link */}
       <TouchableOpacity className="flex-row items-center justify-center gap-1 py-1" activeOpacity={0.7}>
         <Text className="text-sm font-bold" style={{ color: theme.primary }}>
-          View all reviews
+          {t('point.view_all_reviews')}
         </Text>
         <Ionicons name="arrow-forward" size={14} color={theme.primary} />
       </TouchableOpacity>

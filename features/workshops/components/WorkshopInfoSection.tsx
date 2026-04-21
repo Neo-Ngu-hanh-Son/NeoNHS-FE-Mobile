@@ -1,6 +1,7 @@
 import React from "react";
 import { View, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 import { Text } from "@/components/ui/text";
 import { WorkshopTemplateResponse } from "../types";
@@ -20,6 +21,8 @@ interface WorkshopInfoSectionProps {
 }
 
 export default function WorkshopInfoSection({ workshop, theme }: WorkshopInfoSectionProps) {
+  const { t } = useTranslation();
+
   return (
     <View>
       {/* Title & Rating */}
@@ -31,7 +34,7 @@ export default function WorkshopInfoSection({ workshop, theme }: WorkshopInfoSec
               {workshop.averageRating.toFixed(1)}
             </Text>
             <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-              ({workshop.totalRatings} reviews)
+              ({workshop.totalRatings} {t("workshop.reviews")})
             </Text>
           </View>
         </View>
@@ -66,7 +69,7 @@ export default function WorkshopInfoSection({ workshop, theme }: WorkshopInfoSec
               {formatDuration(workshop.estimatedDuration)}
             </Text>
             <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-              Estimated duration
+              {t("workshop.estimated_duration")}
             </Text>
           </View>
         </View>
@@ -84,7 +87,7 @@ export default function WorkshopInfoSection({ workshop, theme }: WorkshopInfoSec
               {formatPrice(workshop.defaultPrice)}
             </Text>
             <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-              Starting from
+              {t("workshop.starting_from")}
             </Text>
           </View>
         </View>
@@ -99,10 +102,10 @@ export default function WorkshopInfoSection({ workshop, theme }: WorkshopInfoSec
           </View>
           <View className="flex-1">
             <Text className="text-sm font-semibold" style={{ color: theme.foreground }}>
-              {workshop.minParticipants}–{workshop.maxParticipants} participants
+              {workshop.minParticipants}–{workshop.maxParticipants} {t("workshop.participants")}
             </Text>
             <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-              Group size
+              {t("workshop.group_size")}
             </Text>
           </View>
         </View>
@@ -120,7 +123,7 @@ export default function WorkshopInfoSection({ workshop, theme }: WorkshopInfoSec
               {workshop.vendorName}
             </Text>
             <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-              Hosted by
+              {t("workshop.hosted_by")}
             </Text>
           </View>
         </View>

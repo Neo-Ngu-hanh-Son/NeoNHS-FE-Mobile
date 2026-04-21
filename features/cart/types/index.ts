@@ -20,13 +20,24 @@ export interface Cart {
     totalPrice: number;
 }
 
+export type DiscountType = 'FIXED' | 'PERCENT';
+export type ApplicableProduct = 'ALL' | 'EVENT_TICKET' | 'WORKSHOP' | 'TICKET';
+export type VoucherType = 'DISCOUNT' | 'GIFT_PRODUCT' | 'BONUS_POINTS' | 'FREE_SERVICE';
+
 export interface Voucher {
     userVoucherId: string;
+    voucherId: string;
     code: string;
     description: string | null;
+    voucherType: VoucherType;
+    discountType: DiscountType;
     discountValue: number;
-    type: 'FIXED' | 'PERCENT';
+    maxDiscountValue: number | null;
     minOrderValue: number;
+    applicableProduct: ApplicableProduct;
+    startDate: string | null;
+    endDate: string | null;
+    isAvailable: boolean;
 }
 
 export interface PreCheckoutResponse {

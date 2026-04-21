@@ -7,6 +7,7 @@ import { RootStackParamList, TabsStackParamList } from '@/app/navigations/Naviga
 import PlaceCard from '../PlaceCard';
 import SectionHeader from '../SectionHeader';
 import SectionStateMessage from './SectionStateMessage';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   destinations: MapPoint[];
@@ -21,6 +22,7 @@ type HomeScreenProps = CompositeScreenProps<
 
 export default function MustSeePlacesSection({ destinations, loading, error }: Props) {
   const { navigate } = useNavigation<HomeScreenProps['navigation']>();
+  const { t } = useTranslation();
 
   function handleExploreAllDestinations(): void {
     navigate('Main', { screen: 'AllDestinations', params: {} });
@@ -34,7 +36,7 @@ export default function MustSeePlacesSection({ destinations, loading, error }: P
     return (
       <View className="mb-4">
         <SectionHeader
-          title="Must-See Places"
+          title={t('home.must_see_places')}
           showSeeAll
           onSeeAllPress={handleExploreAllDestinations}
         />
@@ -50,7 +52,7 @@ export default function MustSeePlacesSection({ destinations, loading, error }: P
     return (
       <View className="mb-4">
         <SectionHeader
-          title="Must-See Places"
+          title={t('home.must_see_places')}
           showSeeAll
           onSeeAllPress={handleExploreAllDestinations}
         />
@@ -62,7 +64,7 @@ export default function MustSeePlacesSection({ destinations, loading, error }: P
   return (
     <View className="mb-4">
       <SectionHeader
-        title="Must-See Places"
+        title={t('home.must_see_places')}
         showSeeAll
         onSeeAllPress={handleExploreAllDestinations}
       />

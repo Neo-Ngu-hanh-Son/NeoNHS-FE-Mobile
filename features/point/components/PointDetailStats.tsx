@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { MapPoint } from '../../map/types';
+import { useTranslation } from 'react-i18next';
 
 type StatItemProps = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -39,6 +40,7 @@ type PointDetailStatsProps = {
 export function PointDetailStats({ point }: PointDetailStatsProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const { t } = useTranslation();
 
   return (
     <Card className="rounded-3xl py-5">
@@ -47,24 +49,24 @@ export function PointDetailStats({ point }: PointDetailStatsProps) {
           icon="time-outline"
           iconColor={theme.primary}
           iconBgColor={`${theme.primary}18`}
-          label="Duration"
-          value={`${point.estTimeSpent || 30} mins`}
+          label={t('point.duration')}
+          value={`${point.estTimeSpent || 30} ${t('point.mins')}`}
         />
         <Separator orientation="vertical" className="mx-1 h-12" />
         <StatItem
           icon="flash-outline"
           iconColor="#f97316"
           iconBgColor="#f9731615"
-          label="Difficulty"
-          value="Moderate"
+          label={t('point.difficulty')}
+          value={t('point.moderate')}
         />
         <Separator orientation="vertical" className="mx-1 h-12" />
         <StatItem
           icon="cloud-outline"
           iconColor="#14b8a6"
           iconBgColor="#14b8a615"
-          label="Vibe"
-          value="Spiritual"
+          label={t('point.vibe')}
+          value={t('point.spiritual')}
         />
       </CardContent>
     </Card>

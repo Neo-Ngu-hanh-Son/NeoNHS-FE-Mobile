@@ -5,13 +5,14 @@ import { Button } from '@/components/ui/button';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { cartService } from '../services/cartService';
-import { PreCheckoutResponse, CartItem } from '../types';
+import { PreCheckoutResponse, CartItem, Voucher, ApplicableProduct } from '../types';
 import LoadingOverlay from '@/components/Loader/LoadingOverlay';
 import { logger } from '@/utils/logger';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { TouchableOpacity } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 interface GroupedItems {
     groupName: string;
@@ -55,6 +56,7 @@ export default function PreCheckoutScreen() {
     const theme = isDarkColorScheme ? THEME.dark : THEME.light;
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
+    const { t } = useTranslation();
 
     // Expect selectedIds from route params
     const { selectedIds, selectedVoucherId } = route.params || { selectedIds: [], selectedVoucherId: null };
@@ -67,6 +69,17 @@ export default function PreCheckoutScreen() {
         if (!preCheckoutData) return [];
         return groupCartItems(preCheckoutData.cartItems);
     }, [preCheckoutData]);
+
+    // Calculate how much discount applies to each group
+    const getGroupDiscount = (groupType: 'event' | 'workshop' | 'other'): number => {
+        const voucher = preCheckoutData?.appliedVoucher;
+        if (!voucher || preCheckoutData.discountValue <= 0) return 0;
+        const ap: ApplicableProduct = voucher.applicableProduct;
+        if (ap === 'ALL') return 0; // shown globally in Payment Summary
+        if (ap === 'EVENT_TICKET' && groupType === 'event') return preCheckoutData.discountValue;
+        if (ap === 'WORKSHOP' && groupType === 'workshop') return preCheckoutData.discountValue;
+        return 0;
+    };
 
 
 
@@ -130,7 +143,7 @@ export default function PreCheckoutScreen() {
         fetchPreCheckout();
     }, []);
 
-    if (!preCheckoutData) return <LoadingOverlay visible={loading} message="Calculating..." />;
+    if (!preCheckoutData) return <LoadingOverlay visible={loading} message={t('common.loading')} />;
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
@@ -138,7 +151,7 @@ export default function PreCheckoutScreen() {
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                     <MaterialIcons name="chevron-left" size={32} color={theme.foreground} />
                 </TouchableOpacity>
-                <Text style={[styles.title, { color: theme.foreground }]}>Order Confirmation</Text>
+                <Text style={[styles.title, { color: theme.foreground }]}>{t('cart.checkout')}</Text>
                 <View style={{ width: 32 }} />
             </View>
 
@@ -168,6 +181,20 @@ export default function PreCheckoutScreen() {
                                     <Text style={{ color: theme.foreground }}>{item.totalPrice.toLocaleString()} VND</Text>
                                 </View>
                             ))}
+                            {/* Per-group voucher discount indicator */}
+                            {getGroupDiscount(group.groupType) > 0 && (
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, paddingLeft: 8 }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                        <MaterialIcons name="local-offer" size={13} color="#22c55e" />
+                                        <Text style={{ color: '#22c55e', fontSize: 12 }}>
+                                            {preCheckoutData!.appliedVoucher!.code}
+                                        </Text>
+                                    </View>
+                                    <Text style={{ color: '#22c55e', fontWeight: '600', fontSize: 13 }}>
+                                        -{getGroupDiscount(group.groupType).toLocaleString()} VND
+                                    </Text>
+                                </View>
+                            )}
                         </View>
                     ))}
                 </View>
@@ -176,12 +203,12 @@ export default function PreCheckoutScreen() {
                     <Text style={[styles.sectionTitle, { color: theme.foreground }]}>Payment Summary</Text>
 
                     <View style={styles.summaryRow}>
-                        <Text style={{ color: theme.mutedForeground }}>Subtotal</Text>
+                        <Text style={{ color: theme.mutedForeground }}>{t('cart.subtotal')}</Text>
                         <Text style={{ color: theme.foreground }}>{preCheckoutData.totalPrice.toLocaleString()} VND</Text>
                     </View>
 
                     <View style={styles.summaryRow}>
-                        <Text style={{ color: theme.mutedForeground }}>Discount</Text>
+                        <Text style={{ color: theme.mutedForeground }}>{t('cart.discount')}</Text>
                         <Text style={{ color: '#22c55e' }}>-{preCheckoutData.discountValue.toLocaleString()} VND</Text>
                     </View>
 
@@ -197,7 +224,7 @@ export default function PreCheckoutScreen() {
                     <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
                     <View style={styles.summaryRow}>
-                        <Text style={{ color: theme.foreground, fontWeight: 'bold', fontSize: 16 }}>Total Payment</Text>
+                        <Text style={{ color: theme.foreground, fontWeight: 'bold', fontSize: 16 }}>{t('cart.total')}</Text>
                         <Text style={{ color: theme.primary, fontWeight: 'bold', fontSize: 20 }}>{preCheckoutData.finalTotalPrice.toLocaleString()} VND</Text>
                     </View>
                 </View>
@@ -205,7 +232,7 @@ export default function PreCheckoutScreen() {
 
             <View style={[styles.footer, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
                 <Button onPress={handleCreatePaymentLink} disabled={isSubmitting || loading}>
-                    <Text style={{ color: 'white' }}>{isSubmitting ? "Processing..." : "Confirm Payment"}</Text>
+                    <Text style={{ color: 'white' }}>{isSubmitting ? t('common.loading') : t('cart.confirm_payment')}</Text>
                 </Button>
             </View>
         </SafeAreaView>

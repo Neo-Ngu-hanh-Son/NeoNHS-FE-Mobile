@@ -7,6 +7,7 @@ import { RootStackParamList, TabsStackParamList } from '@/app/navigations/Naviga
 import GuideCard from '../GuideCard';
 import SectionHeader from '../SectionHeader';
 import SectionStateMessage from './SectionStateMessage';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   guides: BlogResponse[];
@@ -21,6 +22,7 @@ type HomeScreenProps = CompositeScreenProps<
 
 export default function KnowBeforeYouGoSection({ guides, loading, error }: Props) {
   const { navigate } = useNavigation<HomeScreenProps['navigation']>();
+  const { t } = useTranslation();
 
   function handleGuidePress(id: string): void {
     navigate('Main', { screen: 'BlogDetails', params: { blogId: id } });
@@ -29,7 +31,7 @@ export default function KnowBeforeYouGoSection({ guides, loading, error }: Props
   if (error) {
     return (
       <View className="mb-4">
-        <SectionHeader title="Know Before You Go" />
+        <SectionHeader title={t('home.know_before_you_go')} />
         <SectionStateMessage
           tone="error"
           message="Failed to fetch guides. Please pull to refresh."
@@ -41,7 +43,7 @@ export default function KnowBeforeYouGoSection({ guides, loading, error }: Props
   if (!loading && (guides == null || guides.length === 0)) {
     return (
       <View className="mb-4">
-        <SectionHeader title="Know Before You Go" />
+        <SectionHeader title={t('home.know_before_you_go')} />
         <SectionStateMessage message="No guides found." />
       </View>
     );
@@ -49,7 +51,7 @@ export default function KnowBeforeYouGoSection({ guides, loading, error }: Props
 
   return (
     <View className="mb-4">
-      <SectionHeader title="Know Before You Go" />
+      <SectionHeader title={t('home.know_before_you_go')} />
       <View style={{ height: 240 }}>
         <ScrollView
           horizontal

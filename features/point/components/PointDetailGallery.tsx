@@ -4,6 +4,7 @@ import { Text } from '@/components/ui/text';
 import { SmartImage } from '@/components/ui/smart-image';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
+import { useTranslation } from 'react-i18next';
 
 const GALLERY_PHOTOS = [
   'https://lh3.googleusercontent.com/aida-public/AB6AXuCKm5L5M0j5L2QmffIZ0pnmgadfS9Cw9bXKb96m8HynEEq-90T5nXhkuENGaOC3-Ij8snTadpmTYieZZpifEVrEMdOhGIxTAOfDvxi1tfqkodtk1E2Ey-fU2pbdlKvgxgGk7TSIWNjZlEBTogUGYmiqoNNkZbe9jAsZpkHZxvMvBt-DHknqpkvLyUjpZPKS1UpCUWFlj34ijpaFbfz7OBDE39rfUkf9qPN1laOPKe6WRXKv1FYkxXYsL1R9COyGPeRk2565jgKH9tPB',
@@ -14,15 +15,16 @@ const GALLERY_PHOTOS = [
 export function PointDetailGallery() {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const { t } = useTranslation();
 
   return (
     <View className="gap-4">
       {/* Header row */}
       <View className="flex-row items-center justify-between">
-        <Text className="text-xl font-black tracking-tight">Check-in Gallery</Text>
+        <Text className="text-xl font-black tracking-tight">{t('point.checkin_gallery')}</Text>
         <TouchableOpacity activeOpacity={0.7}>
           <Text className="text-sm font-bold" style={{ color: theme.primary }}>
-            See All
+            {t('common.see_all')}
           </Text>
         </TouchableOpacity>
       </View>
