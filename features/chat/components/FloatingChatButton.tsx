@@ -76,7 +76,7 @@ export function FloatingChatButton() {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const room = await createOrOpenRoom("SYSTEM_SUPPORT", [], "Customer Support");
+      const room = await createOrOpenRoom("AI_CHAT", [], "Trợ lý AI");
       supportRoomIdRef.current = room.id;
       setSupportRoomId(room.id);
       navigation.navigate("Main", {
@@ -155,12 +155,12 @@ export function FloatingChatButton() {
     if (!isAuthenticated || preloadAttemptedRef.current) return;
     preloadAttemptedRef.current = true;
 
-    const existing = rooms?.find((r) => r.roomType === "SYSTEM_SUPPORT");
+    const existing = rooms?.find((r) => r.roomType === "AI_CHAT");
     if (existing) {
       setSupportRoomId(existing.id);
       supportRoomIdRef.current = existing.id;
     } else {
-      createOrOpenRoom("SYSTEM_SUPPORT", [], "Customer Support")
+      createOrOpenRoom("AI_CHAT", [], "Trợ lý AI")
         .then((room) => {
           setSupportRoomId(room.id);
           supportRoomIdRef.current = room.id;
@@ -169,7 +169,7 @@ export function FloatingChatButton() {
           console.log("Silent support chat preload failed:", err?.message || err),
         );
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, rooms, createOrOpenRoom]);
 
   // Keep initial position in sync when layout changes
   useEffect(() => {
@@ -178,7 +178,7 @@ export function FloatingChatButton() {
       SPRING_CONFIG,
     );
     translateY.value = withSpring(clamp(translateY.value, minY, maxY), SPRING_CONFIG);
-  }, [screenW, screenH]);
+  }, [screenW, screenH, minX, maxX, minY, maxY, translateX, translateY]);
 
   const allowedScreens = ["Home", "Discover", "Tabs", "Main"];
   const effectiveRouteName = currentRouteName ?? "Home";
