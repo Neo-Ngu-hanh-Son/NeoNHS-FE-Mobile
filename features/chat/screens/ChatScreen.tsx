@@ -252,14 +252,12 @@ export default function ChatScreen({ route, navigation }: any) {
       const newRoom = await createOrOpenRoom("SYSTEM_SUPPORT", [], "Customer Support");
 
       let unansweredMessageStr = "Khách hàng muốn chuyển sang gặp Admin hỗ trợ.";
-      const transferIdx = messages.findIndex((m) => isTransferOfferMessage(m, currentUserId));
-      if (transferIdx !== -1) {
-        const userFollowUp = messages[transferIdx + 1];
-        if (userFollowUp?.senderId === currentUserId) {
-          unansweredMessageStr = `[Chuyển từ Trợ lý AI]: ${userFollowUp.content}`;
-        }
-      } else if (messages[0]?.senderId === currentUserId) {
-        unansweredMessageStr = `[Chuyển từ Trợ lý AI]: ${messages[0].content}`;
+      const lastUserMsg = messages.find((m) => m.senderId === currentUserId);
+
+      if (lastUserMsg) {
+        unansweredMessageStr = `Chuyển từ trợ lý AI: ${lastUserMsg.content}`;
+      } else if (messages[0]) {
+        unansweredMessageStr = `Chuyển từ trợ lý AI: ${messages[0].content}`;
       }
 
       // Navigate to the new room
@@ -562,7 +560,7 @@ export default function ChatScreen({ route, navigation }: any) {
                   }}
                   onGoToCart={() => {
                     // @ts-ignore
-                    navigation.navigate('TestCart');
+                    navigation.navigate('Tabs', { screen: 'TestCart' });
                   }}
                 />
                 {showHumanTransferRow && (
