@@ -20,11 +20,13 @@ import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { userService } from '../services/userService';
 import { ApiError } from '@/services/api/types';
+import { useTranslation } from 'react-i18next';
 
 export default function ChangePasswordScreen() {
     const navigation = useNavigation();
     const { isDarkColorScheme } = useTheme();
     const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+    const { t } = useTranslation();
 
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -37,19 +39,19 @@ export default function ChangePasswordScreen() {
         const newErrors: Record<string, string> = {};
 
         if (!oldPassword) {
-            newErrors.oldPassword = 'Current password is required';
+            newErrors.oldPassword = t('change_password.validation.current_required');
         }
 
         if (!newPassword) {
-            newErrors.newPassword = 'New password is required';
+            newErrors.newPassword = t('change_password.validation.new_required');
         } else if (newPassword.length < 6) {
-            newErrors.newPassword = 'Password must be at least 6 characters';
+            newErrors.newPassword = t('change_password.validation.new_min_length');
         }
 
         if (!confirmNewPassword) {
-            newErrors.confirmNewPassword = 'Please confirm your new password';
+            newErrors.confirmNewPassword = t('change_password.validation.confirm_required');
         } else if (confirmNewPassword !== newPassword) {
-            newErrors.confirmNewPassword = 'Passwords do not match';
+            newErrors.confirmNewPassword = t('change_password.validation.not_match');
         }
 
         setErrors(newErrors);
@@ -68,13 +70,13 @@ export default function ChangePasswordScreen() {
             });
 
             if (response.success) {
-                Alert.alert('Success', 'Password changed successfully', [
-                    { text: 'OK', onPress: () => navigation.goBack() },
+                Alert.alert(t('change_password.success_title'), t('change_password.success_message'), [
+                    { text: t('common.ok'), onPress: () => navigation.goBack() },
                 ]);
             }
         } catch (error) {
             const apiError = error as ApiError;
-            Alert.alert('Error', apiError.message || 'Failed to change password');
+            Alert.alert(t('change_password.error_title'), apiError.message || t('change_password.error_message'));
         } finally {
             setIsLoading(false);
         }
@@ -87,7 +89,7 @@ export default function ChangePasswordScreen() {
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                         <Ionicons name="chevron-back" size={24} color="white" />
-                        <Text style={styles.backText}>Back</Text>
+                        <Text style={styles.backText}>{t('common.back')}</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -99,19 +101,19 @@ export default function ChangePasswordScreen() {
                             contentContainerStyle={styles.scrollContent}
                             showsVerticalScrollIndicator={false}>
                             <Text className="mb-6 text-2xl font-bold" style={{ color: theme.foreground }}>
-                                Change Password
+                                {t('change_password.title')}
                             </Text>
 
                             <View style={styles.formContainer}>
                                 <View style={styles.inputGroup}>
-                                    <Text style={[styles.label, { color: theme.foreground }]}>Current Password</Text>
+                                    <Text style={[styles.label, { color: theme.foreground }]}>{t('change_password.current_password')}</Text>
                                     <Input
                                         value={oldPassword}
                                         onChangeText={(text) => {
                                             setOldPassword(text);
                                             if (errors.oldPassword) setErrors((prev) => ({ ...prev, oldPassword: '' }));
                                         }}
-                                        placeholder="Enter current password"
+                                        placeholder={t('change_password.current_password_placeholder')}
                                         secureTextEntry
                                         style={[
                                             styles.inputCustom,
@@ -122,14 +124,14 @@ export default function ChangePasswordScreen() {
                                 </View>
 
                                 <View style={styles.inputGroup}>
-                                    <Text style={[styles.label, { color: theme.foreground }]}>New Password</Text>
+                                    <Text style={[styles.label, { color: theme.foreground }]}>{t('change_password.new_password')}</Text>
                                     <Input
                                         value={newPassword}
                                         onChangeText={(text) => {
                                             setNewPassword(text);
                                             if (errors.newPassword) setErrors((prev) => ({ ...prev, newPassword: '' }));
                                         }}
-                                        placeholder="Enter new password"
+                                        placeholder={t('change_password.new_password_placeholder')}
                                         secureTextEntry
                                         style={[
                                             styles.inputCustom,
@@ -140,14 +142,14 @@ export default function ChangePasswordScreen() {
                                 </View>
 
                                 <View style={styles.inputGroup}>
-                                    <Text style={[styles.label, { color: theme.foreground }]}>Confirm New Password</Text>
+                                    <Text style={[styles.label, { color: theme.foreground }]}>{t('change_password.confirm_password')}</Text>
                                     <Input
                                         value={confirmNewPassword}
                                         onChangeText={(text) => {
                                             setConfirmNewPassword(text);
                                             if (errors.confirmNewPassword) setErrors((prev) => ({ ...prev, confirmNewPassword: '' }));
                                         }}
-                                        placeholder="Confirm new password"
+                                        placeholder={t('change_password.confirm_password_placeholder')}
                                         secureTextEntry
                                         style={[
                                             styles.inputCustom,
@@ -168,7 +170,7 @@ export default function ChangePasswordScreen() {
                                         isLoading && { opacity: 0.7 },
                                     ]}>
                                     <Text style={{ color: theme.background, fontWeight: '700', fontSize: 16 }}>
-                                        {isLoading ? 'Changing...' : 'Change Password'}
+                                        {isLoading ? t('change_password.button_loading') : t('change_password.button')}
                                     </Text>
                                 </Button>
                             </View>

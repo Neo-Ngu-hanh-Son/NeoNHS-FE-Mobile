@@ -7,6 +7,7 @@ import { Text } from '@/components/ui/text';
 import AppLink from '@/components/Navigator/AppLink';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
+import { useTranslation } from 'react-i18next';
 
 type LoginFormProps = {
   isLoading: boolean;
@@ -16,6 +17,8 @@ type LoginFormProps = {
 export default function LoginForm(props: LoginFormProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const { t } = useTranslation();
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -23,20 +26,20 @@ export default function LoginForm(props: LoginFormProps) {
 
   const validateEmail = (value: string) => {
     if (!value.trim()) {
-      return 'Email is required';
+      return t('auth.validation.email_required');
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-      return 'Please enter a valid email address';
+      return t('auth.validation.email_invalid');
     }
     return '';
   };
 
   const validatePassword = (value: string) => {
     if (!value) {
-      return 'Password is required';
+      return t('auth.validation.password_required');
     }
     if (value.length < 6) {
-      return 'Password must be at least 6 characters';
+      return t('auth.validation.password_min_length');
     }
     return '';
   };
@@ -56,9 +59,9 @@ export default function LoginForm(props: LoginFormProps) {
     <View style={styles.form}>
       {/* Email Input */}
       <View style={styles.inputGroup}>
-        <Label style={styles.label}>Email</Label>
+        <Label style={styles.label}>{t('auth.form.email_label')}</Label>
         <Input
-          placeholder="Enter your email"
+          placeholder={t('auth.form.email_placeholder')}
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
@@ -75,9 +78,9 @@ export default function LoginForm(props: LoginFormProps) {
 
       {/* Password Input */}
       <View style={styles.inputGroup}>
-        <Label style={styles.label}>Password</Label>
+        <Label style={styles.label}>{t('auth.form.password_label')}</Label>
         <Input
-          placeholder="Enter your password"
+          placeholder={t('auth.form.password_placeholder')}
           secureTextEntry
           autoCapitalize="none"
           autoCorrect={false}
@@ -95,38 +98,19 @@ export default function LoginForm(props: LoginFormProps) {
       {/* Forgot Password Link */}
       <View style={styles.forgotPasswordRow}>
         <AppLink screen="ForgotPassword" params={{}}>
-          Forgot password?
+          {t('auth.forgot_password')}
         </AppLink>
       </View>
 
       {/* Sign In Button */}
       <Button onPress={handleSubmit} disabled={props.isLoading} size="lg" className="mt-2">
-        <Text className="text-base font-semibold text-primary-foreground">Sign In</Text>
+        <Text className="text-base font-semibold text-primary-foreground">{t('auth.button.login')}</Text>
       </Button>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    width: '100%',
-    paddingHorizontal: 24,
-    paddingTop: 32,
-    paddingBottom: 24,
-  },
-  header: {
-    marginBottom: 32,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 15,
-    lineHeight: 22,
-  },
   form: {
     gap: 16,
   },
@@ -144,29 +128,5 @@ const styles = StyleSheet.create({
   forgotPasswordRow: {
     alignItems: 'flex-end',
     marginTop: -4,
-  },
-  dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    marginVertical: 28,
-  },
-  dividerText: {
-    fontSize: 13,
-  },
-  socialContainer: {
-    alignItems: 'center',
-  },
-  googleButton: {
-    minWidth: 200,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 32,
-  },
-  footerText: {
-    fontSize: 14,
   },
 });

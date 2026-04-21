@@ -10,6 +10,7 @@ import { ReviewCard } from './ReviewCard';
 import { WriteReviewSheet, WriteReviewSheetRef } from './WriteReviewSheet';
 import type { Review } from '../types';
 import { useAuth } from '@/features/auth';
+import { useTranslation } from 'react-i18next';
 
 export interface ReviewSectionProps {
   /** Target identifier (e.g., workshopId, artisanId) */
@@ -47,6 +48,7 @@ export function ReviewSection({
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const { user } = useAuth();
+  const { t } = useTranslation();
   
   const sheetRef = useRef<WriteReviewSheetRef>(null);
 
@@ -61,13 +63,13 @@ export function ReviewSection({
     return counts;
   }, [reviews]);
 
-  const reviewButtonLabel = myReview ? 'Edit your review' : 'Write a review';
+  const reviewButtonLabel = myReview ? t('review.edit_review') : t('review.write_review');
   const reviewButtonIcon = myReview ? 'pencil-outline' : 'create-outline';
 
   return (
     <View className="gap-4">
       <View className="flex-row items-center justify-between">
-        <Text className="text-xl font-black tracking-tight">Reviews</Text>
+        <Text className="text-xl font-black tracking-tight">{t('review.title')}</Text>
         {user && (
           <TouchableOpacity
             className="flex-row items-center gap-1"
@@ -95,7 +97,7 @@ export function ReviewSection({
         <View className="items-center py-8 gap-2">
           <Ionicons name="chatbubble-outline" size={32} color={theme.mutedForeground} />
           <Text className="text-sm" style={{ color: theme.mutedForeground }}>
-            No reviews yet. Be the first to share your experience!
+            {t('review.be_first')}
           </Text>
         </View>
       )}
@@ -106,7 +108,7 @@ export function ReviewSection({
           activeOpacity={0.7}
           onPress={onViewAll}>
           <Text className="text-sm font-bold" style={{ color: theme.primary }}>
-            View all {totalRatings} reviews
+            {t('review.view_all', { count: totalRatings })}
           </Text>
           <Ionicons name="arrow-forward" size={14} color={theme.primary} />
         </TouchableOpacity>

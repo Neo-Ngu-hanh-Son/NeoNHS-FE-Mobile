@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { StackScreenProps } from "@react-navigation/stack";
 import { CommonActions } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ export default function BookingsScreen({ navigation }: BookingsScreenProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const { isAuthenticated, user } = useAuth();
+  const { t } = useTranslation();
 
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<"upcoming" | "past">("upcoming");
@@ -71,7 +73,7 @@ export default function BookingsScreen({ navigation }: BookingsScreenProps) {
       >
         <View className="px-4 py-4">
           <Text className="text-2xl font-bold" style={{ color: theme.foreground }}>
-            Bookings
+            {t('bookings.title')}
           </Text>
         </View>
 
@@ -86,18 +88,18 @@ export default function BookingsScreen({ navigation }: BookingsScreenProps) {
             className="text-xl font-semibold text-center"
             style={{ color: theme.foreground }}
           >
-            Sign in to view bookings
+            {t('bookings.guest_title')}
           </Text>
           <Text
             className="text-base text-center mt-2"
             style={{ color: theme.mutedForeground }}
           >
-            Book workshops, tours, and events at Ngu Hanh Son
+            {t('bookings.guest_subtitle')}
           </Text>
           <Button className="mt-6" onPress={handleLogin}>
             <Ionicons name="log-in-outline" size={20} color={theme.primaryForeground} />
             <Text className="ml-2 font-semibold" style={{ color: theme.primaryForeground }}>
-              Sign In
+              {t('common.sign_in')}
             </Text>
           </Button>
         </View>
@@ -128,10 +130,10 @@ export default function BookingsScreen({ navigation }: BookingsScreenProps) {
         {/* Header */}
         <View className="px-4 py-4">
           <Text className="text-2xl font-bold" style={{ color: theme.foreground }}>
-            Bookings
+            {t('bookings.title')}
           </Text>
           <Text className="text-base mt-1" style={{ color: theme.mutedForeground }}>
-            Manage your reservations and tickets
+            {t('bookings.subtitle')}
           </Text>
         </View>
 
@@ -148,7 +150,7 @@ export default function BookingsScreen({ navigation }: BookingsScreenProps) {
                 color: activeTab === "upcoming" ? theme.primaryForeground : theme.foreground,
               }}
             >
-              Upcoming
+              {t('bookings.tabs.upcoming')}
             </Text>
           </Button>
           <Button
@@ -162,7 +164,7 @@ export default function BookingsScreen({ navigation }: BookingsScreenProps) {
                 color: activeTab === "past" ? theme.primaryForeground : theme.foreground,
               }}
             >
-              Past
+              {t('bookings.tabs.past')}
             </Text>
           </Button>
         </View>
@@ -212,15 +214,15 @@ export default function BookingsScreen({ navigation }: BookingsScreenProps) {
               className="text-lg font-semibold mt-4"
               style={{ color: theme.foreground }}
             >
-              No {activeTab} bookings
+              {t('bookings.empty_title', { tab: activeTab })}
             </Text>
             <Text
               className="text-sm text-center mt-1"
               style={{ color: theme.mutedForeground }}
             >
               {activeTab === "upcoming"
-                ? "Book a workshop or tour to get started"
-                : "Your past bookings will appear here"}
+                ? t('bookings.empty_upcoming')
+                : t('bookings.empty_past')}
             </Text>
           </View>
         )}

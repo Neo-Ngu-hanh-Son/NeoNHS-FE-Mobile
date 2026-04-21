@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { StackScreenProps } from '@react-navigation/stack';
+import { useTranslation } from 'react-i18next';
 
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
@@ -25,6 +26,7 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
   const { workshopId } = route.params;
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const { t } = useTranslation();
 
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'info' | 'sessions'>('info');
@@ -60,7 +62,7 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
         edges={['top']}>
         <ActivityIndicator size="large" color={theme.primary} />
         <Text className="mt-3 text-sm" style={{ color: theme.mutedForeground }}>
-          Loading workshop...
+          {t('common.loading')}
         </Text>
       </SafeAreaView>
     );
@@ -85,7 +87,7 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
           onPress={() => navigation.goBack()}
           className="mt-4 rounded-full px-6 py-2.5"
           style={{ backgroundColor: theme.primary }}>
-          <Text className="font-semibold text-white">Go Back</Text>
+          <Text className="font-semibold text-white">{t('common.back')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -143,7 +145,7 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
             <Text
               className={`text-sm font-bold ${activeTab === 'info' ? 'text-white' : ''}`}
               style={activeTab !== 'info' ? { color: theme.mutedForeground } : undefined}>
-              Details
+              {t('workshop.details')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -154,7 +156,7 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
             <Text
               className={`text-sm font-bold ${activeTab === 'sessions' ? 'text-white' : ''}`}
               style={activeTab !== 'sessions' ? { color: theme.mutedForeground } : undefined}>
-              Book Sessions
+              {t('workshop.book_sessions')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -166,7 +168,7 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
               <Text
                 className="mb-3 text-xs font-bold uppercase tracking-wider"
                 style={{ color: theme.mutedForeground }}>
-                About this workshop
+                {t('workshop.about_workshop')}
               </Text>
               {workshop.fullDescription ? (
                 <Text className="text-sm leading-6" style={{ color: theme.foreground }}>
@@ -174,7 +176,7 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
                 </Text>
               ) : (
                 <Text className="text-sm italic" style={{ color: theme.mutedForeground }}>
-                  No detailed description available.
+                  {t('workshop.no_description')}
                 </Text>
               )}
 
@@ -214,7 +216,7 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
           style={{ borderColor: theme.border, backgroundColor: theme.card }}
         >
           <View className="flex-1 mr-3">
-            <Text className="text-xs" style={{ color: theme.mutedForeground }}>Price from</Text>
+            <Text className="text-xs" style={{ color: theme.mutedForeground }}>{t('workshop.price_from')}</Text>
             <Text className="text-lg font-bold" style={{ color: theme.foreground }}>
               {workshop.defaultPrice.toLocaleString('vi-VN')} ₫
             </Text>
@@ -252,7 +254,7 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
           >
             <Ionicons name="chatbubble-outline" size={18} color="#FFFFFF" />
             <Text className="ml-2 font-bold text-white">
-              {isChatLoading ? 'Opening...' : 'Chat with Vendor'}
+              {isChatLoading ? t('common.loading') : t('workshop.chat_vendor')}
             </Text>
           </TouchableOpacity>
         </View>

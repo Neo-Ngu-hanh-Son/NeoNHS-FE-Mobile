@@ -62,6 +62,7 @@ export interface MapPoint {
   defaultPitch?: number;
   googlePlaceId?: string;
   historyAudioCount?: number;
+  history?: string;
 
   // Children check-in points
   checkinPoints?: MapPointCheckin[];
