@@ -312,6 +312,26 @@ export default function ChatScreen({ route, navigation }: any) {
     handleSendToAi('Không, cảm ơn.');
   };
 
+  // ── Navigation handlers (memoized) ──────────────────
+  const handleProductSnippetPress = useCallback((id: string, type?: 'workshop' | 'event') => {
+    if (type === 'event') {
+      navigation.navigate('EventDetail', { eventId: id });
+    } else {
+      navigation.navigate('WorkshopDetail', { workshopId: id });
+    }
+  }, [navigation]);
+
+  const handleGoToCart = useCallback(() => {
+    navigation.navigate('Cart');
+  }, [navigation]);
+
+  const handleGoToMap = useCallback((pointId: string) => {
+    navigation.navigate('MapDirection', {
+      pointId: pointId,
+      targetNavigationPointId: pointId
+    });
+  }, [navigation]);
+
   // ── Send product snippet ─────────────────────────────
   const handleSendSnippet = () => {
     if (!roomId || !workshopSnippet) return;
@@ -478,6 +498,73 @@ export default function ChatScreen({ route, navigation }: any) {
     </View>
   );
 
+  const renderMessageItem = useCallback(({ item, index }: { item: ChatMessage; index: number }) => {
+    const isMine = item.senderId === currentUserId && item.senderId !== 'AI_ASSISTANT';
+    const prevMsg = displayMessages[index + 1];
+    const nextMsg = displayMessages[index - 1];
+
+    let showTs = true;
+    if (prevMsg) showTs = shouldShowTimestamp(item.timestamp, prevMsg.timestamp);
+
+    let showAvatar = true;
+    if (nextMsg) {
+      if (nextMsg.senderId === item.senderId && !shouldShowTimestamp(nextMsg.timestamp, item.timestamp)) {
+        showAvatar = false;
+      }
+    }
+
+    const showHumanTransferRow =
+      isAiRoom &&
+      index === 0 &&
+      !isMine &&
+      (isTransferOfferMessage(item, currentUserId) ||
+        (aiTransferOfferPending && item.senderId === 'AI_ASSISTANT'));
+
+    return (
+      <View>
+        <ChatMessageBubble
+          message={item}
+          isMine={isMine}
+          showAvatar={showAvatar}
+          showTimestamp={showTs}
+          timestampString={formatChatMessageTime(item.timestamp)}
+          participantAvatar={displayAvatar}
+          onProductSnippetPress={handleProductSnippetPress}
+          onGoToCart={handleGoToCart}
+          onGoToMap={handleGoToMap}
+        />
+        {showHumanTransferRow && (
+          <View className="ml-[44px] mt-1 mb-2 flex-row items-center">
+            <TouchableOpacity
+              onPress={handleTransferYes}
+              className="mr-2 rounded-full px-4 py-2"
+              style={{ backgroundColor: theme.primary }}>
+              <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>Sẵn lòng</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleTransferNo}
+              className="rounded-full border px-4 py-2"
+              style={{ borderColor: theme.border, backgroundColor: theme.muted }}>
+              <Text style={{ color: theme.foreground, fontWeight: 'bold' }}>Không cần</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+    );
+  }, [
+    currentUserId,
+    displayMessages,
+    isAiRoom,
+    aiTransferOfferPending,
+    displayAvatar,
+    handleProductSnippetPress,
+    handleGoToCart,
+    handleGoToMap,
+    handleTransferYes,
+    handleTransferNo,
+    theme
+  ]);
+
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}>
@@ -552,82 +639,13 @@ export default function ChatScreen({ route, navigation }: any) {
               </View>
             ) : null
           }
-          renderItem={({ item, index }) => {
-            const isMine = item.senderId === currentUserId && item.senderId !== 'AI_ASSISTANT';
-            const prevMsg = displayMessages[index + 1];
-            const nextMsg = displayMessages[index - 1];
-
-            let showTs = true;
-            if (prevMsg) showTs = shouldShowTimestamp(item.timestamp, prevMsg.timestamp);
-
-            let showAvatar = true;
-            if (nextMsg) {
-              if (nextMsg.senderId === item.senderId && !shouldShowTimestamp(nextMsg.timestamp, item.timestamp)) {
-                showAvatar = false;
-              }
-            }
-
-            const showHumanTransferRow =
-              isAiRoom &&
-              index === 0 &&
-              !isMine &&
-              (isTransferOfferMessage(item, currentUserId) ||
-                (aiTransferOfferPending && item.senderId === 'AI_ASSISTANT'));
-
-            return (
-              <View>
-                <ChatMessageBubble
-                  message={item}
-                  isMine={isMine}
-                  showAvatar={showAvatar}
-                  showTimestamp={showTs}
-                  timestampString={formatChatMessageTime(item.timestamp)}
-                  participantAvatar={displayAvatar}
-                  onProductSnippetPress={(id, type) => {
-                    if (type === 'event') {
-                      navigation.navigate('EventDetail', { eventId: id });
-                    } else {
-                      navigation.navigate('WorkshopDetail', { workshopId: id });
-                    }
-                  }}
-                  onGoToCart={() => {
-                    // Navigate to Cart stack screen (not the tab) so that Back button works correctly
-                    navigation.navigate('Cart');
-                  }}
-                  onGoToMap={(pointId) => {
-                    // Navigate to MapDirection stack screen instead of switching Tab
-                    // This allows the "Back" button to return to the ChatRoom
-                    navigation.navigate('MapDirection', {
-                      pointId: pointId,
-                      targetNavigationPointId: pointId
-                    });
-                  }}
-                />
-                {showHumanTransferRow && (
-                  <View className="ml-[44px] mt-1 mb-2 flex-row items-center">
-                    <TouchableOpacity
-                      onPress={handleTransferYes}
-                      className="mr-2 rounded-full px-4 py-2"
-                      style={{ backgroundColor: theme.primary }}>
-                      <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>Sẵn lòng</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={handleTransferNo}
-                      className="rounded-full border px-4 py-2"
-                      style={{ borderColor: theme.border, backgroundColor: theme.muted }}>
-                      <Text style={{ color: theme.foreground, fontWeight: 'bold' }}>Không cần</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
-            );
-          }}
+          renderItem={renderMessageItem}
         />
 
         {/* Quick Replies for AI */}
         {isAiRoom && (
           <QuickReplies
-            replies={['Ở Ngũ Hành Sơn có gì chơi?', 'Có những workshop gì?', 'Giá vé tham quan thế nào ?', 'Cho tôi thông tin về các sự kiện sắp tới', 'Hướng dẫn đường đi đến Ngũ Hành Sơn']}
+            replies={['Ở Ngũ Hành Sơn có gì chơi?', 'Có những workshop gì?', 'Giá vé tham quan thế nào ?', 'Cho tôi thông tin về các sự kiện sắp tới', 'Hướng dẫn đường đi đến Bảo tàng Văn Hóa Phật Giáo']}
             onSelect={(reply) => handleSendToAi(reply)}
           />
         )}

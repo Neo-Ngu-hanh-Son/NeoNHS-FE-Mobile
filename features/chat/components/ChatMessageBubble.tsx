@@ -222,8 +222,8 @@ const ChatMessageBubbleBase = ({
         return (
           <>
             <TouchableOpacity onPress={() => setImageModalVisible(true)} activeOpacity={0.85}>
-              <Image
-                source={{ uri: message.mediaUrl ?? undefined }}
+              <SmartImage
+                uri={message.mediaUrl}
                 className="rounded-xl"
                 contentFit="cover"
                 style={{ width: SCREEN_WIDTH * 0.55, height: SCREEN_WIDTH * 0.55 }}
@@ -294,8 +294,8 @@ const ChatMessageBubbleBase = ({
                 borderColor: theme.border,
               }}>
               {meta?.thumbnailUrl && (
-                <Image
-                  source={{ uri: meta.thumbnailUrl }}
+                <SmartImage
+                  uri={meta.thumbnailUrl}
                   className="rounded-lg"
                   contentFit="cover"
                   style={{ width: 60, height: 60 }}
@@ -449,7 +449,7 @@ const ChatMessageBubbleBase = ({
                   <Ionicons name="sparkles" size={16} color="#FFFFFF" />
                 </View>
               ) : participantAvatar ? (
-                <Image source={{ uri: participantAvatar }} className="h-8 w-8 rounded-full bg-gray-200" />
+                <SmartImage uri={participantAvatar} className="h-8 w-8 rounded-full bg-gray-200" />
               ) : (
                 <View className="h-8 w-8 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700">
                   <Ionicons name="person" size={16} color={theme.mutedForeground} />
