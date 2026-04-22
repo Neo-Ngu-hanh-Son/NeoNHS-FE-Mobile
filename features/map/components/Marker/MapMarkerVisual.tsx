@@ -10,12 +10,6 @@ interface MarkerVisualProps {
   showName?: boolean;
   isSelected?: boolean;
 }
-
-/**
- * Basic marker visual component that renders a marker based on the point type and optionally shows the point name.
- *
- * This marker is "Static" because it display icon using app static types instead of fetching it from the backend.
- */
 export default function MapMarkerVisual({ point, showName, isSelected = false }: MarkerVisualProps) {
   const pointType = point.type !== null ? point.type : 'DEFAULT';
   const style = markerStyles[pointType];

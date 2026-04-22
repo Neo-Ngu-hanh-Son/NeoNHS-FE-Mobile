@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useEffect, useState, useRef, useMemo, useCallback } from "react";
-import { ChatMessage, ChatRoomWithDetails, ReadReceiptEvent, RoomType, MessageType } from "../types";
-import { ChatRestService, ChatWebSocketService } from "../services/chatApiService";
-import { useAuth } from "@/features/auth/context/AuthContext";
+import React, { createContext, useContext, useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { ChatMessage, ChatRoomWithDetails, ReadReceiptEvent, RoomType, MessageType } from '../types';
+import { ChatRestService, ChatWebSocketService } from '../services/chatApiService';
+import { useAuth } from '@/features/auth/context/AuthContext';
 
 // ════════════════════════════════════════════════════════
 // Context value shape
@@ -16,7 +16,13 @@ interface ChatContextValue {
   // Messages
   messagesByRoom: Record<string, ChatMessage[]>;
   setMessagesByRoom: React.Dispatch<React.SetStateAction<Record<string, ChatMessage[]>>>;
-  sendMessage: (roomId: string, content: string, messageType?: MessageType, mediaUrl?: string | null, metadata?: Record<string, any> | null) => void;
+  sendMessage: (
+    roomId: string,
+    content: string,
+    messageType?: MessageType,
+    mediaUrl?: string | null,
+    metadata?: Record<string, any> | null
+  ) => void;
 
   // Unread
   totalUnreadCount: number;
@@ -49,7 +55,7 @@ const ChatContext = createContext<ChatContextValue | null>(null);
 // ════════════════════════════════════════════════════════
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const { user, accessToken } = useAuth();
-  const currentUserId = user?.id?.toString() || "";
+  const currentUserId = user?.id?.toString() || '';
 
   const [rooms, setRooms] = useState<ChatRoomWithDetails[]>([]);
   const [messagesByRoom, setMessagesByRoom] = useState<Record<string, ChatMessage[]>>({});
@@ -61,12 +67,15 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
   // ── Derived unread counts ────────────────────────────
   const totalUnreadCount = useMemo(
-    () => rooms.filter(r => !r.isHidden).reduce((acc, r) => acc + (r.unreadCount || 0), 0),
+    () => rooms.filter((r) => !r.isHidden).reduce((acc, r) => acc + (r.unreadCount || 0), 0),
     [rooms]
   );
 
   const supportUnreadCount = useMemo(
-    () => rooms.filter(r => r.roomType === "SYSTEM_SUPPORT" && !r.isHidden).reduce((acc, r) => acc + (r.unreadCount || 0), 0),
+    () =>
+      rooms
+        .filter((r) => r.roomType === 'SYSTEM_SUPPORT' && !r.isHidden)
+        .reduce((acc, r) => acc + (r.unreadCount || 0), 0),
     [rooms]
   );
 
@@ -77,21 +86,25 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const resetUnreadCount = useCallback((roomId: string) => {
-    setRooms(prev => prev.map(r => (r.id === roomId ? { ...r, unreadCount: 0 } : r)));
+    setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, unreadCount: 0 } : r)));
   }, []);
 
   // ── Room management ──────────────────────────────────
   const hideRoom = useCallback(async (roomId: string) => {
     try {
       await ChatRestService.toggleRoomVisibility(roomId, true);
-      setRooms(prev => prev.map(r => (r.id === roomId ? { ...r, isHidden: true } : r)));
+      setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, isHidden: true } : r)));
     } catch (e) {
-      console.error("Failed to hide room", e);
+      console.error('Failed to hide room', e);
     }
   }, []);
 
   const createOrOpenRoom = useCallback(
-    async (roomType: RoomType, participantIds: string[] = [], name: string | null = null): Promise<ChatRoomWithDetails> => {
+    async (
+      roomType: RoomType,
+      participantIds: string[] = [],
+      name: string | null = null
+    ): Promise<ChatRoomWithDetails> => {
       const room = await ChatRestService.createRoom(roomType, participantIds, name);
 
       // Enrich participant
@@ -101,16 +114,16 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         try {
           otherParticipant = await ChatRestService.getChatParticipantInfo(otherParticipantId);
         } catch {
-          otherParticipant = { id: otherParticipantId, fullname: "Unknown User", avatarUrl: null, role: "UNKNOWN" };
+          otherParticipant = { id: otherParticipantId, fullname: 'Unknown User', avatarUrl: null, role: 'UNKNOWN' };
         }
       }
 
       const enriched: ChatRoomWithDetails = { ...room, otherParticipant, unreadCount: 0 };
 
       // Add to state if not already present
-      setRooms(prev => {
-        const exists = prev.some(r => r.id === enriched.id);
-        if (exists) return prev.map(r => (r.id === enriched.id ? { ...r, isHidden: false } : r));
+      setRooms((prev) => {
+        const exists = prev.some((r) => r.id === enriched.id);
+        if (exists) return prev.map((r) => (r.id === enriched.id ? { ...r, isHidden: false } : r));
         return [enriched, ...prev];
       });
 
@@ -135,7 +148,12 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
               try {
                 otherParticipant = await ChatRestService.getChatParticipantInfo(otherParticipantId);
               } catch {
-                otherParticipant = { id: otherParticipantId, fullname: "Unknown User", avatarUrl: null, role: "UNKNOWN" };
+                otherParticipant = {
+                  id: otherParticipantId,
+                  fullname: 'Unknown User',
+                  avatarUrl: null,
+                  role: 'UNKNOWN',
+                };
               }
             }
             return { ...room, otherParticipant, unreadCount: room.unreadCount ?? 0 } as ChatRoomWithDetails;
@@ -144,7 +162,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
         setRooms(enrichedRooms);
       } catch (error) {
-        console.error("Failed to load chat rooms:", error);
+        console.error('Failed to load chat rooms:', error);
       } finally {
         if (showSpinner) setIsLoadingRooms(false);
       }
@@ -166,19 +184,19 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
     const handlePayload = (payload: ChatMessage | ReadReceiptEvent) => {
       // ── READ_RECEIPT ──
-      if ("type" in payload && payload.type === "READ_RECEIPT") {
+      if ('type' in payload && payload.type === 'READ_RECEIPT') {
         const receipt = payload as ReadReceiptEvent;
         // Only process receipts from OTHER users (i.e., "they read my messages")
         if (receipt.readerId === currentUserId) return;
 
-        setMessagesByRoom(prev => {
+        setMessagesByRoom((prev) => {
           const roomMsgs = prev[receipt.chatRoomId];
           if (!roomMsgs) return prev;
 
-          const updated = roomMsgs.map(m => {
+          const updated = roomMsgs.map((m) => {
             // Mark messages up to lastReadMessageId as READ
-            if (m.senderId === currentUserId && m.status !== "READ" && m.id <= receipt.lastReadMessageId) {
-              return { ...m, status: "READ" as const };
+            if (m.senderId === currentUserId && m.status !== 'READ' && m.id <= receipt.lastReadMessageId) {
+              return { ...m, status: 'READ' as const };
             }
             return m;
           });
@@ -191,19 +209,19 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       // ── Normal ChatMessage ──
       const message = payload as ChatMessage;
 
-      setMessagesByRoom(prev => {
+      setMessagesByRoom((prev) => {
         const roomMsgs = prev[message.chatRoomId] || [];
-        if (roomMsgs.some(m => m.id === message.id)) return prev;
+        if (roomMsgs.some((m) => m.id === message.id)) return prev;
         return { ...prev, [message.chatRoomId]: [message, ...roomMsgs] };
       });
 
-      setRooms(prevRooms => {
-        let updatedRooms = prevRooms.map(room => {
+      setRooms((prevRooms) => {
+        let updatedRooms = prevRooms.map((room) => {
           if (room.id === message.chatRoomId) {
             const isRead = activeRoomIdRef.current === room.id || message.senderId === currentUserId;
             return {
               ...room,
-              lastMessagePreview: message.messageType === "IMAGE" ? "📷 Image" : message.content,
+              lastMessagePreview: message.messageType === 'IMAGE' ? '📷 Image' : message.content,
               lastMessageAt: message.timestamp,
               lastMessageSenderId: message.senderId,
               unreadCount: isRead ? room.unreadCount : (room.unreadCount || 0) + 1,
@@ -222,7 +240,11 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       });
     };
 
-    ws.connect(handlePayload, () => setIsConnected(true), (err) => console.error("WS Error", err));
+    ws.connect(
+      handlePayload,
+      () => setIsConnected(true),
+      (err) => console.error('WS Error', err)
+    );
 
     return () => {
       ws.disconnect();
@@ -232,7 +254,13 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
   // ── Message send wrapper ─────────────────────────────
   const sendMessage = useCallback(
-    (roomId: string, content: string, messageType: MessageType = "TEXT", mediaUrl?: string | null, metadata?: Record<string, any> | null) => {
+    (
+      roomId: string,
+      content: string,
+      messageType: MessageType = 'TEXT',
+      mediaUrl?: string | null,
+      metadata?: Record<string, any> | null
+    ) => {
       wsServiceRef.current?.sendMessage(roomId, content, messageType, mediaUrl, metadata);
     },
     []
@@ -275,8 +303,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         subscribeToRoomTyping,
         sendReadReceipt,
         wsServiceRef,
-      }}
-    >
+      }}>
       {children}
     </ChatContext.Provider>
   );
@@ -284,6 +311,6 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useChatContext = () => {
   const ctx = useContext(ChatContext);
-  if (!ctx) throw new Error("useChatContext must be used within ChatProvider");
+  if (!ctx) throw new Error('useChatContext must be used within ChatProvider');
   return ctx;
 };

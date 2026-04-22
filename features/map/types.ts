@@ -1,5 +1,6 @@
 import { GeofencingEventType, LocationRegion } from 'expo-location';
 import { LatLng } from 'react-native-maps';
+import { PointPanoramaResponse } from '../panorama/types';
 
 /**
  * ===== Types related to Map Points, Attractions, Check-ins, etc. =====
@@ -57,9 +58,6 @@ export interface MapPoint {
   estTimeSpent?: number;
   type: POIType;
   attractionId?: string;
-  panoramaImageUrl?: string;
-  defaultYaw?: number;
-  defaultPitch?: number;
   googlePlaceId?: string;
   historyAudioCount?: number;
   history?: string;
@@ -74,6 +72,9 @@ export interface MapPoint {
   maxParticipants?: number;
   currentEnrolled?: number;
   workshopOrganizerName?: string;
+
+  // List of panoramas
+  panoramas?: PointPanoramaResponse[] | null;
 
   // Only used by front end map (Don't mind about this)
   attachedTo?: {
@@ -145,6 +146,8 @@ export interface UserCheckinRequest {
 export type UserCheckinResultResponse = {
   earnedPoints: number;
   userTotalPoints: number;
+  checkinPointId?: string;
+  parentCheckinPointId?: string;
 };
 
 /**
@@ -289,4 +292,7 @@ export type CheckinSessionGalleryImage = {
   uri: string;
   caption?: string;
   label: string;
+  uploadStatus?: 'pending' | 'uploaded' | 'failed';
+  draftId?: string;
+  publicId?: string;
 };

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useMemo, React
 import { Modal, StyleSheet, View, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { THEME } from '@/lib/theme';
+import { useTheme } from '@/app/providers/ThemeProvider';
 
 /**
  * Button configuration for modal
@@ -30,12 +31,7 @@ interface ModalContextValue {
    * Show an alert modal with customizable buttons
    * Similar to React Native's Alert.alert()
    */
-  alert: (
-    title: string,
-    message?: string,
-    buttons?: ModalButton[],
-    options?: { cancelable?: boolean }
-  ) => void;
+  alert: (title: string, message?: string, buttons?: ModalButton[], options?: { cancelable?: boolean }) => void;
 
   /**
    * Show a confirmation modal with OK and Cancel buttons
@@ -64,8 +60,11 @@ export function ModalProvider({ children }: { children: ReactNode }) {
   const [visible, setVisible] = useState(false);
   const [options, setOptions] = useState<ModalOptions>({});
   const [promiseResolver, setPromiseResolver] = useState<((value: boolean) => void) | null>(null);
+  const { isDarkColorScheme } = useTheme();
 
-  const theme = THEME.light;
+  const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const separatorColor = isDarkColorScheme ? 'rgba(255, 255, 255, 0.16)' : 'rgba(0, 0, 0, 0.1)';
+  const backdropColor = isDarkColorScheme ? 'rgba(0, 0, 0, 0.58)' : 'rgba(0, 0, 0, 0.4)';
 
   const dismiss = useCallback(() => {
     setVisible(false);
@@ -78,12 +77,7 @@ export function ModalProvider({ children }: { children: ReactNode }) {
   }, [promiseResolver]);
 
   const alert = useCallback(
-    (
-      title: string,
-      message?: string,
-      buttons?: ModalButton[],
-      alertOptions?: { cancelable?: boolean }
-    ) => {
+    (title: string, message?: string, buttons?: ModalButton[], alertOptions?: { cancelable?: boolean }) => {
       const defaultButtons: ModalButton[] = buttons || [{ text: 'OK', style: 'default' }];
 
       setOptions({
@@ -164,7 +158,7 @@ export function ModalProvider({ children }: { children: ReactNode }) {
         statusBarTranslucent
         onRequestClose={handleBackdropPress}>
         <TouchableWithoutFeedback onPress={handleBackdropPress}>
-          <View style={styles.backdrop}>
+          <View style={[styles.backdrop, { backgroundColor: backdropColor }]}>
             <TouchableWithoutFeedback>
               <View style={[styles.container, { backgroundColor: theme.card }]}>
                 {options.title ? (
@@ -172,15 +166,14 @@ export function ModalProvider({ children }: { children: ReactNode }) {
                 ) : null}
 
                 {options.message ? (
-                  <Text style={[styles.message, { color: theme.mutedForeground }]}>
-                    {options.message}
-                  </Text>
+                  <Text style={[styles.message, { color: theme.mutedForeground }]}>{options.message}</Text>
                 ) : null}
 
                 {options.buttons && options.buttons.length > 0 ? (
                   <View
                     style={[
                       styles.buttonContainer,
+                      { borderTopColor: separatorColor },
                       options.buttons.length > 2 && styles.buttonContainerVertical,
                     ]}>
                     {options.buttons.map((button, index) => (
@@ -191,13 +184,13 @@ export function ModalProvider({ children }: { children: ReactNode }) {
                           options.buttons!.length <= 2 && styles.buttonHorizontal,
                           options.buttons!.length > 2 && styles.buttonVertical,
                           index > 0 && options.buttons!.length <= 2 && styles.buttonBorderLeft,
+                          index > 0 && options.buttons!.length <= 2 && { borderLeftColor: separatorColor },
                           index > 0 && options.buttons!.length > 2 && styles.buttonBorderTop,
+                          index > 0 && options.buttons!.length > 2 && { borderTopColor: separatorColor },
                         ]}
                         onPress={() => handleButtonPress(button)}
                         activeOpacity={0.7}>
-                        <Text style={[styles.buttonText, getButtonTextStyle(button.style)]}>
-                          {button.text}
-                        </Text>
+                        <Text style={[styles.buttonText, getButtonTextStyle(button.style)]}>{button.text}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -225,7 +218,6 @@ export function useModal(): ModalContextValue {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -258,7 +250,6 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(0, 0, 0, 0.1)',
   },
   buttonContainerVertical: {
     flexDirection: 'column',
@@ -277,11 +268,9 @@ const styles = StyleSheet.create({
   },
   buttonBorderLeft: {
     borderLeftWidth: StyleSheet.hairlineWidth,
-    borderLeftColor: 'rgba(0, 0, 0, 0.1)',
   },
   buttonBorderTop: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(0, 0, 0, 0.1)',
   },
   buttonText: {
     fontSize: 16,

@@ -1,13 +1,14 @@
 import React from 'react';
 import { View, TouchableOpacity } from 'react-native';
-import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { Text } from '@/components/ui/text';
 import { Card, CardContent } from '@/components/ui/card';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { formatTimeAgo } from '../utils';
 import type { Review } from '../types';
+import { ReviewImageGallery } from './ReviewImageGallery';
 
 export interface ReviewCardProps {
   item: Review;
@@ -20,6 +21,10 @@ export function ReviewCard({ item, isOwn, onEdit, onReport }: ReviewCardProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const avatarUri = item.user.avatarUrl ?? undefined;
+  const reviewImages =
+    item.reviewImages && item.reviewImages.length > 0
+      ? item.reviewImages
+      : (item.imageUrls ?? []).map((url) => ({ imageUrl: url }));
 
   return (
     <Card className="rounded-2xl py-4">
@@ -81,18 +86,7 @@ export function ReviewCard({ item, isOwn, onEdit, onReport }: ReviewCardProps) {
 
         {!!item.comment && <Text className="text-sm leading-6 text-muted-foreground">{item.comment}</Text>}
 
-        {item.imageUrls && item.imageUrls.length > 0 && (
-          <View className="flex-row flex-wrap gap-2">
-            {item.imageUrls.slice(0, 3).map((url, idx) => (
-              <Image
-                key={idx}
-                source={{ uri: url }}
-                style={{ width: 64, height: 64, borderRadius: 8 }}
-                contentFit="cover"
-              />
-            ))}
-          </View>
-        )}
+        {reviewImages.length > 0 ? <ReviewImageGallery images={reviewImages} /> : null}
       </CardContent>
     </Card>
   );
