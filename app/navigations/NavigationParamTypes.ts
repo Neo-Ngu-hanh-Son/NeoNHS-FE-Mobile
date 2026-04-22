@@ -24,8 +24,8 @@ export type TabsStackParamList = {
   Map: { pointId?: string; targetNavigationPointId?: string; userCheckedInPointId?: string } | undefined;
   Bookings: undefined;
   Profile: undefined;
-  TestCart: undefined;
   Chat: undefined;
+  TestCart: undefined;
 };
 
 /* ============================================================
@@ -63,6 +63,12 @@ export type DestinationRoutes = {
   AllDestinations: {
     initialTab?: 'Points' | 'Workshops' | 'Events' | 'Blogs';
     selectedAttractionId?: string;
+  };
+  AttractionDestinationScreen: { attractionId: string };
+  PointDetail: { pointId: string };
+  PointAllReviews: {
+    pointId: string;
+    pointName: string;
   };
 };
 
@@ -169,7 +175,10 @@ export type MainStackParamList = BaseMainRoutes &
   CheckoutRoutes &
   BlogRoutes &
   NotificationRoutes &
-  ChatRoutes &
+  ChatRoutes & {
+    MapDirection: { pointId?: string; targetNavigationPointId?: string };
+    Cart: undefined;
+  } &
   VoucherRoutes;
 
 /* ============================================================

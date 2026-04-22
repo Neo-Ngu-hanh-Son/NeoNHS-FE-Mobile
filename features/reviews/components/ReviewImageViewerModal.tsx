@@ -1,31 +1,46 @@
 import React, { useMemo } from 'react';
 import { Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { GestureViewer, useGestureViewerState } from 'react-native-gesture-image-viewer';
+import { Ionicons } from '@expo/vector-icons';
 
 import { SmartImage } from '@/components/ui/smart-image';
 import { Text } from '@/components/ui/text';
-import { CheckinSessionGalleryImage } from '../../types';
+import type { ReviewImage } from '@/features/reviews/types';
 
-type CheckinGalleryViewerModalProps = {
+type ReviewImageViewerModalProps = {
   visible: boolean;
-  images: CheckinSessionGalleryImage[];
+  images: ReviewImage[];
   initialIndex: number;
   onClose: () => void;
 };
 
-export default function CheckinGalleryViewerModal({
-  visible,
-  images,
-  initialIndex,
-  onClose,
-}: CheckinGalleryViewerModalProps) {
+function formatDateTime(isoDate?: string | null) {
+  if (!isoDate) {
+    return undefined;
+  }
+
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) {
+    return undefined;
+  }
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(date);
+}
+
+export function ReviewImageViewerModal({ visible, images, initialIndex, onClose }: ReviewImageViewerModalProps) {
   const { currentIndex } = useGestureViewerState();
 
   const safeInitialIndex = useMemo(() => {
     if (!images.length) {
       return 0;
     }
+
     return Math.min(Math.max(initialIndex, 0), images.length - 1);
   }, [images.length, initialIndex]);
 
@@ -48,7 +63,7 @@ export default function CheckinGalleryViewerModal({
         data={images}
         initialIndex={safeInitialIndex}
         ListComponent={ScrollView}
-        renderItem={(item) => <SmartImage uri={item.uri} style={styles.viewerImage} contentFit="contain" />}
+        renderItem={(item) => <SmartImage uri={item.imageUrl} style={styles.viewerImage} contentFit="contain" />}
         onDismiss={onClose}
         renderContainer={(children, helpers) => (
           <View style={styles.viewerContainer}>
@@ -60,10 +75,12 @@ export default function CheckinGalleryViewerModal({
 
             {activeImage ? (
               <View style={styles.viewerMetadataContainer}>
-                <Text className="text-base font-semibold text-white">
-                  {activeImage.caption?.trim() || 'No caption'}
-                </Text>
-                <Text className="mt-1 text-xs text-white/80">{activeImage.label}</Text>
+                {activeImage.authorName ? (
+                  <Text className="text-sm font-semibold text-white">{activeImage.authorName}</Text>
+                ) : null}
+                {formatDateTime(activeImage.takenDate) ? (
+                  <Text className="mt-1 text-xs text-white/80">{formatDateTime(activeImage.takenDate)}</Text>
+                ) : null}
               </View>
             ) : null}
           </View>

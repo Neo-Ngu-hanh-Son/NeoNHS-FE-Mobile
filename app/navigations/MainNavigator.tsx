@@ -17,7 +17,7 @@ import PreCheckoutScreen from '@/features/cart/screens/PreCheckoutScreen';
 import PaymentScreen from '@/features/cart/screens/PaymentScreen';
 import AllDestinationsScreen from '@/features/discover/screens/AllDestinationsScreen';
 import PointDetailScreen from '@/features/point/screens/PointDetailScreen';
-import PointMapSelectionScreen from '@/features/discover/screens/PointMapSelectionScreen';
+import PointAllReviewsScreen from '@/features/point/screens/PointAllReviewsScreen';
 import ActiveNavigationScreen from '@/features/discover/screens/ActiveNavigationScreen';
 import ArrivalConfirmationScreen from '@/features/discover/screens/ArrivalConfirmationScreen';
 import EventDetailScreen from '@/features/event/screens/EventDetailScreen';
@@ -29,13 +29,16 @@ import BlogListScreen from '@/features/blog/screens/BlogListScreen';
 import BlogDetailsScreen from '@/features/blog/screens/BlogDetailsScreen';
 import PanoramaScreen from '@/features/panorama/screens/PanoramaScreen';
 import PointHistoryAudioScreen from '@/features/point/screens/PointHistoryAudioScreen';
-import CheckinCameraScreen from '@/features/map/screens/CheckinCameraScreen';
-import CheckinCompleteScreen from '@/features/map/screens/CheckinCompleteScreen';
+import CheckinCameraScreen from '@/features/checkin/screens/CheckinCameraScreen';
+import CheckinCompleteScreen from '@/features/checkin/screens/CheckinCompleteScreen';
 import CheckinGalleryScreen from '@/features/profile/screens/CheckinGalleryScreen';
+import { MapScreen } from '@/features/map/screens';
 import ChatScreen from '@/features/chat/screens/ChatScreen';
+import CartListScreen from '@/features/cart/screens/CartListScreen';
 import { FloatingChatButton } from '@/features/chat/components/FloatingChatButton';
 import NotificationsScreen from '@/features/notifications/screens/NotificationsScreen';
 import NotificationDetailScreen from '@/features/notifications/screens/NotificationDetailScreen';
+import AttractionDestinationScreen from '@/features/discover/screens/ViewAllTabs/AttractionDestinationScreen';
 import VoucherDetailScreen from '@/features/voucher/screens/VoucherDetailScreen';
 import MyVouchersScreen from '@/features/voucher/screens/MyVouchersScreen';
 import MyVoucherDetailScreen from '@/features/voucher/screens/MyVoucherDetailScreen';
@@ -67,13 +70,14 @@ export default function MainNavigator() {
         <Stack.Screen name="TicketVerification" component={TicketVerificationScreen} />
 
         {/* Cart & Checkout */}
+        <Stack.Screen name="Cart" component={CartListScreen} />
         <Stack.Screen name="PreCheckout" component={PreCheckoutScreen} />
         <Stack.Screen name="Payment" component={PaymentScreen} />
-
         {/* Discover & Points */}
         <Stack.Screen name="AllDestinations" component={AllDestinationsScreen} />
+        {/* <Stack.Screen name="AttractionDestinationScreen" component={AttractionDestinationScreen} /> */}
         <Stack.Screen name="PointDetail" component={PointDetailScreen} />
-        <Stack.Screen name="PointMapSelection" component={PointMapSelectionScreen} />
+        <Stack.Screen name="PointAllReviews" component={PointAllReviewsScreen} />
         <Stack.Screen name="ActiveNavigation" component={ActiveNavigationScreen} />
         <Stack.Screen name="ArrivalConfirmation" component={ArrivalConfirmationScreen} />
         <Stack.Screen
@@ -107,6 +111,8 @@ export default function MainNavigator() {
         {/* Map & Check-in */}
         <Stack.Screen name="CheckinCamera" component={CheckinCameraScreen} />
         <Stack.Screen name="CheckinComplete" component={CheckinCompleteScreen} />
+        {/* @ts-ignore - CompositeScreenProps typing mismatch with native-stack */}
+        <Stack.Screen name="MapDirection" component={MapScreen} />
 
         <Stack.Screen name="ChatRoom" component={ChatScreen} options={{ headerShown: false }} />
         <Stack.Screen

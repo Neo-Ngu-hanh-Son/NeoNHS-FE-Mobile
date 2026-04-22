@@ -224,15 +224,6 @@ const EventTimelinePointDetailBottomSheet = forwardRef<
             <Compass size={20} color="#fff" style={{ marginRight: 8 }} />
             <Text style={styles.ctaText}>Get Directions</Text>
           </TouchableOpacity>
-
-          {/* <TouchableOpacity
-            onPress={() => onNavigateFromCurrentLocation?.(point)}
-            activeOpacity={0.85}
-            style={[styles.ctaSecondary, { borderColor: tagColor, backgroundColor: theme.background }]}
-            accessibilityLabel="Navigate from current location">
-            <Ionicons name="locate" size={18} color={tagColor} style={{ marginRight: 8 }} />
-            <Text style={[styles.ctaSecondaryText, { color: tagColor }]}>Navigate From Current Location</Text>
-          </TouchableOpacity> */}
         </View>
       </BottomSheetScrollView>
     </BottomSheetModal>

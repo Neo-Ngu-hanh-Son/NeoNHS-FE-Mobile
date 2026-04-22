@@ -1,7 +1,6 @@
 import { useWindowDimensions, Linking, View, Modal, Pressable } from 'react-native';
 import RenderHTML, { CustomBlockRenderer } from 'react-native-render-html';
-import { cssRulesFromSpecs, tableModel } from '@native-html/table-plugin';
-import TableRenderer from '@native-html/table-plugin';
+import TableRenderer, { cssRulesFromSpecs, tableModel } from '@native-html/table-plugin';
 import { getBlogHtmlStyleSet } from '../styles/blogHtmlStyles';
 import { logger } from '@/utils/logger';
 import WebView from 'react-native-webview';

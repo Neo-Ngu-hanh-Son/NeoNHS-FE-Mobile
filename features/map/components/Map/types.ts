@@ -4,6 +4,7 @@ import type { UserLocation } from '../../hooks/useUserLocation';
 import type { MapPoint, MapPointCheckin, PolylineCoordinate } from '../../types';
 import { MapViewMode } from '../../store/useMapStore';
 import { ReactNode } from 'react';
+import { QueryObserverResult, RefetchOptions } from '@tanstack/react-query';
 
 /**
  * Props for NHSMap.
@@ -107,6 +108,11 @@ export interface NHSMapProps<T extends MapPoint = MapPoint> {
    * Note: You have to write your own <Marker/> and <MarkerVisual/> component to use this. You can refer to DynamicMarkerVisual as an example.
    */
   renderMarker?: (point: MapPoint, shouldDisplayMarkerName: boolean) => ReactNode;
+
+  /**
+   * Use to manually refetch newest map point from the server
+   */
+  refetchMapPoints?: (options?: RefetchOptions | undefined) => Promise<QueryObserverResult<MapPoint[], Error>>;
 }
 
 /**

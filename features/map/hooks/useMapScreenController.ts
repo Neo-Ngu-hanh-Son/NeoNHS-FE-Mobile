@@ -82,7 +82,7 @@ export const useMapScreenController = ({ navigation, pointDetailSheetRef }: Prop
     }
 
     navigation.navigate('CheckinCamera', {
-      pointId: activePoint?.id,
+      checkinPointId: activePoint?.id,
       pointName: activePoint?.name ?? '',
       pointRewardPoints: activePoint?.rewardPoints ?? 0,
     });

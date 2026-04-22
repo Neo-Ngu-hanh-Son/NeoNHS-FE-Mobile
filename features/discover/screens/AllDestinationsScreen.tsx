@@ -8,7 +8,6 @@ import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
-import { Attraction, MapPoint } from '../../map/types';
 import { useAttractions } from '../hooks/useAttractions';
 import { usePointsByAttraction } from '../hooks/usePointsByAttraction';
 import { EventListContent } from '../../event/components';
@@ -18,6 +17,7 @@ import { useBlogList } from '@/features/blog';
 import type { Blog } from '@/features/blog/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { SmartImage } from '@/components/ui/smart-image';
+import AttractionsTab from './ViewAllTabs/AttractionsTab';
 
 type Props = StackScreenProps<MainStackParamList, 'AllDestinations'>;
 
@@ -29,9 +29,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const [activeTab, setActiveTab] = useState<CategoryType>(route.params?.initialTab || 'Points');
 
-  const [selectedAttractionId, setSelectedAttractionId] = useState<string | undefined>(
-    route.params?.selectedAttractionId
-  );
+  const initialAttractionId = route.params?.selectedAttractionId;
   const [refreshing, setRefreshing] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,12 +58,6 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
   const loading =
     (activeTab === 'Points' && (attractionsLoading || (selectedAttractionId ? pointsLoading : false))) ||
     (activeTab === 'Blogs' && blogsLoading);
-
-  useEffect(() => {
-    if (route.params?.selectedAttractionId) {
-      setSelectedAttractionId(route.params.selectedAttractionId);
-    }
-  }, [route.params?.selectedAttractionId]);
 
   useEffect(() => {
     if (route.params?.initialTab) {
@@ -113,15 +105,13 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
 
   const renderHeader = () => {
     let title = 'Discover';
-    let showBackToAttractions = false;
     switch (activeTab) {
       case 'Points':
-        if (selectedAttractionId) {
-          const attr = (attractions ?? []).find((a) => a.id === selectedAttractionId);
-          title = attr ? attr.name : 'Points';
-          showBackToAttractions = true;
+        if (initialAttractionId) {
+          const attraction = attractions?.find((a) => a.id === initialAttractionId);
+          title = attraction ? attraction.name : 'Destinations';
         } else {
-          title = 'Popular Destinations';
+          title = 'Destinations';
         }
         break;
       case 'Workshops':
@@ -139,11 +129,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
         <View className="flex-1 flex-row items-center">
           <TouchableOpacity
             onPress={() => {
-              if (showBackToAttractions) {
-                setSelectedAttractionId(undefined);
-              } else {
-                navigation.goBack();
-              }
+              navigation.goBack();
             }}
             className="-ml-2 p-2">
             <Ionicons name="arrow-back" size={24} color={theme.foreground} />
@@ -167,7 +153,6 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
             key={tab}
             onPress={() => {
               setActiveTab(tab);
-              if (tab !== 'Points') setSelectedAttractionId(undefined);
             }}
             style={[
               {
@@ -231,80 +216,6 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
         </View>
       );
     }
-
-    if (activeTab === 'Points') {
-      const data = filteredAttractions;
-      if (data.length === 0) {
-        return (
-          <View className="items-center py-16">
-            <Ionicons name="location-outline" size={40} color={theme.mutedForeground} />
-            <Text className="mt-3 text-base font-bold" style={{ color: theme.foreground }}>
-              No destinations found
-            </Text>
-          </View>
-        );
-      }
-      return (
-        <View className="px-4 pb-10 pt-2">
-          {data.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              onPress={() => {
-                if (!selectedAttractionId) {
-                  setSelectedAttractionId(item.id);
-                } else {
-                  navigation.navigate('PointDetail', { pointId: item.id });
-                }
-              }}
-              className="mb-3 flex-row items-center gap-4 rounded-2xl border p-3"
-              style={{ backgroundColor: theme.card, borderColor: theme.border }}>
-              <SmartImage
-                uri={(item as any).thumbnailUrl || (item as any).image}
-                className="h-24 w-24 rounded-2xl object-cover"
-              />
-              <View className="flex-1">
-                <Text className="text-lg font-bold" style={{ color: theme.foreground }}>
-                  {item.name}
-                </Text>
-                {!selectedAttractionId && (
-                  <View className="mt-1 gap-1">
-                    <Text className="text-sm" style={{ color: theme.mutedForeground }}>
-                      {(item as Attraction).address}
-                    </Text>
-                    <View className="flex-row items-center gap-1.5">
-                      <View
-                        className={`h-2 w-2 rounded-full ${(item as Attraction).status === 'OPEN' ? 'bg-green-500' : 'bg-red-500'}`}
-                      />
-                      <Text
-                        className="text-[10px] font-bold uppercase tracking-wider"
-                        style={{
-                          color: (item as Attraction).status === 'OPEN' ? '#10b981' : '#ef4444',
-                        }}>
-                        {(item as Attraction).status || 'CLOSED'}
-                      </Text>
-                    </View>
-                  </View>
-                )}
-                {selectedAttractionId && (
-                  <View className="mt-1 flex-row items-center gap-2">
-                    <View className="flex-row items-center gap-1 rounded-lg bg-primary/10 px-2 py-0.5">
-                      <Text className="text-[10px] font-bold uppercase text-primary">{(item as MapPoint).type}</Text>
-                    </View>
-                    {(item as MapPoint).estTimeSpent && (
-                      <Text className="text-sm" style={{ color: theme.mutedForeground }}>
-                        • {(item as MapPoint).estTimeSpent} mins
-                      </Text>
-                    )}
-                  </View>
-                )}
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={theme.muted} />
-            </TouchableOpacity>
-          ))}
-        </View>
-      );
-    }
-
     if (activeTab === 'Events') {
       return <EventListContent initialStatus={EventStatus.UPCOMING} />;
     }

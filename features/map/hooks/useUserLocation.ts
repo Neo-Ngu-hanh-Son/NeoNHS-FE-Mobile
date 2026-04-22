@@ -130,7 +130,6 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
       setIsLoading(false);
     }
   }, []);
-
   /**
    * Get current location once
    */
@@ -218,7 +217,6 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
               setPreviousLocation(null);
               return userLocation;
             }
-
             const distance = distanceUtils.calculateDistance(currentLocation, userLocation);
             if (distance < MAP_CONSTANTS.DISTANCE_BEFORE_UPDATE_USER_LOCATION_M) {
               return currentLocation;

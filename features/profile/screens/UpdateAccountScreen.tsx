@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
+import { useTranslation } from 'react-i18next';
 
 import { Text } from '@/components/ui/text';
 import { Input } from '@/components/ui/input';
@@ -49,6 +50,7 @@ export default function UpdateAccountScreen() {
   const { user, updateUser } = useAuth();
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const { t } = useTranslation();
 
   const [fullName, setFullName] = useState(user?.fullname || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -226,7 +228,7 @@ export default function UpdateAccountScreen() {
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Ionicons name="chevron-back" size={24} color="white" />
-            <Text style={styles.backText}>Back</Text>
+            <Text style={styles.backText}>{t('common.back', 'Back')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -238,7 +240,7 @@ export default function UpdateAccountScreen() {
               contentContainerStyle={styles.scrollContent}
               showsVerticalScrollIndicator={false}>
               <Text className="mb-6 text-2xl font-bold" style={{ color: theme.foreground }}>
-                Account Info
+                {t('update_account.title', 'Update Account')}
               </Text>
 
               <TouchableOpacity
@@ -267,24 +269,24 @@ export default function UpdateAccountScreen() {
                 </View>
                 <View style={styles.photoInfo}>
                   <Text className="text-sm font-bold" style={{ color: theme.foreground }}>
-                    Your Photo
+                    {t('update_account.avatar', 'Your Photo')}
                   </Text>
                   <Text className="mt-1 text-xs" style={{ color: theme.mutedForeground }}>
-                    Tap to change your profile picture.
+                    {t('update_account.change_avatar', 'Tap to change your profile picture.')}
                   </Text>
                 </View>
               </TouchableOpacity>
 
               <View style={styles.formContainer}>
                 <View style={styles.inputGroup}>
-                  <Text style={[styles.label, { color: theme.foreground }]}>Full Name</Text>
+                  <Text style={[styles.label, { color: theme.foreground }]}>{t('update_account.fullname', 'Full Name')}</Text>
                   <Input
                     value={fullName}
                     onChangeText={(text) => {
                       setFullName(text);
                       if (errors.fullName) setErrors((prev) => ({ ...prev, fullName: '' }));
                     }}
-                    placeholder="Enter your full name"
+                    placeholder={t('update_account.fullname', 'Enter your full name')}
                     style={[
                       styles.inputCustom,
                       { borderColor: errors.fullName ? theme.destructive : theme.border },
@@ -294,7 +296,7 @@ export default function UpdateAccountScreen() {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={[styles.label, { color: theme.foreground }]}>Email</Text>
+                  <Text style={[styles.label, { color: theme.foreground }]}>{t('auth.form.email_label', 'Email')}</Text>
                   <Input
                     value={email}
                     onChangeText={setEmail}
@@ -310,7 +312,7 @@ export default function UpdateAccountScreen() {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={[styles.label, { color: theme.foreground }]}>Phone Number</Text>
+                  <Text style={[styles.label, { color: theme.foreground }]}>{t('update_account.phone', 'Phone Number')}</Text>
                   <View style={styles.phoneInputRow}>
                     <Input
                       value={phoneNumber}
@@ -325,17 +327,17 @@ export default function UpdateAccountScreen() {
 
               {/* Bank Information Section */}
               <Text className="mt-6 mb-4 text-lg font-bold" style={{ color: theme.foreground }}>
-                Bank Information
+                {t('withdraw.bank_info', 'Bank Information')}
               </Text>
 
               <View style={styles.formContainer}>
                 <View style={styles.inputGroup}>
-                  <Text style={[styles.label, { color: theme.foreground }]}>Bank Name</Text>
+                  <Text style={[styles.label, { color: theme.foreground }]}>{t('withdraw.bank_name', 'Bank Name')}</Text>
                   <TouchableOpacity
                     onPress={() => setIsBankModalVisible(true)}
                     style={[styles.inputCustom, { borderColor: theme.border, justifyContent: 'center' }]}>
                     <Text style={{ color: bankName ? theme.foreground : theme.mutedForeground }}>
-                      {bankName ? banks.find(b => b.bin === bankBin)?.shortName || bankName : 'Select a bank'}
+                      {bankName ? banks.find(b => b.bin === bankBin)?.shortName || bankName : t('withdraw.select_bank', 'Select a bank')}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -351,18 +353,18 @@ export default function UpdateAccountScreen() {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={[styles.label, { color: theme.foreground }]}>Account Number</Text>
+                  <Text style={[styles.label, { color: theme.foreground }]}>{t('withdraw.account_number', 'Account Number')}</Text>
                   <Input
                     value={bankAccountNumber}
                     onChangeText={setBankAccountNumber}
-                    placeholder="Enter account number"
+                    placeholder={t('withdraw.account_number', 'Account Number')}
                     keyboardType="numeric"
                     style={[styles.inputCustom, { borderColor: theme.border }]}
                   />
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={[styles.label, { color: theme.foreground }]}>Account Name</Text>
+                  <Text style={[styles.label, { color: theme.foreground }]}>{t('withdraw.account_name', 'Account Name')}</Text>
                   <Input
                     value={bankAccountName}
                     onChangeText={setBankAccountName}
@@ -383,7 +385,7 @@ export default function UpdateAccountScreen() {
                     (isLoading || isUploading) && { opacity: 0.7 },
                   ]}>
                   <Text style={{ color: theme.background, fontWeight: '700', fontSize: 16 }}>
-                    {isLoading ? 'Saving...' : 'Save'}
+                    {isLoading ? t('common.saving', 'Saving...') : t('update_account.save', 'Save Changes')}
                   </Text>
                 </Button>
               </View>
