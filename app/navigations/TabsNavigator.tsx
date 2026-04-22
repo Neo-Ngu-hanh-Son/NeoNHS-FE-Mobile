@@ -9,6 +9,7 @@ import { CheckinCompleteScreen, MapScreen } from '@/features/map/screens';
 import ProfileScreen from '@/features/profile/screens/ProfileScreen';
 import CartListScreen from '@/features/cart/screens/CartListScreen';
 import ChatRoomListScreen from '@/features/chat/screens/ChatRoomListScreen';
+import VoucherExchangeScreen from '@/features/voucher/screens/VoucherExchangeScreen';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import type { TabsStackParamList } from './NavigationParamTypes';
@@ -63,6 +64,16 @@ export default function TabsNavigator() {
           title: t('tabs.discover'),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? 'compass' : 'compass-outline'} color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Voucher"
+        component={VoucherExchangeScreen}
+        options={{
+          title: t('tabs.voucher'),
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'pricetag' : 'pricetag-outline'} color={color} size={size} />
           ),
         }}
       />

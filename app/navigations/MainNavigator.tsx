@@ -39,6 +39,9 @@ import { FloatingChatButton } from '@/features/chat/components/FloatingChatButto
 import NotificationsScreen from '@/features/notifications/screens/NotificationsScreen';
 import NotificationDetailScreen from '@/features/notifications/screens/NotificationDetailScreen';
 import AttractionDestinationScreen from '@/features/discover/screens/ViewAllTabs/AttractionDestinationScreen';
+import VoucherDetailScreen from '@/features/voucher/screens/VoucherDetailScreen';
+import MyVouchersScreen from '@/features/voucher/screens/MyVouchersScreen';
+import MyVoucherDetailScreen from '@/features/voucher/screens/MyVoucherDetailScreen';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -70,10 +73,9 @@ export default function MainNavigator() {
         <Stack.Screen name="Cart" component={CartListScreen} />
         <Stack.Screen name="PreCheckout" component={PreCheckoutScreen} />
         <Stack.Screen name="Payment" component={PaymentScreen} />
-
         {/* Discover & Points */}
         <Stack.Screen name="AllDestinations" component={AllDestinationsScreen} />
-        <Stack.Screen name="AttractionDestinationScreen" component={AttractionDestinationScreen} />
+        {/* <Stack.Screen name="AttractionDestinationScreen" component={AttractionDestinationScreen} /> */}
         <Stack.Screen name="PointDetail" component={PointDetailScreen} />
         <Stack.Screen name="PointAllReviews" component={PointAllReviewsScreen} />
         <Stack.Screen name="ActiveNavigation" component={ActiveNavigationScreen} />
@@ -95,6 +97,11 @@ export default function MainNavigator() {
         <Stack.Screen name="WorkshopList" component={WorkshopListScreen} />
         <Stack.Screen name="WorkshopDetail" component={WorkshopDetailScreen} />
         <Stack.Screen name="WorkshopAllReviews" component={WorkshopAllReviewsScreen} />
+
+        {/* Voucher */}
+        <Stack.Screen name="VoucherDetail" component={VoucherDetailScreen} />
+        <Stack.Screen name="MyVouchers" component={MyVouchersScreen} />
+        <Stack.Screen name="MyVoucherDetail" component={MyVoucherDetailScreen} />
 
         {/* Content & Features */}
         <Stack.Screen name="BlogList" component={BlogListScreen} />

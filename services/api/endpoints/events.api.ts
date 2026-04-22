@@ -15,4 +15,6 @@ export const eventEndpoints = {
   getEventPointTags: (eventId: string) => `events/${eventId}/point-tags`,
   /** GET /api/events/{id}/ticket-catalogs — Ticket catalogs for an event */
   getTicketCatalogs: (eventId: string) => `events/${eventId}/ticket-catalogs`,
+  /** GET /api/tags — All event tags */
+  getTags: () => `tags`,
 } as const;
