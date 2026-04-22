@@ -4,13 +4,14 @@ import { StackScreenProps } from '@react-navigation/stack';
 
 import { RootStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import type { WorkshopTemplateResponse } from '@/features/workshops/types';
-import { Text } from '@/components/ui/text';
+//import { Text } from '@/components/ui/text';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import ExperienceCard from '../ExperienceCard';
 import SectionHeader from '../SectionHeader';
 import SectionStateMessage from './SectionStateMessage';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   workshops: WorkshopTemplateResponse[];
@@ -27,6 +28,7 @@ export default function UpcomingWorkshopsSection({ workshops, loading, error }: 
   const { navigate } = useNavigation<HomeScreenProps['navigation']>();
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const { t } = useTranslation();
 
   function handleSeeMoreWorkshops(): void {
     navigate('Main', { screen: 'AllDestinations', params: { initialTab: 'Workshops' } });
@@ -40,7 +42,7 @@ export default function UpcomingWorkshopsSection({ workshops, loading, error }: 
     return (
       <View className="mb-4">
         <SectionHeader
-          title="Upcoming workshops"
+          title={t('home.upcoming_workshops')}
           showSeeAll
           onSeeAllPress={handleSeeMoreWorkshops}
         />
@@ -55,7 +57,7 @@ export default function UpcomingWorkshopsSection({ workshops, loading, error }: 
   if (loading) {
     return (
       <View className="mb-4">
-        <SectionHeader title="Upcoming workshops" />
+        <SectionHeader title={t('home.upcoming_workshops')} />
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -72,7 +74,7 @@ export default function UpcomingWorkshopsSection({ workshops, loading, error }: 
     return (
       <View className="mb-4">
         <SectionHeader
-          title="Upcoming workshops"
+          title={t('home.upcoming_workshops')}
           showSeeAll
           onSeeAllPress={handleSeeMoreWorkshops}
         />
@@ -86,7 +88,7 @@ export default function UpcomingWorkshopsSection({ workshops, loading, error }: 
   return (
     <View className="mb-4">
       <SectionHeader
-        title="Upcoming workshops"
+        title={t('home.upcoming_workshops')}
         showSeeAll
         onSeeAllPress={handleSeeMoreWorkshops}
       />

@@ -7,6 +7,7 @@ import { RootStackParamList, TabsStackParamList } from '@/app/navigations/Naviga
 import HighlightCard from '../HighlightCard';
 import SectionHeader from '../SectionHeader';
 import SectionStateMessage from './SectionStateMessage';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   overviews: BlogResponse[];
@@ -21,6 +22,7 @@ type HomeScreenProps = CompositeScreenProps<
 
 export default function AboutNHSSection({ overviews, loading, error }: Props) {
   const { navigate } = useNavigation<HomeScreenProps['navigation']>();
+  const { t } = useTranslation();
 
   function handleHighlightPress(id: string): void {
     navigate('Main', { screen: 'BlogDetails', params: { blogId: id } });
@@ -29,7 +31,7 @@ export default function AboutNHSSection({ overviews, loading, error }: Props) {
   if (error) {
     return (
       <View className="mb-4">
-        <SectionHeader title="About Ngu Hanh Son" />
+        <SectionHeader title={t('home.about_nhs')} />
         <SectionStateMessage
           tone="error"
           message="Failed to fetch overview content. Please pull to refresh."
@@ -41,7 +43,7 @@ export default function AboutNHSSection({ overviews, loading, error }: Props) {
   if (!loading && (overviews == null || overviews.length === 0)) {
     return (
       <View className="mb-4">
-        <SectionHeader title="About Ngu Hanh Son" />
+        <SectionHeader title={t('home.about_nhs')} />
         <SectionStateMessage message="No overview content found." />
       </View>
     );
@@ -49,7 +51,7 @@ export default function AboutNHSSection({ overviews, loading, error }: Props) {
 
   return (
     <View className="mb-4">
-      <SectionHeader title="About Ngu Hanh Son" />
+      <SectionHeader title={t('home.about_nhs')} />
       <View className="gap-3">
         {overviews.map((overview) => (
           <HighlightCard
@@ -57,7 +59,7 @@ export default function AboutNHSSection({ overviews, loading, error }: Props) {
             title={overview.title}
             description={overview.summary ?? ''}
             imageUrl={overview.thumbnailUrl ?? overview.bannerUrl}
-            linkText="Learn More"
+            linkText={t('home.learn_more')}
             onPress={() => handleHighlightPress(overview.id)}
           />
         ))}

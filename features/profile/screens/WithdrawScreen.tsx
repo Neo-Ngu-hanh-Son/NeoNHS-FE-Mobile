@@ -131,25 +131,25 @@ export default function WithdrawScreen() {
         setLivePhotoUri(asset.uri);
 
         setIsLoading(true);
-                try {
-                    // BYPASS liveness check - ảnh vẫn được gửi lên BE qua handleWithdraw
-                    setStep('confirm');
+        try {
+          // BYPASS liveness check - ảnh vẫn được gửi lên BE qua handleWithdraw
+          setStep('confirm');
 
-                    // TODO: restore khi xong test
-                    // const base64Data = await uriToBase64(asset.uri);
-                    // const livenessRes = await userService.checkLiveness(base64Data);
-                    // if (livenessRes.success && livenessRes.data) {
-                    //     setStep('confirm');
-                    // } else {
-                    //     Alert.alert('Liveness Check Failed', 'Spoofing detected.');
-                    //     setLivePhotoUri(null);
-                    // }
-                } catch (error: any) {
-                    Alert.alert('Error', error.message || 'Something went wrong.');
-                    setLivePhotoUri(null);
-                } finally {
-                    setIsLoading(false);
-                }
+          // TODO: restore khi xong test
+          // const base64Data = await uriToBase64(asset.uri);
+          // const livenessRes = await userService.checkLiveness(base64Data);
+          // if (livenessRes.success && livenessRes.data) {
+          //     setStep('confirm');
+          // } else {
+          //     Alert.alert('Liveness Check Failed', 'Spoofing detected.');
+          //     setLivePhotoUri(null);
+          // }
+        } catch (error: any) {
+          Alert.alert('Error', error.message || 'Something went wrong.');
+          setLivePhotoUri(null);
+        } finally {
+          setIsLoading(false);
+        }
       }
     } catch (error) {
       console.error('Camera error:', error);
@@ -532,9 +532,13 @@ export default function WithdrawScreen() {
           </View>
         }
 
-        <View style={[styles.mainContent, { backgroundColor: theme.background }]}>{renderContent()}</View>
+        <View style={[styles.mainContent, { backgroundColor: theme.background }]}>
+          {renderContent()}
+        </View>
 
-        {isLoading && step === 'face' && <LoadingOverlay visible={true} message="Checking live face..." />}
+        {isLoading && step === 'face' && (
+          <LoadingOverlay visible={true} message="Checking live face..." />
+        )}
       </SafeAreaView>
     </View>
   );

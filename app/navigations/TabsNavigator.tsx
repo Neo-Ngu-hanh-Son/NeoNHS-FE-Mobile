@@ -5,13 +5,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HomeScreen from '@/features/home/screens/HomeScreen';
 import { DiscoverScreen } from '@/features/discover/screens';
 import { CheckinCompleteScreen, MapScreen } from '@/features/map/screens';
-import { BookingsScreen } from '@/features/bookings/screens';
+// import { BookingsScreen } from '@/features/bookings/screens';
 import ProfileScreen from '@/features/profile/screens/ProfileScreen';
 import CartListScreen from '@/features/cart/screens/CartListScreen';
 import ChatRoomListScreen from '@/features/chat/screens/ChatRoomListScreen';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import type { TabsStackParamList } from './NavigationParamTypes';
+import { useTranslation } from 'react-i18next';
 import CustomTabBarButton from './components/MapTabBarButton';
 
 const Tab = createBottomTabNavigator<TabsStackParamList>();
@@ -20,6 +21,7 @@ export default function TabsNavigator() {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   // Calculate tab bar height with safe area bottom inset
   const tabBarHeight = 60 + insets.bottom;
@@ -48,7 +50,7 @@ export default function TabsNavigator() {
         name="Home"
         component={HomeScreen}
         options={{
-          title: 'Home',
+          title: t('tabs.home'),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? 'home' : 'home-outline'} color={color} size={size} />
           ),
@@ -58,19 +60,9 @@ export default function TabsNavigator() {
         name="Discover"
         component={DiscoverScreen}
         options={{
-          title: 'Discover',
+          title: t('tabs.discover'),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? 'compass' : 'compass-outline'} color={color} size={size} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Bookings"
-        component={BookingsScreen}
-        options={{
-          title: 'Bookings',
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? 'briefcase' : 'briefcase-outline'} color={color} size={size} />
           ),
         }}
       />
@@ -78,22 +70,32 @@ export default function TabsNavigator() {
         name="Map"
         component={MapScreen}
         options={{
-          title: 'Map',
-          tabBarIcon: ({ focused, size }) => (
-            <Ionicons name={focused ? 'map' : 'map-outline'} size={size} color="#FFFFFF" />
+          title: t('tabs.map'),
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'map' : 'map-outline'} color={color} size={size} />
           ),
-          // Use the custom button wrapper here
-          tabBarButton: (props) => {
-            return <CustomTabBarButton {...props} onPress={props.onPress} theme={theme}></CustomTabBarButton>;
-          },
-          tabBarLabel: () => null, // Hide the label for the Map tab
         }}
       />
+      {/* // <Tab.Screen
+      //   name="Map"
+      //   component={MapScreen}
+      //   options={{
+      //     title: 'Map',
+      //     tabBarIcon: ({ focused, size }) => (
+      //       <Ionicons name={focused ? 'map' : 'map-outline'} size={size} color="#FFFFFF" />
+      //     ),
+      //     // Use the custom button wrapper here
+      //     tabBarButton: (props) => {
+      //       return <CustomTabBarButton {...props} onPress={props.onPress} theme={theme}></CustomTabBarButton>;
+      //     },
+      //     tabBarLabel: () => null, // Hide the label for the Map tab
+      //   }}
+      // /> */}
       <Tab.Screen
         name="TestCart"
         component={CartListScreen}
         options={{
-          title: 'My Cart',
+          title: t('cart.title'),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? 'cart' : 'cart-outline'} color={color} size={size} />
           ),
@@ -104,7 +106,7 @@ export default function TabsNavigator() {
         name="Chat"
         component={ChatRoomListScreen}
         options={{
-          title: 'Chat',
+          title: t('tabs.chat'),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? 'chatbubble' : 'chatbubble-outline'} color={color} size={size} />
           ),

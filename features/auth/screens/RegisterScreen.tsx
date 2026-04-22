@@ -11,6 +11,7 @@ import AuthLayout from '../components/AuthLayout';
 import AppLink from '@/components/Navigator/AppLink';
 import RegisterForm from '../components/RegisterForm';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type RegisterScreenProps = CompositeScreenProps<
   StackScreenProps<AuthStackParamList, 'Register'>,
@@ -22,6 +23,7 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
   const [loading, setLoading] = useState(false);
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const { t } = useTranslation();
 
   const handleRegister = async (
     fullname: string,
@@ -33,11 +35,11 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
       setLoading(true);
       await register({ fullname, email, password, phoneNumber: phoneNumber.trim() || null });
       Alert.alert(
-        'Registration Successful',
-        'Your account has been created. Please verify your email to continue.',
+        t('auth.alert.registration_successful_title'),
+        t('auth.alert.registration_successful_message'),
         [
           {
-            text: 'Verify Email',
+            text: t('auth.button.verify_email'),
             onPress: () => {
               navigation.replace('VerifyEmail', { email: email.trim(), fromRegister: true });
             },
@@ -46,8 +48,8 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
       );
     } catch (error) {
       Alert.alert(
-        'Registration Failed',
-        (error as Error).message || 'Unable to create account. Please try again.'
+        t('auth.alert.registration_failed_title'),
+        (error as Error).message || t('auth.alert.registration_failed_message')
       );
     } finally {
       setLoading(false);
@@ -59,45 +61,21 @@ export default function RegisterScreen({ navigation }: RegisterScreenProps) {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.foreground }]}>Create Account</Text>
+          <Text style={[styles.title, { color: theme.foreground }]}>{t('auth.create_account')}</Text>
           <Text style={[styles.subtitle, { color: theme.mutedForeground }]}>
-            Join us and start your journey today
+            {t('auth.join_us')}
           </Text>
         </View>
 
         <RegisterForm onSubmit={handleRegister} isLoading={loading} />
 
-        {/* Divider */}
-        {/* <View style={styles.dividerContainer}>
-          <Separator className="flex-1" />
-          <Text style={[styles.dividerText, { color: theme.mutedForeground }]}>
-            or sign up with
-          </Text>
-          <Separator className="flex-1" />
-        </View> */}
-
-        {/* Google Sign Up */}
-        {/*
-          <View style={styles.socialContainer}>
-          <IconButton
-            icon="logo-google"
-            onPress={handleGoogleSignup}
-            iconSize={22}
-            color={theme.foreground}
-            buttonStyle={[styles.googleButton, { borderColor: theme.border }]}
-          >
-            Google
-          </IconButton>
-        </View>
-          */}
-
         {/* Login Link */}
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: theme.mutedForeground }]}>
-            Already have an account?{' '}
+            {t('auth.already_account')}{' '}
           </Text>
           <AppLink screen="Login" params={{}}>
-            Sign In
+            {t('auth.button.login')}
           </AppLink>
         </View>
       </View>

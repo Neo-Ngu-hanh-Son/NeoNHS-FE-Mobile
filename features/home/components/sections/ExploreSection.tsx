@@ -4,15 +4,16 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps } from 'react';
 import { IconButton } from '@/components/Buttons/IconButton';
 import { Text } from '@/components/ui/text';
-import { logger } from '@/utils/logger';
+//import { logger } from '@/utils/logger';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { CompositeScreenProps, useFocusEffect, useNavigation } from '@react-navigation/native';
 import { MainStackParamList, RootStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { StackScreenProps } from '@react-navigation/stack';
-import { fetchStats } from '@/services/api/common/statsService';
+//import { fetchStats } from '@/services/api/common/statsService';
 import { StatsResponse } from '@/types/common';
 import SectionHeader from '../SectionHeader';
+import { useTranslation } from 'react-i18next';
 
 type Props = {};
 
@@ -23,12 +24,6 @@ type ExploreItem = {
   icon: ComponentProps<typeof Ionicons>['name'];
 };
 
-const exploreItems: ExploreItem[] = [
-  { key: 'destinations', name: 'Destinations', count: 0, icon: 'location-outline' },
-  { key: 'workshops', name: 'Workshops', count: 0, icon: 'construct-outline' },
-  { key: 'events', name: 'Events', count: 0, icon: 'calendar-outline' },
-  { key: 'blogs', name: 'Blogs', count: 0, icon: 'newspaper-outline' },
-];
 
 type ScreenProps = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Home'>,
@@ -46,6 +41,14 @@ export default function ExploreSection() {
     pointCount: 0,
   });
   const { isDarkColorScheme } = useTheme();
+  const { t } = useTranslation();
+
+  const exploreItems: ExploreItem[] = [
+    { key: 'destinations', name: t('home.destinations'), count: 0, icon: 'location-outline' },
+    { key: 'workshops', name: t('home.workshops'), count: 0, icon: 'construct-outline' },
+    { key: 'events', name: t('home.events'), count: 0, icon: 'calendar-outline' },
+    { key: 'blogs', name: t('home.blogs'), count: 0, icon: 'newspaper-outline' },
+  ];
 
   const handleNavigate = (item: ExploreItem) => {
     switch (item.key) {
@@ -92,7 +95,7 @@ export default function ExploreSection() {
   };
   return (
     <View className="mb-4">
-      <SectionHeader title="Explore" />
+      <SectionHeader title={t('home.explore')} />
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

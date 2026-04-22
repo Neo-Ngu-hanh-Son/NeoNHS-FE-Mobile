@@ -1,6 +1,7 @@
 import { AuthProvider } from '@/features/auth';
 import ApiProvider from './ApiProvider';
 import { ThemeProvider } from './ThemeProvider';
+import { LanguageProvider } from './LanguageProvider';
 import { ModalProvider } from './ModalProvider';
 import { ReactNode } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -20,19 +21,21 @@ export function Providers({ children }: { children: ReactNode }) {
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
-          <GoogleLoginProvider>
-            <ModalProvider>
-              <LoadingProvider>
-                <AuthProvider>
-                  <ApiProvider>
-                    <BottomSheetModalProvider>
-                      <ChatProvider>{children}</ChatProvider>
-                    </BottomSheetModalProvider>
-                  </ApiProvider>
-                </AuthProvider>
-              </LoadingProvider>
-            </ModalProvider>
-          </GoogleLoginProvider>
+          <LanguageProvider>
+            <GoogleLoginProvider>
+              <ModalProvider>
+                <LoadingProvider>
+                  <AuthProvider>
+                    <ApiProvider>
+                      <BottomSheetModalProvider>
+                        <ChatProvider>{children}</ChatProvider>
+                      </BottomSheetModalProvider>
+                    </ApiProvider>
+                  </AuthProvider>
+                </LoadingProvider>
+              </ModalProvider>
+            </GoogleLoginProvider>
+          </LanguageProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </SafeAreaProvider>

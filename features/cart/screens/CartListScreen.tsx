@@ -12,11 +12,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { TouchableOpacity, Modal } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 export default function CartListScreen() {
     const { isDarkColorScheme } = useTheme();
     const theme = isDarkColorScheme ? THEME.dark : THEME.light;
     const navigation = useNavigation<any>();
+    const { t } = useTranslation();
 
     const [loading, setLoading] = useState(false);
     const [cart, setCart] = useState<Cart | null>(null);
@@ -26,6 +28,24 @@ export default function CartListScreen() {
     const [showVoucherModal, setShowVoucherModal] = useState(false);
     const [loadingVouchers, setLoadingVouchers] = useState(false);
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Format discount value based on type
+    const formatDiscount = (voucher: Voucher): string => {
+        if (voucher.discountType === 'PERCENT') {
+            return `-${voucher.discountValue}%`;
+        }
+        return `-${voucher.discountValue.toLocaleString()} VND`;
+    };
+
+    // Applicable product label + color
+    const getApplicableLabel = (ap: Voucher['applicableProduct']) => {
+        switch (ap) {
+            case 'EVENT_TICKET': return { label: 'Event Ticket', color: '#3b82f6' };
+            case 'WORKSHOP': return { label: 'Workshop', color: '#a855f7' };
+            case 'TICKET': return { label: 'Ticket', color: '#f59e0b' };
+            default: return { label: 'All Items', color: '#22c55e' };
+        }
+    };
 
     const fetchCart = async () => {
         setLoading(true);
@@ -201,12 +221,12 @@ export default function CartListScreen() {
                     </View>
 
                     <View style={styles.row}>
-                        <Text style={{ color: theme.mutedForeground }}>Price:</Text>
+                        <Text style={{ color: theme.mutedForeground }}>{t('cart.price', 'Price:')}</Text>
                         <Text style={{ color: theme.foreground }}>{item.price.toLocaleString()} VND</Text>
                     </View>
 
                     <View style={[styles.row, { alignItems: 'center', marginTop: 4 }]}>
-                        <Text style={{ color: theme.mutedForeground }}>Quantity:</Text>
+                        <Text style={{ color: theme.mutedForeground }}>{t('cart.quantity')}:</Text>
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8, borderWidth: 1, borderColor: theme.border, borderRadius: 6 }}>
                             <TouchableOpacity
                                 onPress={() => handleUpdateQuantity(item.id, item.quantity - 1)}
@@ -225,7 +245,7 @@ export default function CartListScreen() {
                     </View>
 
                     <View style={[styles.row, { marginTop: 4 }]}>
-                        <Text style={{ color: theme.mutedForeground }}>Total:</Text>
+                        <Text style={{ color: theme.mutedForeground }}>{t('cart.subtotal', 'Total:')}</Text>
                         <Text style={{ color: theme.primary, fontWeight: 'bold' }}>{item.totalPrice.toLocaleString()} VND</Text>
                     </View>
                 </View>
@@ -243,9 +263,9 @@ export default function CartListScreen() {
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
             <View style={styles.header}>
-                <Text style={[styles.title, { color: theme.foreground }]}>My Cart</Text>
+                <Text style={[styles.title, { color: theme.foreground }]}>{t('cart.title')}</Text>
                 <Button size="sm" variant="outline" onPress={fetchCart}>
-                    <Text>Refresh</Text>
+                    <Text>{t('common.refresh')}</Text>
                 </Button>
             </View>
 
@@ -256,7 +276,7 @@ export default function CartListScreen() {
                 contentContainerStyle={styles.listContent}
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Text style={{ color: theme.mutedForeground }}>Your cart is empty</Text>
+                        <Text style={{ color: theme.mutedForeground }}>{t('cart.empty')}</Text>
                     </View>
                 }
             />
@@ -282,28 +302,56 @@ export default function CartListScreen() {
                             <FlatList
                                 data={vouchers}
                                 keyExtractor={(item) => item.userVoucherId}
-                                renderItem={({ item }) => (
-                                    <TouchableOpacity
-                                        style={{
-                                            padding: 16,
-                                            borderBottomWidth: 1,
-                                            borderBottomColor: theme.border,
-                                            flexDirection: 'row',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center'
-                                        }}
-                                        onPress={() => {
-                                            setSelectedVoucher(item);
-                                            setShowVoucherModal(false);
-                                        }}
-                                    >
-                                        <View>
-                                            <Text style={{ fontWeight: 'bold', color: theme.foreground }}>{item.code}</Text>
-                                            <Text style={{ color: theme.mutedForeground, fontSize: 12 }}>Min Order: {item.minOrderValue.toLocaleString()} VND</Text>
-                                        </View>
-                                        <Text style={{ color: theme.primary, fontWeight: 'bold' }}>-{item.discountValue.toLocaleString()} VND</Text>
-                                    </TouchableOpacity>
-                                )}
+                                renderItem={({ item }) => {
+                                    const apInfo = getApplicableLabel(item.applicableProduct);
+                                    return (
+                                        <TouchableOpacity
+                                            style={{
+                                                padding: 14,
+                                                borderBottomWidth: 1,
+                                                borderBottomColor: theme.border,
+                                                flexDirection: 'row',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'flex-start',
+                                                gap: 12,
+                                            }}
+                                            onPress={() => {
+                                                setSelectedVoucher(item);
+                                                setShowVoucherModal(false);
+                                            }}
+                                        >
+                                            {/* Left info */}
+                                            <View style={{ flex: 1, gap: 4 }}>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                                    <Text style={{ fontWeight: 'bold', color: theme.foreground, fontSize: 15 }}>{item.code}</Text>
+                                                    {/* Applicable badge */}
+                                                    <View style={{ backgroundColor: apInfo.color + '22', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                                                        <Text style={{ color: apInfo.color, fontSize: 10, fontWeight: '600' }}>{apInfo.label}</Text>
+                                                    </View>
+                                                </View>
+                                                <View style={{ flexDirection: 'row', gap: 12, flexWrap: 'wrap' }}>
+                                                    {/* <Text style={{ color: theme.mutedForeground, fontSize: 11 }}>
+                                                        Min: {item.minOrderValue.toLocaleString()} VND
+                                                    </Text> */}
+                                                    {item.maxDiscountValue ? (
+                                                        <Text style={{ color: theme.mutedForeground, fontSize: 11 }}>
+                                                            Max save: {item.maxDiscountValue.toLocaleString()} VND
+                                                        </Text>
+                                                    ) : null}
+                                                    {item.endDate ? (
+                                                        <Text style={{ color: '#f59e0b', fontSize: 11 }}>
+                                                            Exp: {new Date(item.endDate).toLocaleDateString()}
+                                                        </Text>
+                                                    ) : null}
+                                                </View>
+                                            </View>
+                                            {/* Discount badge */}
+                                            <View style={{ alignItems: 'flex-end' }}>
+                                                <Text style={{ color: '#22c55e', fontWeight: 'bold', fontSize: 16 }}>{formatDiscount(item)}</Text>
+                                            </View>
+                                        </TouchableOpacity>
+                                    );
+                                }}
                                 ListEmptyComponent={<Text style={{ textAlign: 'center', padding: 20, color: theme.mutedForeground }}>No vouchers found</Text>}
                             />
                         )}
@@ -332,7 +380,7 @@ export default function CartListScreen() {
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <MaterialIcons name="local-offer" size={20} color={theme.primary} style={{ marginRight: 8 }} />
                         <Text style={{ color: selectedVoucher ? theme.primary : theme.mutedForeground }}>
-                            {selectedVoucher ? `${selectedVoucher.code} (-${selectedVoucher.discountValue.toLocaleString()} VND)` : "Select Voucher / Coupon"}
+                            {selectedVoucher ? `${selectedVoucher.code} (${formatDiscount(selectedVoucher)})` : "Select Voucher / Coupon"}
                         </Text>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -346,9 +394,9 @@ export default function CartListScreen() {
                 </TouchableOpacity>
 
                 <View style={styles.totalRow}>
-                    <Text style={{ color: theme.foreground }}>Selected: {validSelectedCount}</Text>
+                    <Text style={{ color: theme.foreground }}>{t('cart.selected', 'Selected')}: {validSelectedCount}</Text>
                     <Text style={{ color: theme.foreground, fontWeight: 'bold' }}>
-                        Total: {
+                        {t('cart.total')}: {
                             validSelectedItems
                                 .reduce((sum, item) => sum + item.totalPrice, 0)
                                 .toLocaleString() || 0
@@ -356,11 +404,11 @@ export default function CartListScreen() {
                     </Text>
                 </View>
                 <Button onPress={handleProceedToPreCheckout} disabled={validSelectedCount === 0}>
-                    <Text style={{ color: 'white' }}>Proceed to Checkout</Text>
+                    <Text style={{ color: 'white' }}>{t('cart.checkout')}</Text>
                 </Button>
             </View>
 
-            <LoadingOverlay visible={loading} message="Loading Cart..." />
+            <LoadingOverlay visible={loading} message={t('common.loading')} />
         </SafeAreaView>
     );
 }

@@ -36,6 +36,7 @@ import ChatScreen from '@/features/chat/screens/ChatScreen';
 import { FloatingChatButton } from '@/features/chat/components/FloatingChatButton';
 import NotificationsScreen from '@/features/notifications/screens/NotificationsScreen';
 import NotificationDetailScreen from '@/features/notifications/screens/NotificationDetailScreen';
+import AttractionDestinationScreen from '@/features/discover/screens/ViewAllTabs/AttractionDestinationScreen';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -69,6 +70,7 @@ export default function MainNavigator() {
 
         {/* Discover & Points */}
         <Stack.Screen name="AllDestinations" component={AllDestinationsScreen} />
+        <Stack.Screen name="AttractionDestinationScreen" component={AttractionDestinationScreen} />
         <Stack.Screen name="PointDetail" component={PointDetailScreen} />
         <Stack.Screen name="PointAllReviews" component={PointAllReviewsScreen} />
         <Stack.Screen name="ActiveNavigation" component={ActiveNavigationScreen} />

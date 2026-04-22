@@ -62,6 +62,7 @@ export type DestinationRoutes = {
     initialTab?: 'Points' | 'Workshops' | 'Events' | 'Blogs';
     selectedAttractionId?: string;
   };
+  AttractionDestinationScreen: { attractionId: string };
   PointDetail: { pointId: string };
   PointAllReviews: {
     pointId: string;

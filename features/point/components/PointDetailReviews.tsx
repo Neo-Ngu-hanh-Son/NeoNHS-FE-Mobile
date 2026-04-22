@@ -21,7 +21,7 @@ export function PointDetailReviews({
 }: PointDetailReviewsProps) {
   const { user } = useAuth();
 
-  const { data, isLoading, fetchNextPage } = usePointReviews(pointId, 'createdAt,desc');
+  const { data, isLoading } = usePointReviews(pointId, 'createdAt,desc');
   const createReviewMutation = useCreatePointReview(pointId);
   const updateReviewMutation = useUpdatePointReview(pointId);
 

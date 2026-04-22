@@ -6,6 +6,7 @@ import { useRoute, RouteProp } from '@react-navigation/native';
 import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { THEME } from '@/lib/theme';
 import { useTheme } from '@/app/providers/ThemeProvider';
+import { useTranslation } from 'react-i18next';
 
 type NotificationDetailRouteProp = RouteProp<MainStackParamList, 'NotificationDetail'>;
 
@@ -29,20 +30,20 @@ const getNotificationIcon = (
     }
 };
 
-const getNotificationLabel = (type: string): string => {
+const getNotificationLabel = (type: string, t: any): string => {
     switch (type?.toUpperCase()) {
         case 'EVENT':
-            return 'Event Update';
+            return t('notifications.types.event');
         case 'CHECKIN_SUCCESS':
-            return 'Check-in';
+            return t('notifications.types.checkin_success');
         case 'ORDER_SUCCESS':
-            return 'Payment';
+            return t('notifications.types.order_success');
         case 'REPORT_RESOLVED':
-            return 'Report Resolved';
+            return t('notifications.types.report_resolved');
         case 'REPORT_REJECTED':
-            return 'Report Reviewed';
+            return t('notifications.types.report_rejected');
         default:
-            return 'Notification';
+            return t('notifications.types.default');
     }
 };
 
@@ -51,8 +52,9 @@ export default function NotificationDetailScreen() {
     const { notification } = route.params;
     const { isDarkColorScheme } = useTheme();
     const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+    const { t } = useTranslation();
     const icon = getNotificationIcon(notification.type, theme);
-    const label = getNotificationLabel(notification.type);
+    const label = getNotificationLabel(notification.type, t);
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['bottom', 'left', 'right']}>
