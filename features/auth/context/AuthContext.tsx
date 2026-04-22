@@ -109,9 +109,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Gửi push token lên server bất cứ khi nào user được xác thực và có token
   useEffect(() => {
     if (state.isAuthenticated && expoPushToken) {
-      apiClient.post('notifications/push-token', { token: expoPushToken })
+      apiClient
+        .post('notifications/push-token', { token: expoPushToken })
         .then(() => logger.info('[AuthContext] Successfully uploaded Expo Push Token to Backend'))
-        .catch(err => logger.error('[AuthContext] Error sending Push Token', err));
+        .catch((err) => logger.error('[AuthContext] Error sending Push Token', err));
     }
   }, [state.isAuthenticated, expoPushToken]);
 
@@ -124,14 +125,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const fetchNotifications = async () => {
       try {
         const response = await apiClient.get<any>('notifications', {
-          params: { email: state.user!.email, page: 0, size: 20 }
+          params: { email: state.user!.email, page: 0, size: 20 },
         });
         const unreadItems = response.data.content.filter((n: any) => !n.isRead);
 
         if (!isFirstFetch && unreadItems.length > previousUnreadCountRef.current) {
           // Send a local push notification for the newest one
           const newest = unreadItems[0];
-          import('expo-notifications').then(Notifications => {
+          import('expo-notifications').then((Notifications) => {
             Notifications.scheduleNotificationAsync({
               content: {
                 title: newest.title,
@@ -199,9 +200,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.data) {
         const { accessToken, userInfo, refreshToken } = response.data;
-
-        logger.info('[AuthContext] Login successful:', response.data);
-
         await Promise.all([
           storage.setAuthToken(accessToken),
           refreshToken ? storage.setRefreshToken(refreshToken) : Promise.resolve(),
@@ -234,9 +232,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.data) {
         const { accessToken, refreshToken, userInfo } = response.data;
-
-        logger.info('[AuthContext] Google login successful:', response.data);
-
         await Promise.all([
           storage.setAuthToken(accessToken),
           refreshToken ? storage.setRefreshToken(refreshToken) : Promise.resolve(),

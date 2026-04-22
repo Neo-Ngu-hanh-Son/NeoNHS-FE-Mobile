@@ -62,19 +62,34 @@ export type DestinationRoutes = {
     initialTab?: 'Points' | 'Workshops' | 'Events' | 'Blogs';
     selectedAttractionId?: string;
   };
+  AttractionDestinationScreen: { attractionId: string };
+  PointDetail: { pointId: string };
+  PointAllReviews: {
+    pointId: string;
+    pointName: string;
+  };
 };
 
 /* Map / Points */
 export type MapRoutes = {
-  PointDetail: { pointId: string };
-  PointMapSelection: { pointId: string };
   ActiveNavigation: { pointId: string };
   ArrivalConfirmation: { pointId: string };
   AudioGuide: { pointId: string };
   PointHistoryAudio: { pointId: string };
   Panorama: { pointId: string };
-  CheckinCamera: { pointId?: string | null; pointName: string; pointRewardPoints?: number };
-  CheckinComplete: { imageUrl?: string; rewardPoints?: number; userTotalPoints?: number };
+};
+
+export type CheckinRoutes = {
+  CheckinCamera: { checkinPointId?: string | null; pointName: string; pointRewardPoints?: number };
+  CheckinComplete: {
+    imageUrl?: string;
+    rewardPoints?: number;
+    userTotalPoints?: number;
+    destinationName?: string;
+    checkinPointId?: string;
+    parentCheckinPointId?: string;
+    imageUrls?: string[];
+  };
 };
 
 /* Events */
@@ -155,6 +170,7 @@ export type MainStackParamList = BaseMainRoutes &
   TicketRoutes &
   DestinationRoutes &
   MapRoutes &
+  CheckinRoutes &
   EventRoutes &
   WorkshopRoutes &
   CheckoutRoutes &

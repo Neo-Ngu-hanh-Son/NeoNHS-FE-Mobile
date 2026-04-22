@@ -16,7 +16,7 @@ import { mapData } from '../data';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { ScreenLayout } from '@/components/common/ScreenLayout';
 import { useQuery } from '@tanstack/react-query';
-import CheckinCameraButton from '../components/Camera/CheckinCameraButton';
+import CheckinCameraButton from '../components/CheckinCameraButton';
 import MAP_CONSTANTS from '../constants';
 import { LocationAccuracy } from 'expo-location';
 import BottomSheet from '@gorhom/bottom-sheet';
@@ -79,7 +79,11 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     syncNearbyGeofences,
   } = useUserLocation(USER_LOCATION_OPTIONS);
 
-  const { data: mapPoints = mapData.mapPoints, isError: isMapPointsError } = useQuery({
+  const {
+    data: mapPoints = mapData.mapPoints,
+    isError: isMapPointsError,
+    refetch,
+  } = useQuery({
     queryKey: [QUERY_KEYS.MAP_POINTS],
     queryFn: async () => {
       const res = await mapService.getMapPoints();
@@ -280,6 +284,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
         markerFilters={markerFilters}
         enableCheckinMode={true}
         viewMode={viewMode}
+        refetchMapPoints={refetch}
       />
 
       {/* Exploring Mode */}

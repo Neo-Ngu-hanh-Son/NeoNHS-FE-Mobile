@@ -48,6 +48,7 @@ const NHSMapInner = <T extends MapPoint>(
     enableCheckinMode = false,
     viewMode,
     renderMarker,
+    refetchMapPoints,
   }: NHSMapProps<T>,
   ref: ForwardedRef<NHSMapRef>
 ) => {
@@ -77,7 +78,7 @@ const NHSMapInner = <T extends MapPoint>(
   // const setGlobalLastMapInteractionLocation = useMapStore((state) => state.setLastMapInteractionLocation);
   // const setGlobalMapZoom = useMapStore((state) => state.setMapZoom);
   const isGuidanceMode = viewMode === 'NAVIGATING';
-
+  const [track, setShouldTrack] = useState(true);
   const activeCheckinPoint = useCheckinProximity(
     userLocation,
     checkinPoints,
@@ -140,27 +141,54 @@ const NHSMapInner = <T extends MapPoint>(
     },
   }));
 
+  // This will be used for the marker keys to ensure consistency
   useEffect(() => {
     if (!isFocused) return;
-
-    // Soft-refresh: bump epoch so marker/polyline keys change, forcing React to
-    // recreate the lightweight <Marker> wrappers. The native MapView stays alive,
-    // avoiding the expensive teardown/setup cycle that leaks GPU memory.
     logger.info('[NHSMap] Soft-refreshing markers on focus');
     setMarkerEpoch((prev) => prev + 1);
   }, [isFocused]);
 
-  const handleRegionChangeComplete = useCallback((region: Region) => {
-    const zoom = Math.log2(360 / region.longitudeDelta);
-    const shouldShow = zoom >= 17.5;
-    setShouldDisplayMarkerName((prev) => (prev === shouldShow ? prev : shouldShow));
-    // Store for later
-    currentRegionRef.current = region;
-    mapZoomRef.current.latitudeDelta = region.latitudeDelta;
-    mapZoomRef.current.longitudeDelta = region.longitudeDelta;
-
-    setLastMapInteractionLocation(region);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShouldTrack(false);
+    }, 5000);
+    return () => clearTimeout(timer);
   }, []);
+
+  const trackTimerRef = useRef<any>(null);
+
+  const triggerTemporaryTracking = useCallback(() => {
+    if (trackTimerRef.current) {
+      clearTimeout(trackTimerRef.current);
+    }
+    setShouldTrack(true);
+    trackTimerRef.current = setTimeout(() => {
+      setShouldTrack(false);
+      trackTimerRef.current = null;
+    }, 5000);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (trackTimerRef.current) clearTimeout(trackTimerRef.current);
+    };
+  }, []);
+
+  const handleRegionChangeComplete = useCallback(
+    (region: Region) => {
+      const zoom = Math.log2(360 / region.longitudeDelta);
+      const shouldShow = zoom >= 17.5;
+      triggerTemporaryTracking();
+      setShouldDisplayMarkerName((prev) => (prev === shouldShow ? prev : shouldShow));
+      // Store for later
+      currentRegionRef.current = region;
+      mapZoomRef.current.latitudeDelta = region.latitudeDelta;
+      mapZoomRef.current.longitudeDelta = region.longitudeDelta;
+
+      setLastMapInteractionLocation(region);
+    },
+    [triggerTemporaryTracking]
+  );
 
   const handleMapInteraction = useCallback(() => {
     if (isFollowingUser) {
@@ -203,7 +231,8 @@ const NHSMapInner = <T extends MapPoint>(
     setIsMapReady(false);
     setIsFollowingUser(false);
     setMapKey((prev) => prev + 1);
-  }, [setIsMapReady]);
+    refetchMapPoints?.();
+  }, [setIsMapReady, refetchMapPoints]);
 
   useEffect(() => {
     onActiveCheckinPointChange?.(activeCheckinPoint);
@@ -213,7 +242,10 @@ const NHSMapInner = <T extends MapPoint>(
    * useEffect to fetch checkin points near user when the user moves.
    */
   useEffect(() => {
-    if (viewMode !== 'EXPLORING' || !enableCheckinMode) return;
+    if (viewMode !== 'EXPLORING' || !enableCheckinMode) {
+      logger.debug('[NHSMap] Skipping checkin sync - not in exploring mode or checkin mode disabled');
+      return;
+    }
     let isCancelled = false;
 
     const syncCheckinPoints = async () => {
@@ -228,12 +260,14 @@ const NHSMapInner = <T extends MapPoint>(
         latitude: previousLocation?.latitude ?? userLocation.latitude,
         longitude: previousLocation?.longitude ?? userLocation.longitude,
       };
+
       const distanceMoved = distanceUtils.calculateDistance(
         { latitude: userLocation.latitude, longitude: userLocation.longitude },
         { latitude: previousCoords.latitude, longitude: previousCoords.longitude }
       );
 
       if (distanceMoved <= MAP_CONSTANTS.DISTANCE_LIMIT_BEFORE_REFETCH_M && previousLocation) {
+        logger.debug(`[NHSMap] Distance moved: ${distanceMoved.toFixed(2)}m. Skipping fetch.`);
         return;
       }
 
@@ -241,6 +275,7 @@ const NHSMapInner = <T extends MapPoint>(
 
       try {
         const nearbyCheckinPoints = await syncNearbyGeofences(userLocation.latitude, userLocation.longitude);
+        logger.info(`[NHSMap] Checkin point near user: ${nearbyCheckinPoints.length}`);
 
         if (!isCancelled) {
           setCheckinPoints((currentPoints) =>
@@ -284,14 +319,9 @@ const NHSMapInner = <T extends MapPoint>(
   // markerEpoch in key forces polyline re-creation on focus to fix stale rendering
   const memoizedRoutes = useMemo((): React.ReactNode[] => {
     return renderRoutes.map((line) => (
-      <Polyline
-        key={`${line.id}-${markerEpoch}`}
-        coordinates={line.coordinates}
-        strokeColor="#fafafa50"
-        strokeWidth={8}
-      />
+      <Polyline key={`${line.id}`} coordinates={line.coordinates} strokeColor="#fafafa50" strokeWidth={8} />
     ));
-  }, [markerEpoch]);
+  }, []);
 
   // Memoize the navigation route
   const memoizedNavigationRoute = useMemo(() => {
@@ -344,8 +374,8 @@ const NHSMapInner = <T extends MapPoint>(
 
   // 2. Memoize the map points
   const memoizedMarkers = useMemo(() => {
-    console.log('Memmoizing markers ran');
     if (!isMapReady || !mapPoints) return null;
+    console.log('Memmoizing markers ran');
 
     const parentMarkers = mapPoints
       .filter((poi) => poi.latitude !== -1 && poi.longitude !== -1 && shouldShowParentPoint(poi))
@@ -355,8 +385,8 @@ const NHSMapInner = <T extends MapPoint>(
         }
         return (
           <Marker
-            key={`${poi.id}`}
-            tracksViewChanges={true}
+            key={`${poi.id}-${markerEpoch}`}
+            tracksViewChanges={track}
             coordinate={{
               latitude: poi.latitude,
               longitude: poi.longitude,
@@ -412,8 +442,8 @@ const NHSMapInner = <T extends MapPoint>(
 
               return (
                 <Marker
-                  tracksViewChanges={true}
-                  key={`checkin-${checkin.id}`}
+                  tracksViewChanges={track}
+                  key={`checkin-${checkin.id}-${markerEpoch}`}
                   coordinate={{
                     latitude: checkin.latitude,
                     longitude: checkin.longitude,
@@ -442,12 +472,14 @@ const NHSMapInner = <T extends MapPoint>(
   }, [
     isMapReady,
     mapPoints,
-    shouldDisplayMarkerName,
-    shouldShowParentPoint,
     effectiveMarkerFilters.showAll,
     effectiveMarkerFilters.showCheckin,
-    isGuidanceMode,
+    shouldShowParentPoint,
     renderMarker,
+    markerEpoch,
+    track,
+    shouldDisplayMarkerName,
+    isGuidanceMode,
   ]);
 
   return (

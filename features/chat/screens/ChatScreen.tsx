@@ -26,6 +26,8 @@ import { useChatContext } from '../context/ChatProvider';
 import { ChatRestService } from '../services/chatApiService';
 import { streamAiReply } from '../services/aiChatService';
 import { SmartImage } from '@/components/ui/smart-image';
+import imageService from '@/services/api/common/uploadImageService';
+import { generateImageUploadData } from '@/utils/uploadImageHelper';
 
 /** Maps backend role strings to user-facing labels. */
 function formatParticipantRole(role?: string): string {
@@ -84,6 +86,7 @@ export default function ChatScreen({ route, navigation }: any) {
   const displayParticipant = room?.otherParticipant;
   const displayName = displayParticipant?.fullname || room?.name || 'Chat';
   const displayAvatar = displayParticipant?.avatarUrl;
+  const { accessToken } = useAuth();
 
   const messages = messagesByRoom[roomId] || [];
 
@@ -379,8 +382,10 @@ export default function ChatScreen({ route, navigation }: any) {
       }));
 
       setIsUploading(true);
-      const mediaUrl = await ChatRestService.uploadMedia(localUri);
-      sendWsMessage(roomId, '', 'IMAGE', mediaUrl, null);
+      // const mediaUrl = await ChatRestService.uploadMedia(localUri);
+      const media = await imageService.uploadImage(generateImageUploadData({ localUri }), accessToken ?? '');
+
+      sendWsMessage(roomId, '', 'IMAGE', media.mediaUrl, null);
 
       // Remove the placeholder — the real message will arrive via WebSocket
       setMessagesByRoom((prev) => ({
