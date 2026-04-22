@@ -1,3 +1,27 @@
+import type { ChatMessage } from '../types';
+
+/**
+ * Merge REST history with in-memory messages: server wins for shared IDs so
+ * pull-to-refresh picks up status updates and new fields; keep local-only rows
+ * (e.g. optimistic upload placeholders with ids starting with "__").
+ */
+export function mergeServerChatHistory(historyMsgs: ChatMessage[], current: ChatMessage[]): ChatMessage[] {
+  const msgMap = new Map<string, ChatMessage>();
+  historyMsgs.forEach((m) => msgMap.set(m.id, m));
+  current.forEach((m) => {
+    if (m.id.startsWith('__')) {
+      msgMap.set(m.id, m);
+      return;
+    }
+    if (!msgMap.has(m.id)) {
+      msgMap.set(m.id, m);
+    }
+  });
+  return Array.from(msgMap.values()).sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
+}
+
 export function formatChatRoomTime(dateString: string | null): string {
   if (!dateString) return "";
   const date = new Date(dateString);

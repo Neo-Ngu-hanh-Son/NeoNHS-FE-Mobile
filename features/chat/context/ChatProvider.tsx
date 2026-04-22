@@ -32,11 +32,9 @@ interface ChatContextValue {
 
   // Room management
   hideRoom: (roomId: string) => Promise<void>;
-  createOrOpenRoom: (
-    roomType: RoomType,
-    participantIds?: string[],
-    name?: string | null
-  ) => Promise<ChatRoomWithDetails>;
+  createOrOpenRoom: (roomType: RoomType, participantIds?: string[], name?: string | null) => Promise<ChatRoomWithDetails>;
+  /** Reload room list from the server (e.g. pull-to-refresh). Skips the global rooms loading flag. */
+  refetchRooms: () => Promise<void>;
 
   // Typing
   sendTypingStart: (roomId: string) => void;
@@ -134,13 +132,12 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     [currentUserId]
   );
 
-  // ── Initial load + WS connection ─────────────────────
-  useEffect(() => {
-    if (!accessToken || !currentUserId) return;
-
-    const loadRooms = async () => {
+  const loadRoomsFromServer = useCallback(
+    async (options?: { showLoadingSpinner?: boolean }) => {
+      if (!accessToken || !currentUserId) return;
+      const showSpinner = options?.showLoadingSpinner !== false;
+      if (showSpinner) setIsLoadingRooms(true);
       try {
-        setIsLoadingRooms(true);
         const serverRooms = await ChatRestService.getMyRooms();
 
         const enrichedRooms = await Promise.all(
@@ -167,10 +164,19 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       } catch (error) {
         console.error('Failed to load chat rooms:', error);
       } finally {
-        setIsLoadingRooms(false);
+        if (showSpinner) setIsLoadingRooms(false);
       }
-    };
-    loadRooms();
+    },
+    [accessToken, currentUserId]
+  );
+
+  const refetchRooms = useCallback(() => loadRoomsFromServer({ showLoadingSpinner: false }), [loadRoomsFromServer]);
+
+  // ── Initial load + WS connection ─────────────────────
+  useEffect(() => {
+    if (!accessToken || !currentUserId) return;
+
+    void loadRoomsFromServer({ showLoadingSpinner: true });
 
     // WebSocket
     const ws = new ChatWebSocketService(accessToken);
@@ -244,7 +250,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       ws.disconnect();
       wsServiceRef.current = null;
     };
-  }, [accessToken, currentUserId]);
+  }, [accessToken, currentUserId, loadRoomsFromServer]);
 
   // ── Message send wrapper ─────────────────────────────
   const sendMessage = useCallback(
@@ -265,7 +271,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const sendTypingStop = useCallback((roomId: string) => wsServiceRef.current?.sendTypingStop(roomId), []);
   const subscribeToRoomTyping = useCallback(
     (roomId: string, cb: (data: { isTyping: boolean; senderId: string }) => void) =>
-      wsServiceRef.current?.subscribeToRoomTyping(roomId, cb) ?? (() => {}),
+      wsServiceRef.current?.subscribeToRoomTyping(roomId, cb) ?? (() => { }),
     []
   );
 
@@ -291,6 +297,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         resetUnreadCount,
         hideRoom,
         createOrOpenRoom,
+        refetchRooms,
         sendTypingStart,
         sendTypingStop,
         subscribeToRoomTyping,

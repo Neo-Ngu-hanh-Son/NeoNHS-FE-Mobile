@@ -31,7 +31,7 @@ type SmartImageProps = Omit<ImageProps, 'source'> & {
  * efficient GIF/WebP decoding, crossfade transitions).
  * Falls back to a local placeholder when no valid URI is provided.
  */
-export function SmartImage({
+export const SmartImage = React.memo(function SmartImage({
   uri,
   fallbackSource = DEFAULT_FALLBACK_SOURCE,
   style,
@@ -53,7 +53,7 @@ export function SmartImage({
       {...props}
     />
   );
-}
+});
 
 type SmartImageBackgroundProps = Omit<ImageBackgroundProps, 'source'> & {
   uri?: string | null;

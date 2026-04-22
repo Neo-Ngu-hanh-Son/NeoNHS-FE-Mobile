@@ -7,6 +7,7 @@ import { CompositeScreenProps } from '@react-navigation/native';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useChatContext } from '@/features/chat/context/ChatProvider';
 import { RootStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
@@ -42,6 +43,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { refetchRooms } = useChatContext();
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -102,6 +104,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       refetchHomeEvents(),
       refetchHomeWorkshops(),
       refetchDestinations(),
+      refetchRooms(),
     ]).finally(() => {
       setRefreshing(false);
     });
@@ -113,6 +116,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     refetchHomeEvents,
     refetchHomeWorkshops,
     refetchDestinations,
+    refetchRooms,
   ]);
 
   function handleNotificationPress(): void {

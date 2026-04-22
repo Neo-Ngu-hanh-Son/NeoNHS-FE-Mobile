@@ -32,7 +32,9 @@ import PointHistoryAudioScreen from '@/features/point/screens/PointHistoryAudioS
 import CheckinCameraScreen from '@/features/checkin/screens/CheckinCameraScreen';
 import CheckinCompleteScreen from '@/features/checkin/screens/CheckinCompleteScreen';
 import CheckinGalleryScreen from '@/features/profile/screens/CheckinGalleryScreen';
+import { MapScreen } from '@/features/map/screens';
 import ChatScreen from '@/features/chat/screens/ChatScreen';
+import CartListScreen from '@/features/cart/screens/CartListScreen';
 import { FloatingChatButton } from '@/features/chat/components/FloatingChatButton';
 import NotificationsScreen from '@/features/notifications/screens/NotificationsScreen';
 import NotificationDetailScreen from '@/features/notifications/screens/NotificationDetailScreen';
@@ -65,6 +67,7 @@ export default function MainNavigator() {
         <Stack.Screen name="TicketVerification" component={TicketVerificationScreen} />
 
         {/* Cart & Checkout */}
+        <Stack.Screen name="Cart" component={CartListScreen} />
         <Stack.Screen name="PreCheckout" component={PreCheckoutScreen} />
         <Stack.Screen name="Payment" component={PaymentScreen} />
 
@@ -101,6 +104,8 @@ export default function MainNavigator() {
         {/* Map & Check-in */}
         <Stack.Screen name="CheckinCamera" component={CheckinCameraScreen} />
         <Stack.Screen name="CheckinComplete" component={CheckinCompleteScreen} />
+        {/* @ts-ignore - CompositeScreenProps typing mismatch with native-stack */}
+        <Stack.Screen name="MapDirection" component={MapScreen} />
 
         <Stack.Screen name="ChatRoom" component={ChatScreen} options={{ headerShown: false }} />
         <Stack.Screen

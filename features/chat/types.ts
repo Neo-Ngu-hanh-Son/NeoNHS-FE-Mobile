@@ -1,8 +1,8 @@
 // ── Room Types ─────────────────────────────────────────
-export type RoomType = 'STANDARD' | 'SYSTEM_SUPPORT' | 'VENDOR_CHAT';
+export type RoomType = 'STANDARD' | 'SYSTEM_SUPPORT' | 'VENDOR_CHAT' | 'AI_CHAT';
 
 // ── Message Types ──────────────────────────────────────
-export type MessageType = 'TEXT' | 'IMAGE' | 'PRODUCT_SNIPPET';
+export type MessageType = 'TEXT' | 'IMAGE' | 'PRODUCT_SNIPPET' | 'LOCATION';
 
 // ── Participant ────────────────────────────────────────
 export interface ChatParticipant {
@@ -40,12 +40,17 @@ export interface ChatMessage {
   messageType?: MessageType;
   /** Cloudinary URL for IMAGE type messages */
   mediaUrl?: string | null;
-  /** Extra data for PRODUCT_SNIPPET messages */
+  /** Extra data for PRODUCT_SNIPPET or LOCATION messages */
   metadata?: {
     workshopId?: string;
     title?: string;
     price?: number;
     thumbnailUrl?: string;
+    lat?: number;
+    lng?: number;
+    address?: string;
+    /** When true, show transfer-to-human CTAs (set by backend on AI handover). */
+    transferToHuman?: boolean;
     [key: string]: any;
   } | null;
 

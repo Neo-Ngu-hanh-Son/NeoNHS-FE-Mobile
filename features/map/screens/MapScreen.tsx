@@ -30,7 +30,7 @@ import { useMapScreenController } from '../hooks/useMapScreenController';
 
 type MapScreenProps = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Map'>,
-  StackScreenProps<MainStackParamList>
+  StackScreenProps<MainStackParamList, 'MapDirection'>
 >;
 export default function MapScreen({ navigation, route }: MapScreenProps) {
   const USER_LOCATION_OPTIONS = useMemo(() => {
@@ -352,7 +352,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
             ref={navigationStepsSheetRef}
             steps={navigationSteps}
             currentStepIndex={currentUserStepIndex}
-            // onChange={handleNavigationStepsSheetChange}
+          // onChange={handleNavigationStepsSheetChange}
           />
         </>
       )}
