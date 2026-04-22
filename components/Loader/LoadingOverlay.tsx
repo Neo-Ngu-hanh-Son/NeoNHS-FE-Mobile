@@ -17,9 +17,7 @@ export default function LoadingOverlay({ visible, message = 'Loading...' }: Load
       <View style={styles.backdrop} pointerEvents="auto">
         <View style={[styles.container, { backgroundColor: theme.card }]}>
           <ActivityIndicator animating size="large" color={theme.primary} />
-          {message ? (
-            <Text style={[styles.message, { color: theme.foreground }]}>{message}</Text>
-          ) : null}
+          {message ? <Text style={[styles.message, { color: theme.foreground }]}>{message}</Text> : null}
         </View>
       </View>
     </Modal>

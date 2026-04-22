@@ -93,7 +93,7 @@ export const TimelineItem = ({
 
   return (
     <Animated.View
-      layout={LinearTransition.springify().damping(28).mass(0.8)}
+      layout={LinearTransition.springify().damping(80).mass(0.5).stiffness(200)}
       style={[
         styles.card,
         {

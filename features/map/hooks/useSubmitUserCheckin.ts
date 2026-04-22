@@ -1,14 +1,21 @@
 import { useCallback, useState } from 'react';
 
 import checkinServices from '@/features/map/services/checkinServices';
-import { CheckinImageRequest, CheckinMethod, UserCheckinRequest } from '@/features/map/types';
+import { CheckinMethod, UserCheckinRequest } from '@/features/map/types';
 import { useUserLocation } from '@/features/map/hooks/useUserLocation';
 import { logger } from '@/utils/logger';
 import { useCheckinMutation } from './Checkin/useCheckinMutation';
+import { useAuth } from '@/features/auth';
+import { generateImageUploadData } from '@/utils/uploadImageHelper';
 
 export type CheckinDraftImage = {
+  id?: string;
   localUri: string;
   caption?: string;
+  imageUrl?: string;
+  publicId?: string;
+  uploadStatus?: 'pending' | 'uploaded' | 'failed';
+  uploadError?: string;
 };
 
 type SubmitUserCheckinParams = {
@@ -20,6 +27,7 @@ export function useSubmitUserCheckin() {
   const { getCurrentLocation } = useUserLocation({ autoStart: false });
   const { mutateAsync, isPending } = useCheckinMutation();
   const [uploadingImage, setUploadingImage] = useState(false);
+  const { accessToken } = useAuth();
 
   const submit = useCallback(
     async ({ checkinPointId, images }: SubmitUserCheckinParams) => {
@@ -39,33 +47,41 @@ export function useSubmitUserCheckin() {
           throw new Error('Unable to get your location. Please enable location permission and try again.');
         }
 
-        const fileParts = images.map((image, index) => {
-          const fileName = image.localUri.split('/').pop() || `checkin-${index + 1}.jpg`;
-          const extension = fileName.split('.').pop()?.toLowerCase();
-          const mimeType = extension ? `image/${extension === 'jpg' ? 'jpeg' : extension}` : 'image/jpeg';
+        const uploadedImages = [];
+        for (let i = 0; i < images.length; i++) {
+          const image = images[i];
 
-          return {
-            uri: image.localUri,
-            name: fileName,
-            type: mimeType,
-          };
-        });
+          if (image.imageUrl) {
+            uploadedImages.push({
+              imageUrl: image.imageUrl,
+              caption: image.caption?.trim() || '',
+            });
+            continue;
+          }
 
-        const uploadedImages = await Promise.all(
-          fileParts.map(async (filePart, index) => {
-            const uploadResponse = await checkinServices.uploadCheckinImage(filePart);
-            const imageUrl = uploadResponse?.data;
+          if (!accessToken) {
+            throw new Error('Your session has expired. Please log in again to complete check-in.');
+          }
 
-            if (!imageUrl) {
-              throw new Error('Could not upload one of your photos. Please try again.');
-            }
+          const filePart = generateImageUploadData(
+            {
+              localUri: image.localUri,
+            },
+            i
+          );
 
-            return {
-              imageUrl,
-              caption: images[index]?.caption?.trim() || '',
-            } as CheckinImageRequest;
-          })
-        );
+          const uploadResponse = await checkinServices.uploadCheckinImage(filePart, accessToken);
+          logger.info('[useSubmitUserCheckin] Received upload response', { uploadResponse });
+
+          if (!uploadResponse.mediaUrl) {
+            throw new Error('Could not upload one of your photos. Please try again.');
+          }
+
+          uploadedImages.push({
+            imageUrl: uploadResponse.mediaUrl,
+            caption: image.caption?.trim() || '',
+          });
+        }
 
         logger.info('[useSubmitUserCheckin] Uploaded check-in images', { uploadedImages });
 
@@ -93,6 +109,8 @@ export function useSubmitUserCheckin() {
           imageUrl: uploadedImages[0]?.imageUrl,
           earnedPoints: response?.data?.earnedPoints,
           userTotalPoints: response?.data?.userTotalPoints,
+          parentCheckinPointId: response?.data?.parentCheckinPointId,
+          checkinPointId: response?.data?.checkinPointId,
         };
       } catch (error) {
         logger.error('[useSubmitUserCheckin] Failed to submit check-in', error);
@@ -103,7 +121,7 @@ export function useSubmitUserCheckin() {
         setUploadingImage(false);
       }
     },
-    [getCurrentLocation, mutateAsync]
+    [getCurrentLocation, mutateAsync, accessToken]
   );
 
   // There are 2 loading state, therefore we combine them and return here
