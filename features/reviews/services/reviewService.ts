@@ -15,9 +15,10 @@ import type {
   ReviewListParams,
   ReviewResponse,
   UpdateReviewRequest,
-  PointReviewResponse,
-  PointReviewResponseWrapper,
+  GenericReviewResponse,
+  GenericReviewResponseWrapper,
   ReviewPageResponse,
+  ReviewTypeFlgValue,
 } from '../types';
 
 function buildQueryParams(params?: ReviewListParams): Record<string, string | number> {
@@ -27,6 +28,8 @@ function buildQueryParams(params?: ReviewListParams): Record<string, string | nu
   if (params.size !== undefined) q.size = params.size;
   if (params.sortBy) q.sortBy = params.sortBy;
   if (params.sortDir) q.sortDir = params.sortDir;
+  q.reviewTypeFlg = params.reviewTypeFlg;
+  q.reviewTypeId = params.reviewTypeId;
   return q;
 }
 
@@ -46,11 +49,10 @@ export const reviewService = {
       requiresAuth: false,
     }),
 
-  getPointReviews: async (
-    pointId: string,
+  getGenericReviews: async (
     params?: ReviewListParams
-  ): Promise<ApiResponse<PointReviewResponseWrapper>> => {
-    return await apiClient.get<PointReviewResponseWrapper>(endpoints.reviews.getPointReviews(pointId), {
+  ): Promise<ApiResponse<GenericReviewResponseWrapper>> => {
+    return await apiClient.get<GenericReviewResponseWrapper>(endpoints.reviews.getGenericReviews(), {
       params: buildQueryParams(params),
       requiresAuth: false,
     });

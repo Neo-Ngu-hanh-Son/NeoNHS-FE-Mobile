@@ -171,8 +171,6 @@ export default function EventDetailScreen({ navigation, route }: Props) {
                 <EventDetailReviews
                   eventId={eventId}
                   eventName={event.name}
-                  averageRating={event.averageRating ?? 0}
-                  totalRatings={event.totalRatings ?? 0}
                   onViewAll={() =>
                     navigation.navigate('EventAllReviews', {
                       eventId,

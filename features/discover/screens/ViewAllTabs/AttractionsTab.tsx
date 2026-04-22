@@ -66,16 +66,6 @@ export default function AttractionsTab({ initialAttractionId }: { initialAttract
     </View>
   );
 
-  if (!attractions || attractions.length === 0) {
-    return (
-      <View className="items-center py-16">
-        <Ionicons name="location-outline" size={40} color={theme.mutedForeground} />
-        <Text className="mt-3 text-base font-bold" style={{ color: theme.foreground }}>
-          No attractions found
-        </Text>
-      </View>
-    );
-  }
 
   return (
     <FlatList
@@ -107,18 +97,18 @@ export default function AttractionsTab({ initialAttractionId }: { initialAttract
             </Text>
             <View className="mt-1 gap-1">
               <Text className="text-sm" style={{ color: theme.mutedForeground }}>
-                {(item as Attraction).address}
+                {item.address}
               </Text>
               <View className="flex-row items-center gap-1.5">
                 <View
-                  className={`h-2 w-2 rounded-full ${(item as Attraction).status === 'OPEN' ? 'bg-green-500' : 'bg-red-500'}`}
+                  className={`h-2 w-2 rounded-full ${(item).status === 'OPEN' ? 'bg-green-500' : 'bg-red-500'}`}
                 />
                 <Text
                   className="text-[10px] font-bold uppercase tracking-wider"
                   style={{
-                    color: (item as Attraction).status === 'OPEN' ? '#10b981' : '#ef4444',
+                    color: (item).status === 'OPEN' ? '#10b981' : '#ef4444',
                   }}>
-                  {(item as Attraction).status || 'CLOSED'}
+                  {item.status || 'CLOSED'}
                 </Text>
               </View>
             </View>
