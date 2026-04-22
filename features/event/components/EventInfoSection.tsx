@@ -102,17 +102,15 @@ export default function EventInfoSection({ event, theme, onOpenTimelineMap }: Ev
           </View>
         )}
 
-        {/* Price */}
-        {event.price != null && (
-          <View className="flex-row items-center gap-3">
-            <View className="h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: '#f59e0b15' }}>
-              <Ionicons name="pricetag-outline" size={20} color="#f59e0b" />
-            </View>
-            <Text className="text-sm font-bold" style={{ color: theme.primary }}>
-              {formatPrice(event.price)}
-            </Text>
+        {/* Price / Ticket Requirement */}
+        <View className="flex-row items-center gap-3">
+          <View className="h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: '#f59e0b15' }}>
+            <Ionicons name="pricetag-outline" size={20} color="#f59e0b" />
           </View>
-        )}
+          <Text className="text-sm font-bold" style={{ color: theme.primary }}>
+            {event.isTicketRequired ? 'Yêu cầu vé' : 'Miễn phí'}
+          </Text>
+        </View>
       </View>
 
       {/* Tags */}

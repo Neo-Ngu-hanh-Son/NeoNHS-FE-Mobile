@@ -3,7 +3,7 @@ import { View, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { Text } from "@/components/ui/text";
-import { TicketCatalogResponse } from "../types";
+import { TicketCatalogResponse, EventStatus } from "../types";
 import TicketCatalogCard from "./TicketCatalogCard";
 
 interface ThemeColors {
@@ -19,6 +19,7 @@ interface TicketCatalogListProps {
   loading: boolean;
   theme: ThemeColors;
   onBuyPress?: (ticket: TicketCatalogResponse) => void;
+  eventStatus?: EventStatus;
 }
 
 export default function TicketCatalogList({
@@ -26,6 +27,7 @@ export default function TicketCatalogList({
   loading,
   theme,
   onBuyPress,
+  eventStatus,
 }: TicketCatalogListProps) {
   if (loading) {
     return (
@@ -67,6 +69,7 @@ export default function TicketCatalogList({
           ticket={ticket}
           theme={theme}
           onBuyPress={onBuyPress}
+          eventStatus={eventStatus}
         />
       ))}
     </View>

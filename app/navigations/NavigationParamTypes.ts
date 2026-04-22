@@ -1,4 +1,5 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
+import { UserVoucherResponse } from '@/features/voucher/types/voucher.types';
 /* ============================================================
    AUTH STACK
    ============================================================ */
@@ -19,6 +20,7 @@ export type AuthStackParamList = {
 export type TabsStackParamList = {
   Home: undefined;
   Discover: undefined;
+  Voucher: undefined;
   Map: { pointId?: string; targetNavigationPointId?: string; userCheckedInPointId?: string } | undefined;
   Bookings: undefined;
   Profile: undefined;
@@ -125,6 +127,13 @@ export type ChatRoutes = {
   };
 };
 
+/* Voucher */
+export type VoucherRoutes = {
+  VoucherDetail: { voucher: any };
+  MyVouchers: undefined;
+  MyVoucherDetail: { userVoucher: UserVoucherResponse };
+};
+
 /* ============================================================
    MAIN STACK (MERGED)
    ============================================================ */
@@ -160,7 +169,8 @@ export type MainStackParamList = BaseMainRoutes &
   CheckoutRoutes &
   BlogRoutes &
   NotificationRoutes &
-  ChatRoutes;
+  ChatRoutes &
+  VoucherRoutes;
 
 /* ============================================================
    ROOT STACK

@@ -36,6 +36,9 @@ import ChatScreen from '@/features/chat/screens/ChatScreen';
 import { FloatingChatButton } from '@/features/chat/components/FloatingChatButton';
 import NotificationsScreen from '@/features/notifications/screens/NotificationsScreen';
 import NotificationDetailScreen from '@/features/notifications/screens/NotificationDetailScreen';
+import VoucherDetailScreen from '@/features/voucher/screens/VoucherDetailScreen';
+import MyVouchersScreen from '@/features/voucher/screens/MyVouchersScreen';
+import MyVoucherDetailScreen from '@/features/voucher/screens/MyVoucherDetailScreen';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -90,6 +93,11 @@ export default function MainNavigator() {
         <Stack.Screen name="WorkshopList" component={WorkshopListScreen} />
         <Stack.Screen name="WorkshopDetail" component={WorkshopDetailScreen} />
         <Stack.Screen name="WorkshopAllReviews" component={WorkshopAllReviewsScreen} />
+
+        {/* Voucher */}
+        <Stack.Screen name="VoucherDetail" component={VoucherDetailScreen} />
+        <Stack.Screen name="MyVouchers" component={MyVouchersScreen} />
+        <Stack.Screen name="MyVoucherDetail" component={MyVoucherDetailScreen} />
 
         {/* Content & Features */}
         <Stack.Screen name="BlogList" component={BlogListScreen} />

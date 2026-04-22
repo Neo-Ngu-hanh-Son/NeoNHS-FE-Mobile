@@ -11,7 +11,8 @@ import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { Attraction, MapPoint } from '../../map/types';
 import { useAttractions } from '../hooks/useAttractions';
 import { usePointsByAttraction } from '../hooks/usePointsByAttraction';
-import { useAllEvents } from '../../event/hooks/useAllEvents';
+import { EventListContent } from '../../event/components';
+import { EventStatus } from '../../event/types';
 import { WorkshopListContent } from '../../workshops/screens';
 import { useBlogList } from '@/features/blog';
 import type { Blog } from '@/features/blog/types';
@@ -43,7 +44,6 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
     refetch: refetchPoints,
   } = usePointsByAttraction(selectedAttractionId);
 
-  const { data: events, isLoading: eventsLoading, refetch: refetchEvents } = useAllEvents();
   const {
     blogs,
     loading: blogsLoading,
@@ -59,7 +59,6 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
 
   const loading =
     (activeTab === 'Points' && (attractionsLoading || (selectedAttractionId ? pointsLoading : false))) ||
-    (activeTab === 'Events' && eventsLoading) ||
     (activeTab === 'Blogs' && blogsLoading);
 
   useEffect(() => {
@@ -79,25 +78,16 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
     Promise.allSettled([
       refetchAttractions(),
       ...(selectedAttractionId ? [refetchPoints()] : []),
-      refetchEvents(),
       refetchBlogs(),
+      queryClient.refetchQueries({ queryKey: ['events-infinite'] }),
       queryClient.refetchQueries({ queryKey: ['workshop-search'] }),
       queryClient.refetchQueries({ queryKey: ['workshop-tags'] }),
     ]).finally(() => setRefreshing(false));
-  }, [queryClient, refetchAttractions, refetchPoints, refetchEvents, refetchBlogs, selectedAttractionId]);
+  }, [queryClient, refetchAttractions, refetchPoints, refetchBlogs, selectedAttractionId]);
 
   useEffect(() => {
     setSearchQuery('');
   }, [activeTab]);
-
-  const filteredEvents = useMemo(() => {
-    const evts = events ?? [];
-    if (!searchQuery.trim()) return evts;
-    const q = searchQuery.toLowerCase();
-    return evts.filter(
-      (e) => e.name.toLowerCase().includes(q) || (e.locationName && e.locationName.toLowerCase().includes(q))
-    );
-  }, [events, searchQuery]);
 
   const filteredAttractions = useMemo(() => {
     const source = selectedAttractionId ? (points ?? []) : (attractions ?? []);
@@ -205,7 +195,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
   );
 
   const renderSearchAndFilter = () => {
-    if (activeTab === 'Workshops') return null;
+    if (activeTab === 'Workshops' || activeTab === 'Events') return null;
     return (
       <View className="px-4 pt-3">
         <View
@@ -316,79 +306,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
     }
 
     if (activeTab === 'Events') {
-      const data = filteredEvents;
-      if (data.length === 0) {
-        return (
-          <View className="items-center py-16">
-            <Ionicons name="calendar-outline" size={40} color={theme.mutedForeground} />
-            <Text className="mt-3 text-base font-bold" style={{ color: theme.foreground }}>
-              No events found
-            </Text>
-          </View>
-        );
-      }
-      return (
-        <View className="px-4 pb-10 pt-2">
-          {data.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              onPress={() => navigation.navigate('EventDetail', { eventId: item.id })}
-              className="mb-3 flex-row items-center gap-4 rounded-2xl border p-3"
-              style={{ backgroundColor: theme.card, borderColor: theme.border }}>
-              <SmartImage uri={item.thumbnailUrl} className="h-24 w-24 rounded-2xl object-cover" />
-              <View className="flex-1">
-                <Text className="text-lg font-bold" style={{ color: theme.foreground }}>
-                  {item.name}
-                </Text>
-                <View className="mt-1 gap-1">
-                  {item.startTime && (
-                    <Text className="text-sm font-semibold" style={{ color: theme.primary }}>
-                      {new Date(item.startTime).toLocaleDateString('vi-VN', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </Text>
-                  )}
-                  <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-                    {item.locationName || 'TBD'}
-                  </Text>
-                  <View className="flex-row items-center gap-1">
-                    <View
-                      className="h-2 w-2 rounded-full"
-                      style={{
-                        backgroundColor:
-                          item.status === 'UPCOMING'
-                            ? '#3b82f6'
-                            : item.status === 'ONGOING'
-                              ? '#10b981'
-                              : item.status === 'CANCELLED'
-                                ? '#ef4444'
-                                : '#6b7280',
-                      }}
-                    />
-                    <Text
-                      className="text-[10px] font-bold uppercase"
-                      style={{
-                        color:
-                          item.status === 'UPCOMING'
-                            ? '#3b82f6'
-                            : item.status === 'ONGOING'
-                              ? '#10b981'
-                              : item.status === 'CANCELLED'
-                                ? '#ef4444'
-                                : '#6b7280',
-                      }}>
-                      {item.status}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={theme.muted} />
-            </TouchableOpacity>
-          ))}
-        </View>
-      );
+      return <EventListContent initialStatus={EventStatus.UPCOMING} />;
     }
 
     if (activeTab === 'Blogs') {
@@ -444,15 +362,23 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
 
     return null;
   };
-  if (activeTab === 'Workshops') {
+
+  if (activeTab === 'Workshops' || activeTab === 'Events') {
     return (
       <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
         {renderHeader()}
         {renderTabs()}
-        <WorkshopListContent onNavigateToDetail={(id) => navigation.navigate('WorkshopDetail', { workshopId: id })} />
+        {activeTab === 'Workshops' ? (
+          <WorkshopListContent
+            onNavigateToDetail={(id) => navigation.navigate('WorkshopDetail', { workshopId: id })}
+          />
+        ) : (
+          <EventListContent initialStatus={EventStatus.UPCOMING} />
+        )}
       </SafeAreaView>
     );
   }
+
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
       {renderHeader()}

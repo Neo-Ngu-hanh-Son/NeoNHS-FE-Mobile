@@ -31,10 +31,13 @@ export default function CartListScreen() {
 
     // Format discount value based on type
     const formatDiscount = (voucher: Voucher): string => {
+        if (!voucher.discountValue) {
+            return t('voucher.gift');
+        }
         if (voucher.discountType === 'PERCENT') {
             return `-${voucher.discountValue}%`;
         }
-        return `-${voucher.discountValue.toLocaleString()} VND`;
+        return `-${(voucher.discountValue ?? 0).toLocaleString()} VND`;
     };
 
     // Applicable product label + color
@@ -335,7 +338,7 @@ export default function CartListScreen() {
                                                     </Text> */}
                                                     {item.maxDiscountValue ? (
                                                         <Text style={{ color: theme.mutedForeground, fontSize: 11 }}>
-                                                            Max save: {item.maxDiscountValue.toLocaleString()} VND
+                                                            Max save: {(item.maxDiscountValue ?? 0).toLocaleString()} VND
                                                         </Text>
                                                     ) : null}
                                                     {item.endDate ? (
