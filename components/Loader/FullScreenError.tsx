@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { useTranslation } from 'react-i18next';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/app/providers/ThemeProvider';
@@ -36,11 +37,14 @@ type FullScreenErrorProps = {
  * ```
  */
 export default function FullScreenError({
-  message = 'Something went wrong. Please try again.',
+  message,
   onRetry,
   hideBack = false,
   onBack,
 }: FullScreenErrorProps) {
+  const { t } = useTranslation();
+  const defaultMessage = t('common.error_default');
+  const displayMessage = message ?? defaultMessage;
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const insets = useSafeAreaInsets();
@@ -114,12 +118,12 @@ export default function FullScreenError({
         <Text
           className="text-center text-base font-medium"
           style={{ color: theme.foreground }}>
-          Oops!
+          {t('common.oops')}
         </Text>
         <Text
           className="mt-2 text-center text-sm"
           style={{ color: theme.mutedForeground }}>
-          {message}
+          {displayMessage}
         </Text>
 
         {/* Retry button */}
@@ -132,7 +136,7 @@ export default function FullScreenError({
             style={{ borderColor: theme.border }}>
             <Ionicons name="refresh-outline" size={16} color={theme.primary} />
             <Text style={{ color: theme.primary }} className="text-sm font-medium">
-              Try Again
+              {t('common.retry')}
             </Text>
           </Button>
         )}
@@ -142,7 +146,7 @@ export default function FullScreenError({
           <Text
             className="mt-4 text-center text-xs"
             style={{ color: theme.mutedForeground }}>
-            Or pull down to refresh
+            {t('common.pull_to_refresh')}
           </Text>
         )}
       </ScrollView>

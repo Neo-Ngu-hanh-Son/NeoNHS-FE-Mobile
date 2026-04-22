@@ -3,18 +3,20 @@ import { Alert, GestureResponderEvent, Share, TouchableOpacity, View } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { StackScreenProps } from '@react-navigation/stack';
-import * as MediaLibrary from 'expo-media-library';
+//import * as MediaLibrary from 'expo-media-library';
 
 import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { Button } from '@/components/ui/button';
-import { SmartImage } from '@/components/ui/smart-image';
+//import { SmartImage } from '@/components/ui/smart-image';
 import { Text } from '@/components/ui/text';
-import { logger } from '@/utils/logger';
+//import { logger } from '@/utils/logger';
+import { useTranslation } from 'react-i18next';
 
 type CheckinCompleteScreenProps = StackScreenProps<MainStackParamList, 'CheckinComplete'>;
 
 export default function CheckinCompleteScreen({ navigation, route }: CheckinCompleteScreenProps) {
   const { rewardPoints, userTotalPoints } = route.params;
+  const { t } = useTranslation();
 
   // const handleShare = async () => {
   //   if (!imageUrl) {
@@ -66,7 +68,7 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
         <TouchableOpacity onPress={() => navigation.goBack()} className="h-9 w-9 items-center justify-center">
           <Ionicons name="close" size={22} color="#111827" />
         </TouchableOpacity>
-        <Text className="text-base font-semibold text-foreground">Check-in</Text>
+        <Text className="text-base font-semibold text-foreground">{t('map.checkin')}</Text>
         <View className="h-9 w-9" />
       </View>
 
@@ -81,11 +83,15 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
             </View>
           </View>
 
-          <Text className="text-3xl font-bold text-foreground">Check-in Successful!</Text>
+          <Text className="text-3xl font-bold text-foreground">{t('map.checkin_success')}</Text>
           <View className="mt-2 flex-row items-center">
             <Ionicons name="star" size={16} color="#15803d" />
-            <Text className="ml-2 text-lg font-semibold text-[#15803d]">You earned {rewardPoints ?? 50} Points!</Text>
-            <Text className="ml-2 text-sm text-muted-foreground">(Total: {userTotalPoints ?? '...'} Points)</Text>
+            <Text className="ml-2 text-lg font-semibold text-[#15803d]">
+              {t('map.points_earned', { points: rewardPoints ?? 50 }).replace('{{points}}', String(rewardPoints ?? 50))}
+            </Text>
+            <Text className="ml-2 text-sm text-muted-foreground">
+              {t('map.total_points', { total: userTotalPoints ?? '...' }).replace('{{total}}', String(userTotalPoints ?? '...'))}
+            </Text>
           </View>
         </View>
 
@@ -95,8 +101,8 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
               <Ionicons name="gift" size={18} color="#166534" />
             </View>
             <View className="ml-3">
-              <Text className="text-sm font-semibold text-foreground">Rewards Unlocked</Text>
-              <Text className="text-xs text-muted-foreground">Photo Sharing, New Vouchers</Text>
+              <Text className="text-sm font-semibold text-foreground">{t('map.rewards_unlocked')}</Text>
+              <Text className="text-xs text-muted-foreground">{t('map.photo_sharing')}</Text>
             </View>
           </View>
         </View>
@@ -122,7 +128,7 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
           <Text className="text-primary">Download Photo</Text>
         </Button> */}
         <Button onPress={handleMapNavigation} className="h-12 rounded-full">
-          <Text>Back To Map</Text>
+          <Text>{t('map.back_to_map')}</Text>
         </Button>
       </View>
     </SafeAreaView>

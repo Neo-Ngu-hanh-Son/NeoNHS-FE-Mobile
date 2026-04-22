@@ -9,6 +9,7 @@ import { MainStackParamList, TabsStackParamList } from '@/app/navigations/Naviga
 import { discoverService } from '../../discover/services/discoverServices';
 import FullScreenLoader from '@/components/Loader/FullScreenLoader';
 import { RefreshableScrollView } from '@/components/common/RefreshableScrollView';
+import { useTranslation } from 'react-i18next';
 
 import {
   PointDetailHero,
@@ -35,6 +36,7 @@ export default function PointDetailScreen({ navigation, route }: Props) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [isReadMore, setIsReadMore] = useState(false);
   const { openPanorama, preloadPanorama, resendPanoramaMessage } = usePanorama();
+  const { t } = useTranslation();
 
   useEffect(() => {
     preloadPanorama(pointId);
@@ -99,7 +101,7 @@ export default function PointDetailScreen({ navigation, route }: Props) {
 
   // ─── Loading state ───
   if (isLoading) {
-    return <FullScreenLoader message="Loading point details..." />;
+    return <FullScreenLoader message={t('point.loading_details', 'Loading point details...')} />;
   }
 
   if (isError || !point) {
@@ -107,10 +109,10 @@ export default function PointDetailScreen({ navigation, route }: Props) {
     return (
       <View className="flex-1 items-center justify-center bg-background px-5">
         <Text variant="muted" className="text-center">
-          Unable to load point details. Please try again later.
+          {t('point.error_details', 'Unable to load point details. Please try again later.')}
         </Text>
         <Button variant="outline" onPress={() => navigation.goBack()} className="mt-4">
-          <Text>Go Back</Text>
+          <Text>{t('common.back', 'Go Back')}</Text>
         </Button>
       </View>
     );
