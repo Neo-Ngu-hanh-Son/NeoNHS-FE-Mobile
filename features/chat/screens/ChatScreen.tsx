@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { View, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -86,6 +86,21 @@ export default function ChatScreen({ route, navigation }: any) {
   const displayAvatar = displayParticipant?.avatarUrl;
 
   const messages = messagesByRoom[roomId] || [];
+
+  // Deduplicate: If we have a real message from CURRENT_USER, remove any optimistic placeholder with the same content
+  const displayMessages = useMemo(() => {
+    const realMsgContents = new Set(
+      messages
+        .filter((m) => !m.id.startsWith('__user_') && m.senderId === currentUserId)
+        .map((m) => m.content.trim())
+    );
+
+    return messages.filter((m) => {
+      if (!m.id.startsWith('__user_')) return true;
+      // If a real message exists with exact same content (or it's the newest message which is now real), hide the optimistic one
+      return !realMsgContents.has(m.content.trim());
+    });
+  }, [messages, currentUserId]);
 
   // Room opened from transfer / deep link may be missing from context until list refetch
   useFocusEffect(
@@ -203,6 +218,23 @@ export default function ChatScreen({ route, navigation }: any) {
     setIsAiThinking(true);
     setAiStreamingText('');
 
+    // Optimistic UI: Prepend the user's message to local state so it appears immediately
+    if (roomId) {
+      const optimisticUserMsg: ChatMessage = {
+        id: `__user_${Date.now()}`,
+        chatRoomId: roomId,
+        senderId: currentUserId,
+        content: text,
+        timestamp: new Date().toISOString(),
+        status: 'SENT',
+        messageType: 'TEXT',
+      };
+      setMessagesByRoom((prev) => ({
+        ...prev,
+        [roomId]: [optimisticUserMsg, ...(prev[roomId] || [])],
+      }));
+    }
+
     abortAiRef.current = streamAiReply(
       roomId,
       text,
@@ -279,6 +311,26 @@ export default function ChatScreen({ route, navigation }: any) {
     setAiTransferOfferPending(false);
     handleSendToAi('Không, cảm ơn.');
   };
+
+  // ── Navigation handlers (memoized) ──────────────────
+  const handleProductSnippetPress = useCallback((id: string, type?: 'workshop' | 'event') => {
+    if (type === 'event') {
+      navigation.navigate('EventDetail', { eventId: id });
+    } else {
+      navigation.navigate('WorkshopDetail', { workshopId: id });
+    }
+  }, [navigation]);
+
+  const handleGoToCart = useCallback(() => {
+    navigation.navigate('Cart');
+  }, [navigation]);
+
+  const handleGoToMap = useCallback((pointId: string) => {
+    navigation.navigate('MapDirection', {
+      pointId: pointId,
+      targetNavigationPointId: pointId
+    });
+  }, [navigation]);
 
   // ── Send product snippet ─────────────────────────────
   const handleSendSnippet = () => {
@@ -446,13 +498,80 @@ export default function ChatScreen({ route, navigation }: any) {
     </View>
   );
 
+  const renderMessageItem = useCallback(({ item, index }: { item: ChatMessage; index: number }) => {
+    const isMine = item.senderId === currentUserId && item.senderId !== 'AI_ASSISTANT';
+    const prevMsg = displayMessages[index + 1];
+    const nextMsg = displayMessages[index - 1];
+
+    let showTs = true;
+    if (prevMsg) showTs = shouldShowTimestamp(item.timestamp, prevMsg.timestamp);
+
+    let showAvatar = true;
+    if (nextMsg) {
+      if (nextMsg.senderId === item.senderId && !shouldShowTimestamp(nextMsg.timestamp, item.timestamp)) {
+        showAvatar = false;
+      }
+    }
+
+    const showHumanTransferRow =
+      isAiRoom &&
+      index === 0 &&
+      !isMine &&
+      (isTransferOfferMessage(item, currentUserId) ||
+        (aiTransferOfferPending && item.senderId === 'AI_ASSISTANT'));
+
+    return (
+      <View>
+        <ChatMessageBubble
+          message={item}
+          isMine={isMine}
+          showAvatar={showAvatar}
+          showTimestamp={showTs}
+          timestampString={formatChatMessageTime(item.timestamp)}
+          participantAvatar={displayAvatar}
+          onProductSnippetPress={handleProductSnippetPress}
+          onGoToCart={handleGoToCart}
+          onGoToMap={handleGoToMap}
+        />
+        {showHumanTransferRow && (
+          <View className="ml-[44px] mt-1 mb-2 flex-row items-center">
+            <TouchableOpacity
+              onPress={handleTransferYes}
+              className="mr-2 rounded-full px-4 py-2"
+              style={{ backgroundColor: theme.primary }}>
+              <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>Sẵn lòng</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleTransferNo}
+              className="rounded-full border px-4 py-2"
+              style={{ borderColor: theme.border, backgroundColor: theme.muted }}>
+              <Text style={{ color: theme.foreground, fontWeight: 'bold' }}>Không cần</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+    );
+  }, [
+    currentUserId,
+    displayMessages,
+    isAiRoom,
+    aiTransferOfferPending,
+    displayAvatar,
+    handleProductSnippetPress,
+    handleGoToCart,
+    handleGoToMap,
+    handleTransferYes,
+    handleTransferNo,
+    theme
+  ]);
+
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}>
         {renderHeader()}
 
         <FlatList
-          data={messages}
+          data={displayMessages}
           keyExtractor={(item) => item.id}
           inverted
           showsVerticalScrollIndicator={false}
@@ -500,8 +619,8 @@ export default function ChatScreen({ route, navigation }: any) {
               </View>
             ) : isAiRoom &&
               aiTransferOfferPending &&
-              messages[0] &&
-              messages[0].senderId === currentUserId ? (
+              displayMessages[0] &&
+              displayMessages[0].senderId === currentUserId ? (
               <View className="px-4 py-2">
                 <View className="mt-1 flex-row items-center">
                   <TouchableOpacity
@@ -520,74 +639,13 @@ export default function ChatScreen({ route, navigation }: any) {
               </View>
             ) : null
           }
-          renderItem={({ item, index }) => {
-            const isMine = item.senderId === currentUserId && item.senderId !== 'AI_ASSISTANT';
-            const prevMsg = messages[index + 1];
-            const nextMsg = messages[index - 1];
-
-            let showTs = true;
-            if (prevMsg) showTs = shouldShowTimestamp(item.timestamp, prevMsg.timestamp);
-
-            let showAvatar = true;
-            if (nextMsg) {
-              if (nextMsg.senderId === item.senderId && !shouldShowTimestamp(nextMsg.timestamp, item.timestamp)) {
-                showAvatar = false;
-              }
-            }
-
-            const showHumanTransferRow =
-              isAiRoom &&
-              index === 0 &&
-              !isMine &&
-              (isTransferOfferMessage(item, currentUserId) ||
-                (aiTransferOfferPending && item.senderId === 'AI_ASSISTANT'));
-
-            return (
-              <View>
-                <ChatMessageBubble
-                  message={item}
-                  isMine={isMine}
-                  showAvatar={showAvatar}
-                  showTimestamp={showTs}
-                  timestampString={formatChatMessageTime(item.timestamp)}
-                  participantAvatar={displayAvatar}
-                  onProductSnippetPress={(id, type) => {
-                    if (type === 'event') {
-                      navigation.navigate('EventDetail', { eventId: id });
-                    } else {
-                      navigation.navigate('WorkshopDetail', { workshopId: id });
-                    }
-                  }}
-                  onGoToCart={() => {
-                    // @ts-ignore
-                    navigation.navigate('Tabs', { screen: 'TestCart' });
-                  }}
-                />
-                {showHumanTransferRow && (
-                  <View className="ml-[44px] mt-1 mb-2 flex-row items-center">
-                    <TouchableOpacity
-                      onPress={handleTransferYes}
-                      className="mr-2 rounded-full px-4 py-2"
-                      style={{ backgroundColor: theme.primary }}>
-                      <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>Sẵn lòng</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={handleTransferNo}
-                      className="rounded-full border px-4 py-2"
-                      style={{ borderColor: theme.border, backgroundColor: theme.muted }}>
-                      <Text style={{ color: theme.foreground, fontWeight: 'bold' }}>Không cần</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
-            );
-          }}
+          renderItem={renderMessageItem}
         />
 
         {/* Quick Replies for AI */}
         {isAiRoom && (
           <QuickReplies
-            replies={['Ở Ngũ Hành Sơn có gì chơi?', 'Có những workshop gì?', 'Giá vé tham quan thế nào ?', 'Cho tôi thông tin về các sự kiện sắp tới', 'Hướng dẫn đường đi đến Ngũ Hành Sơn']}
+            replies={['Ở Ngũ Hành Sơn có gì chơi?', 'Có những workshop gì?', 'Giá vé tham quan thế nào ?', 'Cho tôi thông tin về các sự kiện sắp tới', 'Hướng dẫn đường đi đến Bảo tàng Văn Hóa Phật Giáo']}
             onSelect={(reply) => handleSendToAi(reply)}
           />
         )}

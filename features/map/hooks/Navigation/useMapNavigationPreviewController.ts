@@ -180,10 +180,11 @@ export const useMapNavigationPreviewController = ({
     if (!shouldAnimateRef.current) return;
     if (viewMode !== 'PREVIEWING_NAVIGATION') return;
     if (!previewOrigin || !previewDestination) return;
+    if (!mapIsReady) return; // Wait until map is ready
 
     handleFitRoute();
     shouldAnimateRef.current = false;
-  }, [handleFitRoute, previewOrigin, previewDestination, viewMode]);
+  }, [handleFitRoute, previewOrigin, previewDestination, viewMode, mapIsReady]);
 
   /**
    * Use effect to switch between explore mode and preview navigation (auto when mounted)
