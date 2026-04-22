@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { useTranslation } from 'react-i18next';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/app/providers/ThemeProvider';
@@ -18,10 +19,14 @@ type FullScreenLoaderProps = {
 };
 
 export default function FullScreenLoader({
-  message = 'Loading…',
+  message,
   hideBack = false,
   onBack,
 }: FullScreenLoaderProps) {
+  const { t } = useTranslation();
+  const defaultMessage = t('common.loading');
+  const displayMessage = message ?? defaultMessage;
+
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const insets = useSafeAreaInsets();
@@ -54,9 +59,9 @@ export default function FullScreenLoader({
       {/* Centered spinner + text */}
       <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" color={theme.primary} />
-        {message ? (
+        {displayMessage ? (
           <Text className="mt-4 text-sm" style={{ color: theme.mutedForeground }}>
-            {message}
+            {displayMessage}
           </Text>
         ) : null}
       </View>

@@ -3,6 +3,7 @@ import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
 import { THEME } from '@/lib/theme';
+import { useTranslation } from 'react-i18next';
 
 type PointDetailCTAProps = {
   accentColor: string;
@@ -12,6 +13,7 @@ type PointDetailCTAProps = {
 };
 
 export default function PointDetailCTA({ accentColor, theme, onViewDetails, onNavigate }: PointDetailCTAProps) {
+  const { t } = useTranslation();
   return (
     <View style={[styles.ctaWrap, { borderTopColor: theme.border }]}>
       <TouchableOpacity
@@ -20,7 +22,7 @@ export default function PointDetailCTA({ accentColor, theme, onViewDetails, onNa
         style={[styles.cta, { backgroundColor: accentColor }]}
         accessibilityLabel="View point details">
         <Ionicons name="information-circle-outline" size={18} color="#fff" style={{ marginRight: 8 }} />
-        <Text style={styles.ctaText}>View Details</Text>
+        <Text style={styles.ctaText}>{t('map.view_details')}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -29,7 +31,7 @@ export default function PointDetailCTA({ accentColor, theme, onViewDetails, onNa
         style={[styles.ctaSecondary, { borderColor: accentColor, backgroundColor: theme.background }]}
         accessibilityLabel="Navigate from current location">
         <Ionicons name="navigate-outline" size={18} color={accentColor} style={{ marginRight: 8 }} />
-        <Text style={[styles.ctaSecondaryText, { color: accentColor }]}>Get Directions</Text>
+        <Text style={[styles.ctaSecondaryText, { color: accentColor }]}>{t('map.get_directions')}</Text>
       </TouchableOpacity>
     </View>
   );

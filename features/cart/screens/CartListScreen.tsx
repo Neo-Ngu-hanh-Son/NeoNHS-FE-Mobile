@@ -40,10 +40,10 @@ export default function CartListScreen() {
     // Applicable product label + color
     const getApplicableLabel = (ap: Voucher['applicableProduct']) => {
         switch (ap) {
-            case 'EVENT_TICKET': return { label: 'Event Ticket', color: '#3b82f6' };
-            case 'WORKSHOP': return { label: 'Workshop', color: '#a855f7' };
-            case 'TICKET': return { label: 'Ticket', color: '#f59e0b' };
-            default: return { label: 'All Items', color: '#22c55e' };
+            case 'EVENT_TICKET': return { label: t('cart.event_ticket'), color: '#3b82f6' };
+            case 'WORKSHOP': return { label: t('cart.workshop'), color: '#a855f7' };
+            case 'TICKET': return { label: t('cart.ticket'), color: '#f59e0b' };
+            default: return { label: t('cart.all_items'), color: '#22c55e' };
         }
     };
 
@@ -342,12 +342,12 @@ export default function CartListScreen() {
                                                     </Text> */}
                                                     {item.maxDiscountValue ? (
                                                         <Text style={{ color: theme.mutedForeground, fontSize: 11 }}>
-                                                            Max save: {item.maxDiscountValue.toLocaleString()} VND
+                                                            {t('cart.max_save')}: {item.maxDiscountValue.toLocaleString()} VND
                                                         </Text>
                                                     ) : null}
                                                     {item.endDate ? (
                                                         <Text style={{ color: '#f59e0b', fontSize: 11 }}>
-                                                            Exp: {new Date(item.endDate).toLocaleDateString()}
+                                                            {t('cart.exp')}: {new Date(item.endDate).toLocaleDateString()}
                                                         </Text>
                                                     ) : null}
                                                 </View>
@@ -359,7 +359,7 @@ export default function CartListScreen() {
                                         </TouchableOpacity>
                                     );
                                 }}
-                                ListEmptyComponent={<Text style={{ textAlign: 'center', padding: 20, color: theme.mutedForeground }}>No vouchers found</Text>}
+                                ListEmptyComponent={<Text style={{ textAlign: 'center', padding: 20, color: theme.mutedForeground }}>{t('cart.no_vouchers')}</Text>}
                             />
                         )}
                     </View>

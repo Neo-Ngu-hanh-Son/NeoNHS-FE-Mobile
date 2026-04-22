@@ -157,7 +157,7 @@ export default function PreCheckoutScreen() {
 
             <ScrollView contentContainerStyle={styles.content}>
                 <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                    <Text style={[styles.sectionTitle, { color: theme.foreground }]}>Items ({preCheckoutData.cartItems.length})</Text>
+                    <Text style={[styles.sectionTitle, { color: theme.foreground }]}>{t('cart.items')} ({preCheckoutData.cartItems.length})</Text>
                     {groupedItems.map((group, groupIndex) => (
                         <View key={groupIndex} style={groupIndex > 0 ? { marginTop: 16 } : undefined}>
                             {/* Group header */}
@@ -176,7 +176,7 @@ export default function PreCheckoutScreen() {
                                 <View key={item.id || index} style={[styles.itemRow, { borderBottomColor: theme.border }]}>
                                     <View style={{ flex: 1, paddingLeft: 8 }}>
                                         <Text style={{ color: theme.foreground, fontWeight: '500' }}>{item.itemName}</Text>
-                                        <Text style={{ color: theme.mutedForeground, fontSize: 12 }}>Qty: {item.quantity}</Text>
+                                        <Text style={{ color: theme.mutedForeground, fontSize: 12 }}>{t('cart.quantity')}: {item.quantity}</Text>
                                     </View>
                                     <Text style={{ color: theme.foreground }}>{item.totalPrice.toLocaleString()} VND</Text>
                                 </View>
@@ -200,7 +200,7 @@ export default function PreCheckoutScreen() {
                 </View>
 
                 <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                    <Text style={[styles.sectionTitle, { color: theme.foreground }]}>Payment Summary</Text>
+                    <Text style={[styles.sectionTitle, { color: theme.foreground }]}>{t('cart.payment_summary')}</Text>
 
                     <View style={styles.summaryRow}>
                         <Text style={{ color: theme.mutedForeground }}>{t('cart.subtotal')}</Text>
