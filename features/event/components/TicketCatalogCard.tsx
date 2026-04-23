@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
-import { TicketCatalogResponse, TicketCatalogStatus } from "../types";
+import { TicketCatalogResponse, TicketCatalogStatus, EventStatus } from "../types";
 import {
   getTicketStatusColor,
   getTicketStatusLabel,
@@ -27,22 +27,42 @@ interface TicketCatalogCardProps {
   ticket: TicketCatalogResponse;
   theme: ThemeColors;
   onBuyPress?: (ticket: TicketCatalogResponse) => void;
+  eventStatus?: EventStatus;
 }
 
 export default function TicketCatalogCard({
   ticket,
   theme,
   onBuyPress,
+  eventStatus,
 }: TicketCatalogCardProps) {
   const [modalVisible, setModalVisible] = useState(false);
   const [quantity, setQuantity] = useState("1");
   const [isAdding, setIsAdding] = useState(false);
 
-  const discount = calcDiscount(ticket.price, ticket.originalPrice);
-  const isSoldOut = ticket.status === TicketCatalogStatus.SOLD_OUT;
-  const isUnavailable = ticket.status === TicketCatalogStatus.INACTIVE;
-  const canBuy = !isSoldOut && !isUnavailable;
+  const now = new Date();
+  const validFrom = ticket.validFromDate ? new Date(ticket.validFromDate) : null;
+  const validTo = ticket.validToDate ? new Date(ticket.validToDate) : null;
 
+  const isComingSoon = validFrom ? now < validFrom : false;
+  const isExpired = validTo ? now > validTo : false;
+  const isEventEnded = eventStatus === EventStatus.COMPLETED || eventStatus === EventStatus.CANCELLED;
+
+  const isSoldOut = ticket.status === TicketCatalogStatus.SOLD_OUT;
+  const isUnavailable = ticket.status === TicketCatalogStatus.INACTIVE || isEventEnded || isExpired || isComingSoon;
+
+  const canBuy = !isSoldOut && !isUnavailable && !isEventEnded && !isExpired && !isComingSoon;
+
+  const getBuyButtonText = () => {
+    if (isEventEnded) return "Sự kiện đã kết thúc";
+    if (isExpired) return "Hết hạn mua";
+    if (isComingSoon) return `Bán từ ${formatDate(ticket.validFromDate)}`;
+    if (isSoldOut) return "Sold Out";
+    if (isUnavailable) return "Unavailable";
+    return "Add to Cart";
+  };
+
+  const discount = calcDiscount(ticket.price, ticket.originalPrice);
   const handleOpenModal = () => {
     if (onBuyPress) {
       onBuyPress(ticket);
@@ -59,7 +79,7 @@ export default function TicketCatalogCard({
       return;
     }
 
-    if (ticket.totalQuota != null && qty > ticket.remainingQuantity) {
+    if (ticket.totalQuota != null && ticket.remainingQuantity != null && qty > ticket.remainingQuantity) {
       Alert.alert("Quantity Exceeded", `Only ${ticket.remainingQuantity} tickets remaining.`);
       return;
     }
@@ -87,7 +107,7 @@ export default function TicketCatalogCard({
       style={{
         borderColor: isSoldOut ? "#ef444440" : theme.border,
         backgroundColor: theme.card,
-        opacity: isSoldOut ? 0.7 : 1,
+        opacity: isSoldOut || isUnavailable ? 0.7 : 1,
       }}
     >
       {/* Header row */}
@@ -198,13 +218,15 @@ export default function TicketCatalogCard({
             <Ionicons
               name="time-outline"
               size={14}
-              color={theme.mutedForeground}
+              color={isExpired ? "#ef4444" : theme.mutedForeground}
             />
             <Text
               className="text-xs"
-              style={{ color: theme.mutedForeground }}
+              style={{ color: isExpired ? "#ef4444" : theme.mutedForeground, fontWeight: isExpired ? 'bold' : 'normal' }}
             >
               {formatDate(ticket.validFromDate)} — {formatDate(ticket.validToDate)}
+              {isExpired && " (Expired)"}
+              {isComingSoon && " (Coming Soon)"}
             </Text>
           </View>
         )}
@@ -221,7 +243,7 @@ export default function TicketCatalogCard({
         activeOpacity={0.7}
       >
         <Ionicons
-          name={isSoldOut ? "close-circle-outline" : "cart-outline"}
+          name={isSoldOut || isExpired || isEventEnded ? "close-circle-outline" : "cart-outline"}
           size={18}
           color={canBuy ? "#fff" : theme.mutedForeground}
         />
@@ -229,11 +251,7 @@ export default function TicketCatalogCard({
           className="font-bold text-sm"
           style={{ color: canBuy ? "#fff" : theme.mutedForeground }}
         >
-          {isSoldOut
-            ? "Sold Out"
-            : isUnavailable
-              ? "Unavailable"
-              : "Add to Cart"}
+          {getBuyButtonText()}
         </Text>
       </TouchableOpacity>
 

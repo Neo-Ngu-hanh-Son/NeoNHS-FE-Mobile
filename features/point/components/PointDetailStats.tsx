@@ -58,7 +58,7 @@ export function PointDetailStats({ point }: PointDetailStatsProps) {
           iconColor="#f97316"
           iconBgColor="#f9731615"
           label={t('point.difficulty')}
-          value={t('point.moderate')}
+          value={t(`point.${(point.difficulty || 'MODERATE').toLowerCase()}`)}
         />
         <Separator orientation="vertical" className="mx-1 h-12" />
         <StatItem
@@ -66,7 +66,7 @@ export function PointDetailStats({ point }: PointDetailStatsProps) {
           iconColor="#14b8a6"
           iconBgColor="#14b8a615"
           label={t('point.vibe')}
-          value={t('point.spiritual')}
+          value={t(`point.${(point.vibe || 'SPIRITUAL').toLowerCase()}`)}
         />
       </CardContent>
     </Card>

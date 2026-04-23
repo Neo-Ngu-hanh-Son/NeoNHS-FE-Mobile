@@ -1,7 +1,6 @@
 import { apiClient, endpoints } from '@/services/api';
 import { Attraction, MapPoint, MapPointCheckin } from '../types';
 import { PageResponse } from '@/services/api/types';
-import { logger } from '@/utils/logger';
 
 export const mapService = {
   getPointOfAttraction: async (attractionId: string) => {

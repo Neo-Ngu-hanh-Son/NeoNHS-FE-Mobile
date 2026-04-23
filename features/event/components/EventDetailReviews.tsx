@@ -1,17 +1,15 @@
 import React, { useMemo } from 'react';
 import { Alert } from 'react-native';
+
 import { useAuth } from '@/features/auth';
-import { useEventReviews } from '../hooks/useEventReviews';
+import { ReviewSection, ReviewTypeFlg } from '@/features/reviews';
 import { useCreateEventReview } from '../hooks/useCreateEventReview';
 import { useUpdateEventReview } from '../hooks/useUpdateEventReview';
-import { ReviewSection } from '@/features/reviews';
-import type { ReviewResponse } from '@/features/reviews/types';
+import { useGenericReviews } from '@/features/point/hooks/useGenericReviews';
 
 interface EventDetailReviewsProps {
   eventId: string;
   eventName: string;
-  averageRating: number;
-  totalRatings: number;
   onViewAll: () => void;
   onSheetVisibilityChange?: (visible: boolean) => void;
 }
@@ -19,23 +17,23 @@ interface EventDetailReviewsProps {
 export function EventDetailReviews({
   eventId,
   eventName,
-  averageRating,
-  totalRatings,
   onViewAll,
   onSheetVisibilityChange,
 }: EventDetailReviewsProps) {
   const { user } = useAuth();
 
-  const { data, isLoading, error } = useEventReviews(eventId, 'createdAt,desc');
+  const { data, isLoading } = useGenericReviews(eventId, ReviewTypeFlg.EVENT);
   const createReviewMutation = useCreateEventReview(eventId);
   const updateReviewMutation = useUpdateEventReview(eventId);
 
-  const allLoaded = useMemo(() => data?.pages.flatMap((p) => p.content) ?? [], [data]);
-
-  const myReview: ReviewResponse | undefined = useMemo(
-    () => (user ? allLoaded.find((r) => r.user?.id === user.id) : undefined),
-    [allLoaded, user]
+  const allReviews = useMemo(() => data?.pages.flatMap((page) => page.reviews?.content ?? []) ?? [], [data]);
+  const myReview = useMemo(
+    () => (user ? allReviews.find((review) => review.id === user.id) : undefined),
+    [allReviews, user]
   );
+
+  const avgRating = useMemo(() => data?.pages[0].avgRating ?? 0, [data]);
+  const totalRatings = useMemo(() => data?.pages[0].totalReviews ?? 0, [data]);
 
   const handleSubmit = async (rating: number, text: string): Promise<void> => {
     if (myReview) {
@@ -54,11 +52,11 @@ export function EventDetailReviews({
     <ReviewSection
       targetId={eventId}
       targetName={eventName}
-      averageRating={averageRating}
+      averageRating={avgRating}
       totalRatings={totalRatings}
-      reviews={allLoaded}
+      reviews={allReviews}
       isLoading={isLoading}
-      myReview={myReview}
+      myReview={myReview ?? undefined}
       onSubmitReview={handleSubmit}
       onViewAll={onViewAll}
       onSheetVisibilityChange={onSheetVisibilityChange}

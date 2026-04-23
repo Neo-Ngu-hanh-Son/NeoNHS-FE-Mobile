@@ -40,6 +40,14 @@ export function PointDetailLocation({ point, onOpenMap }: PointDetailLocationPro
           <Text className="text-xs font-bold">{t('point.open_in_maps')}</Text>
         </View>
       </TouchableOpacity>
+      {point.address && (
+        <View className="flex-row items-center gap-2 px-1">
+          <Ionicons name="location-outline" size={16} color={theme.mutedForeground} />
+          <Text variant="muted" className="flex-1 text-xs font-medium leading-4">
+            {point.address}
+          </Text>
+        </View>
+      )}
     </View>
   );
 }

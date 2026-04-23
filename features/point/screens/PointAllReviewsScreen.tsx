@@ -23,6 +23,7 @@ export default function PointAllReviewsScreen({ navigation, route }: Props) {
 
   const { data, isLoading, isFetching, isFetchingNextPage, hasNextPage, fetchNextPage, error } = usePointReviews(
     pointId,
+    'POINT',
     activeSort
   );
 
@@ -32,7 +33,7 @@ export default function PointAllReviewsScreen({ navigation, route }: Props) {
   const avgRating = useMemo(() => data?.pages[0].avgRating ?? 0, [data]);
   const totalRatings = useMemo(() => data?.pages[0].totalReviews ?? 0, [data]);
 
-  const allReviews = useMemo(() => data?.pages.flatMap((page) => page.reviews.content) ?? [], [data]);
+  const allReviews = useMemo(() => data?.pages.flatMap((page) => page.reviews?.content ?? []) ?? [], [data]);
   const myReview: ReviewResponse | undefined = useMemo(
     () => (user ? allReviews.find((review) => review.user.id === user.id) : undefined),
     [allReviews, user]

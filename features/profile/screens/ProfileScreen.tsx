@@ -297,7 +297,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
             themeBorder={theme.border}
             themeForeground={theme.foreground}
             themeMutedForeground={theme.mutedForeground}
-            onPress={() => {}}
+            onPress={() => navigation.navigate('Main', { screen: 'MyVouchers' })}
           />
           <ActionCard
             title={t('profile.actions.support_center')}

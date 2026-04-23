@@ -1,4 +1,5 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
+import { UserVoucherResponse } from '@/features/voucher/types/voucher.types';
 /* ============================================================
    AUTH STACK
    ============================================================ */
@@ -19,11 +20,12 @@ export type AuthStackParamList = {
 export type TabsStackParamList = {
   Home: undefined;
   Discover: undefined;
+  Voucher: undefined;
   Map: { pointId?: string; targetNavigationPointId?: string; userCheckedInPointId?: string } | undefined;
   Bookings: undefined;
   Profile: undefined;
-  TestCart: undefined;
   Chat: undefined;
+  TestCart: undefined;
 };
 
 /* ============================================================
@@ -72,24 +74,15 @@ export type DestinationRoutes = {
 
 /* Map / Points */
 export type MapRoutes = {
+  PointDetail: { pointId: string };
+  PointMapSelection: { pointId: string };
   ActiveNavigation: { pointId: string };
   ArrivalConfirmation: { pointId: string };
   AudioGuide: { pointId: string };
   PointHistoryAudio: { pointId: string };
   Panorama: { pointId: string };
-};
-
-export type CheckinRoutes = {
-  CheckinCamera: { checkinPointId?: string | null; pointName: string; pointRewardPoints?: number };
-  CheckinComplete: {
-    imageUrl?: string;
-    rewardPoints?: number;
-    userTotalPoints?: number;
-    destinationName?: string;
-    checkinPointId?: string;
-    parentCheckinPointId?: string;
-    imageUrls?: string[];
-  };
+  CheckinCamera: { pointId?: string | null; pointName: string; pointRewardPoints?: number };
+  CheckinComplete: { imageUrl?: string; rewardPoints?: number; userTotalPoints?: number };
 };
 
 /* Events */
@@ -140,6 +133,13 @@ export type ChatRoutes = {
   };
 };
 
+/* Voucher */
+export type VoucherRoutes = {
+  VoucherDetail: { voucher: any };
+  MyVouchers: undefined;
+  MyVoucherDetail: { userVoucher: UserVoucherResponse };
+};
+
 /* ============================================================
    MAIN STACK (MERGED)
    ============================================================ */
@@ -170,7 +170,6 @@ export type MainStackParamList = BaseMainRoutes &
   TicketRoutes &
   DestinationRoutes &
   MapRoutes &
-  CheckinRoutes &
   EventRoutes &
   WorkshopRoutes &
   CheckoutRoutes &
@@ -179,7 +178,8 @@ export type MainStackParamList = BaseMainRoutes &
   ChatRoutes & {
     MapDirection: { pointId?: string; targetNavigationPointId?: string };
     Cart: undefined;
-  };
+  } &
+  VoucherRoutes;
 
 /* ============================================================
    ROOT STACK

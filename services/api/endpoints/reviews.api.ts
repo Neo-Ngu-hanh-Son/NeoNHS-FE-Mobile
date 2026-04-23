@@ -8,7 +8,7 @@ export const reviewEndpoints = {
   /** GET /api/reviews/events/{eventId} */
   getEventReviews: (eventId: string) => `reviews/events/${eventId}`,
   /** GET /api/reviews/points/{pointId} */
-  getPointReviews: (pointId: string) => `reviews/points/${pointId}`,
+  getGenericReviews: () => `reviews`,
   /** POST /api/reviews */
   createReview: () => `reviews`,
   /** PUT /api/reviews/{id} */

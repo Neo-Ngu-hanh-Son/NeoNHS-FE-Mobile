@@ -15,6 +15,7 @@ import HistoryHeader from '../components/historyAudio/HistoryHeader';
 import HistoryWordFlow from '../components/historyAudio/HistoryWordFlow';
 import AudioPlayer from '../components/historyAudio/AudioPlayer';
 import { getPointHistoryAudiosOfPointId } from '../services/PointHistoryAudioService';
+import { useTranslation } from 'react-i18next';
 
 type Props = CompositeScreenProps<
   StackScreenProps<MainStackParamList, 'PointHistoryAudio'>,
@@ -23,6 +24,7 @@ type Props = CompositeScreenProps<
 
 export default function PointHistoryAudioScreen({ route }: Props) {
   const { pointId } = route.params;
+  const { t } = useTranslation();
 
   // ─── Data fetching ───
   const {
@@ -62,7 +64,7 @@ export default function PointHistoryAudioScreen({ route }: Props) {
   }
 
   if (!selectedAudio) {
-    return <FullScreenError onRetry={refetch} message="No history audio is available for this point." />;
+    return <FullScreenError onRetry={refetch} message={t('point.no_audio', 'No history audio is available for this point.')} />;
   }
 
   // ─── Main content ───
@@ -70,7 +72,7 @@ export default function PointHistoryAudioScreen({ route }: Props) {
     <RefreshableScreenLayout
       showBackButton={true}
       onRefresh={() => refetch()}
-      title="History audio transcript"
+      title={t('point.history_transcript', 'History audio transcript')}
       contentContainerClassName="px-5 pb-10 pt-16">
       {/* Header + audio selector */}
       <HistoryHeader
@@ -90,7 +92,7 @@ export default function PointHistoryAudioScreen({ route }: Props) {
         <View className="mb-3 flex-col items-start justify-start gap-2">
           <Text variant={'h4'}>{selectedAudio.metadata.title}</Text>
           <Text variant={'small'} className="text-muted-foreground">
-            By: {selectedAudio.metadata.artist}
+            {t('point.by', 'By:')} {selectedAudio.metadata.artist}
           </Text>
         </View>
         <ScrollView style={{ maxHeight: 200 }} showsVerticalScrollIndicator={true} nestedScrollEnabled={true}>

@@ -1,8 +1,13 @@
 export const discoverEndpoints = {
+  // WHO WRITE THESE COMMENTS??? MOBILE HAS NO ACCESS TO ADMIN ENDPOINTS???
   /**
-   * /api/admin/attractions/all
+   * /api/attractions/all
    */
   getAllAttractions: () => `attractions/all`,
+  /**
+   * /api/attractions
+   */
+  getAllAttractionsWithPointPaginated: () => `attractions`,
   /**
    * /api/admin/attractions/{attractionId}
    */

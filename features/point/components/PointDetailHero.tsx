@@ -89,7 +89,7 @@ export function PointDetailHero({
         <Text className="mb-2.5 text-3xl font-black leading-[38px] text-white">{point.name}</Text>
 
         {/* Quick info */}
-        <View className="flex-row items-center gap-4">
+        {/* <View className="flex-row items-center gap-4">
           <View className="flex-row items-center gap-1.5">
             <Ionicons name="star" size={14} color="#fbbf24" />
             <Text className="text-sm font-semibold text-white/90">4.8 (1.2k)</Text>
@@ -99,7 +99,7 @@ export function PointDetailHero({
             <Ionicons name="walk" size={14} color="white" />
             <Text className="text-sm font-medium text-white/80">15 mins away</Text>
           </View>
-        </View>
+        </View> */}
       </View>
     </View>
   );
