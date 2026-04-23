@@ -1,5 +1,4 @@
 export const discoverEndpoints = {
-  // WHO WRITE THESE COMMENTS??? MOBILE HAS NO ACCESS TO ADMIN ENDPOINTS???
   /**
    * /api/attractions/all
    */
@@ -9,27 +8,31 @@ export const discoverEndpoints = {
    */
   getAllAttractionsWithPointPaginated: () => `attractions`,
   /**
-   * /api/admin/attractions/{attractionId}
+   * /api/attractions/{attractionId}
    */
   getAttractionById: (id: string | number) => `attractions/${id}`,
   /**
-   * /api/admin/points/all/{attractionId}
+   * /api/points/all/{attractionId}
    */
   getPointsOfAttraction: (attractionId: string | number) => `points/all/${attractionId}`,
   /**
-   * /api/admin/points/{pointId}
+   * /api/points/{pointId}
    */
   getPointById: (id: string | number) => `points/${id}`,
   /**
-   * /api/admin/attractions
+   * /api/attractions
    */
   getAttractions: () => `attractions`,
   /**
-   * /api/admin/points/all
+   * /api/points/all
    */
   getAllAvailablePoints: () => `points/all`,
   /**
-   * /api/admin/points/{pointId}/history-audios
+   * /api/points/{pointId}/history-audios
    */
   getAllHistoryAudiosOfPoint: (pointId: string | number) => `points/${pointId}/history-audios`,
+  /**
+   * /api/points/{pointId}/public-checkin-images
+   */
+  getPointPublicCheckinImages: (poitnId: string | number) => `points/${poitnId}/public-checkin-images`,
 } as const;

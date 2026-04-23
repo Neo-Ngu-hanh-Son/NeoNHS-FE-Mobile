@@ -2,12 +2,12 @@ import React, { useMemo, useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { Image } from 'expo-image';
 
-import type { ReviewImage } from '@/features/reviews/types';
+import type { ReviewImageResponse } from '@/features/reviews/types';
 import { Text } from '@/components/ui/text';
 import { ReviewImageViewerModal } from '@/features/reviews/components/ReviewImageViewerModal';
 
 type ReviewImageGalleryProps = {
-  images: ReviewImage[];
+  images: ReviewImageResponse[];
   maxPreviewCount?: number;
 };
 

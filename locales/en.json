@@ -67,7 +67,8 @@
     "too_far": "You are too far to check in",
     "list_view": "List",
     "map_view": "Map",
-    "directions": "Directions"
+    "directions": "Directions",
+    "address": "Address"
   },
   "auth": {
     "welcome_back": "Welcome Back",

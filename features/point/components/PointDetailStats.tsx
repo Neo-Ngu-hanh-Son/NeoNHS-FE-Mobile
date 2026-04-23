@@ -6,8 +6,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
-import { MapPoint } from '../../map/types';
+import { MapPoint, PointDifficulty, PointVibe } from '../../map/types';
 import { useTranslation } from 'react-i18next';
+import { DIFFICULTY_CONFIG, VIBE_CONFIG } from '@/utils/pointDetailUtils';
 
 type StatItemProps = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -42,6 +43,9 @@ export function PointDetailStats({ point }: PointDetailStatsProps) {
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const { t } = useTranslation();
 
+  const diffConfig = DIFFICULTY_CONFIG[point.difficulty as PointDifficulty] || DIFFICULTY_CONFIG.MEDIUM;
+  const vibeConfig = VIBE_CONFIG[point.vibe as PointVibe] || VIBE_CONFIG.ENERGETIC;
+
   return (
     <Card className="rounded-3xl py-5">
       <CardContent className="flex-row items-center justify-between px-4">
@@ -52,21 +56,25 @@ export function PointDetailStats({ point }: PointDetailStatsProps) {
           label={t('point.duration')}
           value={`${point.estTimeSpent || 30} ${t('point.mins')}`}
         />
+
         <Separator orientation="vertical" className="mx-1 h-12" />
+
         <StatItem
-          icon="flash-outline"
-          iconColor="#f97316"
-          iconBgColor="#f9731615"
+          icon={diffConfig.icon}
+          iconColor={diffConfig.color}
+          iconBgColor={diffConfig.bgColor}
           label={t('point.difficulty')}
-          value={t('point.moderate')}
+          value={point.difficulty ? t(`${point.difficulty.toLowerCase()}`) : PointDifficulty.MEDIUM.toLowerCase()}
         />
+
         <Separator orientation="vertical" className="mx-1 h-12" />
+
         <StatItem
-          icon="cloud-outline"
-          iconColor="#14b8a6"
-          iconBgColor="#14b8a615"
+          icon={vibeConfig.icon}
+          iconColor={vibeConfig.color}
+          iconBgColor={vibeConfig.bgColor}
           label={t('point.vibe')}
-          value={t('point.spiritual')}
+          value={point.vibe ? t(`${point.vibe.toLowerCase()}`) : PointVibe.ENERGETIC.toLowerCase()}
         />
       </CardContent>
     </Card>

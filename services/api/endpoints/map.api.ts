@@ -19,6 +19,5 @@ export const mapEndpoints = {
 
   // Check-in related endpoints
   userCheckIn: () => `users/check-ins`,
-  getNearbyCheckIns: () =>
-    `points/-1/check-ins/nearby`,
+  getNearbyCheckIns: () => `points/-1/check-ins/nearby`,
 } as const;

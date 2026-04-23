@@ -30,7 +30,6 @@ export function PointDetailLocation({ point, onOpenMap }: PointDetailLocationPro
           uri={`https://maps.googleapis.com/maps/api/staticmap?center=${point.latitude},${point.longitude}&zoom=17&size=600x300&markers=color:red%7C${point.latitude},${point.longitude}&key=${googleMapApiKey}`}
           className="h-full w-full"
         />
-        {/* Open in Maps badge */}
         <View
           className="absolute bottom-3 right-3 flex-row items-center gap-2 rounded-xl px-4 py-2.5"
           style={{
@@ -40,6 +39,11 @@ export function PointDetailLocation({ point, onOpenMap }: PointDetailLocationPro
           <Text className="text-xs font-bold">{t('point.open_in_maps')}</Text>
         </View>
       </TouchableOpacity>
+      <View className="">
+        <Text variant="muted" className="text-start">
+          {point.address || 'Ngũ Hành Sơn, Đà Nẵng'}
+        </Text>
+      </View>
     </View>
   );
 }

@@ -53,6 +53,25 @@ export default function PointDetailScreen({ navigation, route }: Props) {
     },
   });
 
+  const {
+    data: publicImages,
+    isLoading: isImagesLoading,
+    isError: isImagesError,
+    refetch: refetchImages,
+  } = useQuery({
+    queryKey: ['pointPublicCheckinImages', pointId],
+    queryFn: async () => {
+      const response = await discoverService.getPointPublicCheckinImages(pointId, {
+        page: 0,
+        size: 10,
+        sortBy: 'createdAt',
+        sortDir: 'desc',
+        search: '',
+      });
+      return response.data.content;
+    },
+  });
+
   let hasAudio = false;
   if (point) {
     if (point.historyAudioCount && point.historyAudioCount > 0) {
@@ -146,7 +165,12 @@ export default function PointDetailScreen({ navigation, route }: Props) {
           <PointDetailPanorama point={point} onOpenPanorama={handleOpenPanorama} />
 
           {/* Check-in gallery */}
-          <PointDetailGallery />
+          <PointDetailGallery
+            publicImages={publicImages || []}
+            isLoading={isImagesLoading}
+            isError={isImagesError}
+            refetchImages={refetchImages}
+          />
 
           {/* Reviews */}
           <PointDetailReviews

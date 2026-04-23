@@ -1,6 +1,7 @@
 import { apiClient, endpoints, ApiResponse } from '@/services/api';
 import { Attraction, MapPoint } from '../../map/types';
 import { PageResponse } from '@/features/event/types';
+import { ReviewImageResponse } from '@/features/reviews';
 
 function buildQueryParams(params?: {
   page: number;
@@ -56,6 +57,25 @@ export const discoverService = {
   getAllPoints: async (): Promise<ApiResponse<PageResponse<MapPoint>>> => {
     return await apiClient.get<PageResponse<MapPoint>>(endpoints.discover.getAllAvailablePoints(), {
       requiresAuth: false
+    });
+  },
+
+  getPointPublicCheckinImages: async (pointId: string | number, params: {
+    page: number;
+    size: number;
+    sortBy: string;
+    sortDir: string;
+    search: string;
+  } = {
+      page: 0,
+      size: 10,
+      sortBy: 'createdAt',
+      sortDir: 'desc',
+      search: '',
+    }): Promise<ApiResponse<PageResponse<ReviewImageResponse>>> => {
+    return await apiClient.get<PageResponse<ReviewImageResponse>>(endpoints.discover.getPointPublicCheckinImages(pointId), {
+      requiresAuth: false,
+      params: buildQueryParams(params),
     });
   },
 };

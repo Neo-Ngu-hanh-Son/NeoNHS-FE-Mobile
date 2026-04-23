@@ -67,7 +67,8 @@
     "too_far": "Bạn ở quá xa để check-in",
     "list_view": "Danh sách",
     "map_view": "Bản đồ",
-    "directions": "Chỉ đường"
+    "directions": "Chỉ đường",
+    "address": "Địa chỉ"
   },
   "auth": {
     "welcome_back": "Chào mừng trở lại",
