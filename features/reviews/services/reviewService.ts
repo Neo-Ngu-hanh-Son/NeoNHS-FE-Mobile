@@ -9,14 +9,13 @@
  * Mutations:
  *   POST /api/reviews  |  PUT /api/reviews/{id}
  */
-import { apiClient, endpoints, ApiResponse, PageResponse } from '@/services/api';
+import { apiClient, endpoints, ApiResponse } from '@/services/api';
 import type {
   CreateReviewRequest,
   ReviewListParams,
   ReviewResponse,
   UpdateReviewRequest,
-  PointReviewResponse,
-  PointReviewResponseWrapper,
+  GenericReviewResponseWrapper,
   ReviewPageResponse,
 } from '../types';
 
@@ -27,6 +26,8 @@ function buildQueryParams(params?: ReviewListParams): Record<string, string | nu
   if (params.size !== undefined) q.size = params.size;
   if (params.sortBy) q.sortBy = params.sortBy;
   if (params.sortDir) q.sortDir = params.sortDir;
+  q.reviewTypeFlg = params.reviewTypeFlg;
+  q.reviewTypeId = params.reviewTypeId;
   return q;
 }
 
@@ -46,11 +47,10 @@ export const reviewService = {
       requiresAuth: false,
     }),
 
-  getPointReviews: async (
-    pointId: string,
+  getGenericReviews: async (
     params?: ReviewListParams
-  ): Promise<ApiResponse<PointReviewResponseWrapper>> => {
-    return await apiClient.get<PointReviewResponseWrapper>(endpoints.reviews.getPointReviews(pointId), {
+  ): Promise<ApiResponse<GenericReviewResponseWrapper>> => {
+    return await apiClient.get<GenericReviewResponseWrapper>(endpoints.reviews.getGenericReviews(), {
       params: buildQueryParams(params),
       requiresAuth: false,
     });

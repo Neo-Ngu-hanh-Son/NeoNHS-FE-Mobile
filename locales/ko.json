@@ -213,7 +213,8 @@
     "tabs": {
       "overview": "개요",
       "reviews": "리뷰",
-      "gallery": "갤러리"
+      "gallery": "갤러리",
+      "history": "역사"
     },
     "checkin": "여기서 체크인",
     "write_review": "리뷰 작성",
@@ -225,6 +226,7 @@
     "history": "역사",
     "take_me_there": "길 안내",
     "no_description": "설명이 없습니다.",
+    "read_more": "더 읽기",
     "show_less": "간략히 보기",
     "read_history": "역사 읽기",
     "open_in_maps": "지도에서 열기",

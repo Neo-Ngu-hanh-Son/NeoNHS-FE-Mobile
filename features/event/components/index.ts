@@ -7,5 +7,6 @@ export { default as EventTimelineDaySelector } from './EventTimelineDaySelector'
 export { default as EventTimelineTagChips } from './EventTimelineTagChips';
 export { default as EventTimelineMapOverlay } from './EventTimelineMapOverlay';
 export { default as EventTimelinePointDetailBottomSheet } from './EventTimelinePointDetailBottomSheet';
+export { default as EventTimelineListBottomSheet } from './EventTimelineListBottomSheet';
 export { EventListContent } from './EventListContent';
 export { default as EventContent } from './EventContent';

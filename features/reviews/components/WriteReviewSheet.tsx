@@ -76,8 +76,8 @@ export const WriteReviewSheet = forwardRef<WriteReviewSheetRef, WriteReviewSheet
       try {
         await onSubmit(selectedRating, reviewText.trim());
         sheetRef.current?.dismiss();
-      } catch {
-        Alert.alert('Error', 'Failed to submit your review. Please try again.');
+      } catch (error: any) {
+        Alert.alert('Error', error?.message);
       } finally {
         setIsSubmitting(false);
       }

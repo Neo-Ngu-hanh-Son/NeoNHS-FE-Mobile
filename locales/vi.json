@@ -212,7 +212,8 @@
     "tabs": {
       "overview": "Tổng quan",
       "reviews": "Đánh giá",
-      "gallery": "Thư viện"
+      "gallery": "Thư viện",
+      "history": "Lịch sử"
     },
     "checkin": "Check-in tại đây",
     "write_review": "Viết đánh giá",
@@ -224,6 +225,7 @@
     "history": "Lịch sử",
     "take_me_there": "Đến đó ngay",
     "no_description": "Không có mô tả.",
+    "read_more": "Đọc thêm",
     "show_less": "Thu gọn",
     "read_history": "Đọc lịch sử",
     "open_in_maps": "Mở trong Bản đồ",

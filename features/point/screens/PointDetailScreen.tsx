@@ -33,7 +33,6 @@ type Props = CompositeScreenProps<
 export default function PointDetailScreen({ navigation, route }: Props) {
   const { pointId } = route.params;
   const [isFavorite, setIsFavorite] = useState(false);
-  const [isReadMore, setIsReadMore] = useState(false);
   const { openPanorama, preloadPanorama, resendPanoramaMessage } = usePanorama();
   const { t } = useTranslation();
 
@@ -138,8 +137,6 @@ export default function PointDetailScreen({ navigation, route }: Props) {
           {/* Overview / description */}
           <PointDetailOverview
             point={point}
-            isReadMore={isReadMore}
-            onToggleReadMore={() => setIsReadMore((prev) => !prev)}
           />
 
           {/* Location map preview */}

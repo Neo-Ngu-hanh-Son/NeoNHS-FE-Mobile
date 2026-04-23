@@ -2,9 +2,10 @@ import React, { useMemo } from 'react';
 import { Alert } from 'react-native';
 
 import { useAuth } from '@/features/auth';
-import { ReviewSection } from '@/features/reviews';
+import { ReviewSection, ReviewTypeFlg } from '@/features/reviews';
 import { useCreatePointReview, usePointReviews, useUpdatePointReview } from '@/features/point/hooks';
 import { logger } from '@/utils/logger';
+import { useGenericReviews } from '../hooks/useGenericReviews';
 
 interface PointDetailReviewsProps {
   pointId: string;
@@ -21,34 +22,31 @@ export function PointDetailReviews({
 }: PointDetailReviewsProps) {
   const { user } = useAuth();
 
-  const { data, isLoading } = usePointReviews(pointId, 'createdAt,desc');
-  const createReviewMutation = useCreatePointReview(pointId);
-  const updateReviewMutation = useUpdatePointReview(pointId);
+  const { data, isLoading } = useGenericReviews(pointId, ReviewTypeFlg.POINT);
+  const { mutateAsync: createReview, error: createError } = useCreatePointReview(pointId);
+  const { mutateAsync: updateReview, error: updateError } = useUpdatePointReview(pointId);
 
-  const allReviews = useMemo(() => data?.pages.flatMap((page) => page.reviews.content) ?? [], [data]);
+  const allReviews = useMemo(() => data?.pages.flatMap((page) => page.reviews?.content ?? []) ?? [], [data]);
   const myReview = useMemo(
-    () => (user ? allReviews.find((review) => review.id === user.id) : undefined),
+    () => (user ? allReviews.find((review) => review.user.id === user.id) : undefined),
     [allReviews, user]
   );
+
 
   const avgRating = useMemo(() => data?.pages[0].avgRating ?? 0, [data]);
   const totalRatings = useMemo(() => data?.pages[0].totalReviews ?? 0, [data]);
 
+  /**
+   * Note : Update review is prohibited.
+   */
   const handleSubmit = async (rating: number, text: string): Promise<void> => {
-    if (myReview) {
-      await updateReviewMutation.mutateAsync({
-        reviewId: myReview.id,
-        request: { rating, comment: text },
-      });
-      Alert.alert('Updated!', 'Your review has been updated.');
-      return;
-    }
-
-    await createReviewMutation.mutateAsync({
+    const res = await createReview({
       rating,
       comment: text,
     });
-    Alert.alert('Thank you!', 'Your review has been submitted.');
+    if (!res.success) {
+      throw new Error('Failed to create review: ' + res.message);
+    }
   };
 
   return (

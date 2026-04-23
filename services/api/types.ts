@@ -1,3 +1,5 @@
+import { User } from '@/features/auth';
+import type { AxiosRequestConfig } from 'axios';
 /**
  * API Types and Interfaces
  * Defines types for API requests, responses, and errors
@@ -36,12 +38,7 @@ export interface ApiError {
  */
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-import { User } from '@/features/auth';
-/**
- * Request Configuration
- * Extends AxiosRequestConfig with custom options
- */
-import type { AxiosRequestConfig } from 'axios';
+
 
 export interface RequestConfig extends Omit<AxiosRequestConfig, 'method' | 'params'> {
   method?: HttpMethod;
@@ -92,7 +89,7 @@ export interface PageResponse<T> {
   totalElements: number;
   totalPages: number;
   size: number;
-  page: number;
+  number: number;
   first: boolean;
   last: boolean;
   empty: boolean;

@@ -246,7 +246,8 @@
     "tabs": {
       "overview": "概要",
       "reviews": "レビュー",
-      "gallery": "ギャラリー"
+      "gallery": "ギャラリー",
+      "history": "歴史"
     },
     "checkin": "ここでチェックイン",
     "write_review": "レビューを書く",
@@ -258,6 +259,7 @@
     "history": "歴史",
     "take_me_there": "案内開始",
     "no_description": "説明はありません。",
+    "read_more": "もっと読む",
     "show_less": "閉じる",
     "read_history": "歴史を読む",
     "open_in_maps": "地図で開く",
