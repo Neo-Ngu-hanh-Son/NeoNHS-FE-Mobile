@@ -34,13 +34,11 @@ export default function CheckinCameraCenterHint() {
   }, [opacity]);
 
   return (
-    <View className="absolute left-0 right-0 top-0 bottom-0 items-center justify-center px-6">
+    <View pointerEvents="none" className="absolute bottom-0 left-0 right-0 top-0 items-center justify-center px-6">
       <Animated.View className="h-64 w-64 rounded-2xl border-2 border-green-500" style={{ opacity }} />
       {showText ? (
         <Animated.View style={{ opacity }}>
-          <Text className="mt-4 text-center text-sm font-semibold text-white">
-            Take a photo to complete check-in
-          </Text>
+          <Text className="mt-4 text-center text-sm font-semibold text-white">Take a photo to complete check-in</Text>
         </Animated.View>
       ) : null}
     </View>

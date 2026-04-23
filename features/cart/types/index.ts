@@ -22,7 +22,7 @@ export interface Cart {
 
 export type DiscountType = 'FIXED' | 'PERCENT';
 export type ApplicableProduct = 'ALL' | 'EVENT_TICKET' | 'WORKSHOP' | 'TICKET';
-export type VoucherType = 'DISCOUNT' | 'GIFT_PRODUCT' | 'BONUS_POINTS' | 'FREE_SERVICE';
+export type VoucherType = 'DISCOUNT' | 'GIFT_PRODUCT';
 
 export interface Voucher {
     userVoucherId: string;

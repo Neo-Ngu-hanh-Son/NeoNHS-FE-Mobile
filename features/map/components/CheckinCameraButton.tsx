@@ -1,9 +1,7 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Animated, View, Text } from 'react-native';
 import { Button } from '@/components/ui/button';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useAuth } from '@/features/auth/context/AuthContext';
-import { useNavigation } from '@react-navigation/native';
 
 export default function CheckinCameraButton({
   onOpenCamera,

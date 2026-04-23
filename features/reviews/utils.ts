@@ -4,7 +4,7 @@ import type { ReviewTypeFlgValue } from './types';
 export function reviewsQueryKeyRoot(
   reviewTypeFlg: ReviewTypeFlgValue,
   reviewTypeId: string
-): readonly ['reviews', number, string] {
+): readonly ['reviews', string, string] {
   return ['reviews', reviewTypeFlg, reviewTypeId];
 }
 

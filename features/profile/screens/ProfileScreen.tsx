@@ -201,6 +201,30 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
             </View>
           )}
 
+          {/* TODO: Test checkin completed screen */}
+          <View style={{ marginBottom: 20 }}>
+            <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>MANAGEMENT</Text>
+            <ActionCard
+              title="View checkin completed screen"
+              desc="Scan QR code to verify customer tickets"
+              rightIcon={<MaterialIcons name="qr-code-scanner" size={20} color={theme.primary} />}
+              themeCard={theme.card}
+              themeBorder={theme.border}
+              themeForeground={theme.foreground}
+              themeMutedForeground={theme.mutedForeground}
+              onPress={() =>
+                navigation.navigate('Main', {
+                  screen: 'CheckinComplete',
+                  params: {
+                    imageUrl: undefined,
+                    rewardPoints: 0,
+                    userTotalPoints: 0,
+                  },
+                })
+              }
+            />
+          </View>
+
           {/* Admin/Vendor Actions */}
           {(user.role === 'ADMIN' || user.role === 'VENDOR') && (
             <View style={{ marginBottom: 20 }}>
@@ -273,7 +297,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
             themeBorder={theme.border}
             themeForeground={theme.foreground}
             themeMutedForeground={theme.mutedForeground}
-            onPress={() => {}}
+            onPress={() => navigation.navigate('Main', { screen: 'MyVouchers' })}
           />
           <ActionCard
             title={t('profile.actions.support_center')}

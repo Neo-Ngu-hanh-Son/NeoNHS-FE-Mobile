@@ -3,11 +3,13 @@
  * @see REVIEW_UPDATE_GUIDE.md
  */
 
+import { PageResponse } from '@/services/api';
+
 /** 1: Workshop, 2: Event, 3: Point */
-export const  ReviewTypeFlg = {
-  WORKSHOP: 1,
-  EVENT: 2,
-  POINT: 3,
+export const ReviewTypeFlg = {
+  WORKSHOP: 'WORKSHOP',
+  EVENT: 'EVENT',
+  POINT: 'POINT',
 } as const;
 
 export type ReviewTypeFlgValue = (typeof ReviewTypeFlg)[keyof typeof ReviewTypeFlg];
@@ -20,33 +22,49 @@ export interface ReviewUser {
   role?: string;
 }
 
+export interface ReviewImage {
+  imageUrl: string;
+  authorName?: string | null;
+  authorId?: string | null;
+  takenDate?: string | null;
+}
+
 /** Single review from GET/POST/PUT */
 export interface ReviewResponse {
   id: string;
-  reviewTypeFlg: number;
+  reviewTypeFlg: ReviewTypeFlgValue;
   reviewTypeId: string;
   user: ReviewUser;
   rating: number;
   comment: string | null;
   createdAt: string;
   imageUrls: string[];
+  reviewImages?: ReviewImage[];
 }
 
-/** Spring-style page wrapper returned by all review listing endpoints. */
+export interface PointReviewResponse extends ReviewResponse {
+  reviewImages: ReviewImage[];
+}
+
 export interface ReviewPageResponse {
   content: ReviewResponse[];
-  page?: number;
-  number?: number;
-  size: number;
   totalElements: number;
   totalPages: number;
-  first?: boolean;
-  last?: boolean;
-  empty?: boolean;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
+}
+
+export interface PointReviewResponseWrapper {
+  reviews: PageResponse<PointReviewResponse>;
+  totalReviews: number;
+  avgRating: number;
 }
 
 export interface CreateReviewRequest {
-  reviewTypeFlg: number;
+  reviewTypeFlg: ReviewTypeFlgValue;
   reviewTypeId: string;
   rating: number;
   comment?: string;

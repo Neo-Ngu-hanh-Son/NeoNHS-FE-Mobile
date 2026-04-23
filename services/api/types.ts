@@ -92,8 +92,30 @@ export interface PageResponse<T> {
   totalElements: number;
   totalPages: number;
   size: number;
-  number: number;
+  page: number;
   first: boolean;
   last: boolean;
   empty: boolean;
 }
+
+// ========================= Upload Image Types =========================
+export type MultipartCheckinImage = {
+  uri: string;
+  name: string;
+  type: string;
+};
+
+/**
+ * mediaUrl: URL of the uploaded image returned by the server
+ *
+ * publicId: A unique identifier for the uploaded image (useful for future deletion or management)
+ */
+export type UploadImageResponse = {
+  mediaUrl: string;
+  publicId: string;
+};
+
+export type UploadImagePayload = {
+  image: MultipartCheckinImage;
+  token: string;
+};

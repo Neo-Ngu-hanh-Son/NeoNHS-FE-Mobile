@@ -211,8 +211,7 @@ export interface EventFilterParams {
   location?: string;
   startDate?: string;
   endDate?: string;
-  minPrice?: number;
-  maxPrice?: number;
+  isTicketRequired?: boolean;
   tagIds?: string[];
   sortBy?: string;
   sortDir?: 'asc' | 'desc';
