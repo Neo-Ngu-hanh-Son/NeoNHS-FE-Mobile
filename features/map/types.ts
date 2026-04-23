@@ -46,6 +46,9 @@ export type Edge = {
 };
 
 // These are special points used for map markers and interactions (They are not necessarily nodes in the graph, but can be on the edges)
+export type PointDifficulty = 'EASY' | 'MODERATE' | 'HARD';
+export type PointVibe = 'SPIRITUAL' | 'RELAXING' | 'ENERGETIC' | 'SCENIC' | 'HISTORICAL';
+
 export interface MapPoint {
   // Base PointResponse Fields
   id: string;
@@ -54,8 +57,11 @@ export interface MapPoint {
   thumbnailUrl?: string;
   latitude: number;
   longitude: number;
+  address?: string;
   orderIndex?: number;
   estTimeSpent?: number;
+  difficulty?: PointDifficulty;
+  vibe?: PointVibe;
   type: POIType;
   attractionId?: string;
   googlePlaceId?: string;
