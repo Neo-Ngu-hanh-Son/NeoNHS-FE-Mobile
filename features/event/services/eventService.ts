@@ -28,8 +28,7 @@ export const eventService = {
       if (params.location) queryParams.location = params.location;
       if (params.startDate) queryParams.startTime = params.startDate;
       if (params.endDate) queryParams.endTime = params.endDate;
-      if (params.minPrice !== undefined) queryParams.minPrice = params.minPrice;
-      if (params.maxPrice !== undefined) queryParams.maxPrice = params.maxPrice;
+      if (params.isTicketRequired !== undefined) queryParams.isTicketRequired = params.isTicketRequired;
       if (params.sortBy) queryParams.sortBy = params.sortBy;
       if (params.sortDir) queryParams.sortDir = params.sortDir;
       // tagIds is an array — join as comma-separated
@@ -85,6 +84,14 @@ export const eventService = {
    */
   getTicketCatalogs: async (eventId: string): Promise<ApiResponse<TicketCatalogResponse[]>> => {
     return await apiClient.get<TicketCatalogResponse[]>(endpoints.events.getTicketCatalogs(eventId));
+  },
+
+  /**
+   * Get all event tags
+   * GET /api/tags
+   */
+  getEventTags: async (): Promise<ApiResponse<EventPointTagResponse[]>> => {
+    return await apiClient.get<EventPointTagResponse[]>(endpoints.events.getTags());
   },
 };
 

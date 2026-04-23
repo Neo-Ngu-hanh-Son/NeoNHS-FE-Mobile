@@ -226,7 +226,7 @@ export function WorkshopListContent({ onNavigateToDetail }: WorkshopListContentP
       <View className="mb-1 mt-2 flex-row items-center justify-between px-1">
         {isLoading ? (
           <View className="flex-row items-center gap-2">
-            <ActivityIndicator size="small" color={theme.primary} />
+            {/* <ActivityIndicator size="small" color={theme.primary} /> */}
             <Text className="text-xs" style={{ color: theme.mutedForeground }}>
               Searching…
             </Text>

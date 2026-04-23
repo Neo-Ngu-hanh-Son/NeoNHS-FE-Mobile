@@ -8,31 +8,24 @@ import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
-import { useAllEvents } from '../../event/hooks/useAllEvents';
+import { EventListContent } from '../../event/components';
 import { WorkshopListContent } from '../../workshops/screens';
 import { useQueryClient } from '@tanstack/react-query';
-import { SmartImage } from '@/components/ui/smart-image';
 import DestinationsTab from './AllDestinationTab/DestinationsTab';
 import BlogsTab from './AllBlogTab/BlogsTab';
+import { EventStatus } from '@/features/event/types';
 
 type Props = StackScreenProps<MainStackParamList, 'AllDestinations'>;
 
 type CategoryType = 'Points' | 'Workshops' | 'Events' | 'Blogs';
 
 export default function AllDestinationsScreen({ navigation, route }: Props) {
-  const queryClient = useQueryClient();
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const [activeTab, setActiveTab] = useState<CategoryType>(route.params?.initialTab || 'Points');
 
   const initialAttractionId = route.params?.selectedAttractionId;
-  const [refreshing, setRefreshing] = useState(false);
 
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const { data: events, isLoading: eventsLoading, refetch: refetchEvents } = useAllEvents();
-
-  const loading = activeTab === 'Events' && eventsLoading;
 
   useEffect(() => {
     if (route.params?.initialTab) {
@@ -40,27 +33,6 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
     }
   }, [route.params?.initialTab]);
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    Promise.allSettled([
-      refetchEvents(),
-      queryClient.refetchQueries({ queryKey: ['workshop-search'] }),
-      queryClient.refetchQueries({ queryKey: ['workshop-tags'] }),
-    ]).finally(() => setRefreshing(false));
-  }, [queryClient, refetchEvents]);
-
-  useEffect(() => {
-    setSearchQuery('');
-  }, [activeTab]);
-
-  const filteredEvents = useMemo(() => {
-    const evts = events ?? [];
-    if (!searchQuery.trim()) return evts;
-    const q = searchQuery.toLowerCase();
-    return evts.filter(
-      (e) => e.name.toLowerCase().includes(q) || (e.locationName && e.locationName.toLowerCase().includes(q))
-    );
-  }, [events, searchQuery]);
 
   const renderHeader = () => {
     let title = 'Discover';
@@ -133,131 +105,22 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
     </View>
   );
 
-  const renderSearchAndFilter = () => {
-    if (activeTab === 'Workshops') return null;
-    if (activeTab === 'Points') return null;
-    if (activeTab === 'Blogs') return null;
-    return (
-      <View className="px-4 pt-3">
-        <View
-          className="flex-1 flex-row items-center gap-2 rounded-xl px-4 py-3"
-          style={{ backgroundColor: theme.muted }}>
-          <Ionicons name="search" size={20} color={theme.mutedForeground} />
-          <TextInput
-            placeholder={`Search ${activeTab.toLowerCase()}...`}
-            placeholderTextColor={theme.mutedForeground}
-            className="flex-1 text-sm"
-            style={{ color: theme.foreground, paddingTop: 0, paddingBottom: 0 }}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={18} color={theme.mutedForeground} />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-    );
-  };
+  if (activeTab === 'Events') {
+    return <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
+      {renderHeader()}
+      {renderTabs()}
+      <EventListContent initialStatus={EventStatus.UPCOMING} />
+    </SafeAreaView>;
+  }
 
-  const renderList = () => {
-    if (loading) {
-      return (
-        <View className="items-center py-10">
-          <Ionicons name="refresh" size={24} color={theme.primary} />
-          <Text className="mt-2 text-sm" style={{ color: theme.mutedForeground }}>
-            Loading...
-          </Text>
-        </View>
-      );
-    }
-    if (activeTab === 'Events') {
-      const data = filteredEvents;
-      if (data.length === 0) {
-        return (
-          <View className="items-center py-16">
-            <Ionicons name="calendar-outline" size={40} color={theme.mutedForeground} />
-            <Text className="mt-3 text-base font-bold" style={{ color: theme.foreground }}>
-              No events found
-            </Text>
-          </View>
-        );
-      }
-      return (
-        <View className="px-4 pb-10 pt-2">
-          {data.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              onPress={() => navigation.navigate('EventDetail', { eventId: item.id })}
-              className="mb-3 flex-row items-center gap-4 rounded-2xl border p-3"
-              style={{ backgroundColor: theme.card, borderColor: theme.border }}>
-              <SmartImage uri={item.thumbnailUrl} className="h-24 w-24 rounded-2xl object-cover" />
-              <View className="flex-1">
-                <Text className="text-lg font-bold" style={{ color: theme.foreground }}>
-                  {item.name}
-                </Text>
-                <View className="mt-1 gap-1">
-                  {item.startTime && (
-                    <Text className="text-sm font-semibold" style={{ color: theme.primary }}>
-                      {new Date(item.startTime).toLocaleDateString('vi-VN', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </Text>
-                  )}
-                  <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-                    {item.locationName || 'TBD'}
-                  </Text>
-                  <View className="flex-row items-center gap-1">
-                    <View
-                      className="h-2 w-2 rounded-full"
-                      style={{
-                        backgroundColor:
-                          item.status === 'UPCOMING'
-                            ? '#3b82f6'
-                            : item.status === 'ONGOING'
-                              ? '#10b981'
-                              : item.status === 'CANCELLED'
-                                ? '#ef4444'
-                                : '#6b7280',
-                      }}
-                    />
-                    <Text
-                      className="text-[10px] font-bold uppercase"
-                      style={{
-                        color:
-                          item.status === 'UPCOMING'
-                            ? '#3b82f6'
-                            : item.status === 'ONGOING'
-                              ? '#10b981'
-                              : item.status === 'CANCELLED'
-                                ? '#ef4444'
-                                : '#6b7280',
-                      }}>
-                      {item.status}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={theme.muted} />
-            </TouchableOpacity>
-          ))}
-        </View>
-      );
-    }
-
-    return null;
-  };
-
-  // ── Dedicated tab early returns ──
   if (activeTab === 'Workshops') {
     return (
       <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
         {renderHeader()}
         {renderTabs()}
-        <WorkshopListContent onNavigateToDetail={(id) => navigation.navigate('WorkshopDetail', { workshopId: id })} />
+        <WorkshopListContent
+          onNavigateToDetail={(id) => navigation.navigate('WorkshopDetail', { workshopId: id })}
+        />
       </SafeAreaView>
     );
   }
@@ -288,15 +151,13 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
+            refreshing={false}
+            onRefresh={() => { }}
             tintColor={theme.primary}
             colors={[theme.primary]}
           />
         }>
         {renderTabs()}
-        {renderSearchAndFilter()}
-        {renderList()}
       </ScrollView>
     </SafeAreaView>
   );

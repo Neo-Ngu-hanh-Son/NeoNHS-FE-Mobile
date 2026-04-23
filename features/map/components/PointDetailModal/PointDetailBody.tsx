@@ -4,6 +4,7 @@ import { Text } from '@/components/ui/text';
 import { THEME } from '@/lib/theme';
 import InfoRow from './InfoRow';
 import { hexAlpha } from './helpers';
+import { useTranslation } from 'react-i18next';
 
 type PointDetailBodyProps = {
   description?: string;
@@ -36,12 +37,13 @@ export default function PointDetailBody({
   panoramaImageUrl,
   theme,
 }: PointDetailBodyProps) {
+  const { t } = useTranslation();
   return (
     <View style={styles.body}>
       {/* ── Description ─────────────────────────── */}
       {description ? (
         <>
-          <Text style={[styles.sectionLabel, { color: theme.mutedForeground }]}>About</Text>
+          <Text style={[styles.sectionLabel, { color: theme.mutedForeground }]}>{t('map.about', 'About')}</Text>
           <Text style={[styles.description, { color: theme.foreground }]}>{description}</Text>
           {shortDescription && shortDescription !== description ? (
             <Text style={[styles.shortDesc, { color: theme.mutedForeground }]}>{shortDescription}</Text>
@@ -50,7 +52,7 @@ export default function PointDetailBody({
         </>
       ) : shortDescription ? (
         <>
-          <Text style={[styles.sectionLabel, { color: theme.mutedForeground }]}>About</Text>
+          <Text style={[styles.sectionLabel, { color: theme.mutedForeground }]}>{t('map.about', 'About')}</Text>
           <Text style={[styles.description, { color: theme.foreground }]}>{shortDescription}</Text>
           <Divider theme={theme} />
         </>
@@ -63,7 +65,7 @@ export default function PointDetailBody({
             icon="play-circle-outline"
             iconColor={accentColor}
             iconBg={hexAlpha(accentColor, '18')}
-            label="Starts"
+            label={t('map.starts', 'Starts')}
             value={startStr || null}
             theme={theme}
           />
@@ -74,7 +76,7 @@ export default function PointDetailBody({
             icon="stop-circle-outline"
             iconColor="#64748b"
             iconBg={hexAlpha('#64748b', '18')}
-            label="Ends"
+            label={t('map.ends', 'Ends')}
             value={endStr || null}
             theme={theme}
           />
@@ -85,7 +87,7 @@ export default function PointDetailBody({
                 icon="people-outline"
                 iconColor="#0ea5e9"
                 iconBg={hexAlpha('#0ea5e9', '18')}
-                label="Participants"
+                label={t('map.participants', 'Participants')}
                 value={participantsStr}
                 theme={theme}
               />
@@ -98,7 +100,7 @@ export default function PointDetailBody({
                 icon="business-outline"
                 iconColor="#8b5cf6"
                 iconBg={hexAlpha('#8b5cf6', '18')}
-                label="Organizer"
+                label={t('map.organizer', 'Organizer')}
                 value={workshopOrganizerName}
                 theme={theme}
               />
@@ -114,7 +116,7 @@ export default function PointDetailBody({
             icon="walk-outline"
             iconColor={accentColor}
             iconBg={hexAlpha(accentColor, '18')}
-            label="Estimated visit time"
+            label={t('map.est_visit_time', 'Estimated visit time')}
             value={estTimeStr || null}
             theme={theme}
           />
@@ -125,8 +127,8 @@ export default function PointDetailBody({
                 icon="images-outline"
                 iconColor="#0284c7"
                 iconBg={hexAlpha('#0284c7', '18')}
-                label="Experience"
-                value="360° Panorama available"
+                label={t('map.experience', 'Experience')}
+                value={t('map.panorama_available', '360° Panorama available')}
                 theme={theme}
               />
             </>
