@@ -120,10 +120,10 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
         }>
         <View className="relative h-48">
           <SmartImage uri={item.thumbnailUrl || item.mapImageUrl || undefined} className="h-full w-full object-cover" />
-          <View className="absolute right-3 top-3 flex-row items-center gap-1 rounded-lg bg-white/90 px-2 py-1 dark:bg-slate-900/90">
+          {/* <View className="absolute right-3 top-3 flex-row items-center gap-1 rounded-lg bg-white/90 px-2 py-1 dark:bg-slate-900/90">
             <Ionicons name="star" size={12} color="#eab308" />
             <Text className="text-xs font-bold">4.8</Text>
-          </View>
+          </View> */}
         </View>
         <View className="p-4">
           <Text className="text-lg font-bold" style={{ color: theme.foreground }}>

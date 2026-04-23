@@ -39,7 +39,7 @@ export function PointDetailLocation({ point, onOpenMap }: PointDetailLocationPro
           <Text className="text-xs font-bold">{t('point.open_in_maps')}</Text>
         </View>
       </TouchableOpacity>
-      <View className="">
+      <View>
         <Text variant="muted" className="text-start">
           {point.address || 'Ngũ Hành Sơn, Đà Nẵng'}
         </Text>
