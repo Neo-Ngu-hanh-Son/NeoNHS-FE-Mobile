@@ -1,42 +1,191 @@
-// navigation/types.ts
-import type { NavigatorScreenParams } from "@react-navigation/native";
+import type { NavigatorScreenParams } from '@react-navigation/native';
+import { UserVoucherResponse } from '@/features/voucher/types/voucher.types';
+/* ============================================================
+   AUTH STACK
+   ============================================================ */
 
-/**
- * Authentication Stack Navigation Parameters
- * Contains screens for user authentication flow
- */
 export type AuthStackParamList = {
-    Login: undefined;
-    Register: undefined;
-    ForgotPassword: undefined;
-    ForgotPasswordOtp: undefined;
+  Login: undefined;
+  Register: undefined;
+  ForgotPassword: undefined;
+  EnterOtp: { email: string };
+  ForgotPasswordOtp: { email: string };
+  VerifyEmail: { email?: string; fromRegister?: boolean };
 };
 
-/**
- * Bottom Tabs Navigation Parameters
- * Contains the main app screens accessible via bottom tabs
- */
+/* ============================================================
+   TABS STACK
+   ============================================================ */
+
 export type TabsStackParamList = {
-    Home: undefined;
-    Profile: undefined;
+  Home: undefined;
+  Discover: undefined;
+  Voucher: undefined;
+  Map: { pointId?: string; targetNavigationPointId?: string; userCheckedInPointId?: string } | undefined;
+  Bookings: undefined;
+  Profile: undefined;
+  Chat: undefined;
+  TestCart: undefined;
 };
 
+/* ============================================================
+   FEATURE ROUTES
+   ============================================================ */
 
-/**
- * Main Stack Navigation Parameters
- * Contains the primary app flow including the bottom tabs (Put your other main app screens here if they are not in the tabs navigator)
- */
-export type MainStackParamList = {
-    Tabs: NavigatorScreenParams<TabsStackParamList>;
-    UpdateAccount: undefined;
+/* Blog */
+export type BlogRoutes = {
+  BlogList: undefined;
+  BlogDetails: { blogId: string };
 };
 
+/* Account */
+export type AccountRoutes = {
+  UpdateAccount: undefined;
+  ChangePassword: undefined;
+  KycVerification: undefined;
+  Withdraw: undefined;
+  CheckinGallery: undefined;
+};
 
-/**
- * Root Stack Navigation Parameters
- * Top-level navigation that switches between Auth and Main flows
- */
+/* Transactions */
+export type TransactionRoutes = {
+  TransactionHistory: undefined;
+  TransactionDetails: { transactionId: string };
+};
+
+/* Tickets */
+export type TicketRoutes = {
+  TicketVerification: undefined;
+};
+
+/* Destinations */
+export type DestinationRoutes = {
+  AllDestinations: {
+    initialTab?: 'Points' | 'Workshops' | 'Events' | 'Blogs';
+    selectedAttractionId?: string;
+  };
+  AttractionDestinationScreen: { attractionId: string };
+  PointDetail: { pointId: string };
+  PointAllReviews: {
+    pointId: string;
+    pointName: string;
+  };
+};
+
+/* Map / Points */
+export type MapRoutes = {
+  PointDetail: { pointId: string };
+  PointMapSelection: { pointId: string };
+  ActiveNavigation: { pointId: string };
+  ArrivalConfirmation: { pointId: string };
+  AudioGuide: { pointId: string };
+  PointHistoryAudio: { pointId: string };
+  Panorama: { pointId: string };
+  CheckinCamera: { pointId?: string | null; pointName: string; pointRewardPoints?: number };
+  CheckinComplete: { imageUrl?: string; rewardPoints?: number; userTotalPoints?: number };
+};
+
+/* Events */
+export type EventRoutes = {
+  EventDetail: { eventId: string };
+  EventTimeLineMap: { eventId: string; pointId?: string; targetNavigationPointId?: string };
+  EventAllReviews: {
+    eventId: string;
+    eventName: string;
+    averageRating: number;
+    totalRatings: number;
+  };
+};
+
+/* Workshops */
+export type WorkshopRoutes = {
+  WorkshopList: undefined;
+  WorkshopDetail: { workshopId: string };
+  WorkshopAllReviews: {
+    workshopId: string;
+    workshopName: string;
+    averageRating: number;
+    totalRatings: number;
+  };
+};
+
+/* Checkout */
+export type CheckoutRoutes = {
+  PreCheckout: { selectedIds: string[] };
+  Payment: {
+    cartItemIds: string[];
+    voucherIds: string[];
+    amount: number;
+    orderCode: string;
+  };
+};
+
+/* Chat */
+export type ChatRoutes = {
+  ChatRoom: {
+    roomId: string;
+    workshopSnippet?: {
+      workshopId: string;
+      title: string;
+      price: number;
+      thumbnailUrl: string;
+    };
+  };
+};
+
+/* Voucher */
+export type VoucherRoutes = {
+  VoucherDetail: { voucher: any };
+  MyVouchers: undefined;
+  MyVoucherDetail: { userVoucher: UserVoucherResponse };
+};
+
+/* ============================================================
+   MAIN STACK (MERGED)
+   ============================================================ */
+
+type BaseMainRoutes = {
+  Tabs: NavigatorScreenParams<TabsStackParamList>;
+};
+
+/* Notifications */
+export type NotificationRoutes = {
+  Notifications: undefined;
+  NotificationDetail: {
+    notification: {
+      id: string;
+      title: string;
+      message: string;
+      type: string;
+      referenceId: string | null;
+      isRead: boolean;
+      createdAt: string;
+    };
+  };
+};
+
+export type MainStackParamList = BaseMainRoutes &
+  AccountRoutes &
+  TransactionRoutes &
+  TicketRoutes &
+  DestinationRoutes &
+  MapRoutes &
+  EventRoutes &
+  WorkshopRoutes &
+  CheckoutRoutes &
+  BlogRoutes &
+  NotificationRoutes &
+  ChatRoutes & {
+    MapDirection: { pointId?: string; targetNavigationPointId?: string };
+    Cart: undefined;
+  } &
+  VoucherRoutes;
+
+/* ============================================================
+   ROOT STACK
+   ============================================================ */
+
 export type RootStackParamList = {
-    Auth: NavigatorScreenParams<AuthStackParamList>;
-    Main: NavigatorScreenParams<MainStackParamList>;
+  Auth: NavigatorScreenParams<AuthStackParamList>;
+  Main: NavigatorScreenParams<MainStackParamList>;
 };

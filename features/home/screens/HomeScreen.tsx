@@ -1,215 +1,218 @@
-import { View, StyleSheet } from 'react-native';
+import { ScrollView, View, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { useState, useCallback } from 'react';
 import { StackScreenProps } from '@react-navigation/stack';
-import { CommonActions, CompositeScreenProps } from '@react-navigation/native';
+import { CompositeScreenProps } from '@react-navigation/native';
 
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { THEME } from '@/lib/theme';
+import { useAuth } from '@/features/auth/context/AuthContext';
+import { useChatContext } from '@/features/chat/context/ChatProvider';
+import { RootStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { logger } from '@/utils/logger';
-import { useAuth } from '@/features/auth/context/AuthContext';
-import { useTheme } from '@/app/providers/ThemeProvider';
-import { RootStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
-import { THEME } from '@/lib/theme';
-import { IconButton } from '@/components/Buttons/IconButton';
-import { useEffect } from 'react';
-import { apiClient } from '@/services/api';
+import { Ionicons } from '@expo/vector-icons';
+//import { logger } from '@/utils/logger';
+import { useTranslation } from 'react-i18next';
+
+import { useBlogList } from '@/features/blog';
+import useGuides from '../hooks/useGuides';
+import useOverviews from '../hooks/useOverviews';
+import useHomeEvents from '../hooks/useHomeEvents';
+import useHomeDestinations from '../hooks/useHomeDestinations';
+import useHomeWorkshops from '../hooks/useHomeWorkshops';
+import useFeaturedBlog from '../hooks/useFeaturedBlog';
+import { HomeHeader, SearchBar } from '../components';
+import {
+  ExploreSection,
+  FeaturedSection,
+  KnowBeforeYouGoSection,
+  AboutNHSSection,
+  LatestBlogsSection,
+  UpcomingEventsSection,
+  UpcomingWorkshopsSection,
+  MustSeePlacesSection,
+} from '../components/sections';
 
 type HomeScreenProps = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Home'>,
   StackScreenProps<RootStackParamList>
 >;
-
 export default function HomeScreen({ navigation }: HomeScreenProps) {
-  const { logout, user } = useAuth();
-  const { colorScheme, isDarkColorScheme, toggleColorScheme } = useTheme();
-
-  const testFetch = async () => {
-    const res = await apiClient.get('/auth/ping', {
-      requiresAuth: false,
-    });
-    logger.info('[HomeScreen] Test fetch:', res);
-  };
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [
-            {
-              name: 'Auth',
-              params: { screen: 'Login' },
-            },
-          ],
-        })
-      );
-    } catch (error) {
-      logger.error('[HomeScreen] Logout failed:', error);
-    }
-  };
-
+  const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const { user } = useAuth();
+  const { t } = useTranslation();
+  const { refetchRooms } = useChatContext();
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  const {
+    data: featuredBlog,
+    isLoading: isFeaturedBlogLoading,
+    isError: isFeaturedBlogError,
+    refetch: refetchFeaturedBlog,
+  } = useFeaturedBlog();
+  const {
+    data: guides,
+    isLoading: guidesLoading,
+    isError: guidesError,
+    refetch: refetchGuides,
+  } = useGuides();
+  const {
+    data: overviews,
+    isLoading: overviewsLoading,
+    isError: overviewsError,
+    refetch: refetchOverviews,
+  } = useOverviews();
+  const {
+    blogs,
+    loading: blogsLoading,
+    error: blogsError,
+    refresh: refetchBlogs,
+  } = useBlogList({
+    size: 6,
+    autoFetch: true,
+  });
+  const {
+    data: homeEvents,
+    isLoading: homeEventsLoading,
+    isError: homeEventsError,
+    refetch: refetchHomeEvents,
+  } = useHomeEvents();
+  const {
+    data: homeWorkshops,
+    isLoading: homeWorkshopsLoading,
+    isError: homeWorkshopsError,
+    refetch: refetchHomeWorkshops,
+  } = useHomeWorkshops();
+  const {
+    data: destinations,
+    isLoading: destinationsLoading,
+    isError: destinationsError,
+    refetch: refetchDestinations,
+  } = useHomeDestinations();
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+
+    Promise.allSettled([
+      refetchFeaturedBlog(),
+      refetchBlogs(),
+      refetchGuides(),
+      refetchOverviews(),
+      refetchHomeEvents(),
+      refetchHomeWorkshops(),
+      refetchDestinations(),
+      refetchRooms(),
+    ]).finally(() => {
+      setRefreshing(false);
+    });
+  }, [
+    refetchFeaturedBlog,
+    refetchBlogs,
+    refetchGuides,
+    refetchOverviews,
+    refetchHomeEvents,
+    refetchHomeWorkshops,
+    refetchDestinations,
+    refetchRooms,
+  ]);
+
+  function handleNotificationPress(): void {
+    navigation.navigate('Main', { screen: 'Notifications', params: undefined } as any);
+  }
+
+  function handleProfilePress(): void {
+    navigation.navigate('Profile');
+  }
+
+  function handleSearchPress(): void {
+    navigation.navigate('Main', { screen: 'AllDestinations', params: {} });
+  }
+
+  function handleExploreAllDestinations(): void {
+    navigation.navigate('Main', { screen: 'AllDestinations', params: {} });
+  }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
-      <View style={styles.content}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: 32 }}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.primary}
+            colors={[theme.primary]}
+          />
+        }>
         {/* Header */}
-        <View style={styles.header}>
-          <Text className="text-2xl font-bold" style={{ color: theme.foreground }}>
-            Welcome Home
-          </Text>
-          <Text className="mt-1 text-base" style={{ color: theme.mutedForeground }}>
-            {user?.fullname || user?.email || 'Guest'}
-          </Text>
+        <HomeHeader
+          onNotificationPress={handleNotificationPress}
+          onProfilePress={handleProfilePress}
+          userAvatar={user?.avatarUrl ?? undefined}
+        />
+
+        {/* Search Bar */}
+        <View className="mt-2">
+          <SearchBar onPress={handleSearchPress} />
         </View>
 
-        {/* Theme Toggle Card */}
-        <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={styles.cardHeader}>
-            <Ionicons name={isDarkColorScheme ? 'moon' : 'sunny'} size={24} color={theme.primary} />
-            <Text className="ml-3 text-lg font-semibold" style={{ color: theme.foreground }}>
-              Appearance
-            </Text>
-          </View>
+        <ExploreSection />
 
-          <View style={[styles.themeRow, { borderTopColor: theme.border }]}>
-            <View style={styles.themeInfo}>
-              <Text className="text-base font-medium" style={{ color: theme.foreground }}>
-                Dark Mode
-              </Text>
-              <Text className="text-sm" style={{ color: theme.mutedForeground }}>
-                {isDarkColorScheme ? 'Currently enabled' : 'Currently disabled'}
-              </Text>
-            </View>
-            <Switch checked={isDarkColorScheme} onCheckedChange={toggleColorScheme} />
-          </View>
+        <FeaturedSection
+          loading={isFeaturedBlogLoading}
+          featuredBlog={featuredBlog}
+          error={isFeaturedBlogError}
+        />
 
-          {/* Quick Theme Buttons */}
-          <View
-            style={[styles.themeButtons, { borderTopColor: theme.border }]}
-            className="flex-row gap-2">
-            <Button
-              variant={!isDarkColorScheme ? 'default' : 'outline'}
-              onPress={() => !isDarkColorScheme || toggleColorScheme()}
-              className="mr-2 flex-1">
-              <Ionicons
-                name="sunny-outline"
-                size={18}
-                color={isDarkColorScheme ? 'black' : 'white'}
-              />
-              <Text className="ml-2 font-medium">Light</Text>
-            </Button>
-            <Button
-              variant={isDarkColorScheme ? 'default' : 'outline'}
-              onPress={() => isDarkColorScheme || toggleColorScheme()}
-              className="ml-2 flex-1">
-              <Ionicons
-                name="moon-outline"
-                size={18}
-                color={isDarkColorScheme ? theme.primaryForeground : theme.foreground}
-              />
-              <Text className="ml-2 font-medium">Dark</Text>
-            </Button>
-          </View>
-        </View>
+        <KnowBeforeYouGoSection guides={guides ?? []} loading={guidesLoading} error={guidesError} />
 
-        <Button onPress={testFetch}>
-          <Text>Test Fetch</Text>
-        </Button>
+        <AboutNHSSection
+          overviews={overviews ?? []}
+          loading={overviewsLoading}
+          error={overviewsError}
+        />
 
-        {/* User Info Card */}
-        {user && (
-          <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <View style={styles.cardHeader}>
-              <Ionicons name="person-circle-outline" size={24} color={theme.primary} />
-              <Text className="ml-3 text-lg font-semibold" style={{ color: theme.foreground }}>
-                Profile
-              </Text>
-            </View>
+        <LatestBlogsSection
+          blogs={blogs ?? []}
+          loading={blogsLoading}
+          error={Boolean(blogsError)}
+        />
 
-            <View style={[styles.infoRow, { borderTopColor: theme.border }]}>
-              <Text className="text-sm" style={{ color: theme.mutedForeground }}>
-                Name
-              </Text>
-              <Text className="text-base font-medium" style={{ color: theme.foreground }}>
-                {user.fullname || 'Not set'}
-              </Text>
-            </View>
+        <UpcomingEventsSection
+          events={homeEvents ?? []}
+          loading={homeEventsLoading}
+          error={homeEventsError}
+        />
 
-            <View style={[styles.infoRow, { borderTopColor: theme.border }]}>
-              <Text className="text-sm" style={{ color: theme.mutedForeground }}>
-                Email
-              </Text>
-              <Text className="text-base font-medium" style={{ color: theme.foreground }}>
-                {user.email || 'Not set'}
-              </Text>
-            </View>
-          </View>
-        )}
+        <UpcomingWorkshopsSection
+          workshops={homeWorkshops ?? []}
+          loading={homeWorkshopsLoading}
+          error={homeWorkshopsError}
+        />
 
-        {/* Logout Button */}
-        <View style={styles.logoutContainer}>
-          <Button variant="destructive" onPress={handleLogout} className="w-full">
-            <Ionicons name="log-out-outline" size={20} color={theme.primaryForeground} />
-            <Text className="ml-2 font-semibold" style={{ color: theme.primaryForeground }}>
-              Sign Out
-            </Text>
+        <MustSeePlacesSection
+          destinations={destinations ?? []}
+          loading={destinationsLoading}
+          error={destinationsError}
+        />
+
+        {/* Explore All Destinations Link */}
+        <View className="mt-4 px-4">
+          <Button variant="outline" className="w-full" onPress={handleExploreAllDestinations}>
+            <Ionicons name="compass-outline" size={18} color={theme.foreground} />
+            <Text className="ml-2 font-medium">{t('home.explore_all_destinations')}</Text>
           </Button>
         </View>
-      </View>
+
+        {/* Bottom spacing */}
+        <View className="h-8" />
+      </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 16,
-  },
-  header: {
-    marginBottom: 24,
-  },
-  card: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    borderWidth: 1,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  themeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  themeInfo: {
-    flex: 1,
-  },
-  themeButtons: {
-    flexDirection: 'row',
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  infoRow: {
-    paddingVertical: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  logoutContainer: {
-    marginTop: 'auto',
-    paddingBottom: 24,
-  },
-});

@@ -27,4 +27,3 @@ export const APP_CONFIG = {
     APP_NAME: "NeoNHS",
     VERSION: "1.0.0",
 } as const;
-

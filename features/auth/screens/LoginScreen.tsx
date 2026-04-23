@@ -1,23 +1,23 @@
-import { useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
-import { CompositeScreenProps } from '@react-navigation/native';
+import { StyleSheet, View } from 'react-native';
+import { CommonActions, CompositeScreenProps } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
-
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Text } from '@/components/ui/text';
 import { Separator } from '@/components/ui/separator';
 import { IconButton } from '@/components/Buttons/IconButton';
 import { useTheme } from '@/app/providers/ThemeProvider';
+import { useModal } from '@/app/providers/ModalProvider';
 import { THEME } from '@/lib/theme';
 import { AuthStackParamList, RootStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { useAuth } from '../context/AuthContext';
 import AuthLayout from '../components/AuthLayout';
 import AppLink from '@/components/Navigator/AppLink';
 import LoginForm from '../components/LoginForm';
-import { GoogleSignin, isErrorWithCode, statusCodes } from '@react-native-google-signin/google-signin';
+import {
+  GoogleSignin,
+} from '@react-native-google-signin/google-signin';
 import { logger } from '@/utils/logger';
+import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type LoginScreenProps = CompositeScreenProps<
   StackScreenProps<AuthStackParamList, 'Login'>,
@@ -25,27 +25,74 @@ type LoginScreenProps = CompositeScreenProps<
 >;
 
 export default function LoginScreen({ navigation }: LoginScreenProps) {
-  const { login, loginWithGoogle, isLoading } = useAuth();
+  const { login, loginWithGoogle} = useAuth();
+  const [loading, setLoading] = useState(false);
+  const loginingRef = useRef(false);
+
   const { isDarkColorScheme } = useTheme();
+  const { alert } = useModal();
+  const { t } = useTranslation();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
   const handleLogin = async (email: string, password: string) => {
+    if (loginingRef.current) {
+      logger.error('[LoginScreen] Login already in progress. Please wait.');
+      return;
+    }
     try {
+      loginingRef.current = true;
+      setLoading(true);
       await login({ email: email.trim(), password });
-      navigation.replace('Main', {
-        screen: 'Tabs',
-        params: { screen: 'Home' },
-      });
-    } catch (error) {
-      Alert.alert(
-        'Login Failed',
-        (error as Error).message || 'Unable to sign in. Please try again.'
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [
+            {
+              name: 'Main',
+              params: { screen: 'Tabs', params: { screen: 'Home' } },
+            },
+          ],
+        })
       );
+    } catch (error) {
+      const errorMessage = (error as Error).message || '';
+      logger.error('[LoginScreen] Login failed:', errorMessage);
+      // Check if account is not activated
+      if (
+        errorMessage.toLowerCase().includes('not activated') ||
+        errorMessage.toLowerCase().includes('not verified')
+      ) {
+        alert(
+          t('auth.alert.email_not_verified_title'),
+          t('auth.alert.email_not_verified_message'),
+          [
+            {
+              text: t('common.cancel'),
+              style: 'cancel',
+            },
+            {
+              text: t('auth.alert.verify_now'),
+              onPress: () => navigation.navigate('VerifyEmail', { email: email.trim() }),
+            },
+          ]
+        );
+        return;
+      }
+
+      alert(t('auth.alert.login_failed_title'), errorMessage || t('auth.alert.login_failed_message'));
+    } finally {
+      loginingRef.current = false;
+      setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
+    if (loginingRef.current) {
+      logger.error('[LoginScreen] Another login with Google is already in progress. Please wait.');
+      return;
+    }
     try {
+      loginingRef.current = true;
       await GoogleSignin.hasPlayServices();
 
       // Sign out first to force account chooser to appear
@@ -60,63 +107,47 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       }
 
       await loginWithGoogle(idToken);
-      navigation.replace('Main', {
-        screen: 'Tabs',
-        params: { screen: 'Home' },
-      });
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [
+            {
+              name: 'Main',
+              params: { screen: 'Tabs', params: { screen: 'Home' } },
+            },
+          ],
+        })
+      );
     } catch (error) {
-      // logger.error('[LoginScreen] Google login failed:', error);
-      if (isErrorWithCode(error)) {
-        switch (error.code) {
-          case statusCodes.IN_PROGRESS:
-            Alert.alert(
-              'Google Login Failed',
-              'Google login is already in progress. Please wait for it to complete.',
-            );
-            break;
-          case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
-            Alert.alert(
-              'Google Login Failed',
-              'Google login is not available on this device. Please update your Google Play Services.',
-            );
-            break;
-          default:
-            Alert.alert(
-              'Google Login Failed',
-              (error as Error).message || 'Unable to sign in with Google. Please try again.',
-            );
-        }
-      } else {
-        Alert.alert(
-          'Google Login Failed',
-          (error as Error).message || 'Unable to sign in with Google. Please try again.',
-        );
-      }
+      logger.error('[LoginScreen] Google login failed:', error);
+      alert(t('auth.alert.google_login_failed_title'), t('auth.alert.google_login_failed_message'));
+    } finally {
+      loginingRef.current = false;
     }
   };
 
   return (
     <AuthLayout
-      isLoading={isLoading}
+      isLoading={loading}
       imageSource={{
         uri: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
       }}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.foreground }]}>Welcome Back</Text>
+          <Text style={[styles.title, { color: theme.foreground }]}>{t('auth.welcome_back')}</Text>
           <Text style={[styles.subtitle, { color: theme.mutedForeground }]}>
-            Sign in to continue exploring
+            {t('auth.sign_in_subtitle')}
           </Text>
         </View>
 
-        <LoginForm onSubmit={handleLogin} isLoading={isLoading} />
+        <LoginForm onSubmit={handleLogin} isLoading={loading} />
 
         {/* Divider */}
         <View style={styles.dividerContainer}>
           <Separator className="flex-1" />
           <Text style={[styles.dividerText, { color: theme.mutedForeground }]}>
-            or continue with
+            {t('auth.or_continue_with')}
           </Text>
           <Separator className="flex-1" />
         </View>
@@ -136,10 +167,10 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         {/* Register Link */}
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: theme.mutedForeground }]}>
-            Don't have an account?{' '}
+            {t('auth.no_account')}{' '}
           </Text>
           <AppLink screen="Register" params={{}}>
-            Sign Up
+            {t('auth.button.register')}
           </AppLink>
         </View>
       </View>

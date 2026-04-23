@@ -4,8 +4,10 @@
  */
 
 import type { ApiResponse } from "@/services/api/types";
-import type { User } from "@/features/auth/types";
-import { logger } from "@/utils/logger";
+import { endpoints } from "../../../services/api/endpoints/endpoints";
+import { UserProfile, UpdateProfileRequest } from "../../../services/api/examples";
+import { apiClient } from "@/services/api/client";
+import { uploadImageToCloudinary } from "@/services/cloudinary";
 
 /**
  * Data for updating user account
@@ -15,37 +17,90 @@ export interface UpdateAccountData {
     email?: string;
     phoneNumber?: string;
     avatarUrl?: string;
+    bankName?: string;
+    bankBin?: string;
+    bankAccountNumber?: string;
+    bankAccountName?: string;
+}
+
+/**
+ * KYC Request - 3 base64-encoded images
+ */
+export interface KycRequest {
+    frontImageBase64: string;
+    backImageBase64: string;
+    selfieImageBase64: string;
+}
+
+/**
+ * KYC Response from backend
+ */
+export interface KycResponse {
+    success: boolean;
+    message: string;
+    fullName?: string;
+    idNumber?: string;
+    dateOfBirth?: string;
+    address?: string;
+    faceMatchScore?: number;
+    isFake?: boolean;
 }
 
 export const userService = {
-    /**
-     * Update user account information
-     */
-    async updateAccount(data: UpdateAccountData): Promise<ApiResponse<User>> {
-        logger.warn("[userService] Using dummy data for updateAccount with timeout of 2 seconds");
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        return {
-            data: {
-                id: "dummy-uuid-1234-5678",
-                fullname: data.fullname || "Updated User",
-                email: data.email || "updated@example.com",
-                phoneNumber: data.phoneNumber || null,
-                avatarUrl: data.avatarUrl || null,
-                role: "GUEST",
-                isActive: true,
-                isVerified: false,
-                isBanned: false,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            },
-            status: 200,
-            message: "Account updated successfully",
-        };
-        // Actual API call (commented for now)
-        // return apiClient.put<User>(
-        //     endpoints.user.update(),
-        //     data
-        // );
+    async getProfile(): Promise<ApiResponse<UserProfile>> {
+        return apiClient.get<UserProfile>(endpoints.users.getProfile());
     },
+
+    async updateProfile(id: string | number, data: UpdateProfileRequest): Promise<ApiResponse<UserProfile>> {
+        return apiClient.put<UserProfile>(endpoints.users.updateProfile(id), data);
+    },
+
+    async uploadAvatar(fileUri: string) {
+        const filename = fileUri.split('/').pop();
+        const type = `image/${filename?.split('.').pop()}`;
+
+        const fileToUpload = {
+            uri: fileUri,
+            type: type,
+            name: filename || "avatar.jpg",
+        } as any;
+
+        return await uploadImageToCloudinary(fileToUpload);
+    },
+
+    async changePassword(data: any): Promise<ApiResponse<any>> {
+        return apiClient.post<any>(endpoints.users.changePassword(), data);
+    },
+
+    /**
+     * Perform KYC verification via VNPT eKYC API
+     * @param userId - User UUID
+     * @param data - KycRequest with 3 base64 images
+     */
+    async performKyc(userId: string, data: KycRequest): Promise<ApiResponse<KycResponse>> {
+        return apiClient.post<KycResponse>(endpoints.users.performKyc(userId), data);
+    },
+
+    /**
+     * Withdraw money from user balance to bank account
+     * @param amount - Amount in VND to withdraw
+     * @param livePhotoBase64 - Live photo for face verification (base64 encoded)
+     */
+    async withdraw(amount: number, livePhotoBase64: string): Promise<ApiResponse<any>> {
+        return apiClient.post<any>(endpoints.users.withdraw(), {
+            amount,
+            livePhotoBase64,
+        });
+    },
+
+    /**
+     * Check if a selfie image is a live human
+     * @param base64Image - Base64 encoded selfie image
+     */
+    async checkLiveness(base64Image: string): Promise<ApiResponse<boolean>> {
+        return apiClient.post<boolean>(endpoints.users.checkLiveness(), {
+            image: base64Image
+        });
+    }
 };
+

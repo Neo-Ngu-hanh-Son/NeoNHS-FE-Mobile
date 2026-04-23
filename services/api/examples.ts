@@ -6,7 +6,7 @@
  */
 
 import { apiClient } from "./client";
-import { endpoints } from "./endpoints";
+import { endpoints } from "./endpoints/endpoints";
 import type { ApiResponse } from "./types";
 
 // ============================================
@@ -26,6 +26,34 @@ interface LoginResponse {
         email: string;
         name: string;
     };
+}
+
+export interface UserProfile {
+    avatarUrl: string;
+    id: string;
+    email: string;
+    fullname: string;
+    phoneNumber?: string;
+    bankName?: string;
+    bankBin?: string;
+    bankAccountNumber?: string;
+    bankAccountName?: string;
+    balance?: number;
+    isBankVerified?: boolean;
+    kycVerified?: boolean;
+    kycFullName?: string;
+    kycIdNumber?: string;
+}
+
+export interface UpdateProfileRequest {
+    fullname?: string;
+    phoneNumber?: string;
+    email: string;
+    avatarUrl?: string;
+    bankName?: string;
+    bankBin?: string;
+    bankAccountNumber?: string;
+    bankAccountName?: string;
 }
 
 const authService = {
@@ -87,7 +115,7 @@ const userService = {
      * Update user profile
      */
     async updateProfile(data: Partial<User>): Promise<ApiResponse<User>> {
-        return apiClient.put<User>(endpoints.users.updateProfile(), data);
+        return apiClient.put<User>(endpoints.users.updateProfile(123), data);
     },
 
     /**
@@ -131,7 +159,7 @@ function LoginComponent() {
 
         try {
             const response = await authService.login({ email, password });
-            
+
             if (response.success) {
                 // Store token
                 // Navigate to home

@@ -4,17 +4,23 @@ import React, {
   useCallback,
   useReducer,
   useEffect,
+  useMemo,
+  useState,
+  useRef,
   ReactNode,
 } from 'react';
 import type { AuthContextValue, AuthState, LoginCredentials, RegisterData, User } from '../types';
 import { authService } from '../services/authService';
 import { storage } from '@/utils/storage';
-import type { ApiError } from '@/services/api/types';
+import type { ApiError, TokenRefreshResult } from '@/services/api/types';
 import { logger } from '@/utils/logger';
+import LoadingOverlay from '@/components/Loader/LoadingOverlay';
+import { apiClient } from '@/services/api/client';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 const initialState: AuthState = {
   user: null,
-  token: null,
+  accessToken: null,
   refreshToken: null,
   isAuthenticated: false,
   isLoading: true,
@@ -25,10 +31,11 @@ const initialState: AuthState = {
 type AuthAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_INITIALIZED'; payload: boolean }
-  | { type: 'LOGIN_SUCCESS'; payload: { user: User; token: string; refreshToken?: string } }
+  | { type: 'LOGIN_SUCCESS'; payload: { user: User; accessToken: string; refreshToken?: string } }
+  | { type: 'REGISTER_SUCCESS'; payload: {} }
   | { type: 'LOGOUT' }
   | { type: 'UPDATE_USER'; payload: Partial<User> }
-  | { type: 'SET_TOKEN'; payload: { token: string; refreshToken?: string } };
+  | { type: 'SET_TOKEN'; payload: { accessToken: string; refreshToken?: string; user?: User } };
 
 function authReducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
@@ -40,16 +47,22 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
       return {
         ...state,
         user: action.payload.user,
-        token: action.payload.token,
+        accessToken: action.payload.accessToken,
         refreshToken: action.payload.refreshToken || null,
         isAuthenticated: true,
+        isLoading: false,
+      };
+    case 'REGISTER_SUCCESS':
+      return {
+        ...state,
+        isAuthenticated: false,
         isLoading: false,
       };
     case 'LOGOUT':
       return {
         ...state,
         user: null,
-        token: null,
+        accessToken: null,
         refreshToken: null,
         isAuthenticated: false,
         isLoading: false,
@@ -62,8 +75,9 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
     case 'SET_TOKEN':
       return {
         ...state,
-        token: action.payload.token,
+        accessToken: action.payload.accessToken,
         refreshToken: action.payload.refreshToken || state.refreshToken,
+        user: action.payload.user || state.user,
       };
     default:
       return state;
@@ -79,6 +93,70 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
+  const userRef = useRef<User | null>(null);
+  const refreshTokenRef = useRef<string | null>(null);
+  const logoutRef = useRef<(() => Promise<void>) | undefined>(undefined);
+
+  // Keep refs in sync with state so stable callbacks can read latest values
+  useEffect(() => {
+    userRef.current = state.user;
+    refreshTokenRef.current = state.refreshToken;
+  }, [state.user, state.refreshToken]);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const previousUnreadCountRef = useRef(0);
+  const { expoPushToken } = usePushNotifications();
+
+  // Gửi push token lên server bất cứ khi nào user được xác thực và có token
+  useEffect(() => {
+    if (state.isAuthenticated && expoPushToken) {
+      apiClient
+        .post('notifications/push-token', { token: expoPushToken })
+        .then(() => logger.info('[AuthContext] Successfully uploaded Expo Push Token to Backend'))
+        .catch((err) => logger.error('[AuthContext] Error sending Push Token', err));
+    }
+  }, [state.isAuthenticated, expoPushToken]);
+
+  // Polling fetching unread notifications count context
+  useEffect(() => {
+    if (!state.isAuthenticated || !state.user?.email) return;
+
+    let isFirstFetch = true;
+
+    const fetchNotifications = async () => {
+      try {
+        const response = await apiClient.get<any>('notifications', {
+          params: { email: state.user!.email, page: 0, size: 20 },
+        });
+        const unreadItems = response.data.content.filter((n: any) => !n.isRead);
+
+        if (!isFirstFetch && unreadItems.length > previousUnreadCountRef.current) {
+          // Send a local push notification for the newest one
+          const newest = unreadItems[0];
+          import('expo-notifications').then((Notifications) => {
+            Notifications.scheduleNotificationAsync({
+              content: {
+                title: newest.title,
+                body: newest.message,
+                data: { url: 'Notifications' },
+              },
+              trigger: null, // Send immediately
+            });
+          });
+        }
+
+        isFirstFetch = false;
+        previousUnreadCountRef.current = unreadItems.length;
+        setUnreadNotificationCount(unreadItems.length);
+      } catch (err) {
+        logger.error('Error fetching unread notifications:', err);
+      }
+    };
+
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 10000); // 10 seconds
+
+    return () => clearInterval(interval);
+  }, [state.isAuthenticated, state.user?.email]);
 
   /**
    * Initialize auth state from storage
@@ -87,18 +165,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
 
-      const [token, refreshToken, userData] = await Promise.all([
+      const [accessToken, refreshToken, userData] = await Promise.all([
         storage.getAuthToken(),
         storage.getRefreshToken(),
         storage.getUserData<User>(),
       ]);
 
-      if (token && userData) {
+      if (accessToken && userData) {
         dispatch({
           type: 'LOGIN_SUCCESS',
           payload: {
             user: userData,
-            token,
+            accessToken,
             refreshToken: refreshToken || undefined,
           },
         });
@@ -121,11 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await authService.login(credentials);
 
       if (response.data) {
-        const { accessToken, userInfo } = response.data;
-        const refreshToken = null; // TODO: Adjust if refreshToken is provided
-
-        logger.info('[AuthContext] Login successful:', response.data);
-
+        const { accessToken, userInfo, refreshToken } = response.data;
         await Promise.all([
           storage.setAuthToken(accessToken),
           refreshToken ? storage.setRefreshToken(refreshToken) : Promise.resolve(),
@@ -134,7 +208,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         dispatch({
           type: 'LOGIN_SUCCESS',
-          payload: { user: userInfo, token: accessToken, refreshToken: refreshToken || undefined },
+          payload: {
+            user: userInfo,
+            accessToken: accessToken,
+            refreshToken: refreshToken || undefined,
+          },
         });
       } else {
         throw new Error('Login failed: No data received');
@@ -146,18 +224,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const loginWithGoogle = async (idToken: string) => {
+  const loginWithGoogle = useCallback(async (idToken: string) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
 
       const response = await authService.loginWithGoogle(idToken);
 
       if (response.data) {
-        const { accessToken, userInfo } = response.data;
-        const refreshToken = null; // TODO: Adjust if refreshToken is provided
-
-        logger.info('[AuthContext] Google login successful:', response.data);
-
+        const { accessToken, refreshToken, userInfo } = response.data;
         await Promise.all([
           storage.setAuthToken(accessToken),
           refreshToken ? storage.setRefreshToken(refreshToken) : Promise.resolve(),
@@ -166,7 +240,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         dispatch({
           type: 'LOGIN_SUCCESS',
-          payload: { user: userInfo, token: accessToken, refreshToken: refreshToken || undefined },
+          payload: {
+            user: userInfo,
+            accessToken: accessToken,
+            refreshToken: refreshToken || undefined,
+          },
         });
       } else {
         throw new Error('Google login failed: No data received');
@@ -176,7 +254,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const apiError = error as ApiError;
       throw new Error(apiError.message || 'Google login failed');
     }
-  };
+  }, []);
 
   const register = useCallback(async (data: RegisterData) => {
     try {
@@ -185,8 +263,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await authService.register(data);
 
       if (response.data) {
-        const { accessToken, userInfo } = response.data;
-        const refreshToken = null; // TODO: Adjust if refreshToken is provided
+        const { accessToken, userInfo, refreshToken } = response.data;
 
         await Promise.all([
           storage.setAuthToken(accessToken),
@@ -195,8 +272,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ]);
 
         dispatch({
-          type: 'LOGIN_SUCCESS',
-          payload: { user: userInfo, token: accessToken, refreshToken: refreshToken || undefined },
+          type: 'REGISTER_SUCCESS',
+          payload: {},
         });
       } else {
         throw new Error('Registration failed: No data received');
@@ -211,7 +288,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     try {
       try {
-        authService.logout(); // No need to await, it will handle the logout asynchronously
+        // Read from ref so this callback has zero reactive deps (stable reference)
+        authService.logout((await storage.getRefreshToken()) || refreshTokenRef.current || '');
       } catch (error) {
         logger.warn('Logout API call failed:', error);
       }
@@ -225,61 +303,92 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const refreshAuth = useCallback(async () => {
-    try {
-      const refreshToken = await storage.getRefreshToken();
-      if (!refreshToken) {
-        throw new Error('No refresh token available');
-      }
-
-      const response = await authService.refreshToken(refreshToken);
-
-      if (response.data) {
-        const { token: newToken, refreshToken: newRefreshToken } = response.data;
-
-        await Promise.all([
-          storage.setAuthToken(newToken),
-          newRefreshToken ? storage.setRefreshToken(newRefreshToken) : Promise.resolve(),
-        ]);
-
-        dispatch({
-          type: 'SET_TOKEN',
-          payload: { token: newToken, refreshToken: newRefreshToken },
-        });
-      }
-    } catch (error) {
-      logger.error('Token refresh failed:', error);
-      await logout();
-    }
+  // Keep the ref current so refreshAuth can call logout without depending on it
+  useEffect(() => {
+    logoutRef.current = logout;
   }, [logout]);
 
-  const updateUser = useCallback(
-    (userData: Partial<User>) => {
-      dispatch({ type: 'UPDATE_USER', payload: userData });
-      // Also update storage
-      if (state.user) {
-        storage.setUserData({ ...state.user, ...userData });
-      }
-    },
-    [state.user]
-  );
+  /**
+   * Refresh authentication tokens
+   * DO NOT USE THIS MANUALLY, it is called automatically by the API client
+   */
+  const refreshAuth = useCallback(async (result: TokenRefreshResult): Promise<void> => {
+    try {
+      const { accessToken, refreshToken, userInfo } = result;
+      await Promise.all([
+        storage.setAuthToken(accessToken),
+        refreshToken ? storage.setRefreshToken(refreshToken) : Promise.resolve(),
+        storage.setUserData(userInfo),
+      ]);
+
+      dispatch({
+        type: 'SET_TOKEN',
+        payload: { ...result },
+      });
+    } catch (error) {
+      logger.error('Token refresh failed:', error);
+      // Use ref to avoid depending on `logout` (keeps this callback stable)
+      await logoutRef.current?.();
+    }
+  }, []);
+
+  const updateUser = useCallback((userData: Partial<User>) => {
+    dispatch({ type: 'UPDATE_USER', payload: userData });
+
+    const currentUser = userRef.current;
+    if (currentUser) {
+      storage.setUserData({ ...currentUser, ...userData });
+    }
+  }, []);
 
   // Initialize auth on mount
   useEffect(() => {
     initializeAuth();
   }, [initializeAuth]);
 
-  const value: AuthContextValue = {
-    ...state,
-    login,
-    register,
-    logout,
-    refreshAuth,
-    updateUser,
-    loginWithGoogle,
-  };
+  // Memoize with individual primitive deps so the context value only changes
+  // when actual data changes — not on every `isLoading` toggle during init.
+  const value: AuthContextValue = useMemo(
+    () => ({
+      user: state.user,
+      accessToken: state.accessToken,
+      refreshToken: state.refreshToken,
+      isAuthenticated: state.isAuthenticated,
+      isLoading: state.isLoading,
+      isInitialized: state.isInitialized,
+      login,
+      register,
+      logout,
+      refreshAuth,
+      updateUser,
+      loginWithGoogle,
+      unreadNotificationCount,
+      setUnreadNotificationCount,
+    }),
+    [
+      state.user,
+      state.accessToken,
+      state.refreshToken,
+      state.isAuthenticated,
+      state.isLoading,
+      state.isInitialized,
+      login,
+      register,
+      logout,
+      refreshAuth,
+      updateUser,
+      loginWithGoogle,
+      unreadNotificationCount,
+      setUnreadNotificationCount,
+    ]
+  );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      <LoadingOverlay visible={state.isLoading} message="Loading..." />
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth(): AuthContextValue {

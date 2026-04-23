@@ -12,74 +12,63 @@ import { AuthStackParamList } from "@/app/navigations/NavigationParamTypes";
 import { authService } from "../services/authService";
 import AuthLayout from "../components/AuthLayout";
 import AppLink from "@/components/Navigator/AppLink";
+import { useTranslation } from "react-i18next";
 
 type ForgotPasswordOtpScreenProps = StackScreenProps<AuthStackParamList, "ForgotPasswordOtp">;
 
-export default function ForgotPasswordOtpScreen({ navigation }: ForgotPasswordOtpScreenProps) {
+export default function ForgotPasswordOtpScreen({ navigation, route }: ForgotPasswordOtpScreenProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const { t } = useTranslation();
 
-  const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  
-  const [otpError, setOtpError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { email } = route.params;
 
-  const validateOtp = (value: string) => {
-    if (!value.trim()) {
-      return "OTP code is required";
-    }
-    if (value.trim().length < 4) {
-      return "Please enter a valid OTP code";
-    }
-    return "";
-  };
+
 
   const validatePassword = (value: string) => {
     if (!value) {
-      return "New password is required";
+      return t("auth.validation.new_password_required");
     }
     if (value.length < 6) {
-      return "Password must be at least 6 characters";
+      return t("auth.validation.password_min_length");
     }
     return "";
   };
 
   const validateConfirmPassword = (value: string) => {
     if (!value) {
-      return "Please confirm your password";
+      return t("auth.validation.confirm_password_required");
     }
     if (value !== newPassword) {
-      return "Passwords do not match";
+      return t("auth.validation.passwords_not_match");
     }
     return "";
   };
 
   const handleResetPassword = async () => {
-    const otpErr = validateOtp(otp);
     const passwordErr = validatePassword(newPassword);
     const confirmErr = validateConfirmPassword(confirmPassword);
 
-    setOtpError(otpErr);
     setPasswordError(passwordErr);
     setConfirmPasswordError(confirmErr);
 
-    if (otpErr || passwordErr || confirmErr) return;
+    if (passwordErr || confirmErr) return;
 
     setIsLoading(true);
     try {
-      const response = await authService.resetPassword(otp.trim(), newPassword);
-      
+      const response = await authService.resetPassword(email, newPassword, confirmPassword);
       if (response.status === 200) {
         Alert.alert(
-          "Password Reset Successful",
-          "Your password has been updated. Please sign in with your new password.",
+          t("auth.alert.password_reset_successful_title"),
+          t("auth.alert.password_reset_successful_message"),
           [
             {
-              text: "Sign In",
+              text: t("auth.button.login"),
               onPress: () => navigation.replace("Login"),
             },
           ]
@@ -89,8 +78,8 @@ export default function ForgotPasswordOtpScreen({ navigation }: ForgotPasswordOt
       }
     } catch (error) {
       Alert.alert(
-        "Reset Failed",
-        (error as Error).message || "Unable to reset password. Please try again."
+        t("auth.alert.reset_failed_title"),
+        (error as Error).message || t("auth.alert.reset_failed_message")
       );
     } finally {
       setIsLoading(false);
@@ -102,39 +91,21 @@ export default function ForgotPasswordOtpScreen({ navigation }: ForgotPasswordOt
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.foreground }]}>Reset Password</Text>
+          <Text style={[styles.title, { color: theme.foreground }]}>{t("auth.reset_password")}</Text>
           <Text style={[styles.subtitle, { color: theme.mutedForeground }]}>
-            Enter the code sent to your email and create a new password.
+            {t("auth.reset_password_subtitle")}
           </Text>
         </View>
 
         {/* Form */}
         <View style={styles.form}>
-          {/* OTP Input */}
-          <View style={styles.inputGroup}>
-            <Label style={styles.label}>Verification Code</Label>
-            <Input
-              placeholder="Enter the code"
-              keyboardType="number-pad"
-              autoCapitalize="none"
-              autoCorrect={false}
-              value={otp}
-              onChangeText={(text) => {
-                setOtp(text);
-                if (otpError) setOtpError("");
-              }}
-              className={otpError ? "border-destructive" : ""}
-            />
-            {otpError ? (
-              <Text style={[styles.errorText, { color: theme.destructive }]}>{otpError}</Text>
-            ) : null}
-          </View>
+
 
           {/* New Password Input */}
           <View style={styles.inputGroup}>
-            <Label style={styles.label}>New Password</Label>
+            <Label style={styles.label}>{t("auth.form.new_password_label")}</Label>
             <Input
-              placeholder="Create a new password"
+              placeholder={t("auth.form.new_password_placeholder")}
               secureTextEntry
               autoCapitalize="none"
               autoCorrect={false}
@@ -144,7 +115,7 @@ export default function ForgotPasswordOtpScreen({ navigation }: ForgotPasswordOt
                 setNewPassword(text);
                 if (passwordError) setPasswordError("");
                 if (confirmPassword && text !== confirmPassword) {
-                  setConfirmPasswordError("Passwords do not match");
+                  setConfirmPasswordError(t("auth.validation.passwords_not_match"));
                 } else if (confirmPassword) {
                   setConfirmPasswordError("");
                 }
@@ -158,9 +129,9 @@ export default function ForgotPasswordOtpScreen({ navigation }: ForgotPasswordOt
 
           {/* Confirm Password Input */}
           <View style={styles.inputGroup}>
-            <Label style={styles.label}>Confirm New Password</Label>
+            <Label style={styles.label}>{t("auth.form.confirm_password_label")}</Label>
             <Input
-              placeholder="Confirm your new password"
+              placeholder={t("auth.form.confirm_password_placeholder")}
               secureTextEntry
               autoCapitalize="none"
               autoCorrect={false}
@@ -185,7 +156,7 @@ export default function ForgotPasswordOtpScreen({ navigation }: ForgotPasswordOt
             className="mt-4"
           >
             <Text className="text-primary-foreground font-semibold text-base">
-              Reset Password
+              {t("auth.button.reset_password")}
             </Text>
           </Button>
         </View>
@@ -193,20 +164,20 @@ export default function ForgotPasswordOtpScreen({ navigation }: ForgotPasswordOt
         {/* Resend Code Link */}
         <View style={styles.resendContainer}>
           <Text style={[styles.resendText, { color: theme.mutedForeground }]}>
-            Didn't receive the code?{" "}
+            {t("auth.resend.no_code")}{" "}
           </Text>
           <AppLink screen="ForgotPassword" params={{}}>
-            Resend
+            {t("auth.resend.resend")}
           </AppLink>
         </View>
 
         {/* Back to Login */}
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: theme.mutedForeground }]}>
-            Remember your password?{" "}
+            {t("auth.remember_password")}{" "}
           </Text>
           <AppLink screen="Login" params={{}}>
-            Sign In
+            {t("auth.button.login")}
           </AppLink>
         </View>
       </View>

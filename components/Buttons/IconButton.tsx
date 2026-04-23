@@ -1,12 +1,12 @@
-import { Button, type ButtonProps } from "@/components/ui/button";
-import { Text } from "@/components/ui/text";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { StyleSheet, View, ViewStyle, ActivityIndicator } from "react-native";
-import type { ComponentProps, ReactNode } from "react";
-import { useTheme } from "@/app/providers/ThemeProvider";
-import { THEME } from "@/lib/theme";
+import { Button, type ButtonProps } from '@/components/ui/button';
+import { Text } from '@/components/ui/text';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { StyleSheet, View, ViewStyle, ActivityIndicator } from 'react-native';
+import type { ComponentProps, ReactNode } from 'react';
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { THEME } from '@/lib/theme';
 
-type IconName = ComponentProps<typeof Ionicons>["name"];
+type IconName = ComponentProps<typeof Ionicons>['name'];
 
 type IconButtonProps = {
   color?: string;
@@ -17,26 +17,26 @@ type IconButtonProps = {
   buttonStyle?: ViewStyle | ViewStyle[];
   borderless?: boolean;
   loading?: boolean;
-  variant?: ButtonProps["variant"];
-  size?: ButtonProps["size"];
+  variant?: ButtonProps['variant'];
+  size?: ButtonProps['size'];
 };
 
 export function IconButton(props: IconButtonProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
-  
+
   // Determine button variant
-  const variant = props.variant || (props.borderless ? "ghost" : "outline");
-  
+  const variant = props.variant || (props.borderless ? 'ghost' : 'outline');
+
   // Determine icon color based on variant
   // default variant uses primaryForeground, others use foreground (or custom color)
   const getIconColor = () => {
     if (props.color) return props.color;
-    if (variant === "default") return theme.primaryForeground;
-    if (variant === "destructive") return theme.primaryForeground;
+    if (variant === 'default') return theme.primaryForeground;
+    if (variant === 'destructive') return theme.primaryForeground;
     return theme.foreground;
   };
-  
+
   const iconColor = getIconColor();
 
   const buttonContent = (
@@ -57,8 +57,7 @@ export function IconButton(props: IconButtonProps) {
       disabled={props.loading}
       onPress={props.onPress}
       style={props.buttonStyle}
-      className={props.children ? undefined : "px-2"}
-    >
+      className={props.children ? undefined : 'px-2'}>
       {buttonContent}
     </Button>
   );
@@ -66,9 +65,9 @@ export function IconButton(props: IconButtonProps) {
 
 const styles = StyleSheet.create({
   innerContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     gap: 8,
   },
 });

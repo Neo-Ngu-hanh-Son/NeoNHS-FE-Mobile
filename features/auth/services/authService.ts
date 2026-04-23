@@ -14,30 +14,6 @@ export const authService = {
      * Login user
      */
     async login(credentials: LoginCredentials): Promise<ApiResponse<AuthResponse>> {
-        // Return dummy data for now
-        logger.warn("[authService] Using dummy data for login with timeout of 3 seconds");
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        return {
-            data: {
-                accessToken: "dummy-token",
-                tokenType: "Bearer",
-                userInfo: {
-                    id: "dummy-uuid-1234-5678",
-                    fullname: "Dummy User",
-                    email: credentials.email || "dummy-email@example.com",
-                    phoneNumber: null,
-                    avatarUrl: null,
-                    role: "GUEST",
-                    isActive: true,
-                    isVerified: false,
-                    isBanned: false,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                },
-            },
-            status: 200,
-            message: "Login successful",
-        };
         return apiClient.post<AuthResponse>(
             endpoints.auth.login(),
             credentials,
@@ -49,29 +25,6 @@ export const authService = {
      * Register new user
      */
     async register(data: RegisterData): Promise<ApiResponse<AuthResponse>> {
-        logger.warn("[authService] Using dummy data for register with timeout of 3 seconds");
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        return {
-            data: {
-                accessToken: "dummy-token",
-                tokenType: "Bearer",
-                userInfo: {
-                    id: "dummy-uuid-1234-5678",
-                    fullname: data.name,
-                    email: data.email,
-                    phoneNumber: null,
-                    avatarUrl: null,
-                    role: "GUEST",
-                    isActive: true,
-                    isVerified: false,
-                    isBanned: false,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                },
-            },
-            status: 200,
-            message: "Register successful",
-        };
         return apiClient.post<AuthResponse>(
             endpoints.auth.register(),
             data,
@@ -82,15 +35,15 @@ export const authService = {
     /**
      * Logout user
      */
-    async logout(): Promise<ApiResponse<void>> {
-        return apiClient.post<void>(endpoints.auth.logout(), {}, { requiresAuth: false });
+    async logout(refreshToken: string): Promise<ApiResponse<void>> {
+        return apiClient.post<void>(endpoints.auth.logout(), { refreshToken }, { requiresAuth: false });
     },
 
     /**
      * Refresh authentication token
      */
-    async refreshToken(refreshToken: string): Promise<ApiResponse<{ token: string; refreshToken?: string }>> {
-        return apiClient.post<{ token: string; refreshToken?: string }>(
+    async refreshToken(refreshToken: string): Promise<ApiResponse<AuthResponse>> {
+        return apiClient.post<AuthResponse>(
             endpoints.auth.refreshToken(),
             { refreshToken },
             { requiresAuth: false }
@@ -98,44 +51,54 @@ export const authService = {
     },
 
     async forgotPassword(email: string): Promise<ApiResponse<void>> {
-        logger.warn("[authService] Using dummy data for forgotPassword with timeout of 1 second");
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        return {
-            data: undefined,
-            status: 200,
-            message: "Password reset email sent",
-        };
-        // return apiClient.post<void>(
-        //     endpoints.auth.forgotPassword(),
-        //     { email },
-        //     { requiresAuth: false }
-        // );
+        return apiClient.post<void>(
+            endpoints.auth.forgotPassword(),
+            { email },
+            { requiresAuth: false }
+        );
     },
 
-    async resetPassword(otp: string, newPassword: string): Promise<ApiResponse<void>> {
-        logger.warn("[authService] Using dummy data for resetPassword with timeout of 1 second");
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        // return {
-        //     data: undefined,
-        //     status: 200,
-        //     message: "Password has been reset successfully",
-        // };
-        return {
-            data: undefined,
-            status: 401,
-            message: "Invalid OTP provided",
-        }
-        // return apiClient.post<void>(
-        //     endpoints.auth.resetPassword(),
-        //     { otp, newPassword },
-        //     { requiresAuth: false }
-        // );
+    async resetPassword(email: string, newPassword: string, confirmPassword: string): Promise<ApiResponse<void>> {
+        return apiClient.post<void>(
+            endpoints.auth.resetPassword(),
+            { email, newPassword, confirmPassword },
+            { requiresAuth: false }
+        );
+    },
+
+    async verifyOtp(email: string, otp: string): Promise<ApiResponse<void>> {
+        return apiClient.post<void>(
+            endpoints.auth.verify(),
+            { email, otp },
+            { requiresAuth: false }
+        );
     },
 
     async loginWithGoogle(idToken: string): Promise<ApiResponse<AuthResponse>> {
         return apiClient.post<AuthResponse>(
             endpoints.auth.loginWithGoogle(idToken),
             { idToken },
+            { requiresAuth: false }
+        );
+    },
+
+    /**
+     * Resend verification email with OTP
+     */
+    async resendVerifyEmail(email: string): Promise<ApiResponse<string>> {
+        return apiClient.get<string>(
+            endpoints.auth.resendVerifyEmail(email),
+            { requiresAuth: false }
+        );
+    },
+
+    /**
+     * Verify email with OTP
+     */
+    async verifyEmail(email: string, otp: string): Promise<ApiResponse<string>> {
+        return apiClient.post<string>(
+            endpoints.auth.verify(),
+            { email, otp },
             { requiresAuth: false }
         );
     }

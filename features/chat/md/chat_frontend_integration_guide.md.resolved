@@ -1,0 +1,371 @@
+# 💬 NeoNHS Chat System — Frontend Integration Guide
+
+## Overview
+
+The chat system uses **two communication channels**:
+
+| Channel | Protocol | Purpose |
+|---------|----------|---------|
+| **REST API** | HTTP + JWT Bearer | Room management (create, list, fetch history) |
+| **WebSocket** | SockJS + STOMP + JWT query param | Real-time messaging (send & receive) |
+
+```mermaid
+flowchart LR
+    FE[Frontend App]
+    REST[REST API<br>/api/chat/*]
+    WS[WebSocket<br>/ws]
+    DB[(MongoDB)]
+
+    FE -->|HTTP + JWT| REST
+    FE <-->|SockJS + STOMP| WS
+    REST --> DB
+    WS --> DB
+```
+
+---
+
+## 1. Authentication
+
+All endpoints require the user's **JWT token** (obtained from `POST /api/auth/login`).
+
+- **REST API**: Send as `Authorization: Bearer <token>` header
+- **WebSocket**: Pass as query parameter: `/ws?token=<token>`
+
+---
+
+## 2. REST API Endpoints
+
+Base URL: `http://localhost:8080`
+
+### 2.1 Create a Chat Room
+
+```http
+POST /api/chat/rooms
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+**Request body:**
+```json
+{
+  "name": "Project Discussion",     // optional, null for 1-on-1
+  "participantIds": [
+    "uuid-of-user-A",
+    "uuid-of-user-B",
+    "uuid-of-user-C"
+  ]
+}
+```
+
+> [!NOTE]
+> The authenticated user is **automatically added** to participants. If a room with the exact same participants already exists, it returns the existing room (deduplication).
+
+**Response (200):**
+```json
+{
+  "id": "67e3f1a2b4c5d6e7f8901234",
+  "name": "Project Discussion",
+  "participants": ["uuid-A", "uuid-B", "uuid-C"],
+  "createdAt": "2026-03-26T23:00:00",
+  "lastMessageAt": null,
+  "lastMessagePreview": null,
+  "lastMessageSenderId": null
+}
+```
+
+---
+
+### 2.2 List My Chat Rooms
+
+```http
+GET /api/chat/rooms
+Authorization: Bearer <token>
+```
+
+**Response (200):** Array of rooms sorted by most recent activity.
+```json
+[
+  {
+    "id": "67e3f1a2b4c5d6e7f8901234",
+    "name": "Project Discussion",
+    "participants": ["uuid-A", "uuid-B", "uuid-C"],
+    "createdAt": "2026-03-26T23:00:00",
+    "lastMessageAt": "2026-03-26T23:05:00",
+    "lastMessagePreview": "Hey, how's the project going?",
+    "lastMessageSenderId": "uuid-B"
+  }
+]
+```
+
+> [!TIP]
+> Use `lastMessagePreview` and `lastMessageSenderId` to display a chat list UI (like WhatsApp/Messenger sidebar).
+
+---
+
+### 2.3 Get Room Message History
+
+```http
+GET /api/chat/rooms/{roomId}/messages?page=0&size=20
+Authorization: Bearer <token>
+```
+
+**Response (200):** Spring `Page` object with messages sorted by **newest first**.
+```json
+{
+  "content": [
+    {
+      "id": "msg-id-1",
+      "chatRoomId": "67e3f1a2b4c5d6e7f8901234",
+      "senderId": "uuid-B",
+      "content": "Hey, how's the project going?",
+      "timestamp": "2026-03-26T23:05:00",
+      "status": "SENT"
+    },
+    {
+      "id": "msg-id-2",
+      "chatRoomId": "67e3f1a2b4c5d6e7f8901234",
+      "senderId": "uuid-A",
+      "content": "Going great!",
+      "timestamp": "2026-03-26T23:04:30",
+      "status": "SENT"
+    }
+  ],
+  "totalElements": 42,
+  "totalPages": 3,
+  "number": 0,
+  "size": 20,
+  "first": true,
+  "last": false
+}
+```
+
+> [!TIP]
+> Messages come in **descending** order (newest first). Reverse them in the UI for a natural chat display, or request with `Sort.Direction.ASC` on the backend if preferred.
+
+---
+
+### 2.4 Get Chat Participant Info
+
+Retrieve basic user information (like name, avatar) for displaying the other person in a 1-on-1 chat. 
+
+```http
+GET /api/chat/users/{userId}
+Authorization: Bearer <token>
+```
+
+**Response (200):**
+```json
+{
+  "id": "uuid-of-user",
+  "fullname": "John Doe",
+  "avatarUrl": "https://example.com/avatar.png",
+  "role": "TOURIST"
+}
+```
+
+---
+
+## 3. WebSocket — Real-time Messaging
+
+### 3.1 Required Libraries
+
+```html
+<!-- SockJS client -->
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<!-- STOMP.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+```
+
+Or with npm (for React/Vue/Angular):
+```bash
+npm install sockjs-client stompjs
+# or
+npm install @stomp/stompjs sockjs-client
+```
+
+---
+
+### 3.2 Connect to WebSocket
+
+```javascript
+import SockJS from 'sockjs-client';
+import Stomp from 'stompjs';
+
+const token = 'your-jwt-token';
+
+// 1. Create SockJS connection with JWT in query param
+const socket = new SockJS(`http://localhost:8080/ws?token=${encodeURIComponent(token)}`);
+const stompClient = Stomp.over(socket);
+
+// 2. Connect
+stompClient.connect({}, (frame) => {
+    console.log('Connected:', frame);
+
+    // 3. Subscribe to receive messages
+    stompClient.subscribe('/user/queue/messages', (message) => {
+        const chatMessage = JSON.parse(message.body);
+        console.log('Received:', chatMessage);
+        // → Update your UI here
+    });
+
+}, (error) => {
+    console.error('Connection error:', error);
+});
+```
+
+> [!IMPORTANT]
+> The subscription path is always `/user/queue/messages` — the server routes messages to the correct user automatically. You will receive messages from **ALL your rooms** on this single subscription.
+
+---
+
+### 3.3 Send a Message
+
+```javascript
+const payload = {
+    chatRoomId: '67e3f1a2b4c5d6e7f8901234',
+    content: 'Hello everyone!'
+};
+
+stompClient.send('/app/chat.send', {}, JSON.stringify(payload));
+```
+
+---
+
+### 3.4 Disconnect
+
+```javascript
+stompClient.disconnect(() => {
+    console.log('Disconnected');
+});
+```
+
+---
+
+## 4. Message Object Schema
+
+Every message (both sent and received via WebSocket, and from the REST history API) has this shape:
+
+```typescript
+interface ChatMessage {
+    id: string;              // MongoDB auto-generated ID
+    chatRoomId: string;      // Which room this message belongs to
+    senderId: string;        // UUID of the user who sent it
+    content: string;         // Message text
+    timestamp: string;       // ISO datetime "2026-03-26T23:05:00"
+    status: 'SENT' | 'DELIVERED' | 'READ';
+}
+```
+
+---
+
+## 5. Typical Frontend Flow
+
+```mermaid
+sequenceDiagram
+    participant User as User
+    participant FE as Frontend
+    participant REST as REST API
+    participant WS as WebSocket
+
+    Note over FE: App starts
+    FE->>REST: POST /api/auth/login → get JWT
+    FE->>WS: Connect SockJS(/ws?token=JWT)
+    FE->>WS: Subscribe /user/queue/messages
+
+    Note over FE: Load chat sidebar
+    FE->>REST: GET /api/chat/rooms → room list
+    FE->>FE: Render room list with lastMessagePreview
+
+    Note over FE: User opens a room
+    FE->>REST: GET /api/chat/rooms/{id}/messages?page=0 → history
+    FE->>FE: Render message history
+
+    Note over FE: User sends a message
+    FE->>WS: SEND /app/chat.send {chatRoomId, content}
+
+    Note over FE: Real-time incoming
+    WS-->>FE: /user/queue/messages → new ChatMessage
+    FE->>FE: If msg.chatRoomId === open room → append to chat
+    FE->>FE: Update room list sidebar (lastMessagePreview)
+
+    Note over FE: User creates a new chat
+    FE->>REST: POST /api/chat/rooms {participantIds}
+    FE->>FE: Add new room to sidebar, open it
+```
+
+---
+
+## 6. Key Implementation Notes for Frontend Devs
+
+### Identifying "my" messages vs "other" messages
+```javascript
+const isMyMessage = (msg) => msg.senderId === currentUser.id;
+```
+
+### Routing incoming WebSocket messages to the correct room
+```javascript
+stompClient.subscribe('/user/queue/messages', (message) => {
+    const msg = JSON.parse(message.body);
+
+    // Update the room in your room list (for sidebar preview)
+    updateRoomPreview(msg.chatRoomId, msg.content, msg.senderId);
+
+    // If the user currently has this room open, append the message
+    if (msg.chatRoomId === currentOpenRoomId) {
+        appendMessageToChat(msg);
+    } else {
+        // Show unread badge/notification for this room
+        incrementUnreadCount(msg.chatRoomId);
+    }
+});
+```
+
+### Creating a 1-on-1 chat
+```javascript
+// Just pass the other user's UUID — backend will dedup
+const response = await fetch('/api/chat/rooms', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+        name: null,  // no name for 1-on-1
+        participantIds: [otherUserId]
+    })
+});
+const room = await response.json();
+// room.id → use this to send messages
+```
+
+### Infinite scroll for message history
+```javascript
+let currentPage = 0;
+
+async function loadMoreMessages(roomId) {
+    const res = await fetch(
+        `/api/chat/rooms/${roomId}/messages?page=${currentPage}&size=20`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+    );
+    const page = await res.json();
+
+    prependMessagesToChat(page.content.reverse()); // reverse to get chronological
+    currentPage++;
+
+    if (page.last) {
+        // No more messages to load
+        hideLoadMoreButton();
+    }
+}
+```
+
+---
+
+## 7. CORS & Deployment
+
+The backend allows these origins:
+- `http://localhost:5173` (Vite dev)
+- `http://localhost:3000`
+- `https://neonhs-fe-web.vercel.app`
+
+Both REST and WebSocket share the same CORS configuration. If your frontend runs on a different origin, update [SecurityConfig.java](file:///e:/University/KI9%202026%20SPRING/Capstone/New%20folder/NeoNHS-BE/src/main/java/fpt/project/NeoNHS/config/SecurityConfig.java) and [WebSocketConfig.java](file:///e:/University/KI9%202026%20SPRING/Capstone/New%20folder/NeoNHS-BE/src/main/java/fpt/project/NeoNHS/config/WebSocketConfig.java).

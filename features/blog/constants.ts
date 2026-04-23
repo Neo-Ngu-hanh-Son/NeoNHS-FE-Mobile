@@ -1,0 +1,1 @@
+export const BLOG_MINIMUM_READING_TIME_SECONDS = 30;

@@ -12,12 +12,14 @@ import { AuthStackParamList } from "@/app/navigations/NavigationParamTypes";
 import { authService } from "../services/authService";
 import AuthLayout from "../components/AuthLayout";
 import AppLink from "@/components/Navigator/AppLink";
+import { useTranslation } from "react-i18next";
 
 type ForgotPasswordScreenProps = StackScreenProps<AuthStackParamList, "ForgotPassword">;
 
 export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScreenProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const { t } = useTranslation();
 
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -25,10 +27,10 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
 
   const validateEmail = (value: string) => {
     if (!value.trim()) {
-      return "Email is required";
+      return t("auth.validation.email_required");
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-      return "Please enter a valid email address";
+      return t("auth.validation.email_invalid");
     }
     return "";
   };
@@ -43,19 +45,19 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
     try {
       await authService.forgotPassword(email.trim());
       Alert.alert(
-        "Check Your Email",
-        "We've sent a password reset code to your email address.",
+        t("auth.alert.check_email_title"),
+        t("auth.alert.check_email_message"),
         [
           {
-            text: "Continue",
-            onPress: () => navigation.navigate("ForgotPasswordOtp"),
+            text: t("common.continue"),
+            onPress: () => navigation.navigate("EnterOtp", { email }),
           },
         ]
       );
     } catch (error) {
       Alert.alert(
-        "Request Failed",
-        (error as Error).message || "Unable to send reset code. Please try again."
+        t("auth.alert.request_failed_title"),
+        (error as Error).message || t("auth.alert.request_failed_message")
       );
     } finally {
       setIsLoading(false);
@@ -67,9 +69,9 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.foreground }]}>Forgot Password?</Text>
+          <Text style={[styles.title, { color: theme.foreground }]}>{t("auth.forgot_password")}</Text>
           <Text style={[styles.subtitle, { color: theme.mutedForeground }]}>
-            No worries! Enter your email address and we'll send you a code to reset your password.
+            {t("auth.forgot_password_subtitle")}
           </Text>
         </View>
 
@@ -77,9 +79,9 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
         <View style={styles.form}>
           {/* Email Input */}
           <View style={styles.inputGroup}>
-            <Label style={styles.label}>Email Address</Label>
+            <Label style={styles.label}>{t("auth.form.email_label")}</Label>
             <Input
-              placeholder="Enter your email"
+              placeholder={t("auth.form.email_placeholder")}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -104,7 +106,7 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
             className="mt-4"
           >
             <Text className="text-primary-foreground font-semibold text-base">
-              Send Reset Code
+              {t("auth.button.send_reset_code")}
             </Text>
           </Button>
         </View>
@@ -112,10 +114,10 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
         {/* Back to Login */}
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: theme.mutedForeground }]}>
-            Remember your password?{" "}
+            {t("auth.already_account")}{" "}
           </Text>
           <AppLink screen="Login" params={{}}>
-            Sign In
+            {t("auth.button.login")}
           </AppLink>
         </View>
       </View>
