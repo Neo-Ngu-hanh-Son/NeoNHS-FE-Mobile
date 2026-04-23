@@ -8,7 +8,6 @@ import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
-import { useAttractions } from '../hooks/useAttractions';
 import { useAllEvents } from '../../event/hooks/useAllEvents';
 import { WorkshopListContent } from '../../workshops/screens';
 import { useBlogList } from '@/features/blog';
@@ -32,8 +31,6 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
 
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: attractions, isLoading: attractionsLoading, refetch: refetchAttractions } = useAttractions();
-
   const { data: events, isLoading: eventsLoading, refetch: refetchEvents } = useAllEvents();
   const {
     blogs,
@@ -49,7 +46,6 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
   }, [fetchBlogs]);
 
   const loading =
-    (activeTab === 'Points' && (attractionsLoading || initialAttractionId)) ||
     (activeTab === 'Events' && eventsLoading) ||
     (activeTab === 'Blogs' && blogsLoading);
 
@@ -62,13 +58,12 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     Promise.allSettled([
-      refetchAttractions(),
       refetchEvents(),
       refetchBlogs(),
       queryClient.refetchQueries({ queryKey: ['workshop-search'] }),
       queryClient.refetchQueries({ queryKey: ['workshop-tags'] }),
     ]).finally(() => setRefreshing(false));
-  }, [queryClient, refetchAttractions, refetchEvents, refetchBlogs]);
+  }, [queryClient, refetchEvents, refetchBlogs]);
 
   useEffect(() => {
     setSearchQuery('');
@@ -98,12 +93,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
     let title = 'Discover';
     switch (activeTab) {
       case 'Points':
-        if (initialAttractionId) {
-          const attraction = attractions?.find((a) => a.id === initialAttractionId);
-          title = attraction ? attraction.name : 'Destinations';
-        } else {
-          title = 'Destinations';
-        }
+        title = 'Destinations';
         break;
       case 'Workshops':
         title = 'Workshops';

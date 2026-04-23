@@ -1,7 +1,6 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { TouchableOpacity, View, Text, RefreshControl, SectionList } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, RefreshControl, SectionList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SmartImage } from '@/components/ui/smart-image';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { useNavigation } from '@react-navigation/native';
@@ -12,8 +11,6 @@ import { Attraction, PointPreview } from '@/features/map/types';
 import PointItem from './PointItem';
 import DebouncedInput from '@/components/common/DebouncedInput';
 import DestinationListHeader from './DestinationListHeader';
-import DestinationHeader from './DestinationHeader';
-import DestinationFilterChips from './DestinationFilterChips';
 import { normalizeString } from '@/utils/normalizeUtils';
 import FilterChips from '@/components/common/FilterChips';
 

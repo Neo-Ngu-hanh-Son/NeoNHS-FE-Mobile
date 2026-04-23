@@ -9,16 +9,14 @@
  * Mutations:
  *   POST /api/reviews  |  PUT /api/reviews/{id}
  */
-import { apiClient, endpoints, ApiResponse, PageResponse } from '@/services/api';
+import { apiClient, endpoints, ApiResponse } from '@/services/api';
 import type {
   CreateReviewRequest,
   ReviewListParams,
   ReviewResponse,
   UpdateReviewRequest,
-  GenericReviewResponse,
   GenericReviewResponseWrapper,
   ReviewPageResponse,
-  ReviewTypeFlgValue,
 } from '../types';
 
 function buildQueryParams(params?: ReviewListParams): Record<string, string | number> {
