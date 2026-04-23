@@ -81,8 +81,17 @@ export type MapRoutes = {
   AudioGuide: { pointId: string };
   PointHistoryAudio: { pointId: string };
   Panorama: { pointId: string };
-  CheckinCamera: { pointId?: string | null; pointName: string; pointRewardPoints?: number };
-  CheckinComplete: { imageUrl?: string; rewardPoints?: number; userTotalPoints?: number };
+  CheckinCamera: { checkinPointId?: string | null; pointName: string; pointRewardPoints?: number };
+  CheckinComplete: {
+    imageUrl?: string;
+    rewardPoints?: number;
+    userTotalPoints?: number;
+    pointId?: string;
+    destinationName?: string;
+    checkinPointId?: string;
+    parentCheckinPointId?: string;
+    imageUrls?: string[];
+  };
 };
 
 /* Events */

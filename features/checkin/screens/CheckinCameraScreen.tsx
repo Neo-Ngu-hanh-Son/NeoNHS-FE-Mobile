@@ -66,15 +66,15 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
 
     const currentImage = capturedPhotoUri
       ? [
-          {
-            id: 'current-capture',
-            uri: capturedPhotoUri,
-            caption: capturedCaption.trim() || undefined,
-            label: 'Current photo',
-            uploadStatus: capturedImageUrl ? ('uploaded' as const) : ('pending' as const),
-            draftId: 'current-capture',
-          },
-        ]
+        {
+          id: 'current-capture',
+          uri: capturedPhotoUri,
+          caption: capturedCaption.trim() || undefined,
+          label: 'Current photo',
+          uploadStatus: capturedImageUrl ? ('uploaded' as const) : ('pending' as const),
+          draftId: 'current-capture',
+        },
+      ]
       : [];
 
     return [...currentImage, ...draftGallery];
@@ -95,10 +95,10 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
           currentImages.map((image) =>
             image.id === draft.id
               ? {
-                  ...image,
-                  uploadStatus: 'failed',
-                  uploadError: 'You are not authenticated to upload images.',
-                }
+                ...image,
+                uploadStatus: 'failed',
+                uploadError: 'You are not authenticated to upload images.',
+              }
               : image
           )
         );
@@ -109,10 +109,10 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
         currentImages.map((image) =>
           image.id === draft.id
             ? {
-                ...image,
-                uploadStatus: 'pending',
-                uploadError: undefined,
-              }
+              ...image,
+              uploadStatus: 'pending',
+              uploadError: undefined,
+            }
             : image
         )
       );
@@ -126,12 +126,12 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
             currentImages.map((image) =>
               image.id === draft.id
                 ? {
-                    ...image,
-                    uploadStatus: 'uploaded',
-                    imageUrl: uploadResponse.mediaUrl,
-                    publicId: uploadResponse.publicId,
-                    uploadError: undefined,
-                  }
+                  ...image,
+                  uploadStatus: 'uploaded',
+                  imageUrl: uploadResponse.mediaUrl,
+                  publicId: uploadResponse.publicId,
+                  uploadError: undefined,
+                }
                 : image
             )
           );
@@ -142,11 +142,11 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
             currentImages.map((image) =>
               image.id === draft.id
                 ? {
-                    ...image,
-                    uploadStatus: 'failed',
-                    uploadError:
-                      error instanceof Error ? error.message : 'Unable to upload this image. Please try again.',
-                  }
+                  ...image,
+                  uploadStatus: 'failed',
+                  uploadError:
+                    error instanceof Error ? error.message : 'Unable to upload this image. Please try again.',
+                }
                 : image
             )
           );
