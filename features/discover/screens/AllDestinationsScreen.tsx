@@ -9,7 +9,9 @@ import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { useAttractions } from '../hooks/useAttractions';
-import { useAllEvents } from '../../event/hooks/useAllEvents';
+import { usePointsByAttraction } from '../hooks/usePointsByAttraction';
+import { EventListContent } from '../../event/components';
+import { EventStatus } from '../../event/types';
 import { WorkshopListContent } from '../../workshops/screens';
 import { useBlogList } from '@/features/blog';
 import type { Blog } from '@/features/blog/types';
@@ -34,7 +36,12 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
 
   const { data: attractions, isLoading: attractionsLoading, refetch: refetchAttractions } = useAttractions();
 
-  const { data: events, isLoading: eventsLoading, refetch: refetchEvents } = useAllEvents();
+  const {
+    data: points,
+    isLoading: pointsLoading,
+    refetch: refetchPoints,
+  } = usePointsByAttraction(selectedAttractionId);
+
   const {
     blogs,
     loading: blogsLoading,
@@ -49,8 +56,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
   }, [fetchBlogs]);
 
   const loading =
-    (activeTab === 'Points' && (attractionsLoading || initialAttractionId)) ||
-    (activeTab === 'Events' && eventsLoading) ||
+    (activeTab === 'Points' && (attractionsLoading || (selectedAttractionId ? pointsLoading : false))) ||
     (activeTab === 'Blogs' && blogsLoading);
 
   useEffect(() => {
@@ -63,25 +69,28 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
     setRefreshing(true);
     Promise.allSettled([
       refetchAttractions(),
-      refetchEvents(),
+      ...(selectedAttractionId ? [refetchPoints()] : []),
       refetchBlogs(),
+      queryClient.refetchQueries({ queryKey: ['events-infinite'] }),
       queryClient.refetchQueries({ queryKey: ['workshop-search'] }),
       queryClient.refetchQueries({ queryKey: ['workshop-tags'] }),
     ]).finally(() => setRefreshing(false));
-  }, [queryClient, refetchAttractions, refetchEvents, refetchBlogs]);
+  }, [queryClient, refetchAttractions, refetchPoints, refetchBlogs, selectedAttractionId]);
 
   useEffect(() => {
     setSearchQuery('');
   }, [activeTab]);
 
-  const filteredEvents = useMemo(() => {
-    const evts = events ?? [];
-    if (!searchQuery.trim()) return evts;
+  const filteredAttractions = useMemo(() => {
+    const source = selectedAttractionId ? (points ?? []) : (attractions ?? []);
+    if (!searchQuery.trim()) return source;
     const q = searchQuery.toLowerCase();
-    return evts.filter(
-      (e) => e.name.toLowerCase().includes(q) || (e.locationName && e.locationName.toLowerCase().includes(q))
+    return source.filter(
+      (a) =>
+        a.name.toLowerCase().includes(q) ||
+        ((a as Attraction).address && (a as Attraction).address.toLowerCase().includes(q))
     );
-  }, [events, searchQuery]);
+  }, [attractions, points, selectedAttractionId, searchQuery]);
 
   const filteredBlogs = useMemo(() => {
     if (!searchQuery.trim()) return blogs;
@@ -171,8 +180,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
   );
 
   const renderSearchAndFilter = () => {
-    if (activeTab === 'Workshops') return null;
-    if (activeTab === 'Points') return null;
+    if (activeTab === 'Workshops' || activeTab === 'Events') return null;
     return (
       <View className="px-4 pt-3">
         <View
@@ -209,79 +217,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
       );
     }
     if (activeTab === 'Events') {
-      const data = filteredEvents;
-      if (data.length === 0) {
-        return (
-          <View className="items-center py-16">
-            <Ionicons name="calendar-outline" size={40} color={theme.mutedForeground} />
-            <Text className="mt-3 text-base font-bold" style={{ color: theme.foreground }}>
-              No events found
-            </Text>
-          </View>
-        );
-      }
-      return (
-        <View className="px-4 pb-10 pt-2">
-          {data.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              onPress={() => navigation.navigate('EventDetail', { eventId: item.id })}
-              className="mb-3 flex-row items-center gap-4 rounded-2xl border p-3"
-              style={{ backgroundColor: theme.card, borderColor: theme.border }}>
-              <SmartImage uri={item.thumbnailUrl} className="h-24 w-24 rounded-2xl object-cover" />
-              <View className="flex-1">
-                <Text className="text-lg font-bold" style={{ color: theme.foreground }}>
-                  {item.name}
-                </Text>
-                <View className="mt-1 gap-1">
-                  {item.startTime && (
-                    <Text className="text-sm font-semibold" style={{ color: theme.primary }}>
-                      {new Date(item.startTime).toLocaleDateString('vi-VN', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </Text>
-                  )}
-                  <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-                    {item.locationName || 'TBD'}
-                  </Text>
-                  <View className="flex-row items-center gap-1">
-                    <View
-                      className="h-2 w-2 rounded-full"
-                      style={{
-                        backgroundColor:
-                          item.status === 'UPCOMING'
-                            ? '#3b82f6'
-                            : item.status === 'ONGOING'
-                              ? '#10b981'
-                              : item.status === 'CANCELLED'
-                                ? '#ef4444'
-                                : '#6b7280',
-                      }}
-                    />
-                    <Text
-                      className="text-[10px] font-bold uppercase"
-                      style={{
-                        color:
-                          item.status === 'UPCOMING'
-                            ? '#3b82f6'
-                            : item.status === 'ONGOING'
-                              ? '#10b981'
-                              : item.status === 'CANCELLED'
-                                ? '#ef4444'
-                                : '#6b7280',
-                      }}>
-                      {item.status}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={theme.muted} />
-            </TouchableOpacity>
-          ))}
-        </View>
-      );
+      return <EventListContent initialStatus={EventStatus.UPCOMING} />;
     }
 
     if (activeTab === 'Blogs') {
@@ -337,19 +273,19 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
 
     return null;
   };
-  if (activeTab === 'Workshops') {
+
+  if (activeTab === 'Workshops' || activeTab === 'Events') {
     return (
       <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
         {renderHeader()}
         {renderTabs()}
-        <WorkshopListContent onNavigateToDetail={(id) => navigation.navigate('WorkshopDetail', { workshopId: id })} />
-      </SafeAreaView>
-    );
-  }
-  if (activeTab === 'Points') {
-    return (
-      <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
-        <AttractionsTab initialAttractionId={initialAttractionId} />;
+        {activeTab === 'Workshops' ? (
+          <WorkshopListContent
+            onNavigateToDetail={(id) => navigation.navigate('WorkshopDetail', { workshopId: id })}
+          />
+        ) : (
+          <EventListContent initialStatus={EventStatus.UPCOMING} />
+        )}
       </SafeAreaView>
     );
   }

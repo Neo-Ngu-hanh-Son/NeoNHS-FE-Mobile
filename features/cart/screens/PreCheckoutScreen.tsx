@@ -178,7 +178,7 @@ export default function PreCheckoutScreen() {
                                         <Text style={{ color: theme.foreground, fontWeight: '500' }}>{item.itemName}</Text>
                                         <Text style={{ color: theme.mutedForeground, fontSize: 12 }}>{t('cart.quantity')}: {item.quantity}</Text>
                                     </View>
-                                    <Text style={{ color: theme.foreground }}>{item.totalPrice.toLocaleString()} VND</Text>
+                                    <Text style={{ color: theme.foreground }}>{(item.totalPrice ?? 0).toLocaleString()} VND</Text>
                                 </View>
                             ))}
                             {/* Per-group voucher discount indicator */}
@@ -191,7 +191,7 @@ export default function PreCheckoutScreen() {
                                         </Text>
                                     </View>
                                     <Text style={{ color: '#22c55e', fontWeight: '600', fontSize: 13 }}>
-                                        -{getGroupDiscount(group.groupType).toLocaleString()} VND
+                                        -{(getGroupDiscount(group.groupType) ?? 0).toLocaleString()} VND
                                     </Text>
                                 </View>
                             )}
@@ -204,12 +204,12 @@ export default function PreCheckoutScreen() {
 
                     <View style={styles.summaryRow}>
                         <Text style={{ color: theme.mutedForeground }}>{t('cart.subtotal')}</Text>
-                        <Text style={{ color: theme.foreground }}>{preCheckoutData.totalPrice.toLocaleString()} VND</Text>
+                        <Text style={{ color: theme.foreground }}>{(preCheckoutData.totalPrice ?? 0).toLocaleString()} VND</Text>
                     </View>
 
                     <View style={styles.summaryRow}>
                         <Text style={{ color: theme.mutedForeground }}>{t('cart.discount')}</Text>
-                        <Text style={{ color: '#22c55e' }}>-{preCheckoutData.discountValue.toLocaleString()} VND</Text>
+                        <Text style={{ color: '#22c55e' }}>-{(preCheckoutData.discountValue ?? 0).toLocaleString()} VND</Text>
                     </View>
 
                     {preCheckoutData.appliedVoucher && (
@@ -225,7 +225,7 @@ export default function PreCheckoutScreen() {
 
                     <View style={styles.summaryRow}>
                         <Text style={{ color: theme.foreground, fontWeight: 'bold', fontSize: 16 }}>{t('cart.total')}</Text>
-                        <Text style={{ color: theme.primary, fontWeight: 'bold', fontSize: 20 }}>{preCheckoutData.finalTotalPrice.toLocaleString()} VND</Text>
+                        <Text style={{ color: theme.primary, fontWeight: 'bold', fontSize: 20 }}>{(preCheckoutData.finalTotalPrice ?? 0).toLocaleString()} VND</Text>
                     </View>
                 </View>
             </ScrollView>

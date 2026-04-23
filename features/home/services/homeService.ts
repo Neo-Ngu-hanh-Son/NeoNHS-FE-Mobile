@@ -1,6 +1,7 @@
 import { blogService } from '@/features/blog';
 import { BLOG_CATEGORY_SLUG_CONST } from '../homeScreenConst';
 import eventService from '@/features/event/services/eventService';
+import { EventStatus } from '@/features/event/types';
 import discoverService from '@/features/discover/services/discoverServices';
 
 export const homeService = {
@@ -42,7 +43,7 @@ export const homeService = {
     return await eventService.getEvents({
       page: 0,
       size: 5,
-      // sortBy: 'startDate', BROTHER MAN THIS SHIT DOES NOT EXIST IN SORT BY IN BACKEND LOL WHAT THE FRICK
+      status: EventStatus.UPCOMING,
       sortDir: 'desc',
     });
   },

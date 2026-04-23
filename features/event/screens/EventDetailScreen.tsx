@@ -9,7 +9,13 @@ import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { TicketCatalogResponse } from '../types';
-import { EventImageGallery, EventInfoSection, TicketCatalogList, EventDetailReviews } from '../components';
+import {
+  EventImageGallery,
+  EventInfoSection,
+  TicketCatalogList,
+  EventDetailReviews,
+  EventContent,
+} from '../components';
 import { useEventDetail } from '../hooks/useEventDetail';
 import { useTicketCatalogs } from '../hooks/useTicketCatalogs';
 
@@ -140,16 +146,18 @@ export default function EventDetailScreen({ navigation, route }: Props) {
               Details
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setActiveTab('tickets')}
-            className={`flex-1 items-center rounded-xl py-3 ${activeTab === 'tickets' ? 'bg-primary' : ''}`}
-            style={activeTab !== 'tickets' ? { backgroundColor: theme.muted } : undefined}>
-            <Text
-              className={`text-sm font-bold ${activeTab === 'tickets' ? 'text-white' : ''}`}
-              style={activeTab !== 'tickets' ? { color: theme.mutedForeground } : undefined}>
-              Buy Tickets
-            </Text>
-          </TouchableOpacity>
+          {event.isTicketRequired && (
+            <TouchableOpacity
+              onPress={() => setActiveTab('tickets')}
+              className={`flex-1 items-center rounded-xl py-3 ${activeTab === 'tickets' ? 'bg-primary' : ''}`}
+              style={activeTab !== 'tickets' ? { backgroundColor: theme.muted } : undefined}>
+              <Text
+                className={`text-sm font-bold ${activeTab === 'tickets' ? 'text-white' : ''}`}
+                style={activeTab !== 'tickets' ? { color: theme.mutedForeground } : undefined}>
+                Buy Tickets
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Tab Content */}
@@ -157,9 +165,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
           {activeTab === 'info' ? (
             <View>
               {event.fullDescription ? (
-                <Text className="text-sm leading-6" style={{ color: theme.foreground }}>
-                  {event.fullDescription}
-                </Text>
+                <EventContent html={event.fullDescription} />
               ) : (
                 <Text className="text-sm italic" style={{ color: theme.mutedForeground }}>
                   No detailed description available.
@@ -186,7 +192,12 @@ export default function EventDetailScreen({ navigation, route }: Props) {
               </View>
             </View>
           ) : (
-            <TicketCatalogList tickets={tickets ?? []} loading={ticketsLoading} theme={theme} />
+            <TicketCatalogList
+              tickets={tickets ?? []}
+              loading={ticketsLoading}
+              theme={theme}
+              eventStatus={event.status}
+            />
           )}
         </View>
       </ScrollView>
