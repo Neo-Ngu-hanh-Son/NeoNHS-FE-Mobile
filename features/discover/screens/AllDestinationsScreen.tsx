@@ -8,56 +8,24 @@ import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
-import { useAttractions } from '../hooks/useAttractions';
-import { usePointsByAttraction } from '../hooks/usePointsByAttraction';
 import { EventListContent } from '../../event/components';
-import { EventStatus } from '../../event/types';
 import { WorkshopListContent } from '../../workshops/screens';
-import { useBlogList } from '@/features/blog';
-import type { Blog } from '@/features/blog/types';
 import { useQueryClient } from '@tanstack/react-query';
-import { SmartImage } from '@/components/ui/smart-image';
-import AttractionsTab from './ViewAllTabs/AttractionsTab';
+import DestinationsTab from './AllDestinationTab/DestinationsTab';
+import BlogsTab from './AllBlogTab/BlogsTab';
+import { EventStatus } from '@/features/event/types';
 
 type Props = StackScreenProps<MainStackParamList, 'AllDestinations'>;
 
 type CategoryType = 'Points' | 'Workshops' | 'Events' | 'Blogs';
 
 export default function AllDestinationsScreen({ navigation, route }: Props) {
-  const queryClient = useQueryClient();
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const [activeTab, setActiveTab] = useState<CategoryType>(route.params?.initialTab || 'Points');
 
   const initialAttractionId = route.params?.selectedAttractionId;
-  const [refreshing, setRefreshing] = useState(false);
 
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const { data: attractions, isLoading: attractionsLoading, refetch: refetchAttractions } = useAttractions();
-
-  const {
-    data: points,
-    isLoading: pointsLoading,
-    refetch: refetchPoints,
-  } = usePointsByAttraction(selectedAttractionId);
-
-  const {
-    blogs,
-    loading: blogsLoading,
-    fetchBlogs,
-    refresh: refetchBlogs,
-  } = useBlogList({
-    size: 20,
-  });
-
-  useEffect(() => {
-    fetchBlogs();
-  }, [fetchBlogs]);
-
-  const loading =
-    (activeTab === 'Points' && (attractionsLoading || (selectedAttractionId ? pointsLoading : false))) ||
-    (activeTab === 'Blogs' && blogsLoading);
 
   useEffect(() => {
     if (route.params?.initialTab) {
@@ -65,54 +33,12 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
     }
   }, [route.params?.initialTab]);
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    Promise.allSettled([
-      refetchAttractions(),
-      ...(selectedAttractionId ? [refetchPoints()] : []),
-      refetchBlogs(),
-      queryClient.refetchQueries({ queryKey: ['events-infinite'] }),
-      queryClient.refetchQueries({ queryKey: ['workshop-search'] }),
-      queryClient.refetchQueries({ queryKey: ['workshop-tags'] }),
-    ]).finally(() => setRefreshing(false));
-  }, [queryClient, refetchAttractions, refetchPoints, refetchBlogs, selectedAttractionId]);
-
-  useEffect(() => {
-    setSearchQuery('');
-  }, [activeTab]);
-
-  const filteredAttractions = useMemo(() => {
-    const source = selectedAttractionId ? (points ?? []) : (attractions ?? []);
-    if (!searchQuery.trim()) return source;
-    const q = searchQuery.toLowerCase();
-    return source.filter(
-      (a) =>
-        a.name.toLowerCase().includes(q) ||
-        ((a as Attraction).address && (a as Attraction).address.toLowerCase().includes(q))
-    );
-  }, [attractions, points, selectedAttractionId, searchQuery]);
-
-  const filteredBlogs = useMemo(() => {
-    if (!searchQuery.trim()) return blogs;
-    const q = searchQuery.toLowerCase();
-    return blogs.filter(
-      (b: Blog) =>
-        b.title.toLowerCase().includes(q) ||
-        (b.summary?.toLowerCase().includes(q) ?? false) ||
-        (b.user?.fullname?.toLowerCase().includes(q) ?? false)
-    );
-  }, [blogs, searchQuery]);
 
   const renderHeader = () => {
     let title = 'Discover';
     switch (activeTab) {
       case 'Points':
-        if (initialAttractionId) {
-          const attraction = attractions?.find((a) => a.id === initialAttractionId);
-          title = attraction ? attraction.name : 'Destinations';
-        } else {
-          title = 'Destinations';
-        }
+        title = 'Destinations';
         break;
       case 'Workshops':
         title = 'Workshops';
@@ -179,113 +105,40 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
     </View>
   );
 
-  const renderSearchAndFilter = () => {
-    if (activeTab === 'Workshops' || activeTab === 'Events') return null;
-    return (
-      <View className="px-4 pt-3">
-        <View
-          className="flex-1 flex-row items-center gap-2 rounded-xl px-4 py-3"
-          style={{ backgroundColor: theme.muted }}>
-          <Ionicons name="search" size={20} color={theme.mutedForeground} />
-          <TextInput
-            placeholder={`Search ${activeTab.toLowerCase()}...`}
-            placeholderTextColor={theme.mutedForeground}
-            className="flex-1 text-sm"
-            style={{ color: theme.foreground, paddingTop: 0, paddingBottom: 0 }}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={18} color={theme.mutedForeground} />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-    );
-  };
+  if (activeTab === 'Events') {
+    return <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
+      {renderHeader()}
+      {renderTabs()}
+      <EventListContent initialStatus={EventStatus.UPCOMING} />
+    </SafeAreaView>;
+  }
 
-  const renderList = () => {
-    if (loading) {
-      return (
-        <View className="items-center py-10">
-          <Ionicons name="refresh" size={24} color={theme.primary} />
-          <Text className="mt-2 text-sm" style={{ color: theme.mutedForeground }}>
-            Loading...
-          </Text>
-        </View>
-      );
-    }
-    if (activeTab === 'Events') {
-      return <EventListContent initialStatus={EventStatus.UPCOMING} />;
-    }
-
-    if (activeTab === 'Blogs') {
-      const data = filteredBlogs;
-      if (data.length === 0) {
-        return (
-          <View className="items-center py-16">
-            <Ionicons name="book-outline" size={40} color={theme.mutedForeground} />
-            <Text className="mt-3 text-base font-bold" style={{ color: theme.foreground }}>
-              No blogs found
-            </Text>
-          </View>
-        );
-      }
-      return (
-        <View className="px-4 pb-10 pt-2">
-          {data.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              onPress={() => navigation.navigate('BlogDetails', { blogId: item.id })}
-              className="mb-3 flex-row items-center gap-4 rounded-2xl border p-3"
-              style={{ backgroundColor: theme.card, borderColor: theme.border }}>
-              <SmartImage uri={item.thumbnailUrl || item.bannerUrl} className="h-24 w-24 rounded-2xl object-cover" />
-              <View className="flex-1">
-                <Text className="text-lg font-bold" style={{ color: theme.foreground }}>
-                  {item.title}
-                </Text>
-                {item.summary && (
-                  <Text className="mt-1 text-xs" numberOfLines={2} style={{ color: theme.mutedForeground }}>
-                    {item.summary}
-                  </Text>
-                )}
-                <View className="mt-1 flex-row items-center gap-2">
-                  <Text className="text-xs font-semibold" style={{ color: theme.primary }}>
-                    {item.user?.fullname || 'NeoNHS'}
-                  </Text>
-                  <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-                    •{' '}
-                    {new Date(item.publishedAt || item.createdAt || Date.now()).toLocaleDateString('vi-VN', {
-                      day: '2-digit',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </Text>
-                </View>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={theme.muted} />
-            </TouchableOpacity>
-          ))}
-        </View>
-      );
-    }
-
-    return null;
-  };
-
-  if (activeTab === 'Workshops' || activeTab === 'Events') {
+  if (activeTab === 'Workshops') {
     return (
       <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
         {renderHeader()}
         {renderTabs()}
-        {activeTab === 'Workshops' ? (
-          <WorkshopListContent
-            onNavigateToDetail={(id) => navigation.navigate('WorkshopDetail', { workshopId: id })}
-          />
-        ) : (
-          <EventListContent initialStatus={EventStatus.UPCOMING} />
-        )}
+        <WorkshopListContent
+          onNavigateToDetail={(id) => navigation.navigate('WorkshopDetail', { workshopId: id })}
+        />
+      </SafeAreaView>
+    );
+  }
+  if (activeTab === 'Points') {
+    return (
+      <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
+        {renderHeader()}
+        {renderTabs()}
+        <DestinationsTab initialAttractionId={initialAttractionId} />
+      </SafeAreaView>
+    );
+  }
+  if (activeTab === 'Blogs') {
+    return (
+      <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
+        {renderHeader()}
+        {renderTabs()}
+        <BlogsTab />
       </SafeAreaView>
     );
   }
@@ -298,15 +151,13 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
+            refreshing={false}
+            onRefresh={() => { }}
             tintColor={theme.primary}
             colors={[theme.primary]}
           />
         }>
         {renderTabs()}
-        {renderSearchAndFilter()}
-        {renderList()}
       </ScrollView>
     </SafeAreaView>
   );

@@ -212,7 +212,8 @@
     "tabs": {
       "overview": "Overview",
       "reviews": "Reviews",
-      "gallery": "Gallery"
+      "gallery": "Gallery",
+      "history": "History"
     },
     "checkin": "Check-in here",
     "write_review": "Write a Review",
@@ -224,7 +225,6 @@
     "history": "History",
     "take_me_there": "Take me there",
     "no_description": "No description available.",
-    "show_less": "Show less",
     "read_history": "Read about history",
     "open_in_maps": "Open in Maps",
     "tap_to_explore": "Tap to explore",
@@ -237,6 +237,8 @@
     "reviews_count": "reviews",
     "view_all_reviews": "View all reviews",
     "checkin_gallery": "Check-in Gallery",
+    "read_more": "Read more",
+    "show_less": "Show less",
     "loading_details": "Loading point details...",
     "error_details": "Unable to load point details. Please try again later.",
     "no_audio": "No history audio is available for this point.",

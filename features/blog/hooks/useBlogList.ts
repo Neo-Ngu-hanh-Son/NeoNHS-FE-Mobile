@@ -138,6 +138,7 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
       });
       setBlogs(featuredBlogs.content);
     } catch (error) {
+      logger.error('[useBlogList] Failed to fetch featured blog:', error);
       throw new Error('Failed to fetch featured blog');
     } finally {
       setLoading(false);

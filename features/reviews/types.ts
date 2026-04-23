@@ -42,7 +42,7 @@ export interface ReviewResponse {
   reviewImages?: ReviewImage[];
 }
 
-export interface PointReviewResponse extends ReviewResponse {
+export interface GenericReviewResponse extends ReviewResponse {
   reviewImages: ReviewImage[];
 }
 
@@ -57,8 +57,8 @@ export interface ReviewPageResponse {
   empty: boolean;
 }
 
-export interface PointReviewResponseWrapper {
-  reviews: PageResponse<PointReviewResponse>;
+export interface GenericReviewResponseWrapper {
+  reviews: PageResponse<GenericReviewResponse>;
   totalReviews: number;
   avgRating: number;
 }
@@ -85,6 +85,8 @@ export interface ReviewListParams {
   size?: number;
   sortBy?: ReviewSortBy;
   sortDir?: ReviewSortDir;
+  reviewTypeFlg: ReviewTypeFlgValue;
+  reviewTypeId: string;
 }
 
 /** UI list row — same shape as API review */

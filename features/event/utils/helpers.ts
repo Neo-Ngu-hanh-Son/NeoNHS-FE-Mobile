@@ -154,12 +154,12 @@ function normalizeEventPoint(rawPoint: unknown): EventPointResponse | null {
 
   const eventPointTag = isRecord(rawPoint.eventPointTag)
     ? {
-        id: typeof rawPoint.eventPointTag.id === 'string' ? rawPoint.eventPointTag.id : '',
-        name: typeof rawPoint.eventPointTag.name === 'string' ? rawPoint.eventPointTag.name : '',
-        description: typeof rawPoint.eventPointTag.description === 'string' ? rawPoint.eventPointTag.description : null,
-        tagColor: typeof rawPoint.eventPointTag.tagColor === 'string' ? rawPoint.eventPointTag.tagColor : null,
-        iconUrl: typeof rawPoint.eventPointTag.iconUrl === 'string' ? rawPoint.eventPointTag.iconUrl : null,
-      }
+      id: typeof rawPoint.eventPointTag.id === 'string' ? rawPoint.eventPointTag.id : '',
+      name: typeof rawPoint.eventPointTag.name === 'string' ? rawPoint.eventPointTag.name : '',
+      description: typeof rawPoint.eventPointTag.description === 'string' ? rawPoint.eventPointTag.description : null,
+      tagColor: typeof rawPoint.eventPointTag.tagColor === 'string' ? rawPoint.eventPointTag.tagColor : null,
+      iconUrl: typeof rawPoint.eventPointTag.iconUrl === 'string' ? rawPoint.eventPointTag.iconUrl : null,
+    }
     : null;
 
   return {
@@ -457,10 +457,10 @@ export function buildEventTimelineDayOptions(groups: EventTimelineGroupResponse[
       : group.date === UNSCHEDULED_DATE_KEY
         ? 'Unscheduled'
         : new Date(`${group.date}T00:00:00`).toLocaleDateString('en-US', {
-            weekday: 'short',
-            month: 'short',
-            day: '2-digit',
-          }),
+          weekday: 'short',
+          month: 'short',
+          day: '2-digit',
+        }),
     eventCount: group.timelines.length,
   }));
 }
@@ -509,4 +509,15 @@ export function filterEventMapPointsBySearch(points: EventMapPoint[], query: str
     // 3. Perform the check
     return combinedContent.includes(normalizedQuery);
   });
+}
+
+
+export function formatSimpleTime(time?: string): string {
+  if (!time) return '--:--';
+  const [h, m] = time.split(':');
+  return h && m ? `${h}:${m}` : time;
+}
+
+export function resolveColor(color?: string | null, fallback = '#15803d') {
+  return color ? color : fallback;
 }
