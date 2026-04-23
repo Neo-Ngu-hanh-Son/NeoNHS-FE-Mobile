@@ -26,7 +26,7 @@ export default function LatestBlogsSection({ blogs, loading, error }: Props) {
   const { t } = useTranslation();
 
   function handleViewAllBlogs(): void {
-    navigate('Main', { screen: 'BlogList' });
+    navigate('Main', { screen: 'AllDestinations', params: { initialTab: 'Blogs' } });
   }
 
   function handleBlogPress(id: string): void {

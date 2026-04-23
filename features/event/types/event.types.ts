@@ -217,3 +217,10 @@ export interface EventFilterParams {
   sortBy?: string;
   sortDir?: 'asc' | 'desc';
 }
+
+
+export interface TimelineRow {
+  key: string;
+  timeline: EventMapPointTimelineInfo;
+  point: EventMapPoint;
+}

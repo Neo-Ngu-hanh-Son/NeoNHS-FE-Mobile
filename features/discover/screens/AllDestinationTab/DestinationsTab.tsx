@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, RefreshControl, SectionList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/app/providers/ThemeProvider';
@@ -39,6 +39,9 @@ export default function DestinationsTab({ initialAttractionId }: { initialAttrac
     if (selectedAttractionId) {
       filtered = attractions.filter(attr => attr.id === selectedAttractionId);
     }
+    // Filter out the attractions that have no points
+    filtered = filtered.filter(attr => attr.points && attr.points.length > 0);
+
     return filtered.map((attr) => {
       const originalPoints = attr.points ?? [];
 
@@ -79,7 +82,7 @@ export default function DestinationsTab({ initialAttractionId }: { initialAttrac
     }
   }, [searchQuery, sections]);
 
-  const renderEmpty = () => (
+  const renderEmpty = useCallback(() => (
     <View className="items-center justify-center py-24 px-10">
       <View className="h-20 w-20 items-center justify-center rounded-full bg-muted/20" style={{ backgroundColor: theme.muted + '20' }}>
         <Ionicons name="map-outline" size={40} color={theme.mutedForeground} />
@@ -91,7 +94,17 @@ export default function DestinationsTab({ initialAttractionId }: { initialAttrac
         We couldn&apos;t find any destinations, try change your attractions filter and try again
       </Text>
     </View>
-  );
+  ), [theme]);
+
+  const handleOnPress = useCallback((id: string) => {
+    navigation.navigate('PointDetail', { pointId: id });
+  }, [navigation]);
+
+  const renderItem = useCallback(({ item }: { item: PointPreview }) => {
+    return (
+      <PointItem item={item} theme={theme} onPress={handleOnPress} />
+    )
+  }, [theme, handleOnPress]);
 
   return (
     <>
@@ -124,20 +137,13 @@ export default function DestinationsTab({ initialAttractionId }: { initialAttrac
           />
         }
 
-        // ── SECTION HEADER (The District) ──
         renderSectionHeader={({ section }) => {
           const { attraction } = section;
           return <DestinationListHeader attraction={attraction} />;
         }}
 
-        // ── SECTION ITEMS (The Points) ──
-        renderItem={({ item }: { item: PointPreview }) => {
-          return (
-            <PointItem item={item} theme={theme} onPress={(id) => navigation.navigate('PointDetail', { pointId: id })} />
-          )
-        }}
+        renderItem={renderItem}
 
-        // ── SECTION FOOTER ──
         renderSectionFooter={({ section }) => {
           if (section.data.length > 0) return <View className="h-4" />; // Spacer between sections
           return (

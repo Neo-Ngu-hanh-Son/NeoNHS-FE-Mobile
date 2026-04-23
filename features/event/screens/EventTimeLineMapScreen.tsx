@@ -23,18 +23,23 @@ import {
 } from '@/features/map/components';
 import { useMapNavigationPreviewController } from '@/features/map/hooks/Navigation/useMapNavigationPreviewController';
 import { useMapScreenController } from '@/features/map/hooks/useMapScreenController';
-import { Keyboard } from 'react-native';
+import { Keyboard, StyleSheet, TouchableOpacity } from 'react-native';
 import { useModal } from '@/app/providers/ModalProvider';
 import { logger } from '@/utils/logger';
 import { useEventPointTags } from '../hooks/useEventPointTags';
 import { useEventTimelineMapController } from '../hooks/useEventTimelineMapController';
 import { useEventTimelinesGrouped } from '../hooks/useEventTimelinesGrouped';
-import { EventTimelineMapOverlay, EventTimelinePointDetailBottomSheet } from '../components';
+import { EventTimelineMapOverlay, EventTimelinePointDetailBottomSheet, EventTimelineListBottomSheet } from '../components';
 import { buildEventMapPointsFromGroups } from '../utils/helpers';
 import { useEventMapStore } from '../hooks/useEventMapStore';
 import { EventMapPoint } from '../types';
 import EventTimelineMapMarker from '../components/EventTimelineMapMarker';
 import type { EventTimelinePointDetailSheetRef } from '../components/EventTimelinePointDetailBottomSheet';
+import type { EventTimelineListSheetRef } from '../components/EventTimelineListBottomSheet';
+import { Text } from '@/components/ui/text';
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { THEME } from '@/lib/theme';
+import { List } from 'lucide-react-native';
 
 type EventTimeLineMapScreenProps = StackScreenProps<MainStackParamList, 'EventTimeLineMap'>;
 
@@ -51,7 +56,11 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
   const mapRef = useRef<NHSMapRef>(null);
   const navigationStepsSheetRef = useRef<BottomSheet>(null);
   const pointDetailSheetRef = useRef<EventTimelinePointDetailSheetRef>(null);
+  const timelineListSheetRef = useRef<EventTimelineListSheetRef>(null);
   const { alert } = useModal();
+
+  const { isDarkColorScheme } = useTheme();
+  const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
   const groupedTimelineQuery = useEventTimelinesGrouped(eventId);
   const groupedTimelines = useMemo(() => groupedTimelineQuery.data ?? [], [groupedTimelineQuery.data]);
@@ -380,11 +389,41 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
             activeTagId={timelineController.activeTagId}
             onSelectTag={timelineController.setActiveTagId}
           />
+
+          {/* ── Floating Schedule button (bottom center) ── */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => timelineListSheetRef.current?.present()}
+            style={[
+              floatingStyles.scheduleBtn,
+              {
+                backgroundColor: theme.primary,
+                shadowColor: theme.primary,
+              },
+            ]}
+            accessibilityLabel="View schedule for this day"
+          >
+            <List size={18} color="#fff" />
+            <Text style={floatingStyles.scheduleBtnText}>Schedule</Text>
+          </TouchableOpacity>
+
           <EventTimelinePointDetailBottomSheet
             ref={pointDetailSheetRef}
             point={controller.selectedPoint as EventMapPoint | null}
             onAfterClose={controller.handlePointSheetClosed}
             onNavigateFromCurrentLocation={handleNavigateFromCurrentLocation}
+          />
+          <EventTimelineListBottomSheet
+            ref={timelineListSheetRef}
+            points={mapPoints}
+            selectedDateLabel={
+              timelineController.dayOptions.find((d) => d.date === timelineController.selectedDate)?.label ??
+              'Schedule'
+            }
+            onFocusPoint={(point) => {
+              focusOnPoint(point);
+              handleOpenPointSheetModal(point);
+            }}
           />
         </>
       )}
@@ -425,3 +464,27 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
     </ScreenLayout>
   );
 }
+
+const floatingStyles = StyleSheet.create({
+  scheduleBtn: {
+    position: 'absolute',
+    bottom: 28,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 999,
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
+  },
+  scheduleBtnText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+});

@@ -62,6 +62,25 @@ export interface BlogListParams {
   isFeatured?: boolean;
 }
 
+export interface BlogCategoryParams {
+  page?: number;
+  size?: number;
+  sortBy?: string;
+  sortDir?: 'asc' | 'desc';
+  name?: string;
+}
+
+export interface BlogCategoryResponse {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  status?: BlogCategoryStatus;
+  postCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface BlogFilters {
   status?: string;
   tags: string[];
