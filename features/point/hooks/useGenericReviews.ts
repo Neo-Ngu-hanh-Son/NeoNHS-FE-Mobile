@@ -37,7 +37,7 @@ export function useGenericReviews(reviewTypeId: string, reviewTypeFlag: ReviewTy
         return undefined;
       }
 
-      const currentPage = lastPage?.reviews?.page ?? 0;
+      const currentPage = lastPage?.reviews?.number ?? 0;
       const totalPages = lastPage?.reviews?.totalPages ?? 1;
 
       if (currentPage + 1 >= totalPages) {

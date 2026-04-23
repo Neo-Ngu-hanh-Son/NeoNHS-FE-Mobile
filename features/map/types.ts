@@ -116,6 +116,18 @@ export interface Attraction {
   mapImageUrl: string | null;
   openHour: string; // format: "HH:mm:ss"
   closeHour: string; // format: "HH:mm:ss"
+  points: PointPreview[];
+}
+
+export interface PointPreview {
+  id: string;
+  attractionId: string;
+  name: string;
+  thumbnailUrl?: string;
+  description?: string;
+  type: POIType;
+  latitude: number;
+  longitude: number;
 }
 
 export interface BackgroundGeoFencingData {

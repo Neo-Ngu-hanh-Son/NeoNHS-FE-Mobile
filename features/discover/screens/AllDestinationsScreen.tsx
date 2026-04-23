@@ -15,7 +15,7 @@ import { useBlogList } from '@/features/blog';
 import type { Blog } from '@/features/blog/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { SmartImage } from '@/components/ui/smart-image';
-import AttractionsTab from './ViewAllTabs/AttractionsTab';
+import DestinationsTab from './AllDestinationTab/DestinationsTab';
 
 type Props = StackScreenProps<MainStackParamList, 'AllDestinations'>;
 
@@ -349,7 +349,9 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
   if (activeTab === 'Points') {
     return (
       <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
-        <AttractionsTab initialAttractionId={initialAttractionId} />;
+        {renderHeader()}
+        {renderTabs()}
+        <DestinationsTab initialAttractionId={initialAttractionId} />
       </SafeAreaView>
     );
   }
