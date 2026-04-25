@@ -633,7 +633,13 @@
     "insufficient_points": "포인트 부족",
     "your_points": "내 포인트",
     "points_required": "필요 포인트",
-    "already_collected": "이미 받음"
+    "already_collected": "이미 받음",
+    "tabs": {
+      "available": "사용 가능",
+      "history": "내역"
+    },
+    "use_now": "지금 사용",
+    "show_qr": "QR 코드 표시"
   },
   "tabs": {
     "home": "홈",

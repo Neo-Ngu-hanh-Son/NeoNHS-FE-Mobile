@@ -22,6 +22,7 @@ import {
   PointDetailBottomBar,
 } from '../components';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslatedQuery } from '@/hooks/useTranslatedQuery';
 import { logger } from '@/utils/logger';
 import { usePanorama } from '@/app/providers/PanoramaProvider';
 
@@ -45,12 +46,27 @@ export default function PointDetailScreen({ navigation, route }: Props) {
     isLoading,
     isError,
     refetch,
-  } = useQuery({
+  } = useTranslatedQuery({
     queryKey: ['pointDetail', pointId],
     queryFn: async () => {
       const response = await discoverService.getPointById(pointId);
       return response.data;
     },
+    extractTranslatableFields: (point) => {
+      const fields: Record<string, string> = {};
+      if (point.name) fields.name = point.name;
+      if (point.description) fields.description = point.description;
+      if (point.history) fields.history = point.history;
+      if (point.address) fields.address = point.address;
+      return fields;
+    },
+    mergeTranslatedFields: (point, translated) => ({
+      ...point,
+      name: translated.name || point.name,
+      description: translated.description || point.description,
+      history: translated.history || point.history,
+      address: translated.address || point.address,
+    }),
   });
 
   const {

@@ -3,6 +3,8 @@ import { blogService } from '@/features/blog/services/blogService';
 import { logger } from '@/utils/logger';
 import { BLOG_DEFAULT_FILTERS } from '@/features/blog/types';
 import type { Blog, BlogFilters } from '@/features/blog/types';
+import { useLanguage } from '@/app/providers/LanguageProvider';
+import { translationApi } from '@/services/api/translationApi';
 
 interface UseBlogListOptions {
   size?: number;
@@ -27,6 +29,7 @@ const DEFAULT_PAGE_SIZE = 10;
 
 export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn {
   const { size = DEFAULT_PAGE_SIZE, search, filters, autoFetch = false } = options;
+  const { language } = useLanguage();
 
   const normalizedSearch = search?.trim() || undefined;
   const activeFilters = filters ?? BLOG_DEFAULT_FILTERS;
@@ -38,6 +41,25 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
   const [error, setError] = useState<string | null>(null);
 
   const isFetchingRef = useRef(false);
+
+  const translateBlogs = async (incomingBlogs: Blog[]): Promise<Blog[]> => {
+    if (language === 'vi' || incomingBlogs.length === 0) return incomingBlogs;
+
+    const fieldsToTranslate: Record<string, string> = {};
+    incomingBlogs.forEach((blog) => {
+      if (blog.title) fieldsToTranslate[`${blog.id}_title`] = blog.title;
+      // You can add blog.shortDescription or similar fields here if needed
+    });
+
+    if (Object.keys(fieldsToTranslate).length > 0) {
+      const translatedFields = await translationApi.translateBatch(fieldsToTranslate, language);
+      return incomingBlogs.map((blog) => ({
+        ...blog,
+        title: translatedFields[`${blog.id}_title`] || blog.title,
+      }));
+    }
+    return incomingBlogs;
+  };
 
   const requestPage = useCallback(
     async ({ targetPage, replace }: { targetPage: number; replace: boolean }) => {
@@ -64,9 +86,11 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
           ? pageData.content
           : [];
 
-        const incomingBlogs = content.map(
-          ({ contentJSON: _contentJson, ...blog }) => blog
+        let incomingBlogs = content.map(
+          ({ contentJSON: _contentJson, ...blog }) => blog as Blog
         );
+
+        incomingBlogs = await translateBlogs(incomingBlogs);
 
         setBlogs((prevBlogs) => (replace ? incomingBlogs : [...prevBlogs, ...incomingBlogs]));
         setPage(pageData.number);
@@ -86,6 +110,7 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
       activeFilters.tags,
       normalizedSearch,
       size,
+      language, // Added language dependency
     ]
   );
 
@@ -96,11 +121,12 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
     });
   }, [requestPage]);
 
+  // Re-fetch when language changes (if autoFetch is enabled)
   useEffect(() => {
     if (autoFetch) {
       void fetchBlogs();
     }
-  }, [autoFetch, fetchBlogs]);
+  }, [autoFetch, fetchBlogs, language]);
 
   const loadMore = useCallback(() => {
     if (loading || isFetchingRef.current) {
@@ -127,7 +153,7 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
   const fetchFeaturedBlog = async () => {
     setLoading(true);
     try {
-      const featuredBlogs = await blogService.getBlogs({
+      const pageData = await blogService.getBlogs({
         page: 0,
         size: 1,
         search: normalizedSearch,
@@ -136,7 +162,8 @@ export function useBlogList(options: UseBlogListOptions = {}): UseBlogListReturn
         sortBy: 'featured',
         sortDir: 'desc',
       });
-      setBlogs(featuredBlogs.content);
+      const translated = await translateBlogs(pageData.content as Blog[]);
+      setBlogs(translated);
     } catch (error) {
       logger.error('[useBlogList] Failed to fetch featured blog:', error);
       throw new Error('Failed to fetch featured blog');
