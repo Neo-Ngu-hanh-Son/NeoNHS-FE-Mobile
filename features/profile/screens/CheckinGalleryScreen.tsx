@@ -108,8 +108,8 @@ export default function CheckinGalleryScreen({ navigation }: CheckinGalleryScree
             ))}
             {row.length < GRID_COLUMN_COUNT
               ? Array.from({ length: GRID_COLUMN_COUNT - row.length }).map((_, emptyIndex) => (
-                  <View key={`${section.title}-${rowIndex}-empty-${emptyIndex}`} style={styles.gridItem} />
-                ))
+                <View key={`${section.title}-${rowIndex}-empty-${emptyIndex}`} style={styles.gridItem} />
+              ))
               : null}
           </View>
         ))}

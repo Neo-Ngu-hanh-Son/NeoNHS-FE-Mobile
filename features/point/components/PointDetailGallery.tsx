@@ -1,42 +1,78 @@
-import React from 'react';
-import { View, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, FlatList } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { SmartImage } from '@/components/ui/smart-image';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { useTranslation } from 'react-i18next';
+import { ReviewImageResponse } from '@/features/reviews';
+import { PublicGalleryViewerModal } from './PublicGalleryViewerModal';
 
-const GALLERY_PHOTOS = [
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuCKm5L5M0j5L2QmffIZ0pnmgadfS9Cw9bXKb96m8HynEEq-90T5nXhkuENGaOC3-Ij8snTadpmTYieZZpifEVrEMdOhGIxTAOfDvxi1tfqkodtk1E2Ey-fU2pbdlKvgxgGk7TSIWNjZlEBTogUGYmiqoNNkZbe9jAsZpkHZxvMvBt-DHknqpkvLyUjpZPKS1UpCUWFlj34ijpaFbfz7OBDE39rfUkf9qPN1laOPKe6WRXKv1FYkxXYsL1R9COyGPeRk2565jgKH9tPB',
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuDsSVWdk4xdgOBN8Jt4LxtXEgN6_Y1TTlWaorIF0TZBFfMTJP53DaLgzm1SCz2uHVEJ2iQwmjof0HFQp7fwdAztWvmGs1crUR-LPyV7kfsvIMh00-xQjrNpoFPKtSpJ49feaad9bp3V0XVfBwsEkU30lgQVThaET83tV7e08lBTFpOQI7raFI0UM9XgB3iC54sjnGwb5bwVzROaZOouG1u76Ijsam0P4i6EBI8TSarKCtojQVXqUKvi6iZ9FEVxdVglC2qxmCShwq_3',
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuCjLJD_UcqL87_A5cxKEI9OItTiFnAm6qFpNlYguEHg3RvNRzNkEPrMZq_YCCy560V4iyAPieGxv1oJq5bjd9Cqx1iLF95JfxQSNGyLB24OIVnfQFYZ75UpyC-zi7q2zAafB4nsbVQ3cIduxcikNrPS4CkDbnDusH8tHWHFYYoAuXBxjJFW5rv2idB03vckyRdaJ8QrJwqCZqG5xBBW7HksTb_e1PmiHIfcq8P_52fzc4Szz096UO-85NJKbQnYxkxxmqYRckbSK-Pw',
-];
+const { width } = Dimensions.get('window');
+const THUMB_SIZE = width * 0.32;
 
-export function PointDetailGallery() {
+export function PointDetailGallery({ publicImages, isLoading, isError, refetchImages }: {
+  publicImages: ReviewImageResponse[];
+  isLoading: boolean;
+  isError: boolean;
+  refetchImages: () => void;
+}) {
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const { t } = useTranslation();
 
+  if (isLoading) return <ActivityIndicator className="py-8" />;
+  if (isError) return <Text className="text-center py-4">Error loading images</Text>;
+  if (publicImages.length === 0) return null;
+
+  const handleNavigateToSeeAllGallery = () => {
+    console.log('handleNavigateToSeeAllGallery');
+  }
+
   return (
     <View className="gap-4">
       {/* Header row */}
-      <View className="flex-row items-center justify-between">
+      <View className="flex-row items-center justify-between px-1">
         <Text className="text-xl font-black tracking-tight">{t('point.checkin_gallery')}</Text>
-        <TouchableOpacity activeOpacity={0.7}>
+        <TouchableOpacity activeOpacity={0.7} onPress={handleNavigateToSeeAllGallery}>
           <Text className="text-sm font-bold" style={{ color: theme.primary }}>
             {t('common.see_all')}
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Horizontal scroll */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
-        {GALLERY_PHOTOS.map((uri, index) => (
-          <TouchableOpacity key={index} activeOpacity={0.85}>
-            <SmartImage uri={uri} className="h-32 w-32 rounded-2xl" />
+      <FlatList
+        data={publicImages}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        // Using contentContainerStyle for padding and gap
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          columnGap: 12 // Modern RN supports columnGap/rowGap in style
+        }}
+        keyExtractor={(item, index) => item.authorId + "_" + index}
+        renderItem={({ item, index }) => (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => setSelectedIndex(index)}
+          >
+            <SmartImage
+              uri={item.imageUrl}
+              style={{ width: THUMB_SIZE, height: THUMB_SIZE }}
+              className="rounded-3xl bg-muted"
+              contentFit="cover"
+            />
           </TouchableOpacity>
-        ))}
-      </ScrollView>
+        )}
+      />
+
+      <PublicGalleryViewerModal
+        visible={selectedIndex !== null}
+        images={publicImages}
+        initialIndex={selectedIndex ?? 0}
+        onClose={() => setSelectedIndex(null)}
+      />
     </View>
   );
 }
