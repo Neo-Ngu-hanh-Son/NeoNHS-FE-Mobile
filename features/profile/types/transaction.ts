@@ -27,6 +27,8 @@ export interface Ticket {
     ticketType: TransactionType;
     status: string; // 'ACTIVE', etc.
     itemName: string;
+    eventName?: string;
+    workshopName?: string;
     validFrom: string;
     validTo: string;
     price: number;

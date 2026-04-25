@@ -47,20 +47,37 @@ export default function PaymentScreen() {
 
         try {
             const response = await cartService.verifyPayment(orderCode);
+            
+            const handleSuccessNavigation = () => {
+                navigation.reset({
+                    index: 1,
+                    routes: [
+                        { name: 'Tabs', params: { screen: 'Profile' } },
+                        { name: 'TransactionHistory' },
+                    ],
+                });
+            };
+
             if (response.success) {
-                // Assuming backend returns success=true if payment is confirmed
-                // Could be response.data.status === 'PAID' or similar
                 Alert.alert("Payment Successful", "Your order has been paid successfully.", [
-                    { text: "OK", onPress: () => navigation.replace('TransactionHistory') }
+                    { text: "OK", onPress: handleSuccessNavigation }
                 ]);
             } else {
                 Alert.alert("Payment Incomplete", "We could not verify your payment. Please check your transaction history.", [
-                    { text: "Check History", onPress: () => navigation.replace('TransactionHistory') }
+                    { text: "Check History", onPress: handleSuccessNavigation }
                 ]);
             }
         } catch (error) {
             Alert.alert("Error", "Failed to verify payment status.", [
-                { text: "OK", onPress: () => navigation.replace('TransactionHistory') }
+                { text: "OK", onPress: () => {
+                    navigation.reset({
+                        index: 1,
+                        routes: [
+                            { name: 'Tabs', params: { screen: 'Profile' } },
+                            { name: 'TransactionHistory' },
+                        ],
+                    });
+                } }
             ]);
         }
     };
