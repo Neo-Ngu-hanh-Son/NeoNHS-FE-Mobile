@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useTranslatedQuery } from "@/hooks/useTranslatedQuery";
 import { blogService } from "../services/blogService";
 
 export function useBlogCategory({
@@ -14,8 +14,26 @@ export function useBlogCategory({
   sortDir?: "asc" | "desc";
   name?: string
 }) {
-  return useQuery({
+  return useTranslatedQuery({
     queryKey: ["blog-category", page, size, sortBy, sortDir, name],
     queryFn: () => blogService.getBlogCategories({ page, size, sortBy, sortDir, name }),
-  })
+    extractTranslatableFields: (data) => {
+      const fields: Record<string, string> = {};
+      data.content?.forEach((category: any) => {
+        if (category.name) fields[`category_${category.id}_name`] = category.name;
+        if (category.description) fields[`category_${category.id}_desc`] = category.description;
+      });
+      return fields;
+    },
+    mergeTranslatedFields: (data, translated) => {
+      return {
+        ...data,
+        content: data.content?.map((category: any) => ({
+          ...category,
+          name: translated[`category_${category.id}_name`] || category.name,
+          description: translated[`category_${category.id}_desc`] || category.description,
+        }))
+      };
+    }
+  });
 }
