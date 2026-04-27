@@ -40,7 +40,7 @@ const uploadImageService = async (image: MultipartCheckinImage, token: string) =
     type: image.type,
   } as any);
   try {
-    const response = await fetch(`${API_URL}/upload/image`, {
+    const response = await fetch(`${API_URL}/public/upload/image`, {
       method: 'POST',
       body: formData,
       headers: { Authorization: `Bearer ${token}` },
@@ -76,7 +76,7 @@ const useUploadImage = () => {
 const useDeleteImage = () => {
   return useMutation<string, Error, string>({
     mutationFn: async (publicId: string) => {
-      const response = await apiClient.delete<string>(`/upload/image/${publicId}`, {
+      const response = await apiClient.delete<string>(`/public/upload/image/${publicId}`, {
         requiresAuth: true,
       });
       return response.data;

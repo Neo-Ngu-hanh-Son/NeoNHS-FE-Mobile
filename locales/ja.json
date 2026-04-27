@@ -101,7 +101,8 @@
     "too_far": "チェックインするには遠すぎます",
     "list_view": "リスト",
     "map_view": "地図",
-    "directions": "道案内"
+    "directions": "道案内",
+    "address": "住所"
   },
   "auth": {
     "welcome_back": "おかえりなさい",
@@ -632,7 +633,13 @@
     "insufficient_points": "ポイント不足",
     "your_points": "あなたのポイント",
     "points_required": "必要ポイント",
-    "already_collected": "取得済み"
+    "already_collected": "取得済み",
+    "tabs": {
+      "available": "利用可能",
+      "history": "履歴"
+    },
+    "use_now": "今すぐ使う",
+    "show_qr": "QRコードを表示"
   },
   "tabs": {
     "home": "ホーム",

@@ -5,11 +5,11 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { SmartImage } from '@/components/ui/smart-image';
 import { Text } from '@/components/ui/text';
-import type { ReviewImage } from '@/features/reviews/types';
+import type { ReviewImageResponse } from '@/features/reviews/types';
 
 type ReviewImageViewerModalProps = {
   visible: boolean;
-  images: ReviewImage[];
+  images: ReviewImageResponse[];
   initialIndex: number;
   onClose: () => void;
 };

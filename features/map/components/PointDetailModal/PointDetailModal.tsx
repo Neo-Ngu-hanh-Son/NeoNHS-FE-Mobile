@@ -132,8 +132,8 @@ const MapPointDetailModal = forwardRef<MapPointDetailSheetRef, PointDetailModalP
             participantsStr={participantsStr}
             workshopOrganizerName={point.workshopOrganizerName}
             estTimeStr={estTimeStr}
-            panoramaImageUrl={point.panoramaImageUrl}
             theme={theme}
+            address={point.address}
           />
 
           <PointDetailCTA

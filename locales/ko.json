@@ -61,13 +61,14 @@
     "est_visit_time": "예상 방문 시간",
     "experience": "안내",
     "panorama_available": "360° 파노라마 지원",
-        "title": "지도",
+    "title": "지도",
     "nearby": "근처",
     "checkin_failed": "체크인 실패",
     "too_far": "체크인하기에 너무 멀리 있습니다",
     "list_view": "목록",
     "map_view": "지도",
-    "directions": "길 안내"
+    "directions": "길 안내",
+    "address": "주소"
   },
   "auth": {
     "welcome_back": "다시 오셨군요",
@@ -208,7 +209,6 @@
     "no_workshops": "워크숍을 찾을 수 없습니다",
     "no_events": "예정된 이벤트가 없습니다"
   },
-
   "point": {
     "tabs": {
       "overview": "개요",
@@ -633,7 +633,13 @@
     "insufficient_points": "포인트 부족",
     "your_points": "내 포인트",
     "points_required": "필요 포인트",
-    "already_collected": "이미 받음"
+    "already_collected": "이미 받음",
+    "tabs": {
+      "available": "사용 가능",
+      "history": "내역"
+    },
+    "use_now": "지금 사용",
+    "show_qr": "QR 코드 표시"
   },
   "tabs": {
     "home": "홈",

@@ -45,9 +45,21 @@ export type Edge = {
   note?: string;
 };
 
+export enum PointVibe {
+  SPIRITUAL = 'SPIRITUAL',
+  RELAXING = 'RELAXING',
+  ENERGETIC = 'ENERGETIC',
+  SCENIC = 'SCENIC',
+  HISTORICAL = 'HISTORICAL',
+}
+
+export enum PointDifficulty {
+  EASY = 'EASY',
+  MEDIUM = 'MEDIUM',
+  HARD = 'HARD',
+}
+
 // These are special points used for map markers and interactions (They are not necessarily nodes in the graph, but can be on the edges)
-export type PointDifficulty = 'EASY' | 'MODERATE' | 'HARD';
-export type PointVibe = 'SPIRITUAL' | 'RELAXING' | 'ENERGETIC' | 'SCENIC' | 'HISTORICAL';
 
 export interface MapPoint {
   // Base PointResponse Fields
@@ -57,7 +69,6 @@ export interface MapPoint {
   thumbnailUrl?: string;
   latitude: number;
   longitude: number;
-  address?: string;
   orderIndex?: number;
   estTimeSpent?: number;
   difficulty?: PointDifficulty;
@@ -67,6 +78,7 @@ export interface MapPoint {
   googlePlaceId?: string;
   historyAudioCount?: number;
   history?: string;
+  address?: string;
 
   // Children check-in points
   checkinPoints?: MapPointCheckin[];

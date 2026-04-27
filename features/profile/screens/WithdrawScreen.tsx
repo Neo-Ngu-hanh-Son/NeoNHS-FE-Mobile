@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
@@ -511,22 +511,31 @@ export default function WithdrawScreen() {
               const labels = ['Amount', 'Face', 'Confirm'];
 
               return (
-                <View key={s} style={styles.stepDotWrap}>
-                  <View
-                    style={[
-                      styles.stepDot,
-                      isCompleted && { backgroundColor: '#22C55E' },
-                      isCurrent && { backgroundColor: 'white' },
-                    ]}>
-                    {isCompleted ? (
-                      <MaterialIcons name="check" size={12} color="white" />
-                    ) : (
-                      <Text style={[styles.stepDotText, isCurrent && { color: theme.primary }]}>{i + 1}</Text>
-                    )}
+                <React.Fragment key={s}>
+                  <View style={styles.stepDotWrap}>
+                    <View
+                      style={[
+                        styles.stepDot,
+                        isCompleted && { backgroundColor: '#22C55E' },
+                        isCurrent && { backgroundColor: 'white' },
+                      ]}>
+                      {isCompleted ? (
+                        <MaterialIcons name="check" size={12} color="white" />
+                      ) : (
+                        <Text style={[styles.stepDotText, isCurrent && { color: theme.primary }]}>{i + 1}</Text>
+                      )}
+                    </View>
+                    <Text style={[styles.stepDotLabel, isCurrent && { fontWeight: '700' }]}>{labels[i]}</Text>
                   </View>
-                  <Text style={[styles.stepDotLabel, isCurrent && { fontWeight: '700' }]}>{labels[i]}</Text>
-                  {i < 2 && <View style={[styles.stepLine, isCompleted && { backgroundColor: '#22C55E' }]} />}
-                </View>
+                  {i < 2 && (
+                    <View
+                      style={[
+                        styles.stepLine,
+                        isCompleted && { backgroundColor: '#22C55E' },
+                      ]}
+                    />
+                  )}
+                </React.Fragment>
               );
             })}
           </View>
@@ -566,11 +575,11 @@ const styles = StyleSheet.create({
   stepIndicator: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingHorizontal: 40,
     paddingBottom: 16,
   },
-  stepDotWrap: { alignItems: 'center', position: 'relative' },
+  stepDotWrap: { alignItems: 'center' },
   stepDot: {
     width: 24,
     height: 24,
@@ -582,12 +591,12 @@ const styles = StyleSheet.create({
   stepDotText: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.7)' },
   stepDotLabel: { fontSize: 10, color: 'rgba(255,255,255,0.8)', marginTop: 3, fontWeight: '500' },
   stepLine: {
-    position: 'absolute',
-    top: 12,
-    left: 24,
-    width: SCREEN_WIDTH / 3 - 32,
+    flex: 1,
     height: 2,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    marginTop: 11,
+    marginHorizontal: 4,
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.4)',
   },
 
   // Balance card

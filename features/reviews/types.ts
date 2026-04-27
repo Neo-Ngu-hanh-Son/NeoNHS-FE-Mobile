@@ -22,7 +22,7 @@ export interface ReviewUser {
   role?: string;
 }
 
-export interface ReviewImage {
+export interface ReviewImageResponse {
   imageUrl: string;
   authorName?: string | null;
   authorId?: string | null;
@@ -39,11 +39,11 @@ export interface ReviewResponse {
   comment: string | null;
   createdAt: string;
   imageUrls: string[];
-  reviewImages?: ReviewImage[];
+  reviewImages?: ReviewImageResponse[];
 }
 
 export interface GenericReviewResponse extends ReviewResponse {
-  reviewImages: ReviewImage[];
+  reviewImages: ReviewImageResponse[];
 }
 
 export interface ReviewPageResponse {
