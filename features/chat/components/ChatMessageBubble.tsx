@@ -161,32 +161,31 @@ const splitByCardTitleAnchors = (text: string, cards: AttachedCard[]): string[] 
   return sections;
 };
 
-const splitNumberedSectionBodyAndTail = (section: string): { body: string; tail: string } => {
+const splitSectionBodyAndTail = (section: string): { body: string; tail: string } => {
   const lines = section.split('\n');
-  if (lines.length <= 1 || !/^\s*\d+\.\s+/.test(lines[0])) {
+  if (lines.length <= 1) {
     return { body: section.trim(), tail: '' };
   }
 
   let cut = lines.length;
-  let sawListLine = false;
 
-  for (let i = 1; i < lines.length; i++) {
+  for (let i = lines.length - 1; i >= 1; i--) {
     const raw = lines[i];
     const line = raw.trim();
     if (!line) continue;
 
-    const isListLine = /^[-*•]\s+/.test(line) || /^-\s+/.test(line);
+    const isListLine = /^[-*•+]\s+/.test(line) || /^\d+\.\s+/.test(line);
+    const isAttributeLike = /^(?:\*\*)?[^:*]{2,40}:/.test(line);
     const isIndented = /^\s+/.test(raw);
 
-    if (isListLine || isIndented) {
-      sawListLine = true;
-      continue;
-    }
-
-    if (sawListLine) {
-      cut = i;
+    if (isListLine || isAttributeLike || isIndented) {
+      cut = i + 1;
       break;
     }
+  }
+
+  if (cut === 1) {
+    cut = lines.length;
   }
 
   const body = lines.slice(0, cut).join('\n').trim();
@@ -466,7 +465,7 @@ const ChatMessageBubbleBase = ({
             usedCardIndexes.add(selectedIndex);
           }
           const isPoint = card?.type === 'point';
-          const split = splitNumberedSectionBodyAndTail(section);
+          const split = splitSectionBodyAndTail(section);
           return (
             <View key={`sec-${idx}`}>
               <Markdown
