@@ -329,11 +329,11 @@ export default function ChatScreen({ route, navigation }: any) {
   }, [navigation]);
 
   const handleGoToMap = useCallback((pointId: string) => {
-    navigation.navigate('MapDirection', {
-      pointId: pointId,
-      targetNavigationPointId: pointId
+    navigation.navigate('Tabs', {
+      screen: 'Map',
+      params: { pointId: pointId, targetNavigationPointId: pointId, fromChatRoomId: roomId }
     });
-  }, [navigation]);
+  }, [navigation, roomId]);
 
   // ── Send product snippet ─────────────────────────────
   const handleSendSnippet = () => {

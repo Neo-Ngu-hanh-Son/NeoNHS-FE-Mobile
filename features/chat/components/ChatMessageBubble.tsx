@@ -685,7 +685,7 @@ const ChatMessageBubbleBase = ({
               <View className="flex-1 ml-3">
                 <Text
                   className="text-xs font-bold"
-                  style={{ color: isMine ? '#FFFFFF' : theme.foreground }}
+                  style={{ color: theme.foreground }}
                   numberOfLines={2}>
                   {meta?.title ?? 'Product'}
                 </Text>
