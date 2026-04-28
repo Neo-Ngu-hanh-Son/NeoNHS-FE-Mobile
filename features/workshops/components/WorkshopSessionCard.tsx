@@ -29,6 +29,7 @@ interface WorkshopSessionCardProps {
 export default function WorkshopSessionCard({ session, theme }: WorkshopSessionCardProps) {
   const slotsColor = getAvailabilityColor(session.availableSlots, session.maxParticipants);
   const isFull = session.availableSlots <= 0;
+  const isFree = session.price === 0 || session.price == null;
   const fillPercent = Math.min(
     (session.currentEnrolled / session.maxParticipants) * 100,
     100
@@ -100,10 +101,20 @@ export default function WorkshopSessionCard({ session, theme }: WorkshopSessionC
             </Text>
           </View>
         </View>
+        {/* Price / Free badge */}
         <View className="items-end">
-          <Text className="text-lg font-bold" style={{ color: theme.primary }}>
-            {formatPrice(session.price)}
-          </Text>
+          {isFree ? (
+            <View
+              className="rounded-lg px-2 py-1"
+              style={{ backgroundColor: '#dcfce7' }}
+            >
+              <Text className="text-sm font-extrabold" style={{ color: '#16a34a' }}>FREE</Text>
+            </View>
+          ) : (
+            <Text className="text-lg font-bold" style={{ color: theme.primary }}>
+              {formatPrice(session.price)}
+            </Text>
+          )}
         </View>
       </View>
 
@@ -140,28 +151,30 @@ export default function WorkshopSessionCard({ session, theme }: WorkshopSessionC
         </View>
       </View>
 
-      {/* Book button */}
-      <TouchableOpacity
-        className="py-3 rounded-xl items-center flex-row justify-center gap-2"
-        style={{
-          backgroundColor: isFull ? theme.muted : theme.primary,
-        }}
-        disabled={isFull}
-        activeOpacity={0.7}
-        onPress={handleOpenModal}
-      >
-        <Ionicons
-          name={isFull ? "close-circle-outline" : "bookmark-outline"}
-          size={18}
-          color={isFull ? theme.mutedForeground : "#fff"}
-        />
-        <Text
-          className="font-bold text-sm"
-          style={{ color: isFull ? theme.mutedForeground : "#fff" }}
+      {/* Book button — hidden when free */}
+      {!isFree && (
+        <TouchableOpacity
+          className="py-3 rounded-xl items-center flex-row justify-center gap-2"
+          style={{
+            backgroundColor: isFull ? theme.muted : theme.primary,
+          }}
+          disabled={isFull}
+          activeOpacity={0.7}
+          onPress={handleOpenModal}
         >
-          {isFull ? "Fully Booked" : "Book This Session"}
-        </Text>
-      </TouchableOpacity>
+          <Ionicons
+            name={isFull ? "close-circle-outline" : "bookmark-outline"}
+            size={18}
+            color={isFull ? theme.mutedForeground : "#fff"}
+          />
+          <Text
+            className="font-bold text-sm"
+            style={{ color: isFull ? theme.mutedForeground : "#fff" }}
+          >
+            {isFull ? "Fully Booked" : "Book This Session"}
+          </Text>
+        </TouchableOpacity>
+      )}
 
       {/* Add to Cart Modal */}
       <Modal
@@ -180,29 +193,36 @@ export default function WorkshopSessionCard({ session, theme }: WorkshopSessionC
               {formatShortDate(session.startTime)} at {formatTime(session.startTime)}
             </Text>
 
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
-              <Text style={{ fontSize: 16, color: theme.foreground, marginRight: 10 }}>Quantity:</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', borderColor: theme.border, borderWidth: 1, borderRadius: 8 }}>
-                <TouchableOpacity
-                  onPress={() => setQuantity(prev => Math.max(1, parseInt(prev || "0") - 1).toString())}
-                  style={{ padding: 10 }}
-                >
-                  <Ionicons name="remove" size={20} color={theme.foreground} />
-                </TouchableOpacity>
-                <TextInput
-                  style={{ width: 50, textAlign: 'center', color: theme.foreground, fontSize: 16, padding: 5 }}
-                  keyboardType="numeric"
-                  value={quantity}
-                  onChangeText={setQuantity}
-                />
-                <TouchableOpacity
-                  onPress={() => setQuantity(prev => (parseInt(prev || "0") + 1).toString())}
-                  style={{ padding: 10 }}
-                >
-                  <Ionicons name="add" size={20} color={theme.foreground} />
-                </TouchableOpacity>
+            {isFree ? (
+              /* Free session — no quantity picker needed, just 1 slot */
+              <Text style={{ fontSize: 14, color: '#16a34a', fontWeight: '600', marginBottom: 20, textAlign: 'center' }}>
+                🎉 This session is free! Register 1 spot.
+              </Text>
+            ) : (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
+                <Text style={{ fontSize: 16, color: theme.foreground, marginRight: 10 }}>Quantity:</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', borderColor: theme.border, borderWidth: 1, borderRadius: 8 }}>
+                  <TouchableOpacity
+                    onPress={() => setQuantity(prev => Math.max(1, parseInt(prev || "0") - 1).toString())}
+                    style={{ padding: 10 }}
+                  >
+                    <Ionicons name="remove" size={20} color={theme.foreground} />
+                  </TouchableOpacity>
+                  <TextInput
+                    style={{ width: 50, textAlign: 'center', color: theme.foreground, fontSize: 16, padding: 5 }}
+                    keyboardType="numeric"
+                    value={quantity}
+                    onChangeText={setQuantity}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setQuantity(prev => (parseInt(prev || "0") + 1).toString())}
+                    style={{ padding: 10 }}
+                  >
+                    <Ionicons name="add" size={20} color={theme.foreground} />
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
+            )}
 
             <View style={{ width: '100%', gap: 10 }}>
               <TouchableOpacity
@@ -216,7 +236,7 @@ export default function WorkshopSessionCard({ session, theme }: WorkshopSessionC
                   <Ionicons name="cart" size={20} color="#fff" style={{ marginRight: 8 }} />
                 )}
                 <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 16 }}>
-                  {isAdding ? "Adding..." : "Add to Cart"}
+                  {isAdding ? "Adding..." : isFree ? "Register Now" : "Add to Cart"}
                 </Text>
               </TouchableOpacity>
 

@@ -8,23 +8,29 @@ import { THEME } from '@/lib/theme';
 import { transactionService } from '../services/transactionService';
 import LoadingOverlay from '@/components/Loader/LoadingOverlay';
 import * as ImagePicker from 'expo-image-picker';
+import { useAuth } from '@/features/auth/context/AuthContext';
 import { logger } from '@/utils/logger';
 import RNQRGenerator from 'rn-qr-generator';
+
 
 const { width } = Dimensions.get('window');
 const SCAN_AREA_SIZE = width * 0.7;
 
-type TabMode = 'scan' | 'manual';
+type TabMode = 'scan' | 'manual' | 'voucher';
+
 
 export default function TicketVerificationScreen() {
     const navigation = useNavigation();
     const { isDarkColorScheme } = useTheme();
     const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+    const { user } = useAuth();
+    const userRole = user?.role ?? 'VENDOR';
     const [permission, requestPermission] = useCameraPermissions();
     const [scanned, setScanned] = useState(false);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<TabMode>('scan');
     const [manualCode, setManualCode] = useState('');
+
 
     useEffect(() => {
         if (!permission) {
@@ -90,8 +96,13 @@ export default function TicketVerificationScreen() {
     const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
         if (scanned || loading) return;
         setScanned(true);
-        await verifyCode(data);
+        if (activeTab === 'voucher') {
+            await redeemVoucherCode(data);
+        } else {
+            await verifyCode(data);
+        }
     };
+
 
     const handlePickImage = async () => {
         try {
@@ -128,7 +139,43 @@ export default function TicketVerificationScreen() {
         }
     };
 
+    // ─── Voucher Redeem Logic ───
+    const redeemVoucherCode = async (userVoucherId: string) => {
+        if (!userVoucherId.trim()) return;
+        setLoading(true);
+        try {
+            logger.info(`Redeeming voucher: ${userVoucherId} as ${userRole}`);
+            const response = await transactionService.redeemVoucher(userVoucherId.trim(), userRole);
+            if (response.status === 200 || response.success) {
+                const data = response.data;
+                Alert.alert(
+                    '🎁 Voucher Redeemed!',
+                    data?.giftDescription
+                        ? `Gift: ${data.giftDescription}`
+                        : 'Voucher has been redeemed successfully!',
+                    [{ text: 'OK', onPress: () => setScanned(false) }]
+                );
+            } else {
+                Alert.alert(
+                    'Redeem Failed',
+                    response.message || 'Invalid or already used voucher.',
+                    [{ text: 'Try Again', onPress: () => setScanned(false) }]
+                );
+            }
+        } catch (error: any) {
+            logger.error('Voucher redeem error:', error);
+            Alert.alert(
+                'Error',
+                error.message || 'Failed to redeem voucher.',
+                [{ text: 'Try Again', onPress: () => setScanned(false) }]
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleManualSubmit = async () => {
+
         if (!manualCode.trim()) {
             Alert.alert('Input Required', 'Please enter a ticket code.');
             return;
@@ -157,8 +204,18 @@ export default function TicketVerificationScreen() {
                     Manual Entry
                 </Text>
             </TouchableOpacity>
+            <TouchableOpacity
+                style={[styles.tabBtn, activeTab === 'voucher' && styles.tabBtnVoucherActive]}
+                onPress={() => { setActiveTab('voucher'); setScanned(false); }}
+            >
+                <MaterialIcons name="card-giftcard" size={15} color={activeTab === 'voucher' ? '#fff' : 'rgba(255,255,255,0.55)'} />
+                <Text style={[styles.tabBtnText, activeTab === 'voucher' && styles.tabBtnTextActive]}>
+                    Voucher
+                </Text>
+            </TouchableOpacity>
         </View>
     );
+
 
     // ─── Manual Entry Bottom Panel ───
     const renderManualPanel = () => (
@@ -219,8 +276,9 @@ export default function TicketVerificationScreen() {
             <CameraView
                 style={StyleSheet.absoluteFillObject}
                 facing="back"
-                onBarcodeScanned={(activeTab === 'scan' && !scanned) ? handleBarCodeScanned : undefined}
+                onBarcodeScanned={(activeTab !== 'manual' && !scanned) ? handleBarCodeScanned : undefined}
                 barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+
             >
                 <View style={styles.overlay}>
 
@@ -233,7 +291,7 @@ export default function TicketVerificationScreen() {
                             <Ionicons name="close" size={28} color="white" />
                         </TouchableOpacity>
                         <Text style={styles.title}>Ticket Verification</Text>
-                        {/* Pick from gallery — only relevant in scan mode */}
+                        {/* Pick from gallery — only relevant in scan/voucher mode */}
                         <TouchableOpacity
                             onPress={handlePickImage}
                             style={[styles.iconButton, activeTab === 'manual' && { opacity: 0.3 }]}
@@ -241,12 +299,13 @@ export default function TicketVerificationScreen() {
                         >
                             <Ionicons name="image" size={24} color="white" />
                         </TouchableOpacity>
+
                     </View>
 
                     {/* ── Tab Switcher ── */}
                     {renderTabSwitcher()}
 
-                    {/* ── QR Scan Area ── */}
+                    {/* ── QR Scan Area (ticket) ── */}
                     {activeTab === 'scan' && (
                         <View style={styles.scanAreaContainer}>
                             <View style={styles.scanFrame}>
@@ -261,8 +320,31 @@ export default function TicketVerificationScreen() {
                         </View>
                     )}
 
+                    {/* ── Voucher QR Scan Area ── */}
+                    {activeTab === 'voucher' && (
+                        <View style={styles.scanAreaContainer}>
+                            <View style={[styles.scanFrame, styles.scanFrameVoucher]}>
+                                <View style={[styles.corner, styles.cornerTL, styles.cornerVoucher]} />
+                                <View style={[styles.corner, styles.cornerTR, styles.cornerVoucher]} />
+                                <View style={[styles.corner, styles.cornerBL, styles.cornerVoucher]} />
+                                <View style={[styles.corner, styles.cornerBR, styles.cornerVoucher]} />
+                            </View>
+                            <View style={styles.voucherBadge}>
+                                <MaterialIcons name="card-giftcard" size={16} color="#a855f7" />
+                                <Text style={styles.voucherBadgeText}>Voucher Gift Redeem</Text>
+                            </View>
+                            {/* <Text style={styles.instructionText}>
+                                Scan customer's voucher QR to redeem gift
+                            </Text>
+                            <Text style={styles.roleLabel}>
+                                Role: {userRole === 'ADMIN' ? '👑 Admin' : '🏪 Vendor'}
+                            </Text> */}
+                        </View>
+                    )}
+
                     {/* ── Manual Entry Panel ── */}
                     {activeTab === 'manual' && renderManualPanel()}
+
                 </View>
             </CameraView>
 
@@ -337,6 +419,10 @@ const styles = StyleSheet.create({
     tabBtnActive: {
         backgroundColor: '#22c55e',
     },
+    tabBtnVoucherActive: {
+        backgroundColor: '#a855f7',
+    },
+
     tabBtnText: {
         color: 'rgba(255,255,255,0.55)',
         fontSize: 13,
@@ -374,6 +460,33 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         opacity: 0.8,
     },
+    scanFrameVoucher: {
+        borderColor: '#a855f7',
+    },
+    cornerVoucher: {
+        borderColor: '#a855f7',
+    },
+    voucherBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        backgroundColor: 'rgba(168,85,247,0.15)',
+        borderRadius: 20,
+        paddingHorizontal: 14,
+        paddingVertical: 6,
+        marginTop: 16,
+    },
+    voucherBadgeText: {
+        color: '#a855f7',
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    roleLabel: {
+        color: 'rgba(255,255,255,0.65)',
+        fontSize: 12,
+        marginTop: 8,
+    },
+
 
     // ── Manual Entry Panel ──
     manualPanelWrapper: {
