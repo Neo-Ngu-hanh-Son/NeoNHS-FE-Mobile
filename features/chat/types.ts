@@ -51,6 +51,14 @@ export interface ChatMessage {
     address?: string;
     /** When true, show transfer-to-human CTAs (set by backend on AI handover). */
     transferToHuman?: boolean;
+    /** Deterministic cards generated from backend tool outputs. */
+    attachedCards?: Array<{
+      id: string;
+      type: 'workshop' | 'event' | 'blog' | 'point' | string;
+      title: string;
+      imageUrl?: string;
+      [key: string]: any;
+    }>;
     [key: string]: any;
   } | null;
 

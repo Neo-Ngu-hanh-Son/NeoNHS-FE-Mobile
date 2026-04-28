@@ -9,7 +9,6 @@ import { THEME } from '@/lib/theme';
 import Markdown from 'react-native-markdown-display';
 
 import { ChatMessage } from '../types';
-import { hasTransferMarker, stripTransferMarker } from '../utils/transferHuman';
 
 export interface ChatMessageBubbleProps {
   message: ChatMessage;
@@ -25,29 +24,175 @@ export interface ChatMessageBubbleProps {
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-// ── Status ticks ───────────────────────────────────────
-function StatusTicks({ status }: { status: ChatMessage['status'] }) {
-  if (status === 'READ') {
-    return (
-      <View className="ml-1.5 flex-row">
-        <Ionicons name="checkmark-done" size={14} color="#22C55E" />
-      </View>
-    );
+const normalizeText = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+type AttachedCard = {
+  id: string;
+  type: 'workshop' | 'event' | 'blog' | 'point' | string;
+  title: string;
+  imageUrl?: string;
+};
+
+const extractCardMeta = (raw: string | undefined | null) => {
+  if (!raw) {
+    return { title: '', id: null as string | null, type: null as string | null };
   }
-  if (status === 'DELIVERED') {
-    return (
-      <View className="ml-1.5 flex-row">
-        <Ionicons name="checkmark-done" size={14} color="#9CA3AF" />
-      </View>
-    );
+
+  const normalized = raw.trim();
+  const title = normalized.split('|')[0]?.trim() ?? '';
+
+  if ((normalized.startsWith('{') && normalized.endsWith('}')) || (normalized.startsWith('[') && normalized.endsWith(']'))) {
+    try {
+      const json = JSON.parse(normalized);
+      const parsedId = json.id || json.pointId || json.workshopId || json.eventId || null;
+      const parsedType = (json.type || (json.pointId ? 'point' : json.eventId ? 'event' : json.workshopId ? 'workshop' : null) || '')
+        .toString()
+        .trim()
+        .toLowerCase();
+      const parsedTitle = (json.title || json.name || title || '').toString().trim();
+      const normalizedType = ['location', 'destination', 'place', 'map_point'].includes(parsedType) ? 'point' : parsedType;
+      return {
+        title: parsedTitle,
+        id: parsedId ? parsedId.toString().trim() : null,
+        type: normalizedType || null,
+      };
+    } catch {
+      // Fall through to plain-text parser.
+    }
   }
-  // SENT
-  return (
-    <View className="ml-1.5 flex-row">
-      <Ionicons name="checkmark" size={14} color="#9CA3AF" />
-    </View>
-  );
-}
+
+  const idMatch =
+    normalized.match(/(?:^|[\|,;])\s*id\s*:\s*([^\|,;\]]+)/i) ||
+    normalized.match(/(?:^|[\|,;])\s*pointId\s*:\s*([^\|,;\]]+)/i) ||
+    normalized.match(/(?:^|[\|,;])\s*eventId\s*:\s*([^\|,;\]]+)/i) ||
+    normalized.match(/(?:^|[\|,;])\s*workshopId\s*:\s*([^\|,;\]]+)/i);
+  const typeMatch = normalized.match(/(?:^|[\|,;])\s*type\s*:\s*([^\|,;\]]+)/i);
+  let inferredType: string | null = null;
+  if (!typeMatch) {
+    if (/pointId\s*:/i.test(normalized)) inferredType = 'point';
+    else if (/eventId\s*:/i.test(normalized)) inferredType = 'event';
+    else if (/workshopId\s*:/i.test(normalized)) inferredType = 'workshop';
+  }
+
+  const matchedType = (typeMatch?.[1]?.trim().toLowerCase() || inferredType || null) as string | null;
+  const normalizedType = matchedType && ['location', 'destination', 'place', 'map_point'].includes(matchedType)
+    ? 'point'
+    : matchedType;
+  return {
+    title,
+    id: idMatch?.[1]?.trim() || null,
+    type: normalizedType,
+  };
+};
+
+const stripMarkdownImages = (text: string | undefined | null): string => {
+  if (!text) return '';
+  return text
+    .replace(/!\[[^\]]*]\([^)]+\)/g, '')
+    .replace(/^\s*[-*•]\s*$/gm, '') // remove orphan bullet lines
+    .replace(/^\s*\d+\.\s*$/gm, '') // remove orphan numbered markers
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+};
+
+const hasMarkdownImage = (text: string | undefined | null): boolean => {
+  if (!text) return false;
+  return /!\[[^\]]*]\([^)]+\)/.test(text);
+};
+
+const splitByNumberedSections = (text: string): string[] => {
+  const lines = text.split('\n');
+  const sections: string[] = [];
+  let current: string[] = [];
+
+  for (const line of lines) {
+    if (/^\s*\d+\.\s+/.test(line) && current.length > 0) {
+      sections.push(current.join('\n').trim());
+      current = [line];
+      continue;
+    }
+    current.push(line);
+  }
+
+  if (current.length > 0) {
+    sections.push(current.join('\n').trim());
+  }
+
+  return sections.filter(Boolean);
+};
+
+const normalizeForMatch = (value: string): string =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/y/g, 'i') // improve matching for variants like mỹ/mĩ
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const splitByCardTitleAnchors = (text: string, cards: AttachedCard[]): string[] => {
+  const lines = text.split('\n');
+  const titleNorms = cards.map((c) => normalizeForMatch(c.title)).filter(Boolean);
+  if (titleNorms.length === 0) return [];
+
+  const anchorIdx: number[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const n = normalizeForMatch(lines[i]);
+    if (!n) continue;
+    if (titleNorms.some((t) => n.includes(t) || t.includes(n))) {
+      anchorIdx.push(i);
+    }
+  }
+
+  if (anchorIdx.length < 2) return [];
+  const uniqueAnchors = Array.from(new Set(anchorIdx)).sort((a, b) => a - b);
+  const sections: string[] = [];
+  for (let i = 0; i < uniqueAnchors.length; i++) {
+    const start = uniqueAnchors[i];
+    const end = i + 1 < uniqueAnchors.length ? uniqueAnchors[i + 1] : lines.length;
+    const section = lines.slice(start, end).join('\n').trim();
+    if (section) sections.push(section);
+  }
+  return sections;
+};
+
+const splitNumberedSectionBodyAndTail = (section: string): { body: string; tail: string } => {
+  const lines = section.split('\n');
+  if (lines.length <= 1 || !/^\s*\d+\.\s+/.test(lines[0])) {
+    return { body: section.trim(), tail: '' };
+  }
+
+  let cut = lines.length;
+  let sawListLine = false;
+
+  for (let i = 1; i < lines.length; i++) {
+    const raw = lines[i];
+    const line = raw.trim();
+    if (!line) continue;
+
+    const isListLine = /^[-*•]\s+/.test(line) || /^-\s+/.test(line);
+    const isIndented = /^\s+/.test(raw);
+
+    if (isListLine || isIndented) {
+      sawListLine = true;
+      continue;
+    }
+
+    if (sawListLine) {
+      cut = i;
+      break;
+    }
+  }
+
+  const body = lines.slice(0, cut).join('\n').trim();
+  const tail = lines.slice(cut).join('\n').trim();
+  return { body, tail };
+};
 
 // ── Main component ─────────────────────────────────────
 const ChatMessageBubbleBase = ({
@@ -66,6 +211,7 @@ const ChatMessageBubbleBase = ({
   const [imageModalVisible, setImageModalVisible] = useState(false);
 
   const msgType = message.messageType ?? 'TEXT';
+  const hasAttachedCardsRaw = Array.isArray(message.metadata?.attachedCards) && message.metadata!.attachedCards!.length > 0;
 
   const markdownStyle = useMemo(() => ({
     body: {
@@ -104,16 +250,24 @@ const ChatMessageBubbleBase = ({
 
   const markdownRules = useMemo(() => ({
     image: (node: any) => {
-      const { src, alt } = node.attributes;
-      const parts = alt ? alt.split('|') : [];
-      const title = parts[0]?.trim();
-      const idPart = parts.find((p: string) => p.trim().toUpperCase().startsWith('ID:'));
-      const typePart = parts.find((p: string) => p.trim().toUpperCase().startsWith('TYPE:'));
-
-      const id = idPart ? idPart.split(':')[1]?.trim() : null;
-      const type = typePart ? typePart.split(':')[1]?.trim().toLowerCase() : 'workshop';
+      const { src, alt, title: markdownTitle } = node.attributes;
+      const rawMeta = alt || markdownTitle || '';
+      const parsedMeta = extractCardMeta(rawMeta);
+      const title = parsedMeta.title || alt || '';
+      const id = parsedMeta.id;
+      const type = parsedMeta.type || 'workshop';
       const isPoint = type === 'point';
-      const isMapImage = alt?.toLowerCase().includes('map') || alt?.toLowerCase().includes('vị trí') || alt?.toLowerCase().includes('chỉ đường') || alt?.toLowerCase().includes('direction');
+      const lowerMeta = normalizeText(rawMeta);
+      const isMapImage =
+        lowerMeta.includes('map') ||
+        lowerMeta.includes('vi tri') ||
+        lowerMeta.includes('chi duong') ||
+        lowerMeta.includes('direction');
+
+      // If cards are present, do not render any markdown images to avoid duplicates.
+      if (hasAttachedCardsRaw) {
+        return null;
+      }
 
       if (id) {
         return (
@@ -175,7 +329,225 @@ const ChatMessageBubbleBase = ({
         />
       );
     },
-  }), [theme, isDarkColorScheme, onGoToMap, onProductSnippetPress, markdownStyle]);
+  }), [theme, isDarkColorScheme, onGoToMap, onProductSnippetPress, markdownStyle, hasAttachedCardsRaw]);
+
+  const attachedCards = useMemo<AttachedCard[]>(() => {
+    const raw = message.metadata?.attachedCards;
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .map((item: any) => ({
+        id: String(item?.id ?? '').trim(),
+        type: String(item?.type ?? '').trim().toLowerCase(),
+        title: String(item?.title ?? '').trim(),
+        imageUrl: String(item?.imageUrl ?? '').trim(),
+      }))
+      .filter((c) => !!c.id && !!c.title && !!c.type);
+  }, [message.metadata?.attachedCards]);
+
+  const isDirectionResponse = useMemo(
+    () => Boolean(message.metadata?.redirectToMap || message.metadata?.targetPointId),
+    [message.metadata?.redirectToMap, message.metadata?.targetPointId]
+  );
+  const hasPointCard = useMemo(() => attachedCards.some((c) => c.type === 'point'), [attachedCards]);
+  const displayAttachedCards = useMemo<AttachedCard[]>(() => {
+    if (attachedCards.length === 0) return [];
+
+    // Direction UX: keep only one deterministic point card for explicit navigate replies.
+    if (hasPointCard && isDirectionResponse) {
+      const firstPoint = attachedCards.find((c) => c.type === 'point');
+      return firstPoint ? [firstPoint] : [];
+    }
+
+    // For workshop/event/blog, cards come from metadata as source of truth.
+    // Any duplicated markdown card syntax will be stripped from textContent.
+    return attachedCards;
+  }, [attachedCards, hasPointCard, isDirectionResponse]);
+
+  const textContent = useMemo(() => {
+    if (displayAttachedCards.length === 0) return message.content ?? '';
+
+    // Cards exist => remove all markdown images from text.
+    return stripMarkdownImages(message.content);
+  }, [displayAttachedCards.length, message.content]);
+
+  const renderAttachedCards = () => {
+    if (displayAttachedCards.length === 0) return null;
+    return (
+      <View className="mt-2">
+        {displayAttachedCards.map((card, idx) => {
+          const isPoint = card.type === 'point';
+          return (
+            <TouchableOpacity
+              key={`${card.type}:${card.id}:${idx}`}
+              activeOpacity={0.8}
+              onPress={() => {
+                if (isPoint) {
+                  onGoToMap?.(card.id);
+                } else {
+                  onProductSnippetPress?.(card.id, card.type === 'event' ? 'event' : 'workshop');
+                }
+              }}
+              className="flex-row items-center p-2 my-2 rounded-xl border"
+              style={{
+                width: '100%',
+                backgroundColor: isDarkColorScheme ? 'rgba(255,255,255,0.05)' : '#FFFFFF',
+                borderColor: theme.border,
+              }}>
+              {card.imageUrl ? (
+                <SmartImage
+                  uri={card.imageUrl}
+                  className="rounded-lg"
+                  style={{ width: 60, height: 60 }}
+                />
+              ) : (
+                <View
+                  className="rounded-lg"
+                  style={{ width: 60, height: 60, backgroundColor: isDarkColorScheme ? '#374151' : '#E5E7EB' }}
+                />
+              )}
+              <View className="flex-1 ml-3">
+                <Text
+                  className="text-xs font-bold"
+                  style={{ color: theme.foreground }}
+                  numberOfLines={2}>
+                  {card.title}
+                </Text>
+                <Text className="text-[10px] font-bold mt-1" style={{ color: theme.primary }}>
+                  {isPoint ? 'Nhấn để xem đường đi →' : 'Nhấn để xem chi tiết →'}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    );
+  };
+
+  const renderAttachedCardsInlineWithText = () => {
+    if (displayAttachedCards.length === 0 || !textContent || (hasPointCard && isDirectionResponse)) return null;
+
+    let sections = splitByNumberedSections(textContent);
+    if (sections.length <= 1) {
+      sections = splitByCardTitleAnchors(textContent, displayAttachedCards);
+    }
+    if (sections.length <= 1) return null;
+
+    const usedCardIndexes = new Set<number>();
+    return (
+      <View>
+        {sections.map((section, idx) => {
+          const normalizedSection = normalizeForMatch(section);
+          let card: AttachedCard | undefined;
+          let selectedIndex = -1;
+
+          for (let i = 0; i < displayAttachedCards.length; i++) {
+            if (usedCardIndexes.has(i)) continue;
+            const c = displayAttachedCards[i];
+            const normalizedTitle = normalizeForMatch(c.title);
+            if (normalizedTitle && normalizedSection.includes(normalizedTitle)) {
+              card = c;
+              selectedIndex = i;
+              break;
+            }
+          }
+
+          // Fallback: for numbered sections, map by first unused card
+          if (!card && /^\s*\d+\.\s+/.test(section)) {
+            for (let i = 0; i < displayAttachedCards.length; i++) {
+              if (!usedCardIndexes.has(i)) {
+                card = displayAttachedCards[i];
+                selectedIndex = i;
+                break;
+              }
+            }
+          }
+
+          if (selectedIndex >= 0) {
+            usedCardIndexes.add(selectedIndex);
+          }
+          const isPoint = card?.type === 'point';
+          const split = splitNumberedSectionBodyAndTail(section);
+          return (
+            <View key={`sec-${idx}`}>
+              <Markdown
+                style={markdownStyle}
+                onLinkPress={(url: string) => {
+                  if (url.startsWith('neo-nhs://')) {
+                    const parts = url.replace('neo-nhs://', '').split('/');
+                    const type = parts[0]?.toLowerCase();
+                    const id = parts[1];
+                    if (id) {
+                      if (type === 'point') onGoToMap?.(id);
+                      else onProductSnippetPress?.(id, type as any);
+                    }
+                    return false;
+                  }
+                  Linking.openURL(url).catch(() => { });
+                  return true;
+                }}
+                rules={markdownRules}
+              >
+                {split.body}
+              </Markdown>
+              {card ? (
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    if (isPoint) onGoToMap?.(card.id);
+                    else onProductSnippetPress?.(card.id, card.type === 'event' ? 'event' : 'workshop');
+                  }}
+                  className="flex-row items-center p-2 my-2 rounded-xl border"
+                  style={{
+                    width: '100%',
+                    backgroundColor: isDarkColorScheme ? 'rgba(255,255,255,0.05)' : '#FFFFFF',
+                    borderColor: theme.border,
+                  }}>
+                  {card.imageUrl ? (
+                    <SmartImage uri={card.imageUrl} className="rounded-lg" style={{ width: 60, height: 60 }} />
+                  ) : (
+                    <View
+                      className="rounded-lg"
+                      style={{ width: 60, height: 60, backgroundColor: isDarkColorScheme ? '#374151' : '#E5E7EB' }}
+                    />
+                  )}
+                  <View className="flex-1 ml-3">
+                    <Text className="text-xs font-bold" style={{ color: theme.foreground }} numberOfLines={2}>
+                      {card.title}
+                    </Text>
+                    <Text className="text-[10px] font-bold mt-1" style={{ color: theme.primary }}>
+                      {isPoint ? 'Nhấn để xem đường đi →' : 'Nhấn để xem chi tiết →'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ) : null}
+              {split.tail ? (
+                <Markdown
+                  style={markdownStyle}
+                  onLinkPress={(url: string) => {
+                    if (url.startsWith('neo-nhs://')) {
+                      const parts = url.replace('neo-nhs://', '').split('/');
+                      const type = parts[0]?.toLowerCase();
+                      const id = parts[1];
+                      if (id) {
+                        if (type === 'point') onGoToMap?.(id);
+                        else onProductSnippetPress?.(id, type as any);
+                      }
+                      return false;
+                    }
+                    Linking.openURL(url).catch(() => { });
+                    return true;
+                  }}
+                  rules={markdownRules}
+                >
+                  {split.tail}
+                </Markdown>
+              ) : null}
+            </View>
+          );
+        })}
+      </View>
+    );
+  };
 
   // ── Render bubble content by type ────────────────────
   const renderContent = () => {
@@ -229,27 +601,37 @@ const ChatMessageBubbleBase = ({
                 style={{ width: SCREEN_WIDTH * 0.55, height: SCREEN_WIDTH * 0.55 }}
               />
             </TouchableOpacity>
-            {message.content ? (
+            {textContent ? (
               <View className="mt-1.5 px-2">
-                <Markdown
-                  style={markdownStyle}
-                  onLinkPress={(url: string) => {
-                    if (url.startsWith('neo-nhs://')) {
-                      const parts = url.replace('neo-nhs://', '').split('/');
-                      const type = parts[0] === 'event' ? 'event' : 'workshop';
-                      const id = parts[1];
-                      if (id) onProductSnippetPress?.(id, type);
-                      return false;
-                    }
-                    Linking.openURL(url).catch(() => { });
-                    return true;
-                  }}
-                  rules={markdownRules}
-                >
-                  {message.content}
-                </Markdown>
+                {renderAttachedCardsInlineWithText() ?? (
+                  <Markdown
+                    style={markdownStyle}
+                    onLinkPress={(url: string) => {
+                      if (url.startsWith('neo-nhs://')) {
+                        const parts = url.replace('neo-nhs://', '').split('/');
+                        const rawType = (parts[0] || '').toLowerCase();
+                        const id = parts[1];
+                        if (id) {
+                          if (rawType === 'point') {
+                            onGoToMap?.(id);
+                          } else {
+                            const type = rawType === 'event' ? 'event' : 'workshop';
+                            onProductSnippetPress?.(id, type);
+                          }
+                        }
+                        return false;
+                      }
+                      Linking.openURL(url).catch(() => { });
+                      return true;
+                    }}
+                    rules={markdownRules}
+                  >
+                    {textContent}
+                  </Markdown>
+                )}
               </View>
             ) : null}
+            {!renderAttachedCardsInlineWithText() ? renderAttachedCards() : null}
 
             {/* Full-screen image modal */}
             <Modal visible={imageModalVisible} transparent animationType="fade">
@@ -322,33 +704,36 @@ const ChatMessageBubbleBase = ({
             </TouchableOpacity>
 
             {/* AI Explanation Text */}
-            {message.content ? (
+            {textContent ? (
               <View className="mt-3 px-2 pb-1">
-                <Markdown
-                  style={{ ...markdownStyle, body: { ...markdownStyle.body, fontSize: 14, lineHeight: 20 } }}
-                  onLinkPress={(url: string) => {
-                    if (url.startsWith('neo-nhs://')) {
-                      const parts = url.replace('neo-nhs://', '').split('/');
-                      const type = parts[0]?.toLowerCase();
-                      const id = parts[1];
-                      if (id) {
-                        if (type === 'point') {
-                          onGoToMap?.(id);
-                        } else {
-                          onProductSnippetPress?.(id, type as any);
+                {renderAttachedCardsInlineWithText() ?? (
+                  <Markdown
+                    style={{ ...markdownStyle, body: { ...markdownStyle.body, fontSize: 14, lineHeight: 20 } }}
+                    onLinkPress={(url: string) => {
+                      if (url.startsWith('neo-nhs://')) {
+                        const parts = url.replace('neo-nhs://', '').split('/');
+                        const type = parts[0]?.toLowerCase();
+                        const id = parts[1];
+                        if (id) {
+                          if (type === 'point') {
+                            onGoToMap?.(id);
+                          } else {
+                            onProductSnippetPress?.(id, type as any);
+                          }
                         }
+                        return false;
                       }
-                      return false;
-                    }
-                    Linking.openURL(url).catch(() => { });
-                    return true;
-                  }}
-                  rules={markdownRules}
-                >
-                  {message.content}
-                </Markdown>
+                      Linking.openURL(url).catch(() => { });
+                      return true;
+                    }}
+                    rules={markdownRules}
+                  >
+                    {textContent}
+                  </Markdown>
+                )}
               </View>
             ) : null}
+            {!renderAttachedCardsInlineWithText() ? renderAttachedCards() : null}
           </View>
         );
       }
@@ -383,29 +768,32 @@ const ChatMessageBubbleBase = ({
       default: // TEXT
         return (
           <View>
-            <Markdown
-              style={markdownStyle}
-              onLinkPress={(url: string) => {
-                if (url.startsWith('neo-nhs://')) {
-                  const parts = url.replace('neo-nhs://', '').split('/');
-                  const type = parts[0]?.toLowerCase();
-                  const id = parts[1];
-                  if (id) {
-                    if (type === 'point') {
-                      onGoToMap?.(id);
-                    } else {
-                      onProductSnippetPress?.(id, type as any);
+            {renderAttachedCardsInlineWithText() ?? (
+              <Markdown
+                style={markdownStyle}
+                onLinkPress={(url: string) => {
+                  if (url.startsWith('neo-nhs://')) {
+                    const parts = url.replace('neo-nhs://', '').split('/');
+                    const type = parts[0]?.toLowerCase();
+                    const id = parts[1];
+                    if (id) {
+                      if (type === 'point') {
+                        onGoToMap?.(id);
+                      } else {
+                        onProductSnippetPress?.(id, type as any);
+                      }
                     }
+                    return false;
                   }
-                  return false;
-                }
-                Linking.openURL(url).catch(() => { });
-                return true;
-              }}
-              rules={markdownRules}
-            >
-              {message.content}
-            </Markdown>
+                  Linking.openURL(url).catch(() => { });
+                  return true;
+                }}
+                rules={markdownRules}
+              >
+                {textContent}
+              </Markdown>
+            )}
+            {!renderAttachedCardsInlineWithText() ? renderAttachedCards() : null}
             {message.metadata?.redirectToCart && (
               <TouchableOpacity
                 onPress={onGoToCart}
