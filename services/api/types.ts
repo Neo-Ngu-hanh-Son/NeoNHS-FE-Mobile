@@ -68,6 +68,8 @@ export interface ApiClientConfig {
   onTokenRefresh?: (refreshToken: string) => Promise<TokenRefreshResult | null>;
   onTokenRefreshed?: (result: TokenRefreshResult) => void | Promise<void>;
   onUnauthorized?: () => void;
+  /** Called for HTTP 403 (after token refresh is not retried for the same failure). */
+  onForbidden?: (error: ApiError) => void;
   onError?: (error: ApiError) => void;
 }
 

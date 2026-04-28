@@ -16,6 +16,7 @@ class ApiClient {
   private onTokenRefresh?: (refreshToken: string) => Promise<TokenRefreshResult | null | void>;
   private onTokenRefreshed?: (result: TokenRefreshResult) => void | Promise<void>;
   private onUnauthorized?: () => void;
+  private onForbidden?: (error: ApiError) => void;
   private onError?: (error: ApiError) => void;
 
   // Token refresh state management
@@ -38,6 +39,7 @@ class ApiClient {
     this.onTokenRefresh = config?.onTokenRefresh;
     this.onTokenRefreshed = config?.onTokenRefreshed;
     this.onUnauthorized = config?.onUnauthorized;
+    this.onForbidden = config?.onForbidden;
     this.onError = config?.onError;
 
     // Setup interceptors
@@ -136,11 +138,12 @@ class ApiClient {
                 // Retry the original request with explicit request method
                 return this.axiosInstance.request(retryConfig);
               }
+              return Promise.reject(this.handleError(error, { suppressForbiddenAlert: true }));
             } catch (refreshError) {
               // logger.error("[ApiClient] Token refresh failed:", refreshError);
               // Token refresh failed, call onUnauthorized
               this.onUnauthorized?.();
-              return Promise.reject(this.handleError(error));
+              return Promise.reject(this.handleError(error, { suppressForbiddenAlert: true }));
             }
           }
         }
@@ -245,7 +248,10 @@ class ApiClient {
   /**
    * Handle API errors
    */
-  private handleError(error: unknown): ApiError {
+  private handleError(
+    error: unknown,
+    options?: { suppressForbiddenAlert?: boolean }
+  ): ApiError {
     let apiError: ApiError;
 
     // Handle Axios errors
@@ -332,6 +338,13 @@ class ApiClient {
     // Note: We don't call onUnauthorized here anymore because
     // 401 errors are handled in the response interceptor with token refresh logic.
     // onUnauthorized is called there only after refresh fails.
+
+    if (
+      !options?.suppressForbiddenAlert &&
+      (apiError.status === 403 || apiError.code === ApiErrorCode.FORBIDDEN)
+    ) {
+      this.onForbidden?.(apiError);
+    }
 
     // Call error callback
     this.onError?.(apiError);
@@ -446,6 +459,9 @@ class ApiClient {
     }
     if (config.onUnauthorized) {
       this.onUnauthorized = config.onUnauthorized;
+    }
+    if (config.onForbidden !== undefined) {
+      this.onForbidden = config.onForbidden;
     }
     if (config.onError) {
       this.onError = config.onError;

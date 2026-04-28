@@ -1,9 +1,11 @@
 import { ReactNode, useEffect, useCallback, useRef } from 'react';
+import { Alert } from 'react-native';
 import { apiClient } from '@/services/api';
 import { useAuth } from '@/features/auth';
 import { authService } from '@/features/auth/services/authService';
 import { logger } from '@/utils/logger';
-import type { TokenRefreshResult } from '@/services/api/types';
+import type { ApiError, TokenRefreshResult } from '@/services/api/types';
+import { rootNavigationRef } from '@/app/navigations/rootNavigationRef';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -48,6 +50,36 @@ export default function ApiProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const forbiddenAlertOpenRef = useRef(false);
+
+  const handleForbidden = useCallback((_error: ApiError) => {
+    if (forbiddenAlertOpenRef.current) {
+      return;
+    }
+    forbiddenAlertOpenRef.current = true;
+
+    const resetAlertFlag = () => {
+      forbiddenAlertOpenRef.current = false;
+    };
+
+    const goToLogin = () => {
+      resetAlertFlag();
+      if (rootNavigationRef.isReady()) {
+        rootNavigationRef.navigate('Auth', { screen: 'Login' });
+      }
+    };
+
+    Alert.alert(
+      'Must login',
+      'You need to sign in to use this feature.',
+      [
+        { text: 'Cancel', style: 'cancel', onPress: resetAlertFlag },
+        { text: 'Log in', onPress: goToLogin },
+      ],
+      { cancelable: true, onDismiss: resetAlertFlag }
+    );
+  }, []);
+
   useEffect(() => {
     logger.info(`[ApiProvider] Using API URL: ${API_URL}`);
     apiClient.updateConfig({
@@ -59,13 +91,14 @@ export default function ApiProvider({ children }: { children: ReactNode }) {
       onUnauthorized: () => {
         logoutRef.current();
       },
+      onForbidden: handleForbidden,
       onError: (error) => {
         logger.error('[ApiProvider] API error:', error);
       },
       timeout: 30000,
     });
     // Only re-run when the actual token *values* change
-  }, [accessToken, refreshToken, handleTokenRefresh]);
+  }, [accessToken, refreshToken, handleTokenRefresh, handleForbidden]);
 
   return <>{children}</>;
 }
