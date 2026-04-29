@@ -19,6 +19,7 @@ import { WorkshopImageGallery, WorkshopInfoSection, WorkshopSessionList, Worksho
 import { useWorkshopDetail } from '../hooks/useWorkshopDetail';
 import { useWorkshopSessions } from '../hooks/useWorkshopSessions';
 import { useChatContext } from '@/features/chat/context/ChatProvider';
+import SmartMenu from '@/components/common/MenuTriggerBtn';
 
 type Props = StackScreenProps<MainStackParamList, 'WorkshopDetail'>;
 
@@ -53,6 +54,14 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
       ...(activeTab === 'sessions' ? [refetchSessions()] : []),
     ]).finally(() => setRefreshing(false));
   }, [refetchWorkshop, refetchSessions, activeTab]);
+
+  function handleShare() {
+
+  }
+
+  function handleReport() {
+
+  }
 
   if (loading) {
     return (
@@ -108,9 +117,21 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
           numberOfLines={1}>
           {workshop.name}
         </Text>
-        <TouchableOpacity className="-mr-2 p-2">
-          <Ionicons name="share-outline" size={22} color={theme.foreground} />
-        </TouchableOpacity>
+        <SmartMenu
+          trigger={<View className="-mr-2 p-2">
+            <Ionicons name="ellipsis-vertical-sharp" size={22} color={theme.foreground} />
+          </View>}
+          items={[
+            {
+              label: t('common.share'), onPress: handleShare,
+              icon: <Ionicons name='share' size={16} color={theme.foreground} />
+            },
+            {
+              label: t('common.report'), onPress: handleReport,
+              icon: <Ionicons name='flag' size={16} color={theme.destructive} />, isDestructive: true
+            },
+          ]}
+        />
       </View>
 
       <ScrollView

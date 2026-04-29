@@ -61,15 +61,46 @@ export default function CheckinGalleryViewerModal({
     try {
       const permission = await MediaLibrary.requestPermissionsAsync();
       if (!permission.granted) {
-        alert('Permission required', 'Please allow media library permission to save photos.');
+        alert({
+          title: 'Permission required',
+          message: 'Please allow media library permission to save photos.',
+          buttons: [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+            },
+            {
+              text: 'Allow',
+              onPress: () => MediaLibrary.requestPermissionsAsync(),
+            },
+          ]
+        });
         return;
       }
 
       await MediaLibrary.saveToLibraryAsync(activeImage.uri);
-      alert('Saved', 'Photo has been saved to your device.');
+      alert({
+        title: 'Saved',
+        message: 'Photo has been saved to your device.',
+        buttons: [
+          {
+            text: 'OK',
+            style: 'default',
+          },
+        ]
+      });
     } catch (error) {
       logger.error('[CheckinCameraScreen] Failed to save review photo', error);
-      alert('Save failed', 'Could not save this photo right now.');
+      alert({
+        title: 'Save failed',
+        message: 'Could not save this photo right now.',
+        buttons: [
+          {
+            text: 'OK',
+            style: 'default',
+          },
+        ]
+      });
     } finally {
       setIsSavingPhoto(false);
     }
@@ -96,25 +127,41 @@ export default function CheckinGalleryViewerModal({
   };
 
   const handleDeleteImage = async () => {
-    if (!activeImage || !onDeleteImage || isDeleting) {
-      return;
-    }
+    if (!activeImage || !onDeleteImage || isDeleting) return;
 
     setIsMenuVisible(false);
-    const confirmed = await confirm('Delete this photo?', 'This action cannot be undone.');
-    if (!confirmed) {
-      return;
-    }
 
-    try {
-      setIsDeleting(true);
-      await onDeleteImage(activeImage);
-    } catch {
-      alert('Delete failed', 'Unable to delete this photo right now. Please try again.');
-    } finally {
-      setIsDeleting(false);
+    const confirmed = await confirm({
+      title: 'Delete this photo?',
+      message: 'This action cannot be undone.',
+      buttons: [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Delete',
+          style: 'destructive'
+        },
+      ]
+    });
+
+    if (confirmed) {
+      try {
+        setIsDeleting(true);
+        await onDeleteImage?.(activeImage);
+      } catch (error) {
+        logger.error('[CheckinCameraScreen] Failed to delete', error);
+        alert({
+          title: 'Delete failed',
+          message: 'Unable to delete this photo. Please check your connection.',
+        });
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
+
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>

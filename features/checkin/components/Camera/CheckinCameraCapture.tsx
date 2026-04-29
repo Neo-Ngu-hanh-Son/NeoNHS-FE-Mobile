@@ -9,6 +9,7 @@ import { Text } from '@/components/ui/text';
 import { logger } from '@/utils/logger';
 import CheckinCameraCenterHint from '@/features/checkin/components/Camera/CheckinCameraCenterHint';
 import { CameraIcon } from 'lucide-react-native';
+import { ImageManipulator } from 'expo-image-manipulator';
 
 type CheckinCameraCaptureProps = {
   isBusy: boolean;
@@ -43,14 +44,21 @@ export default function CheckinCameraCapture({
 
     try {
       const photo = await cameraRef.current.takePictureAsync({
-        quality: 1,
+        quality: 0.8,
+        skipProcessing: true,
       });
       if (!photo?.uri) {
         Alert.alert('Capture failed', 'Could not capture photo. Please try again.');
         return;
       }
 
-      onImageSelected(photo.uri);
+      const manipulated = await ImageManipulator.manipulateAsync(
+        photo.uri,
+        [{ resize: { width: 1200 } }],
+        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+      );
+
+      onImageSelected(manipulated.uri);
     } catch (error) {
       logger.error('[CheckinCameraCapture] Failed to capture photo', error);
       Alert.alert('Error', 'Could not capture photo. Please try again.');
@@ -66,14 +74,20 @@ export default function CheckinCameraCapture({
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: 'images',
         allowsEditing: false,
-        quality: 1,
+        quality: 0.6,
       });
 
       if (result.canceled || !result.assets?.length) {
         return;
       }
 
-      onImageSelected(result.assets[0].uri);
+      const manipulated = await ImageManipulator.manipulateAsync(
+        result.assets[0].uri,
+        [{ resize: { width: 1200 } }],
+        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+      );
+
+      onImageSelected(manipulated.uri);
     } catch (error) {
       logger.error('[CheckinCameraCapture] Failed to pick image', error);
       Alert.alert('Error', 'Failed to process selected photo.');
@@ -113,6 +127,7 @@ export default function CheckinCameraCapture({
         style={StyleSheet.absoluteFillObject}
         facing={cameraFacing}
         onCameraReady={() => setCameraReady(true)}
+        mute={true}
       />
       <View style={styles.overlay} pointerEvents="box-none">
         <View className="px-5 pt-14">

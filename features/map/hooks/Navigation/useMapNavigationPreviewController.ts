@@ -113,7 +113,10 @@ export const useMapNavigationPreviewController = ({
 
   const handleStartNavigationWithSelectedMode = useCallback(async () => {
     if (!previewParams) {
-      alert('Navigation Unavailable', 'Route preview is not ready yet. Please wait a moment.');
+      alert({
+        title: 'Navigation Unavailable',
+        message: 'Route preview is not ready yet. Please wait a moment.',
+      });
       return;
     }
 
@@ -121,7 +124,10 @@ export const useMapNavigationPreviewController = ({
       setConfirmedTravelMode(selectedTravelMode);
     } catch (error) {
       logger.error('[useMapNavigationController] Failed to start navigation with selected transport mode', error);
-      alert('Navigation Unavailable', 'Failed to load this route mode. Please try again.');
+      alert({
+        title: 'Navigation Unavailable',
+        message: 'Failed to load this route mode. Please try again.',
+      });
     } finally {
       setViewMode('NAVIGATING');
     }

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, Alert } from 'react-native';
+import { View, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, Alert, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -18,6 +18,9 @@ import {
 } from '../components';
 import { useEventDetail } from '../hooks/useEventDetail';
 import { useTicketCatalogs } from '../hooks/useTicketCatalogs';
+import SmartMenu from '@/components/common/MenuTriggerBtn';
+import { ReportTypes } from '@/features/report/type';
+import { useTranslation } from 'react-i18next';
 
 type Props = StackScreenProps<MainStackParamList, 'EventDetail'>;
 
@@ -29,6 +32,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'info' | 'tickets'>('info');
   const [isReviewSheetVisible, setIsReviewSheetVisible] = useState(false);
+  const { t } = useTranslation();
 
   const { data: event, isLoading: loading, refetch: refetchEvent } = useEventDetail(eventId);
 
@@ -59,6 +63,21 @@ export default function EventDetailScreen({ navigation, route }: Props) {
   const handleOpenTimelineMap = useCallback(() => {
     navigation.navigate('EventTimeLineMap', { eventId });
   }, [eventId, navigation]);
+
+  const handleShare = useCallback(() => {
+    Share.share({
+      title: event?.name ?? "",
+      message: event?.shortDescription ?? "",
+    });
+  }, [event]);
+
+  const handleReport = useCallback(() => {
+    navigation.navigate('ReportScreen', {
+      initialTargetId: eventId ?? "",
+      initialTargetType: ReportTypes.EVENT,
+      reportTargetName: event?.name ?? "",
+    });
+  }, [event?.name, eventId, navigation]);
 
   // ── Loading state ──
 
@@ -108,7 +127,25 @@ export default function EventDetailScreen({ navigation, route }: Props) {
         <Text className="ml-2 flex-1 text-lg font-bold" style={{ color: theme.foreground }} numberOfLines={1}>
           {event.name}
         </Text>
-        <View className="w-10" />
+        <View className="w-10">
+          <SmartMenu
+            trigger={
+              <View className="-mr-2 p-2">
+                <Ionicons name="ellipsis-vertical-sharp" size={22} color={theme.foreground} />
+              </View>
+            }
+            items={[
+              {
+                label: t('common.share'), onPress: handleShare,
+                icon: <Ionicons name='share' size={16} color={theme.foreground} />
+              },
+              {
+                label: t('common.report'), onPress: handleReport,
+                icon: <Ionicons name='flag' size={16} color={theme.destructive} />, isDestructive: true
+              },
+            ]}
+          />
+        </View>
       </View>
 
       <ScrollView

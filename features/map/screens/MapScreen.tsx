@@ -171,7 +171,6 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     permissionStatus,
     isTracking,
     startTracking,
-    alert,
     clearTargetNavigationParam,
     travelMode: confirmedTravelMode,
     previewRouteSummary,

@@ -135,13 +135,20 @@ export default function BlogFilterModal({
                   variant="outline"
                   className="flex-1"
                   onPress={async () => {
-                    const shouldReset = await confirm(
-                      'Reset filters',
-                      'Clear all selected filters?'
-                    );
-                    if (shouldReset) {
-                      setDraftFilters(BLOG_DEFAULT_FILTERS);
-                    }
+                    await confirm({
+                      title: 'Reset filters',
+                      message: 'Clear all selected filters?',
+                      buttons: [
+                        {
+                          text: 'Cancel',
+                          style: 'cancel',
+                        },
+                        {
+                          text: 'Reset',
+                          onPress: () => setDraftFilters(BLOG_DEFAULT_FILTERS),
+                        },
+                      ]
+                    });
                   }}>
                   <Text>Reset</Text>
                 </Button>

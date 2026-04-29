@@ -24,6 +24,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { logger } from '@/utils/logger';
 import { usePanorama } from '@/app/providers/PanoramaProvider';
+import { ReportTypes } from '@/features/report/type';
 
 type Props = CompositeScreenProps<
   StackScreenProps<MainStackParamList, 'PointDetail'>,
@@ -121,6 +122,14 @@ export default function PointDetailScreen({ navigation, route }: Props) {
     return <FullScreenLoader message={t('point.loading_details', 'Loading point details...')} />;
   }
 
+  const handleReport = () => {
+    navigation.navigate('ReportScreen', {
+      initialTargetId: pointId,
+      initialTargetType: ReportTypes.POINT,
+      reportTargetName: point?.name ?? '',
+    });
+  };
+
   if (isError || !point) {
     logger.error('Error fetching point details:', isError);
     return (
@@ -146,6 +155,7 @@ export default function PointDetailScreen({ navigation, route }: Props) {
           onBack={() => navigation.goBack()}
           onToggleFavorite={() => setIsFavorite((prev) => !prev)}
           onShare={handleShare}
+          onReport={handleReport}
         />
 
         {/* Content sections */}

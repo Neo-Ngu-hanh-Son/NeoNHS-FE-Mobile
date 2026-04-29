@@ -280,7 +280,7 @@ export default function KycVerificationScreen({ navigation }: Props) {
   // ─── RENDER: Camera View ───
   const renderCamera = () => (
     <View style={styles.cameraContainer}>
-      <CameraView ref={cameraRef} style={styles.camera} facing={currentConfig.cameraFacing}>
+      <CameraView ref={cameraRef} style={styles.camera} facing={currentConfig.cameraFacing} mute={true}>
         {/* Camera overlay frame */}
         <View style={styles.cameraOverlay}>
           <View style={styles.cameraFrame}>
@@ -434,7 +434,7 @@ export default function KycVerificationScreen({ navigation }: Props) {
 
       {isSubmitting && (
         <Text style={[styles.submitHint, { color: theme.mutedForeground }]}>
-          This may take a moment. Please don't close the app.
+          This may take a moment. Please don&apos;t close the app.
         </Text>
       )}
     </ScrollView>

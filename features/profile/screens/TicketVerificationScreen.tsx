@@ -131,6 +131,7 @@ export default function TicketVerificationScreen() {
                 barcodeScannerSettings={{
                     barcodeTypes: ["qr"],
                 }}
+                mute={true}
             >
                 <View style={styles.overlay}>
                     <View style={styles.header}>

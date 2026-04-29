@@ -25,7 +25,9 @@
     "refresh": "更新",
     "error_default": "問題が発生しました。もう一度お試しください。",
     "oops": "おっと！",
-    "pull_to_refresh": "または下にスワイプして更新"
+    "pull_to_refresh": "または下にスワイプして更新",
+    "share": "共有",
+    "report": "報告"
   },
   "cart": {
     "title": "カート",

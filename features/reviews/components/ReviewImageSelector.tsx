@@ -3,15 +3,12 @@ import { ActivityIndicator, Alert, FlatList, TouchableOpacity, View } from 'reac
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import { CheckCircle2, ImagePlus, X } from 'lucide-react-native';
-
-import imageService from '@/services/api/common/uploadImageService';
 import { useAuth } from '@/features/auth';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { Text } from '@/components/ui/text';
 import { generateImageUploadData } from '@/utils/uploadImageHelper';
 import { useCheckinGallery } from '@/features/reviews/hooks/useReview';
-import { MediaType } from 'expo-media-library';
 
 type UploadingImageItem = {
   id: string;
@@ -30,7 +27,7 @@ export function ReviewImageSelector({ checkinPointId, selectedUrls, onSelectionC
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const [uploadingItems, setUploadingItems] = useState<UploadingImageItem[]>([]);
   const { images: galleryImages, isLoading: isGalleryLoading } = useCheckinGallery(checkinPointId);
-  const { mutateAsync: uploadImageAsync } = imageService.useUploadImage();
+  const { mutateAsync: uploadImageAsync } = useUploadImage();
 
   const selectedUrlSet = useMemo(() => new Set(selectedUrls), [selectedUrls]);
 
@@ -145,9 +142,8 @@ export function ReviewImageSelector({ checkinPointId, selectedUrls, onSelectionC
                   <TouchableOpacity
                     activeOpacity={0.7}
                     onPress={() => toggleSelection(item.imageUrl)}
-                    className={`h-24 w-24 overflow-hidden rounded-2xl border-2 ${
-                      isSelected ? 'border-primary' : 'border-border'
-                    }`}>
+                    className={`h-24 w-24 overflow-hidden rounded-2xl border-2 ${isSelected ? 'border-primary' : 'border-border'
+                      }`}>
                     <Image
                       source={{ uri: item.imageUrl }}
                       contentFit="cover"
@@ -215,3 +211,7 @@ export function ReviewImageSelector({ checkinPointId, selectedUrls, onSelectionC
     </View>
   );
 }
+function useUploadImage(): { mutateAsync: any; } {
+  throw new Error('Function not implemented.');
+}
+

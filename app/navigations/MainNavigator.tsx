@@ -41,6 +41,7 @@ import NotificationDetailScreen from '@/features/notifications/screens/Notificat
 import VoucherDetailScreen from '@/features/voucher/screens/VoucherDetailScreen';
 import MyVouchersScreen from '@/features/voucher/screens/MyVouchersScreen';
 import MyVoucherDetailScreen from '@/features/voucher/screens/MyVoucherDetailScreen';
+import ReportScreen from '@/features/report/screens/ReportScreen';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -123,6 +124,9 @@ export default function MainNavigator() {
           component={NotificationDetailScreen}
           options={{ headerShown: true, title: 'Details', headerBackTitle: 'Back' }}
         />
+
+        {/* Report */}
+        <Stack.Screen name="ReportScreen" component={ReportScreen} />
       </Stack.Navigator>
       <FloatingChatButton />
     </>

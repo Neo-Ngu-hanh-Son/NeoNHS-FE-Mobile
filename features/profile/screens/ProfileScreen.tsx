@@ -32,7 +32,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
   const isFocused = useIsFocused();
   const isFetchingProfileRef = useRef(false);
   const lastFetchAtRef = useRef(0);
-  
+
   const { language, setLanguage } = useLanguage();
   const { t } = useTranslation();
   const { alert } = useModal();
@@ -288,7 +288,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
             themeBorder={theme.border}
             themeForeground={theme.foreground}
             themeMutedForeground={theme.mutedForeground}
-            onPress={() => {}}
+            onPress={() => { }}
           />
           <ActionCard
             title={t('profile.actions.coupon_voucher')}
@@ -306,7 +306,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
             themeBorder={theme.border}
             themeForeground={theme.foreground}
             themeMutedForeground={theme.mutedForeground}
-            onPress={() => {}}
+            onPress={() => { }}
           />
 
           <View style={styles.settingsSection}>
@@ -357,18 +357,18 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
                 themeForeground={theme.foreground}
                 themeMutedForeground={theme.mutedForeground}
                 onPress={() => {
-                  alert(
-                    t('language.title'),
-                    '',
-                    [
+                  alert({
+                    title: t('language.title'),
+                    message: '',
+                    buttons: [
                       { text: t('language.vi'), onPress: () => setLanguage('vi') },
                       { text: t('language.en'), onPress: () => setLanguage('en') },
                       { text: t('language.ja'), onPress: () => setLanguage('ja') },
                       { text: t('language.ko'), onPress: () => setLanguage('ko') },
                       { text: t('common.cancel'), style: 'cancel' }
                     ],
-                    { cancelable: true }
-                  );
+                    cancelable: true
+                  });
                 }}
               />
             </View>

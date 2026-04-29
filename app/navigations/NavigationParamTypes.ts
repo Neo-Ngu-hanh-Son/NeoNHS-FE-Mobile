@@ -1,5 +1,6 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import { UserVoucherResponse } from '@/features/voucher/types/voucher.types';
+import { ReportTypes } from '@/features/report/type';
 /* ============================================================
    AUTH STACK
    ============================================================ */
@@ -149,6 +150,12 @@ export type VoucherRoutes = {
   MyVoucherDetail: { userVoucher: UserVoucherResponse };
 };
 
+
+/* Report */
+export type ReportRoutes = {
+  ReportScreen: { initialTargetId: string; initialTargetType: ReportTypes, reportTargetName: string | null };
+};
+
 /* ============================================================
    MAIN STACK (MERGED)
    ============================================================ */
@@ -188,7 +195,9 @@ export type MainStackParamList = BaseMainRoutes &
     MapDirection: { pointId?: string; targetNavigationPointId?: string };
     Cart: undefined;
   } &
-  VoucherRoutes;
+  VoucherRoutes &
+  ReportRoutes;
+
 
 /* ============================================================
    ROOT STACK

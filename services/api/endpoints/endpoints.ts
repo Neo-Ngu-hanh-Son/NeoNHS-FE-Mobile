@@ -82,9 +82,10 @@ export const utilitiesEndpoints = {
   uploadImages: () => `upload/images`,
 } as const;
 
-/**
- * All Endpoints (for easy access)
- */
+export const reportEndpoints = {
+  submitReport: () => `reports`,
+} as const;
+
 export const endpoints = {
   auth: authEndpoints,
   users: userEndpoints,

@@ -225,7 +225,6 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
     permissionStatus,
     isTracking,
     startTracking,
-    alert,
     clearTargetNavigationParam,
     travelMode: confirmedTravelMode,
     previewRouteSummary,

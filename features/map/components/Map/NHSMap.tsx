@@ -459,7 +459,7 @@ const NHSMapInner = <T extends MapPoint>(
                 }}>
                 <MapMarkerVisual
                   point={checkinAsPoint}
-                  showName={shouldDisplayMarkerName}
+                  showName={false} // To make it clear
                 // isSelected={selectedPointId === checkin.id} (Because performance issues, this is removed)
                 />
               </Marker>

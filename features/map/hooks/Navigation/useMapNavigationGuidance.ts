@@ -29,7 +29,6 @@ type UseMapNavigationGuidanceParams = {
   permissionStatus: LocationPermissionStatus;
   isTracking: boolean;
   startTracking: () => Promise<void>;
-  alert: (title: string, message: string) => void;
   clearTargetNavigationParam: () => void;
   previewRouteSummary: RouteResponse | null;
   previewErrorMessage: string | null;
@@ -69,7 +68,6 @@ export function useMapNavigationGuidance({
   permissionStatus,
   isTracking,
   startTracking,
-  alert,
   clearTargetNavigationParam,
   previewRouteSummary,
   previewErrorMessage,
