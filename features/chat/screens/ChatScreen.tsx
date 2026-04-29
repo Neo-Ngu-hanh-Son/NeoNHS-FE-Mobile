@@ -329,11 +329,11 @@ export default function ChatScreen({ route, navigation }: any) {
   }, [navigation]);
 
   const handleGoToMap = useCallback((pointId: string) => {
-    navigation.navigate('MapDirection', {
-      pointId: pointId,
-      targetNavigationPointId: pointId
+    navigation.navigate('Tabs', {
+      screen: 'Map',
+      params: { pointId: pointId, targetNavigationPointId: pointId, fromChatRoomId: roomId }
     });
-  }, [navigation]);
+  }, [navigation, roomId]);
 
   // ── Send product snippet ─────────────────────────────
   const handleSendSnippet = () => {
@@ -598,7 +598,7 @@ export default function ChatScreen({ route, navigation }: any) {
                   <>
                     <View className="max-w-[80%] rounded-2xl rounded-bl-sm px-4 py-3" style={{ backgroundColor: theme.muted }}>
                       <Text className="text-sm" style={{ color: theme.foreground }}>
-                        {stripTransferMarker(aiStreamingText)}
+                        {stripTransferMarker(aiStreamingText).replace(/!\[[^\]]*\]\([^)]+\)/g, '')}
                       </Text>
                     </View>
                     {isAiRoom && hasTransferMarker(aiStreamingText) && (

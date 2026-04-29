@@ -216,14 +216,14 @@ export default function MyVoucherDetailScreen() {
             <Text style={styles.actionBtnText}>{t('voucher.show_qr')}</Text>
           </TouchableOpacity>
         ) : !isUsed && !isExpired && userVoucher.voucherType === 'DISCOUNT' ? (
-            <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: accentColor }]}
-                onPress={() => navigation.navigate('Tabs', { screen: 'Home' })}
-                activeOpacity={0.7}
-            >
-                <Ionicons name="cart-outline" size={20} color="#fff" />
-                <Text style={styles.actionBtnText}>{t('voucher.use_now')}</Text>
-            </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: accentColor }]}
+            onPress={() => navigation.navigate('Tabs', { screen: 'Home' })}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="cart-outline" size={20} color="#fff" />
+            <Text style={styles.actionBtnText}>{t('voucher.use_now')}</Text>
+          </TouchableOpacity>
         ) : (
           <View style={[styles.disabledButton, { backgroundColor: theme.border }]}>
             <Text style={[styles.disabledBtnText, { color: theme.mutedForeground }]}>
@@ -248,16 +248,16 @@ export default function MyVoucherDetailScreen() {
                 <Ionicons name="close" size={24} color={theme.foreground} />
               </TouchableOpacity>
             </View>
-            
+
             <View style={styles.qrContainer}>
               <QRCode value={userVoucher.userVoucherId} size={width * 0.6} />
-              <Text style={[styles.qrCodeText, { color: theme.foreground }]}>{userVoucher.userVoucherId}</Text>
+              {/* <Text style={[styles.qrCodeText, { color: theme.foreground }]}>{userVoucher.userVoucherId}</Text> */}
               <Text style={[styles.qrHint, { color: theme.mutedForeground }]}>
                 {t('profile.actions.verify_ticket_desc')}
               </Text>
             </View>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.modalCloseBtn, { backgroundColor: accentColor }]}
               onPress={() => setShowQrModal(false)}
             >
@@ -465,9 +465,9 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   qrCodeText: {
-      marginTop: 16,
-      fontSize: 12,
-      fontWeight: '600',
+    marginTop: 16,
+    fontSize: 12,
+    fontWeight: '600',
   },
   qrHint: {
     marginTop: 8,

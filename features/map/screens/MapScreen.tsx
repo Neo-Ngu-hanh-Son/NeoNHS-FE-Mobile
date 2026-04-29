@@ -27,6 +27,8 @@ import { useMapNavigationPreviewController } from '../hooks/Navigation/useMapNav
 import { QUERY_KEYS } from '@/services/api/tanstack/queryKeyConstants';
 import { useMapCameraController } from '../hooks/MapCamera/useMapCameraController';
 import { useMapScreenController } from '../hooks/useMapScreenController';
+import { BackHandler } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 type MapScreenProps = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Map'>,
@@ -44,8 +46,32 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
   // Route params
   const initialPointId = route.params?.pointId;
   const targetNavigationPointId = route.params?.targetNavigationPointId;
+  const fromChatRoomId = route.params?.fromChatRoomId;
   const [manualTargetNavigationPointId, setManualTargetNavigationPointId] = useState<string | undefined>(undefined);
   const effectiveTargetNavigationPointId = manualTargetNavigationPointId ?? targetNavigationPointId;
+
+  const handleBackToChat = useCallback(() => {
+    if (fromChatRoomId) {
+      // Clear fromChatRoomId from params so if we come back it doesn't stay
+      navigation.setParams({ fromChatRoomId: undefined });
+      navigation.navigate('ChatRoom', { roomId: fromChatRoomId });
+    }
+  }, [navigation, fromChatRoomId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (fromChatRoomId) {
+          handleBackToChat();
+          return true; // Prevent default back (which goes to Home)
+        }
+        return false;
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [fromChatRoomId, handleBackToChat])
+  );
 
   // Zustand store for managing map-wide states like view mode
   const viewMode = useMapStore((state) => state.viewMode);
@@ -263,7 +289,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
   }
 
   return (
-    <ScreenLayout showBackButton={false}>
+    <ScreenLayout showBackButton={!!fromChatRoomId} onBack={handleBackToChat}>
       {/* Main map */}
       <NHSMap
         ref={mapRef}

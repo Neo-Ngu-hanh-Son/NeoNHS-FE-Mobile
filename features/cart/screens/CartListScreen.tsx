@@ -193,6 +193,9 @@ export default function CartListScreen() {
 
     const renderCartItem = ({ item }: { item: CartItem }) => {
         const isSelected = selectedItems.has(item.id);
+        const isWorkshop = !!item.workshopSessionId;
+        const isEventTicket = !!item.eventId;
+
         return (
             <TouchableOpacity
                 style={[
@@ -216,11 +219,48 @@ export default function CartListScreen() {
                     {isSelected && <Ionicons name="checkmark" size={16} color="white" />}
                 </View>
                 <View style={{ flex: 1 }}>
+                    {/* Item name + delete */}
                     <View style={styles.row}>
                         <Text style={[styles.itemName, { color: theme.foreground, flex: 1 }]}>{item.itemName}</Text>
                         <TouchableOpacity onPress={() => handleRemoveItem(item.id)} style={{ padding: 4 }}>
                             <Ionicons name="trash-outline" size={20} color="#ef4444" />
                         </TouchableOpacity>
+                    </View>
+
+                    {/* Type badge + parent name */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                        {isWorkshop && (
+                            <>
+                                <View style={[styles.typeBadge, { backgroundColor: '#a855f722' }]}>
+                                    <MaterialIcons name="self-improvement" size={11} color="#a855f7" />
+                                    <Text style={{ color: '#a855f7', fontSize: 10, fontWeight: '700' }}>Workshop</Text>
+                                </View>
+                                {item.workshopName && (
+                                    <Text style={{ color: theme.mutedForeground, fontSize: 12 }} numberOfLines={1}>
+                                        {item.workshopName}
+                                    </Text>
+                                )}
+                            </>
+                        )}
+                        {isEventTicket && (
+                            <>
+                                <View style={[styles.typeBadge, { backgroundColor: '#3b82f622' }]}>
+                                    <MaterialIcons name="event" size={11} color="#3b82f6" />
+                                    <Text style={{ color: '#3b82f6', fontSize: 10, fontWeight: '700' }}>Event</Text>
+                                </View>
+                                {item.eventName && (
+                                    <Text style={{ color: theme.mutedForeground, fontSize: 12 }} numberOfLines={1}>
+                                        {item.eventName}
+                                    </Text>
+                                )}
+                            </>
+                        )}
+                        {!isWorkshop && !isEventTicket && (
+                            <View style={[styles.typeBadge, { backgroundColor: '#f59e0b22' }]}>
+                                <MaterialIcons name="confirmation-number" size={11} color="#f59e0b" />
+                                <Text style={{ color: '#f59e0b', fontSize: 10, fontWeight: '700' }}>Ticket</Text>
+                            </View>
+                        )}
                     </View>
 
                     <View style={styles.row}>
@@ -491,5 +531,13 @@ const styles = StyleSheet.create({
     emptyContainer: {
         padding: 40,
         alignItems: 'center',
-    }
+    },
+    typeBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 3,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+    },
 });

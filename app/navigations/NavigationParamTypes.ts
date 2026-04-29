@@ -22,7 +22,7 @@ export type TabsStackParamList = {
   Home: undefined;
   Discover: undefined;
   Voucher: undefined;
-  Map: { pointId?: string; targetNavigationPointId?: string; userCheckedInPointId?: string } | undefined;
+  Map: { pointId?: string; targetNavigationPointId?: string; userCheckedInPointId?: string; fromChatRoomId?: string } | undefined;
   Bookings: undefined;
   Profile: undefined;
   Chat: undefined;

@@ -31,5 +31,17 @@ export const transactionService = {
      */
     async verifyTicket(code: string): Promise<ApiResponse<any>> {
         return apiClient.post<any>('/tickets/verify', { code });
+    },
+
+    /**
+     * Redeem a voucher (gift) by scanning its QR code.
+     * Calls vendor or admin endpoint depending on the caller's role.
+     */
+    async redeemVoucher(userVoucherId: string, role: string): Promise<ApiResponse<any>> {
+        const isAdmin = role === 'ADMIN';
+        const url = isAdmin
+            ? `admin/vouchers/redeem/${userVoucherId}`
+            : `vendor/vouchers/redeem/${userVoucherId}`;
+        return apiClient.post<any>(url);
     }
 };

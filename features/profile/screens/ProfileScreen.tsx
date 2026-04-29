@@ -32,7 +32,6 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
   const isFocused = useIsFocused();
   const isFetchingProfileRef = useRef(false);
   const lastFetchAtRef = useRef(0);
-
   const { language, setLanguage } = useLanguage();
   const { t } = useTranslation();
   const { alert } = useModal();
@@ -200,30 +199,6 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
               <MaterialIcons name="verified" size={22} color="#22C55E" />
             </View>
           )}
-
-          {/* TODO: Test checkin completed screen */}
-          <View style={{ marginBottom: 20 }}>
-            <Text style={[styles.sectionTitle, { color: theme.mutedForeground }]}>MANAGEMENT</Text>
-            <ActionCard
-              title="View checkin completed screen"
-              desc="Scan QR code to verify customer tickets"
-              rightIcon={<MaterialIcons name="qr-code-scanner" size={20} color={theme.primary} />}
-              themeCard={theme.card}
-              themeBorder={theme.border}
-              themeForeground={theme.foreground}
-              themeMutedForeground={theme.mutedForeground}
-              onPress={() =>
-                navigation.navigate('Main', {
-                  screen: 'CheckinComplete',
-                  params: {
-                    imageUrl: undefined,
-                    rewardPoints: 0,
-                    userTotalPoints: 0,
-                  },
-                })
-              }
-            />
-          </View>
 
           {/* Admin/Vendor Actions */}
           {(user.role === 'ADMIN' || user.role === 'VENDOR') && (
