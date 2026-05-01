@@ -3,6 +3,7 @@ import { Modal, StyleSheet, View, TouchableOpacity, TouchableWithoutFeedback } f
 import { Text } from '@/components/ui/text';
 import { THEME } from '@/lib/theme';
 import { useTheme } from '@/app/providers/ThemeProvider';
+import { AlertModalOptions, ConfirmationModalOptions, InfoModalOptions } from '../types';
 
 /**
  * Button configuration for modal
@@ -20,33 +21,16 @@ export interface ModalOptions {
   title?: string;
   message?: string;
   buttons?: ModalButton[];
-  cancelable?: boolean; // Whether tapping outside dismisses the modal
+  cancelable?: boolean;
 }
 
 /**
  * Modal context value
  */
 interface ModalContextValue {
-  /**
-   * Show an alert modal with customizable buttons
-   * Similar to React Native's Alert.alert()
-   */
-  alert: (title: string, message?: string, buttons?: ModalButton[], options?: { cancelable?: boolean }) => void;
-
-  /**
-   * Show a confirmation modal with OK and Cancel buttons
-   * Returns a promise that resolves to true if confirmed, false if cancelled
-   */
-  confirm: (title: string, message?: string) => Promise<boolean>;
-
-  /**
-   * Show a simple info modal with just an OK button
-   */
-  info: (title: string, message?: string) => void;
-
-  /**
-   * Dismiss the current modal
-   */
+  alert: (options: AlertModalOptions) => void;
+  confirm: (options: ConfirmationModalOptions) => Promise<boolean>;
+  info: (options: InfoModalOptions) => void;
   dismiss: () => void;
 }
 
@@ -77,29 +61,52 @@ export function ModalProvider({ children }: { children: ReactNode }) {
   }, [promiseResolver]);
 
   const alert = useCallback(
-    (title: string, message?: string, buttons?: ModalButton[], alertOptions?: { cancelable?: boolean }) => {
-      const defaultButtons: ModalButton[] = buttons || [{ text: 'OK', style: 'default' }];
+    (options: AlertModalOptions) => {
+      const defaultButtons: ModalButton[] = options.buttons || [{ text: 'OK', style: 'default' }];
 
       setOptions({
-        title,
-        message,
+        title: options.title,
+        message: options.message,
         buttons: defaultButtons,
-        cancelable: alertOptions?.cancelable ?? true,
+        cancelable: options?.cancelable ?? true,
       });
       setVisible(true);
     },
     []
   );
 
-  const confirm = useCallback((title: string, message?: string): Promise<boolean> => {
+  /**
+   * Show a confirmation modal with OK and Cancel buttons
+   * Returns a promise and executes optional callbacks
+   */
+  const confirm = useCallback((
+    options: ConfirmationModalOptions
+  ): Promise<boolean> => {
     return new Promise((resolve) => {
+      const title = options.title;
+      const message = options.message;
+      const confirmOptions = { onOk: options.onOk, onCancel: options.onCancel };
       setPromiseResolver(() => resolve);
       setOptions({
         title,
         message,
-        buttons: [
-          { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
-          { text: 'OK', style: 'default', onPress: () => resolve(true) },
+        buttons: options.buttons || [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+            onPress: () => {
+              confirmOptions?.onCancel?.();
+              resolve(false);
+            }
+          },
+          {
+            text: 'OK',
+            style: 'default',
+            onPress: () => {
+              confirmOptions?.onOk?.();
+              resolve(true);
+            }
+          },
         ],
         cancelable: true,
       });
@@ -107,9 +114,23 @@ export function ModalProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  /**
+   * Show a simple info modal with just an OK button and optional callback
+   */
   const info = useCallback(
-    (title: string, message?: string) => {
-      alert(title, message, [{ text: 'OK', style: 'default' }], { cancelable: true });
+    (options: InfoModalOptions) => {
+      alert(
+        {
+          title: options.title,
+          message: options.message,
+          buttons: [{
+            text: 'OK',
+            style: 'default',
+            onPress: options.onOk
+          }],
+          cancelable: options.cancelable ?? true
+        }
+      );
     },
     [alert]
   );

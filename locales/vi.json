@@ -25,7 +25,9 @@
     "refresh": "Làm mới",
     "error_default": "Đã xảy ra lỗi. Vui lòng thử lại.",
     "oops": "Ôi!",
-    "pull_to_refresh": "Hoặc vuốt xuống để làm mới"
+    "pull_to_refresh": "Hoặc vuốt xuống để làm mới",
+    "share": "Chia sẻ",
+    "report": "Báo cáo"
   },
   "map": {
     "checkin": "Điểm danh",

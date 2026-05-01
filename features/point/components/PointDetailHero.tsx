@@ -6,6 +6,18 @@ import { SmartImage } from '@/components/ui/smart-image';
 import { Text } from '@/components/ui/text';
 import { MapPoint } from '../../map/types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import SmartMenu from '@/components/common/MenuTriggerBtn';
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { useTranslation } from 'react-i18next';
 
 const HERO_HEIGHT = 460;
 
@@ -18,6 +30,7 @@ type PointDetailHeroProps = {
   onBack: () => void;
   onToggleFavorite: () => void;
   onShare: () => void;
+  onReport: () => void;
 };
 
 export function PointDetailHero({
@@ -26,8 +39,12 @@ export function PointDetailHero({
   onBack,
   onToggleFavorite,
   onShare,
+  onReport,
 }: PointDetailHeroProps) {
   const insets = useSafeAreaInsets();
+  const { getCurrentTheme } = useTheme();
+  const theme = getCurrentTheme();
+  const { t } = useTranslation();
 
   return (
     <View className="relative" style={{ height: HERO_HEIGHT }}>
@@ -57,23 +74,26 @@ export function PointDetailHero({
         </TouchableOpacity>
 
         <View className="flex-row gap-2.5">
-          <TouchableOpacity
-            onPress={onToggleFavorite}
-            className="h-11 w-11 items-center justify-center rounded-full border border-white/25 bg-black/30"
-            activeOpacity={0.7}>
-            <Ionicons
-              name={isFavorite ? 'heart' : 'heart-outline'}
-              size={20}
-              color={isFavorite ? '#f43f5e' : 'white'}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={onShare}
-            className="h-11 w-11 items-center justify-center rounded-full border border-white/25 bg-black/30"
-            activeOpacity={0.7}>
-            <Ionicons name="share-outline" size={20} color="white" />
-          </TouchableOpacity>
+          <SmartMenu
+            trigger={
+              <View
+                className="h-11 w-11 items-center justify-center rounded-full border border-white/25 bg-black/30">
+                <Ionicons name="ellipsis-vertical-sharp" size={22} color="white" />
+              </View>
+            }
+            items={[
+              {
+                label: t('common.share'), onPress: onShare,
+                icon: <Ionicons name='share' size={16} color={theme.foreground} />
+              },
+              {
+                label: t('common.report'), onPress: onReport,
+                icon: <Ionicons name='flag' size={16} color={theme.destructive} />, isDestructive: true
+              },
+            ]}
+          />
         </View>
+
       </View>
 
       {/* Bottom content overlay */}
@@ -87,19 +107,6 @@ export function PointDetailHero({
 
         {/* Title */}
         <Text className="mb-2.5 text-3xl font-black leading-[38px] text-white">{point.name}</Text>
-
-        {/* Quick info */}
-        {/* <View className="flex-row items-center gap-4">
-          <View className="flex-row items-center gap-1.5">
-            <Ionicons name="star" size={14} color="#fbbf24" />
-            <Text className="text-sm font-semibold text-white/90">4.8 (1.2k)</Text>
-          </View>
-          <View className="h-1 w-1 rounded-full bg-white/40" />
-          <View className="flex-row items-center gap-1.5">
-            <Ionicons name="walk" size={14} color="white" />
-            <Text className="text-sm font-medium text-white/80">15 mins away</Text>
-          </View>
-        </View> */}
       </View>
     </View>
   );

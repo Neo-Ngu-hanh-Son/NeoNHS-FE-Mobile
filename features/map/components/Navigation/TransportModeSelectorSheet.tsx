@@ -7,6 +7,7 @@ import { THEME } from '@/lib/theme';
 import { TravelMode } from '../../types';
 
 type TransportModeSelectorSheetProps = {
+  excludedModes?: TravelMode[];
   selectedMode: TravelMode | null;
   destinationName?: string;
   previewDistanceText?: string;
@@ -49,6 +50,7 @@ const MODE_OPTIONS: ModeOption[] = [
 ];
 
 export default function TransportModeSelectorSheet({
+  excludedModes,
   selectedMode,
   destinationName,
   previewDistanceText,
@@ -118,8 +120,8 @@ export default function TransportModeSelectorSheet({
           </TouchableOpacity>
         </View>
 
-        <View className="mt-3 flex-row items-center justify-between">
-          {MODE_OPTIONS.map((option) => {
+        <View className="mt-3 flex-row items-center justify-around gap-2">
+          {MODE_OPTIONS.filter((option) => !excludedModes?.includes(option.mode)).map((option) => {
             const isSelected = option.mode === selectedMode;
 
             return (
@@ -130,9 +132,8 @@ export default function TransportModeSelectorSheet({
                 accessibilityState={{ selected: isSelected }}
                 activeOpacity={0.8}
                 onPress={makeModePressHandler(option.mode)}
-                className={`flex-1 items-center justify-center rounded-full border px-4 py-2 ${
-                  isSelected ? 'border-primary/60 bg-primary/10' : 'border-border/50 bg-background'
-                }`}>
+                className={`flex-1 items-center justify-center rounded-full border px-4 py-2 ${isSelected ? 'border-primary/60 bg-primary/10' : 'border-border/50 bg-background'
+                  }`}>
                 <FontAwesome6 name={option.icon} size={24} color={isSelected ? theme.primary : theme.foreground} />
               </TouchableOpacity>
             );
@@ -158,9 +159,8 @@ export default function TransportModeSelectorSheet({
             activeOpacity={0.85}
             onPress={onStartNavigation}
             disabled={!canStartNavigation}
-            className={`h-10 flex-1 items-center justify-center rounded-lg ${
-              canStartNavigation ? 'bg-primary' : 'bg-muted'
-            }`}>
+            className={`h-10 flex-1 items-center justify-center rounded-lg ${canStartNavigation ? 'bg-primary' : 'bg-muted'
+              }`}>
             <Text
               className={`font-semibold ${canStartNavigation ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
               {canStartNavigation ? 'Start Navigation' : 'Loading Navigation...'}

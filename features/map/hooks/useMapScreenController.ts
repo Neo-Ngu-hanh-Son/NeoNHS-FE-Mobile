@@ -40,7 +40,10 @@ export const useMapScreenController = ({ navigation, pointDetailSheetRef }: Prop
   const handleNavigate = useCallback(
     (point: MapPoint) => {
       if (!point.id || point.id === 'offline') {
-        alert('Navigation Unavailable', 'Please connect to the internet.');
+        alert({
+          title: 'Navigation Unavailable',
+          message: 'Please connect to the internet.',
+        });
         return;
       }
 
@@ -77,7 +80,10 @@ export const useMapScreenController = ({ navigation, pointDetailSheetRef }: Prop
     }
 
     if (!activePoint?.id) {
-      alert('No check-in point nearby', 'Move closer to a check-in location, then try opening the camera again.');
+      alert({
+        title: 'No check-in point nearby',
+        message: 'Move closer to a check-in location, then try opening the camera again.',
+      });
       return;
     }
 

@@ -278,7 +278,7 @@ export default function TicketVerificationScreen() {
                 facing="back"
                 onBarcodeScanned={(activeTab !== 'manual' && !scanned) ? handleBarCodeScanned : undefined}
                 barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-
+                mute={true}
             >
                 <View style={styles.overlay}>
 

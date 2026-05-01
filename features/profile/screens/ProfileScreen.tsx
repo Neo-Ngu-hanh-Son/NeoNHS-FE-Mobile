@@ -332,18 +332,18 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
                 themeForeground={theme.foreground}
                 themeMutedForeground={theme.mutedForeground}
                 onPress={() => {
-                  alert(
-                    t('language.title'),
-                    '',
-                    [
+                  alert({
+                    title: t('language.title'),
+                    message: '',
+                    buttons: [
                       { text: t('language.vi'), onPress: () => setLanguage('vi') },
                       { text: t('language.en'), onPress: () => setLanguage('en') },
                       { text: t('language.ja'), onPress: () => setLanguage('ja') },
                       { text: t('language.ko'), onPress: () => setLanguage('ko') },
                       { text: t('common.cancel'), style: 'cancel' }
                     ],
-                    { cancelable: true }
-                  );
+                    cancelable: true
+                  });
                 }}
               />
             </View>
