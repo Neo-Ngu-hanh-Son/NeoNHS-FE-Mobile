@@ -31,6 +31,7 @@ export interface ReviewSectionProps {
   onSubmitReview: (rating: number, text: string) => Promise<void>;
   onViewAll: () => void;
   onSheetVisibilityChange?: (visible: boolean) => void;
+  isEligible?: boolean;
 }
 
 export function ReviewSection({
@@ -44,6 +45,7 @@ export function ReviewSection({
   onSubmitReview,
   onViewAll,
   onSheetVisibilityChange,
+  isEligible,
 }: ReviewSectionProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
@@ -70,7 +72,7 @@ export function ReviewSection({
     <View className="gap-4">
       <View className="flex-row items-center justify-between">
         <Text className="text-xl font-black tracking-tight">{t('review.title')}</Text>
-        {user && (
+        {user && (isEligible !== false || myReview) && (
           <TouchableOpacity
             className="flex-row items-center gap-1"
             activeOpacity={0.7}

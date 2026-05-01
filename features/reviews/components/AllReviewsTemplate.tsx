@@ -37,6 +37,8 @@ export interface AllReviewsTemplateProps {
   onLoadMore: () => void;
   onSubmitReview: (rating: number, text: string) => Promise<void>;
   onGoBack: () => void;
+  /** Same rule as ReviewSection: hide write unless eligible, always allow edit when user already has a review. */
+  isEligible?: boolean;
 }
 
 const FILTER_STARS = [0, 5, 4, 3, 2, 1] as const;
@@ -59,6 +61,7 @@ export function AllReviewsTemplate({
   onLoadMore,
   onSubmitReview,
   onGoBack,
+  isEligible,
 }: AllReviewsTemplateProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
@@ -228,7 +231,7 @@ export function AllReviewsTemplate({
         <Text className="flex-1 ml-2 text-lg font-bold" style={{ color: theme.foreground }}>
           {t('review.title')}
         </Text>
-        {user && (
+        {user && (isEligible !== false || myReview) && (
           <TouchableOpacity
             onPress={() => sheetRef.current?.present()}
             activeOpacity={0.8}
@@ -265,7 +268,11 @@ export function AllReviewsTemplate({
               <ReviewCard
                 item={item}
                 isOwn={item.user.id === user?.id}
-                onEdit={() => sheetRef.current?.present()}
+                onEdit={
+                  isEligible !== false || myReview
+                    ? () => sheetRef.current?.present()
+                    : undefined
+                }
                 onReport={() => Alert.alert(t('review.alert.report_title'), t('review.alert.report_message'))}
               />
             </View>
