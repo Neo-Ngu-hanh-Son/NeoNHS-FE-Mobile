@@ -326,3 +326,8 @@ export type CheckinSessionGalleryImage = {
   draftId?: string;
   publicId?: string;
 };
+
+export enum MapDirectionSource {
+  GOOGLE = 'GOOGLE',
+  CUSTOM = 'CUSTOM',
+}

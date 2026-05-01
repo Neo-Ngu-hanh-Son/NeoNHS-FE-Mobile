@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Keyboard } from 'react-native';
+import { Keyboard, BackHandler } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { MainStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { logger } from '@/utils/logger';
@@ -13,7 +13,7 @@ import { mapService } from '../services/mapServices';
 import { useModal } from '@/app/providers/ModalProvider';
 import { useMapMarkerFilters, useMapNavigationGuidance, useMapSearch, useUserLocation } from '../hooks';
 import { mapData } from '../data';
-import { CompositeScreenProps } from '@react-navigation/native';
+import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
 import { ScreenLayout } from '@/components/common/ScreenLayout';
 import { useQuery } from '@tanstack/react-query';
 import CheckinCameraButton from '../components/CheckinCameraButton';
@@ -21,14 +21,14 @@ import MAP_CONSTANTS from '../constants';
 import { LocationAccuracy } from 'expo-location';
 import BottomSheet from '@gorhom/bottom-sheet';
 import NavigationStepsBottomSheet from '../components/Navigation/NavigationStepsBottomSheet';
-import { decodeRoutePolyline } from '../helpers';
+import { decodeRoutePolyline } from '../utils/helpers';
 import { useMapStore } from '../store/useMapStore';
 import { useMapNavigationPreviewController } from '../hooks/Navigation/useMapNavigationPreviewController';
 import { QUERY_KEYS } from '@/services/api/tanstack/queryKeyConstants';
 import { useMapCameraController } from '../hooks/MapCamera/useMapCameraController';
 import { useMapScreenController } from '../hooks/useMapScreenController';
-import { BackHandler } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import * as turf from '@turf/turf'
+import { useDynamicPolyline } from '../hooks/Navigation/useDynamicPolyline';
 
 type MapScreenProps = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Map'>,
@@ -153,13 +153,14 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     activeTravelModeLabel,
     previewRouteSummary,
     previewRouteQuery,
-    selectedTravelMode,
     confirmedTravelMode,
     handleStartNavigationWithSelectedMode,
     clearTargetNavigationParam: clearTargetNavigationParamAuto,
     handleTravelModeSelection,
     handleCancelTransportSelection: handleCancelTransportSelectionAuto,
     setConfirmedTravelMode,
+    effectiveTravelMode: selectedTravelMode,
+    routingSource,
   } = useMapNavigationPreviewController({
     targetNavigationPointId: effectiveTargetNavigationPointId,
     mapPoints,
@@ -232,7 +233,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     [clearSearch, focusOnPoint, handleOpenPointSheetModal]
   );
 
-  const lastValidRouteRef = useRef<PolylineCoordinate[] | null>(null);
+  // const lastValidRouteRef = useRef<PolylineCoordinate[] | null>(null);
   const memorizedEncodedPolyline = useMemo(() => {
     if (viewMode === 'EXPLORING') {
       return '';
@@ -244,20 +245,56 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     return previewRouteSummary?.routes?.[0]?.polyline?.encodedPolyline;
   }, [previewRouteSummary?.routes, viewMode]);
 
-  const navigationPolylineCoordinates = useMemo(() => {
-    const decoded = decodeRoutePolyline(memorizedEncodedPolyline);
-    return decoded;
-  }, [memorizedEncodedPolyline]);
+  // Update the navigation polyline on the fly.
+  // const navigationPolylineCoordinates = useMemo(() => {
+  //   if (!previewRouteSummary || !userLocation) return [];
 
-  const displayCoordinates = useMemo(() => {
-    if (navigationPolylineCoordinates && navigationPolylineCoordinates.length >= 2) {
-      lastValidRouteRef.current = navigationPolylineCoordinates;
-      return navigationPolylineCoordinates;
-    }
+  //   const fullPath = decodeRoutePolyline(memorizedEncodedPolyline);
+  //   if (fullPath.length < 2) return fullPath;
 
-    return lastValidRouteRef.current ?? [];
-  }, [navigationPolylineCoordinates]);
-  const isNavPolylineVisible = !!(navigationPolylineCoordinates && navigationPolylineCoordinates.length >= 2);
+  //   const userPoint = turf.point([userLocation.longitude, userLocation.latitude]);
+  //   const line = turf.lineString(fullPath.map(p => [p.longitude, p.latitude]));
+
+  //   // Find the point on the line closest to the user
+  //   const snapped = turf.nearestPointOnLine(line, userPoint);
+
+  //   // Slice the line from the snapped point to the very end
+  //   const endPoint = turf.point([
+  //     fullPath[fullPath.length - 1].longitude,
+  //     fullPath[fullPath.length - 1].latitude
+  //   ]);
+
+  //   const sliced = turf.lineSlice(snapped, endPoint, line);
+
+  //   // Convert back to LatLng objects
+  //   return sliced.geometry.coordinates.map(coord => ({
+  //     latitude: coord[1],
+  //     longitude: coord[0],
+  //   }));
+  // }, [previewRouteSummary, memorizedEncodedPolyline, userLocation]);
+
+  // const displayCoordinates = useMemo(() => {
+  //   if (navigationPolylineCoordinates && navigationPolylineCoordinates.length >= 2) {
+  //     lastValidRouteRef.current = navigationPolylineCoordinates;
+  //     return navigationPolylineCoordinates;
+  //   }
+
+  //   return lastValidRouteRef.current ?? [];
+  // }, [navigationPolylineCoordinates]);
+
+  const {
+    displayCoordinates,
+    isDrawingRoute
+  } = useDynamicPolyline({
+    encodedPolyline: memorizedEncodedPolyline,
+    userLocation: userLocation,
+    animationIntervalMs: 50,
+    enableAnimation: true,
+  });
+
+  // const isNavPolylineVisible = !!(navigationPolylineCoordinates && navigationPolylineCoordinates.length >= 2);
+  const isNavPolylineVisible = !!(displayCoordinates && displayCoordinates.length >= 2);
+
 
   // Auto request permission on mount if not granted or denied
   useEffect(() => {
@@ -304,6 +341,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
         startTrackingCallback={startTracking}
         onMapReadyCallback={handleOnMapReady}
         navigationPolylineCoordinates={displayCoordinates}
+        selectedTravelMode={selectedTravelMode ?? 'WALK'}
         isNavPolylineVisible={isNavPolylineVisible}
         isMapInteractionEnabled={true}
         markerFilters={markerFilters}
@@ -358,6 +396,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
           onSelectMode={handleTravelModeSelection}
           onStartNavigation={handleStartNavigationWithSelectedMode}
           onCancel={handleCancelTransportSelection}
+          excludedModes={routingSource === 'CUSTOM' ? ['BICYCLE', 'TWO_WHEELER', 'DRIVE'] : []}
         />
       )}
 

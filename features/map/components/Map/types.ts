@@ -1,7 +1,7 @@
 import type { Region } from 'react-native-maps';
 import type { MapMarkerFilters } from '../../hooks';
 import type { UserLocation } from '../../hooks/useUserLocation';
-import type { MapPoint, MapPointCheckin, PolylineCoordinate } from '../../types';
+import type { MapPoint, MapPointCheckin, PolylineCoordinate, TravelMode } from '../../types';
 import { MapViewMode } from '../../store/useMapStore';
 import { ReactNode } from 'react';
 import { QueryObserverResult, RefetchOptions } from '@tanstack/react-query';
@@ -113,6 +113,11 @@ export interface NHSMapProps<T extends MapPoint = MapPoint> {
    * Use to manually refetch newest map point from the server
    */
   refetchMapPoints?: (options?: RefetchOptions | undefined) => Promise<QueryObserverResult<MapPoint[], Error>>;
+
+  /**
+   * Used to display the polyine (If using walk, display dot-like polylines)
+   */
+  selectedTravelMode?: TravelMode;
 }
 
 /**

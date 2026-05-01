@@ -15,7 +15,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { useMapCameraController } from '@/features/map/hooks/MapCamera/useMapCameraController';
 import { LocationAccuracy } from 'expo-location';
 import BottomSheet from '@gorhom/bottom-sheet';
-import { decodeRoutePolyline } from '@/features/map/helpers';
+import { decodeRoutePolyline } from '@/features/map/utils/helpers';
 import {
   NavigationGuideOverlay,
   NavigationStepsBottomSheet,
