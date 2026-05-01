@@ -25,7 +25,9 @@
     "refresh": "새로고침",
     "error_default": "문제가 발생했습니다. 다시 시도해주세요.",
     "oops": "앗!",
-    "pull_to_refresh": "또는 아래로 당겨서 새로고침"
+    "pull_to_refresh": "또는 아래로 당겨서 새로고침",
+    "share": "공유하기",
+    "report": "신고하기"
   },
   "map": {
     "checkin": "체크인",

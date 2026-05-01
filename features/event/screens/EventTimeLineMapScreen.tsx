@@ -15,7 +15,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { useMapCameraController } from '@/features/map/hooks/MapCamera/useMapCameraController';
 import { LocationAccuracy } from 'expo-location';
 import BottomSheet from '@gorhom/bottom-sheet';
-import { decodeRoutePolyline } from '@/features/map/helpers';
+import { decodeRoutePolyline } from '@/features/map/utils/helpers';
 import {
   NavigationGuideOverlay,
   NavigationStepsBottomSheet,
@@ -225,7 +225,6 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
     permissionStatus,
     isTracking,
     startTracking,
-    alert,
     clearTargetNavigationParam,
     travelMode: confirmedTravelMode,
     previewRouteSummary,

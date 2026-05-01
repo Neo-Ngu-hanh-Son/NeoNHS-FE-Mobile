@@ -1,5 +1,5 @@
 import { decode } from '@googlemaps/polyline-codec';
-import { MapPointCheckin, Maneuver, PolylineCoordinate } from './types';
+import { MapPointCheckin, Maneuver, PolylineCoordinate } from '../types';
 
 type ManeuverPresentation = {
   iconName: string;

@@ -30,21 +30,9 @@ export default function BlogHeader({ blog }: BlogHeaderProps) {
         <SmartImage
           uri={coverImage}
           className="h-52 w-full"
-          resizeMode="cover"
+          contentFit='cover'
           accessibilityLabel={`Cover image for ${blog.title}`}
         />
-
-        {/* Back button */}
-        <View className="absolute left-4 top-4 rounded-full bg-white/20 backdrop-blur-md">
-          <Button
-            variant="ghost"
-            size="icon"
-            onPress={goBack}
-            accessibilityLabel="Go back"
-            className="rounded-full bg-black/30">
-            <Ionicons name="arrow-back" size={22} color="white" />
-          </Button>
-        </View>
       </View>
 
       <View

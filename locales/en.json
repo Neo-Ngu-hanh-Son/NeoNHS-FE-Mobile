@@ -25,7 +25,9 @@
     "refresh": "Refresh",
     "error_default": "Something went wrong. Please try again.",
     "oops": "Oops!",
-    "pull_to_refresh": "Or pull down to refresh"
+    "pull_to_refresh": "Or pull down to refresh",
+    "share": "Share",
+    "report": "Report"
   },
   "map": {
     "checkin": "Check-in",

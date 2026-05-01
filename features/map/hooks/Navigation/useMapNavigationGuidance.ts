@@ -6,7 +6,7 @@ import {
   formatDistanceText,
   formatDurationText,
   parseDurationSeconds,
-} from '../../helpers';
+} from '../../utils/helpers';
 import {
   CurrentNavigationStepData,
   MapPoint,
@@ -29,7 +29,6 @@ type UseMapNavigationGuidanceParams = {
   permissionStatus: LocationPermissionStatus;
   isTracking: boolean;
   startTracking: () => Promise<void>;
-  alert: (title: string, message: string) => void;
   clearTargetNavigationParam: () => void;
   previewRouteSummary: RouteResponse | null;
   previewErrorMessage: string | null;
@@ -69,7 +68,6 @@ export function useMapNavigationGuidance({
   permissionStatus,
   isTracking,
   startTracking,
-  alert,
   clearTargetNavigationParam,
   previewRouteSummary,
   previewErrorMessage,
@@ -80,25 +78,27 @@ export function useMapNavigationGuidance({
     isUserArrived: false,
   });
 
+  const [currentUserStepIndex, setCurrentUserStepIndex] = useState(0);
+
   const isGuidanceMode = viewMode === 'NAVIGATING';
   const isDirectionsLoading = previewRouteSummary === null || previewRouteSummary === undefined;
   const isDirectionsReady = previewRouteSummary !== null || previewRouteSummary !== undefined;
   const directionError = previewErrorMessage;
 
-  // 1. Extract the base legs for cleaner access
+  // Extract the base legs for cleaner access
   const routeLeg = previewRouteSummary?.routes?.[0]?.legs?.[0];
 
   const steps = useMemo(() => {
     return previewRouteSummary?.routes?.[0]?.legs?.[0]?.steps ?? [];
   }, [previewRouteSummary]);
 
-  // 3. Derived Polyline (Memoized because decoding can be CPU intensive)
+  // Derived Polyline (Memoized because decoding can be CPU intensive)
   const navigationPolylineCoordinates = useMemo(() => {
     const encoded = previewRouteSummary?.routes?.[0]?.polyline?.encodedPolyline;
     return encoded ? decodeRoutePolyline(encoded) : [];
   }, [previewRouteSummary]);
 
-  // 4. Derived Endpoints (Memoized to prevent unnecessary re-renders in Map components)
+  // Derived Endpoints (Memoized to prevent unnecessary re-renders in Map components)
   const navigationEndpoints = useMemo(() => {
     const start = routeLeg?.startLocation?.latLng;
     const end = routeLeg?.endLocation?.latLng;
@@ -118,8 +118,6 @@ export function useMapNavigationGuidance({
   }, [routeLeg]);
 
   const routeSummary = previewRouteSummary;
-
-  const [currentUserStepIndex, setCurrentUserStepIndex] = useState(0);
 
   const getTrackingStartContext = useCallback(() => {
     if (!isGuidanceMode || !targetNavigationPointId) {
@@ -186,9 +184,9 @@ export function useMapNavigationGuidance({
     const currentStep = steps[boundedStepIndex];
     const nextStep = steps[boundedStepIndex + 1];
 
-    // // Transition guard: nearest-segment matching can lag by one step around junctions.
-    // // If user is close to the current step end, or clearly closer to the next segment,
-    // // proactively advance to avoid one-step-behind UI.
+    // Transition guard: nearest-segment matching can lag by one step around junctions.
+    // If user is close to the current step end, or clearly closer to the next segment,
+    // proactively advance to avoid one-step-behind UI.
     if (currentStep && nextStep) {
       const distanceToCurrentStepEnd = distanceUtils.calculateDistance(userLocationPoint, {
         latitude: currentStep.endLocation.latLng.latitude,
@@ -326,8 +324,8 @@ export function useMapNavigationGuidance({
   }, [currentIndex, steps, totalSteps]);
 
   const currentNavigationStepData: CurrentNavigationStepData = useMemo(() => {
-    // note: Base maneuever is the instruction for the end point of a road, not the start point. But there is an
-    // exception of the first road, which contain both the initial instruction and an instruction for the end.
+    // note: Base maneuever is the instruction for the end point of a road, not the start point.
+    // But there is an exception of the first road, which contain both the start and end instruction step.
     const baseManeuver = currentStep?.navigationInstruction?.maneuver ?? null;
     const baseInstruction = currentStep?.navigationInstruction?.instructions;
 
@@ -356,7 +354,8 @@ export function useMapNavigationGuidance({
       const shouldEnterContinueStraight =
         distanceToNextManeuver > MAP_CONSTANTS.STEP_RADIUS_M &&
         distanceToPreviousManeuver > MAP_CONSTANTS.STEP_RADIUS_M;
-      // If the user is in between the two start and end point, displaying a generic message: "Continue follow the {streetName}"
+      // If the user is in between the start and end point of a step,
+      // display a generic message: "Continue follow the {streetName}"
       if (shouldEnterContinueStraight) {
         const streetName = extractStreetNameFromInstruction(baseInstruction);
         currentManeuver = 'STRAIGHT';

@@ -23,6 +23,7 @@ import { AfterCheckinReviewModal } from '../components/CheckinReview/AfterChecki
 import { CheckinSocialShareActions } from '../components/CheckinComplete/CheckinSocialShareActions';
 import { ReviewTypeFlg } from '@/features/reviews/types';
 import { useCreateReview } from '@/features/reviews/hooks/useReview';
+import { useModal } from '@/app/providers/ModalProvider';
 
 type CheckinCompleteScreenProps = StackScreenProps<MainStackParamList, 'CheckinComplete'>;
 
@@ -33,6 +34,7 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
   const theme = getCurrentTheme();
   const reviewSheetRef = useRef<BottomSheetModal>(null);
   const createReviewMutation = useCreateReview();
+  const { alert } = useModal();
 
   // Animation values
   const pulseScale = useSharedValue(1);
@@ -51,9 +53,13 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
     opacity: 1.5 - pulseScale.value,
   }));
 
-  const handleSubmitReviewDraft = async (payload: { rating: number; description: string; imageUrls: string[] }) => {
+  const handleSubmitReview = async (payload: { rating: number; description: string; imageUrls: string[] }) => {
     if (!checkinPointId) {
-      Alert.alert('Missing review target', 'Could not find this check-in point. Please try again from the map.');
+      alert({
+        title: 'Missing check-in point',
+        message: 'Could not find this check-in point. Please try again from the map.',
+        buttons: [{ text: 'Close', onPress: () => navigation.replace('Tabs', { screen: 'Home' }) }]
+      });
       return;
     }
 
@@ -68,12 +74,17 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
       });
 
       reviewSheetRef.current?.dismiss();
-      Alert.alert('Review submitted', 'Thank you for sharing your experience.');
+      alert({
+        title: 'Review submitted',
+        message: 'Thank you for sharing your experience.',
+        buttons: [{ text: 'Ok', onPress: () => navigation.replace('Tabs', { screen: 'Home' }) }]
+      });
     } catch (error) {
-      Alert.alert(
-        'Submit failed',
-        error instanceof Error ? error.message : 'Unable to submit your review right now. Please try again later.'
-      );
+      alert({
+        title: 'Submit failed',
+        message: error instanceof Error ? error.message : 'Unable to submit your review right now. Please try again later.',
+        buttons: [{ text: 'Close', onPress: () => navigation.replace('Tabs', { screen: 'Home' }) }]
+      });
     }
   };
 
@@ -201,7 +212,7 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
         checkinPointId={checkinPointId}
         checkinImageUrl={imageUrl}
         isSubmitting={createReviewMutation.isPending}
-        onSubmit={handleSubmitReviewDraft}
+        onSubmit={handleSubmitReview}
       />
     </SafeAreaView>
   );

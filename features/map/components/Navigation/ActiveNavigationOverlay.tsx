@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
-import { getManeuverPresentation } from '../../helpers';
+import { getManeuverPresentation } from '../../utils/helpers';
 import type { NavigationGuideOverlayProps } from './types';
 import { logger } from '@/utils/logger';
 

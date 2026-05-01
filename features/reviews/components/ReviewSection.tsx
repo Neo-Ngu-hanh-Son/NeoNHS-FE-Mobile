@@ -8,23 +8,27 @@ import { THEME } from '@/lib/theme';
 import { RatingSummary } from './RatingSummary';
 import { ReviewCard } from './ReviewCard';
 import { WriteReviewSheet, WriteReviewSheetRef } from './WriteReviewSheet';
-import type { Review } from '../types';
+import type { Review, ReviewResponse } from '../types';
 import { useAuth } from '@/features/auth';
 import { useTranslation } from 'react-i18next';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
+import { ReportTypes } from '@/features/report/type';
 
 export interface ReviewSectionProps {
   /** Target identifier (e.g., workshopId, artisanId) */
   targetId: string;
   /** Presentation name (e.g., workshop name, user name) */
   targetName: string;
-  
+
   averageRating: number;
   totalRatings: number;
-  
+
   /** All loaded reviews to display and calculate distributions */
   reviews: Review[];
   isLoading: boolean;
-  
+
   /** My review if any */
   myReview?: Review;
 
@@ -49,7 +53,8 @@ export function ReviewSection({
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const { user } = useAuth();
   const { t } = useTranslation();
-  
+  const navigation = useNavigation<StackNavigationProp<MainStackParamList>>();
+
   const sheetRef = useRef<WriteReviewSheetRef>(null);
 
   // Show only first 2 reviews as a preview
@@ -62,6 +67,14 @@ export function ReviewSection({
     }
     return counts;
   }, [reviews]);
+
+  const handleReport = (review: ReviewResponse) => {
+    navigation.navigate('ReportScreen', {
+      initialTargetId: review.id,
+      initialTargetType: ReportTypes.REVIEW,
+      reportTargetName: review.user.fullname,
+    });
+  };
 
   const reviewButtonLabel = myReview ? t('review.edit_review') : t('review.write_review');
   const reviewButtonIcon = myReview ? 'pencil-outline' : 'create-outline';
@@ -91,7 +104,10 @@ export function ReviewSection({
         </View>
       ) : previewReviews.length > 0 ? (
         previewReviews.map((review) => (
-          <ReviewCard key={review.id} item={review} isOwn={review.user.id === user?.id} />
+          <ReviewCard key={review.id}
+            item={review}
+            isOwn={review.user.id === user?.id}
+            onReport={(item: ReviewResponse) => handleReport(item)} />
         ))
       ) : (
         <View className="items-center py-8 gap-2">
