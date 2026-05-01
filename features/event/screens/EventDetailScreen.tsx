@@ -18,6 +18,8 @@ import {
 } from '../components';
 import { useEventDetail } from '../hooks/useEventDetail';
 import { useTicketCatalogs } from '../hooks/useTicketCatalogs';
+import { useGenericReviews } from '@/features/point/hooks/useGenericReviews';
+import { ReviewTypeFlg } from '@/features/reviews/types';
 import SmartMenu from '@/components/common/MenuTriggerBtn';
 import { ReportTypes } from '@/features/report/type';
 import { useTranslation } from 'react-i18next';
@@ -35,6 +37,9 @@ export default function EventDetailScreen({ navigation, route }: Props) {
   const { t } = useTranslation();
 
   const { data: event, isLoading: loading, refetch: refetchEvent } = useEventDetail(eventId);
+
+  /** Prefetch first page of reviews in parallel (shared query key with EventDetailReviews). */
+  const reviewsQuery = useGenericReviews(eventId, ReviewTypeFlg.EVENT);
 
   const {
     data: tickets,
@@ -79,9 +84,11 @@ export default function EventDetailScreen({ navigation, route }: Props) {
     });
   }, [event?.name, eventId, navigation]);
 
+  const awaitingReviewsFirstPage = !!event && reviewsQuery.isPending;
+
   // ── Loading state ──
 
-  if (loading) {
+  if (loading || awaitingReviewsFirstPage) {
     return (
       <SafeAreaView
         className="flex-1 items-center justify-center"

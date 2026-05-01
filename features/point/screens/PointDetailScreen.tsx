@@ -21,6 +21,8 @@ import {
   PointDetailReviews,
   PointDetailBottomBar,
 } from '../components';
+import { useGenericReviews } from '../hooks/useGenericReviews';
+import { ReviewTypeFlg } from '@/features/reviews/types';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslatedQuery } from '@/hooks/useTranslatedQuery';
 import { logger } from '@/utils/logger';
@@ -69,6 +71,9 @@ export default function PointDetailScreen({ navigation, route }: Props) {
       address: translated.address || point.address,
     }),
   });
+
+  /** Prefetch first page of reviews in parallel with point detail (shared query key with PointDetailReviews). */
+  const reviewsQuery = useGenericReviews(pointId, ReviewTypeFlg.POINT);
 
   const {
     data: publicImages,
@@ -133,8 +138,10 @@ export default function PointDetailScreen({ navigation, route }: Props) {
     // navigation.navigate('Panorama', { pointId });
   };
 
-  // ─── Loading state ───
-  if (isLoading) {
+  // ─── Loading state: point + first page of reviews (single full-screen pass) ───
+  const awaitingReviewsFirstPage = !isError && !!point && reviewsQuery.isPending;
+
+  if (isLoading || awaitingReviewsFirstPage) {
     return <FullScreenLoader message={t('point.loading_details', 'Loading point details...')} />;
   }
 

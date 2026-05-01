@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,8 +19,10 @@ import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { WorkshopImageGallery, WorkshopInfoSection, WorkshopSessionList, WorkshopDetailReviews } from '../components';
 import { useWorkshopDetail } from '../hooks/useWorkshopDetail';
 import { useWorkshopSessions } from '../hooks/useWorkshopSessions';
+import { useWorkshopReviews } from '../hooks/useWorkshopReviews';
 import { useChatContext } from '@/features/chat/context/ChatProvider';
 import SmartMenu from '@/components/common/MenuTriggerBtn';
+import { ReportTypes } from '@/features/report/type';
 
 type Props = StackScreenProps<MainStackParamList, 'WorkshopDetail'>;
 
@@ -41,6 +44,9 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
     refetch: refetchWorkshop,
   } = useWorkshopDetail(workshopId);
 
+  /** Prefetch first page of reviews in parallel (shared query key with WorkshopDetailReviews). */
+  const reviewsQuery = useWorkshopReviews(workshopId, 'createdAt,desc');
+
   const {
     data: sessions,
     isLoading: sessionsLoading,
@@ -55,15 +61,26 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
     ]).finally(() => setRefreshing(false));
   }, [refetchWorkshop, refetchSessions, activeTab]);
 
-  function handleShare() {
+  const handleShare = useCallback(() => {
+    if (!workshop) return;
+    Share.share({
+      title: workshop.name,
+      message: workshop.shortDescription ?? '',
+    });
+  }, [workshop]);
 
-  }
+  const handleReport = useCallback(() => {
+    navigation.navigate('ReportScreen', {
+      initialTargetId: workshopId,
+      initialTargetType: ReportTypes.WORKSHOP,
+      reportTargetName: workshop?.name ?? '',
+    });
+  }, [workshop?.name, workshopId, navigation]);
 
-  function handleReport() {
+  const awaitingReviewsFirstPage =
+    !!workshop && reviewsQuery.isPending;
 
-  }
-
-  if (loading) {
+  if (loading || awaitingReviewsFirstPage) {
     return (
       <SafeAreaView
         className="flex-1 items-center justify-center"
