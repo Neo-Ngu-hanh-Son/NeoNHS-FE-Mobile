@@ -6,7 +6,7 @@ import {
   MapPoint,
   NHSMap,
   NHSMapRef,
-  PolylineCoordinate,
+  TravelMode,
   useMapNavigationGuidance,
   useUserLocation,
 } from '@/features/map';
@@ -15,7 +15,6 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { useMapCameraController } from '@/features/map/hooks/MapCamera/useMapCameraController';
 import { LocationAccuracy } from 'expo-location';
 import BottomSheet from '@gorhom/bottom-sheet';
-import { decodeRoutePolyline } from '@/features/map/utils/helpers';
 import {
   NavigationGuideOverlay,
   NavigationStepsBottomSheet,
@@ -24,7 +23,6 @@ import {
 import { useMapNavigationPreviewController } from '@/features/map/hooks/Navigation/useMapNavigationPreviewController';
 import { useMapScreenController } from '@/features/map/hooks/useMapScreenController';
 import { Keyboard, StyleSheet, TouchableOpacity } from 'react-native';
-import { useModal } from '@/app/providers/ModalProvider';
 import { logger } from '@/utils/logger';
 import { useEventPointTags } from '../hooks/useEventPointTags';
 import { useEventTimelineMapController } from '../hooks/useEventTimelineMapController';
@@ -40,6 +38,8 @@ import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { List } from 'lucide-react-native';
+import { useDynamicPolyline } from '@/features/map/hooks/Navigation/useDynamicPolyline';
+import MAP_CONSTANTS from '@/features/map/constants';
 
 type EventTimeLineMapScreenProps = StackScreenProps<MainStackParamList, 'EventTimeLineMap'>;
 
@@ -57,7 +57,6 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
   const navigationStepsSheetRef = useRef<BottomSheet>(null);
   const pointDetailSheetRef = useRef<EventTimelinePointDetailSheetRef>(null);
   const timelineListSheetRef = useRef<EventTimelineListSheetRef>(null);
-  const { alert } = useModal();
 
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
@@ -138,8 +137,6 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
   const {
     location: userLocation,
     previousLocation,
-    isTracking,
-    permissionStatus,
     isLoading: isLocationLoading,
     startTracking,
   } = useUserLocation({
@@ -149,12 +146,14 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
 
   const controller = useMapScreenController({ navigation, pointDetailSheetRef });
 
+  const { handleMarkerPress } = controller;
+
   const handleOpenPointSheetModal = useCallback(
     (point: MapPoint) => {
-      controller.handleMarkerPress(point);
+      handleMarkerPress(point);
       pointDetailSheetRef.current?.present();
     },
-    [controller]
+    [handleMarkerPress]
   );
 
   const handleOnMapReady = useCallback(() => {
@@ -172,7 +171,6 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
   });
 
   const {
-    activeGuidanceTargetPointId,
     navigationTargetPoint,
     previewDistanceText,
     previewDurationText,
@@ -181,12 +179,13 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
     activeTravelModeLabel,
     previewRouteSummary,
     previewRouteQuery,
-    selectedTravelMode,
     confirmedTravelMode,
+    previewDestination,
+    effectiveTravelMode: selectedTravelMode,
+    routingSource,
     handleStartNavigationWithSelectedMode,
-    clearTargetNavigationParam: clearTargetNavigationParamAuto,
+    clearTargetNavigationParam,
     handleTravelModeSelection,
-    handleCancelTransportSelection: handleCancelTransportSelectionAuto,
     setConfirmedTravelMode,
   } = useMapNavigationPreviewController({
     targetNavigationPointId: effectiveTargetNavigationPointId,
@@ -197,19 +196,12 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
     setViewMode,
     mapRef,
     mapIsReady: isMapReady,
-    fitCameraToCoordinates,
     focusOnPoint,
+    fitCameraToCoordinates,
   });
 
-  const clearTargetNavigationParam = useCallback(() => {
-    setManualTargetNavigationPointId(undefined);
-    clearTargetNavigationParamAuto();
-  }, [clearTargetNavigationParamAuto]);
-
-  const handleCancelTransportSelection = useCallback(() => {
-    setManualTargetNavigationPointId(undefined);
-    handleCancelTransportSelectionAuto();
-  }, [handleCancelTransportSelectionAuto]);
+  const hasValidNavInput =
+    userLocation && previewDestination && confirmedTravelMode;
 
   const {
     directionError,
@@ -218,28 +210,37 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
     handleExitGuidance,
     isUserArrived,
     currentNavigationStepData,
-  } = useMapNavigationGuidance({
-    targetNavigationPointId: activeGuidanceTargetPointId,
-    mapPoints,
-    userLocation,
-    permissionStatus,
-    isTracking,
-    startTracking,
-    clearTargetNavigationParam,
-    travelMode: confirmedTravelMode,
-    previewRouteSummary,
-    previewErrorMessage,
-    viewMode,
-  });
+    routeSummary,
+  } = useMapNavigationGuidance(
+    hasValidNavInput
+      ? {
+        origin: userLocation,
+        destination: previewDestination,
+        source: routingSource,
+        travelMode: confirmedTravelMode,
+        userLocation,
+        startTracking,
+        previewRouteSummary,
+        viewMode,
+      }
+      : ({} as any)
+  );
 
-  const handleNavigateFromCurrentLocation = useCallback((point: EventMapPoint) => {
-    if (!point.id) {
-      return;
-    }
-
+  const handleClosePointSheetModal = useCallback(() => {
     pointDetailSheetRef.current?.dismiss();
-    setManualTargetNavigationPointId(point.id);
   }, []);
+
+  const handleNavigateFromCurrentLocation = useCallback(
+    (point: EventMapPoint) => {
+      if (!point.id) {
+        return;
+      }
+
+      handleClosePointSheetModal();
+      setManualTargetNavigationPointId(point.id);
+    },
+    [handleClosePointSheetModal]
+  );
 
   const renderTimelineMarker = useCallback(
     (point: MapPoint, shouldDisplayMarkerName: boolean) => {
@@ -268,29 +269,20 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
     [focusOnPoint, handleOpenPointSheetModal, timelineController]
   );
 
-  const lastValidRouteRef = useRef<PolylineCoordinate[] | null>(null);
-  const memorizedEncodedPolyline = useMemo(() => {
-    if (viewMode === 'EXPLORING') {
-      return '';
-    }
+  // Use the same dynamic polyline approach as MapScreen
+  const routeToDisplay = viewMode === 'NAVIGATING' ? routeSummary : previewRouteSummary;
 
-    return previewRouteSummary?.routes?.[0]?.polyline?.encodedPolyline ?? '';
-  }, [previewRouteSummary?.routes, viewMode]);
+  const { displayCoordinates, isDrawingRoute } = useDynamicPolyline({
+    userLocation: userLocation,
+    animationIntervalMs: 50,
+    enableAnimation: true,
+    isFetching: previewRouteQuery.isFetching,
+    viewMode: viewMode,
+    routeSummary: routeToDisplay,
+  });
 
-  const navigationPolylineCoordinates = useMemo(() => {
-    return decodeRoutePolyline(memorizedEncodedPolyline);
-  }, [memorizedEncodedPolyline]);
+  const isNavPolylineVisible = !!(displayCoordinates && displayCoordinates.length >= 2);
 
-  const displayCoordinates = useMemo(() => {
-    if (navigationPolylineCoordinates.length >= 2) {
-      lastValidRouteRef.current = navigationPolylineCoordinates;
-      return navigationPolylineCoordinates;
-    }
-
-    return lastValidRouteRef.current ?? [];
-  }, [navigationPolylineCoordinates]);
-
-  const isNavPolylineVisible = navigationPolylineCoordinates.length >= 2;
   const showInitialTimelineLoader = groupedTimelineQuery.isLoading && groupedTimelines.length === 0;
   const showInitialTimelineError = groupedTimelineQuery.isError && groupedTimelines.length === 0;
 
@@ -325,12 +317,19 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
     navigationStepsSheetRef.current?.close();
   }, []);
 
-  const onNavigationExit = useCallback(() => {
-    logger.debug('[EventTimeLineMapScreen] Exiting navigation');
+  const resetAllNavigation = useCallback(() => {
+    setManualTargetNavigationPointId(undefined);
     handleCloseNavigationSteps();
-    setConfirmedTravelMode(null);
+    clearTargetNavigationParam();
     handleExitGuidance();
-  }, [handleCloseNavigationSteps, handleExitGuidance, setConfirmedTravelMode]);
+    setViewMode('EXPLORING');
+  }, [clearTargetNavigationParam, handleCloseNavigationSteps, handleExitGuidance, setViewMode]);
+
+  const excludedModes: TravelMode[] = useMemo(() => {
+    return routingSource === 'CUSTOM'
+      ? ['BICYCLE', 'TWO_WHEELER', 'DRIVE']
+      : [];
+  }, [routingSource]);
 
   if (showInitialTimelineLoader) {
     return <FullScreenLoader message="Loading timeline map..." />;
@@ -366,6 +365,7 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
         isLocationLoading={isLocationLoading}
         startTrackingCallback={startTracking}
         onMapReadyCallback={handleOnMapReady}
+        selectedTravelMode={selectedTravelMode ?? MAP_CONSTANTS.DEFAULT_TRAVEL_MODE}
         enableCheckinMode={false}
         renderMarker={renderTimelineMarker}
       />
@@ -438,7 +438,8 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
           canStartNavigation={canStartGuidance}
           onSelectMode={handleTravelModeSelection}
           onStartNavigation={handleStartNavigationWithSelectedMode}
-          onCancel={handleCancelTransportSelection}
+          onCancel={resetAllNavigation}
+          excludedModes={excludedModes}
         />
       )}
 
@@ -448,7 +449,7 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
             isLoading={navigationSteps == null || navigationSteps.length === 0}
             errorMessage={directionError}
             travelModeLabel={activeTravelModeLabel}
-            onExit={onNavigationExit}
+            onExit={resetAllNavigation}
             onOpenSteps={handleOpenNavigationSteps}
             currentNavigationStepData={currentNavigationStepData}
             isUserArrived={isUserArrived}
