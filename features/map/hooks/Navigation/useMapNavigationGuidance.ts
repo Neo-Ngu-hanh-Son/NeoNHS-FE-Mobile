@@ -71,18 +71,36 @@ export function useMapNavigationGuidance({
 
   const isGuidanceMode = viewMode === 'NAVIGATING';
 
-  const [routeFetchOrigin, setRouteFetchOrigin] = useState<LatLng>(origin);
+  const [routeFetchOrigin, setRouteFetchOrigin] = useState<LatLng>(
+    userLocation ? { latitude: userLocation.latitude, longitude: userLocation.longitude } : origin
+  );
 
-  const navigationQuery = useDirectionsNavigation({
-    params: {
-      origin: {
-        latitude: userLocation?.latitude ?? 0,
-        longitude: userLocation?.longitude ?? 0,
-      },
+  const navigationParams = useMemo(() => {
+    let safeOrigin = undefined;
+
+    if (
+      routeFetchOrigin &&
+      typeof routeFetchOrigin.latitude === 'number' &&
+      typeof routeFetchOrigin.longitude === 'number'
+    ) {
+      safeOrigin = routeFetchOrigin;
+    } else if (userLocation && typeof userLocation.latitude === 'number') {
+      safeOrigin = { latitude: userLocation.latitude, longitude: userLocation.longitude };
+    } else {
+      safeOrigin = origin;
+    }
+
+    return {
+      origin: safeOrigin,
       destination: destination,
       source: source,
       travelMode: travelMode,
-    },
+      language: language,
+    };
+  }, [routeFetchOrigin, destination, source, travelMode, userLocation, origin, language]);
+
+  const navigationQuery = useDirectionsNavigation({
+    params: navigationParams,
     enabled: isGuidanceMode,
     initialData: previewRouteSummary,
     originKey: routeFetchOrigin,
@@ -185,14 +203,24 @@ export function useMapNavigationGuidance({
       //   reason: 'off-route',
       // });
 
-      setRouteFetchOrigin({
-        latitude: userLocation?.latitude ?? 0,
-        longitude: userLocation?.longitude ?? 0,
-      });
+      const newOrigin = {
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+      };
 
-      navigationQuery.refetch();
+      // logger.info('off-route: routeFetchOrigin: ', routeFetchOrigin, ' newOrigin: ', newOrigin);
+      if (!routeFetchOrigin) {
+        setRouteFetchOrigin(newOrigin);
+        return;
+      }
+
+      const distFromLastFetch = distanceUtils.calculateDistance(newOrigin, routeFetchOrigin);
+
+      if (distFromLastFetch > MAP_CONSTANTS.NAVIGATION_DISTANCE_LIMIT_BEFORE_REFETCH_OFF_ROUTE_M) {
+        setRouteFetchOrigin(newOrigin);
+      }
     }
-  }, [userLocation, isGuidanceMode, isOffRoute, navigationQuery.isFetching, navigationQuery]);
+  }, [userLocation, isGuidanceMode, isOffRoute, navigationQuery.isFetching, navigationQuery, routeFetchOrigin]);
 
   /**
    * Use effect to start tracking user location if guidance mode is initiated and tracking hasn't started yet
@@ -320,7 +348,7 @@ export function useMapNavigationGuidance({
         if (nextInstruction) {
           Speech.stop(); // Immediately stop the previous instruction
           await handleSpeakSteps(nextInstruction);
-          logger.debug('Speaking:', nextInstruction);
+          // logger.debug('Speaking:', nextInstruction);
         }
       }
     };
