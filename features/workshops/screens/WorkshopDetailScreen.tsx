@@ -194,7 +194,9 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
             <Text
               className={`text-sm font-bold ${activeTab === 'sessions' ? 'text-white' : ''}`}
               style={activeTab !== 'sessions' ? { color: theme.mutedForeground } : undefined}>
-              {t('workshop.book_sessions')}
+              {!workshop.defaultPrice || workshop.defaultPrice === 0 
+                ? t('workshop.view_sessions') 
+                : t('workshop.book_sessions')}
             </Text>
           </TouchableOpacity>
         </View>

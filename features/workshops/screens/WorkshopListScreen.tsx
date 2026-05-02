@@ -307,9 +307,13 @@ export function WorkshopListContent({ onNavigateToDetail }: WorkshopListContentP
               <Text className="flex-shrink text-xs" style={{ color: theme.mutedForeground }} numberOfLines={1}>
                 {workshop.vendorName}
               </Text>
-              <Text className="text-sm font-bold" style={{ color: theme.primary }}>
-                {formatPrice(workshop.defaultPrice)}
-              </Text>
+              {workshop.defaultPrice === 0 ? (
+                <Text className="text-sm font-extrabold" style={{ color: '#16a34a' }}>FREE</Text>
+              ) : (
+                <Text className="text-sm font-bold" style={{ color: theme.primary }}>
+                  {formatPrice(workshop.defaultPrice)}
+                </Text>
+              )}
             </View>
           </View>
           <Ionicons name="chevron-forward" size={20} color={theme.muted} />
