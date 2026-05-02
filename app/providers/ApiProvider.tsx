@@ -6,6 +6,7 @@ import { authService } from '@/features/auth/services/authService';
 import { logger } from '@/utils/logger';
 import type { ApiError, TokenRefreshResult } from '@/services/api/types';
 import { rootNavigationRef } from '@/app/navigations/rootNavigationRef';
+import { API_CONFIG } from '@/utils/constants';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -81,9 +82,15 @@ export default function ApiProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    logger.info(`[ApiProvider] Using API URL: ${API_URL}`);
+    // Never pass undefined/empty — axios then keeps a stale baseURL or mis-resolves
+    // URLs, which surfaces as status 0 / NETWORK_ERROR on device.
+    const baseURL = (typeof API_URL === 'string' && API_URL.trim().length > 0
+      ? API_URL.trim()
+      : API_CONFIG.BASE_URL
+    ).replace(/\/+$/, '');
+    logger.info(`[ApiProvider] Using API URL: ${baseURL}`);
     apiClient.updateConfig({
-      baseURL: API_URL,
+      baseURL,
       getAuthToken: () => accessToken || null,
       getRefreshToken: () => refreshToken || null,
       onTokenRefresh: handleTokenRefresh,

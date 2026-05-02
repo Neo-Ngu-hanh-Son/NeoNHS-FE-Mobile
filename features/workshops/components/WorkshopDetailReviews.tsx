@@ -4,6 +4,7 @@ import { useAuth } from '@/features/auth';
 import { useWorkshopReviews, useCreateWorkshopReview, useUpdateWorkshopReview } from '../hooks';
 import { ReviewSection } from '@/features/reviews';
 import type { ReviewResponse } from '@/features/reviews/types';
+import { useReviewEligibility } from '@/features/reviews/hooks/useReviewEligibility';
 
 interface WorkshopDetailReviewsProps {
   workshopId: string;
@@ -27,6 +28,9 @@ export function WorkshopDetailReviews({
   const { data, isLoading } = useWorkshopReviews(workshopId, 'createdAt,desc');
   const createReviewMutation = useCreateWorkshopReview(workshopId);
   const updateReviewMutation = useUpdateWorkshopReview(workshopId);
+
+  const { data: eligibilityData } = useReviewEligibility(workshopId, 'WORKSHOP', { enabled: !!user });
+  const isEligible = eligibilityData?.data?.eligible ?? false;
 
   const allLoaded = useMemo(
     () => data?.pages.flatMap((p) => p.content) ?? [],
@@ -66,6 +70,7 @@ export function WorkshopDetailReviews({
       onSubmitReview={handleSubmit}
       onViewAll={onViewAll}
       onSheetVisibilityChange={onSheetVisibilityChange}
+      isEligible={isEligible}
     />
   );
 }

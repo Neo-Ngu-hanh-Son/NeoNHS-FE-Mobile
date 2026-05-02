@@ -119,37 +119,39 @@ export default function WorkshopSessionCard({ session, theme }: WorkshopSessionC
       </View>
 
       {/* Availability bar */}
-      <View className="mb-3">
-        <View className="flex-row items-center justify-between mb-1">
-          <View className="flex-row items-center gap-1">
-            <Ionicons name="people-outline" size={14} color={theme.mutedForeground} />
-            <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-              {session.currentEnrolled} / {session.maxParticipants} enrolled
-            </Text>
+      {!isFree && (
+        <View className="mb-3">
+          <View className="flex-row items-center justify-between mb-1">
+            <View className="flex-row items-center gap-1">
+              <Ionicons name="people-outline" size={14} color={theme.mutedForeground} />
+              <Text className="text-xs" style={{ color: theme.mutedForeground }}>
+                {session.currentEnrolled} / {session.maxParticipants} enrolled
+              </Text>
+            </View>
+            <View className="flex-row items-center gap-1">
+              <View
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: slotsColor }}
+              />
+              <Text className="text-xs font-bold" style={{ color: slotsColor }}>
+                {isFull ? "Full" : `${session.availableSlots} spots left`}
+              </Text>
+            </View>
           </View>
-          <View className="flex-row items-center gap-1">
-            <View
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: slotsColor }}
-            />
-            <Text className="text-xs font-bold" style={{ color: slotsColor }}>
-              {isFull ? "Full" : `${session.availableSlots} spots left`}
-            </Text>
-          </View>
-        </View>
-        <View
-          className="h-2 rounded-full overflow-hidden"
-          style={{ backgroundColor: theme.muted }}
-        >
           <View
-            className="h-full rounded-full"
-            style={{
-              backgroundColor: slotsColor,
-              width: `${fillPercent}%`,
-            }}
-          />
+            className="h-2 rounded-full overflow-hidden"
+            style={{ backgroundColor: theme.muted }}
+          >
+            <View
+              className="h-full rounded-full"
+              style={{
+                backgroundColor: slotsColor,
+                width: `${fillPercent}%`,
+              }}
+            />
+          </View>
         </View>
-      </View>
+      )}
 
       {/* Book button — hidden when free */}
       {!isFree && (
@@ -188,7 +190,7 @@ export default function WorkshopSessionCard({ session, theme }: WorkshopSessionC
             <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 15, color: theme.foreground, textAlign: 'center' }}>
               Book Session
             </Text>
-            
+
             <Text style={{ fontSize: 14, color: theme.mutedForeground, marginBottom: 15, textAlign: 'center' }}>
               {formatShortDate(session.startTime)} at {formatTime(session.startTime)}
             </Text>

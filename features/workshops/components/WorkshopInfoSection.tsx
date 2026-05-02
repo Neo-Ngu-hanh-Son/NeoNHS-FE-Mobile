@@ -83,32 +83,45 @@ export default function WorkshopInfoSection({ workshop, theme }: WorkshopInfoSec
             <Ionicons name="pricetag-outline" size={20} color="#f59e0b" />
           </View>
           <View className="flex-1">
-            <Text className="text-sm font-bold" style={{ color: theme.primary }}>
-              {formatPrice(workshop.defaultPrice)}
-            </Text>
-            <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-              {t("workshop.starting_from")}
-            </Text>
+            {!workshop.defaultPrice || workshop.defaultPrice === 0 ? (
+              <View
+                className="rounded-lg px-2 py-1 self-start"
+                style={{ backgroundColor: '#dcfce7' }}
+              >
+                <Text className="text-sm font-extrabold" style={{ color: '#16a34a' }}>FREE</Text>
+              </View>
+            ) : (
+              <>
+                <Text className="text-sm font-bold" style={{ color: theme.primary }}>
+                  {formatPrice(workshop.defaultPrice)}
+                </Text>
+                <Text className="text-xs" style={{ color: theme.mutedForeground }}>
+                  {t("workshop.starting_from")}
+                </Text>
+              </>
+            )}
           </View>
         </View>
 
         {/* Participants */}
-        <View className="flex-row items-center gap-3">
-          <View
-            className="w-10 h-10 rounded-xl items-center justify-center"
-            style={{ backgroundColor: "#8b5cf615" }}
-          >
-            <Ionicons name="people-outline" size={20} color="#8b5cf6" />
+        {workshop.defaultPrice > 0 && (
+          <View className="flex-row items-center gap-3">
+            <View
+              className="w-10 h-10 rounded-xl items-center justify-center"
+              style={{ backgroundColor: "#8b5cf615" }}
+            >
+              <Ionicons name="people-outline" size={20} color="#8b5cf6" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-sm font-semibold" style={{ color: theme.foreground }}>
+                {workshop.minParticipants}–{workshop.maxParticipants} {t("workshop.participants")}
+              </Text>
+              <Text className="text-xs" style={{ color: theme.mutedForeground }}>
+                {t("workshop.group_size")}
+              </Text>
+            </View>
           </View>
-          <View className="flex-1">
-            <Text className="text-sm font-semibold" style={{ color: theme.foreground }}>
-              {workshop.minParticipants}–{workshop.maxParticipants} {t("workshop.participants")}
-            </Text>
-            <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-              {t("workshop.group_size")}
-            </Text>
-          </View>
-        </View>
+        )}
 
         {/* Vendor */}
         <View className="flex-row items-center gap-3">

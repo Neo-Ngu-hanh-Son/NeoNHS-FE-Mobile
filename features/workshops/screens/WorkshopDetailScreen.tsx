@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,8 +19,10 @@ import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { WorkshopImageGallery, WorkshopInfoSection, WorkshopSessionList, WorkshopDetailReviews } from '../components';
 import { useWorkshopDetail } from '../hooks/useWorkshopDetail';
 import { useWorkshopSessions } from '../hooks/useWorkshopSessions';
+import { useWorkshopReviews } from '../hooks/useWorkshopReviews';
 import { useChatContext } from '@/features/chat/context/ChatProvider';
 import SmartMenu from '@/components/common/MenuTriggerBtn';
+import { ReportTypes } from '@/features/report/type';
 
 type Props = StackScreenProps<MainStackParamList, 'WorkshopDetail'>;
 
@@ -41,6 +44,9 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
     refetch: refetchWorkshop,
   } = useWorkshopDetail(workshopId);
 
+  /** Prefetch first page of reviews in parallel (shared query key with WorkshopDetailReviews). */
+  const reviewsQuery = useWorkshopReviews(workshopId, 'createdAt,desc');
+
   const {
     data: sessions,
     isLoading: sessionsLoading,
@@ -55,15 +61,26 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
     ]).finally(() => setRefreshing(false));
   }, [refetchWorkshop, refetchSessions, activeTab]);
 
-  function handleShare() {
+  const handleShare = useCallback(() => {
+    if (!workshop) return;
+    Share.share({
+      title: workshop.name,
+      message: workshop.shortDescription ?? '',
+    });
+  }, [workshop]);
 
-  }
+  const handleReport = useCallback(() => {
+    navigation.navigate('ReportScreen', {
+      initialTargetId: workshopId,
+      initialTargetType: ReportTypes.WORKSHOP,
+      reportTargetName: workshop?.name ?? '',
+    });
+  }, [workshop?.name, workshopId, navigation]);
 
-  function handleReport() {
+  const awaitingReviewsFirstPage =
+    !!workshop && reviewsQuery.isPending;
 
-  }
-
-  if (loading) {
+  if (loading || awaitingReviewsFirstPage) {
     return (
       <SafeAreaView
         className="flex-1 items-center justify-center"
@@ -177,7 +194,9 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
             <Text
               className={`text-sm font-bold ${activeTab === 'sessions' ? 'text-white' : ''}`}
               style={activeTab !== 'sessions' ? { color: theme.mutedForeground } : undefined}>
-              {t('workshop.book_sessions')}
+              {!workshop.defaultPrice || workshop.defaultPrice === 0 
+                ? t('workshop.view_sessions') 
+                : t('workshop.book_sessions')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -230,73 +249,71 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
         </View>
       </ScrollView>
 
-      {/* Sticky bottom: Price + Action (Hidden when review sheet is open) */}
+      {/* Sticky bottom: Price/Free + Chat with vendor (Hidden when review sheet is open) */}
       {!isReviewSheetVisible && (
         <View
           className="px-5 py-3 border-t flex-row items-center"
           style={{ borderColor: theme.border, backgroundColor: theme.card }}
         >
+          {/* Left side: FREE badge or price */}
           {workshop.defaultPrice === 0 ? (
-            /* ── Free workshop ── */
-            <View className="flex-1 flex-row items-center gap-3">
+            <View className="flex-1 mr-3 flex-row items-center gap-2">
               <View
-                className="rounded-xl px-4 py-2"
+                className="rounded-xl px-3 py-1.5"
                 style={{ backgroundColor: '#dcfce7' }}
               >
-                <Text className="text-base font-extrabold" style={{ color: '#16a34a' }}>
+                <Text className="text-sm font-extrabold" style={{ color: '#16a34a' }}>
                   🎉 FREE
                 </Text>
               </View>
-              <Text className="flex-1 text-sm font-medium" style={{ color: '#16a34a' }}>
-                {t('workshop.free_no_ticket')}
-              </Text>
             </View>
           ) : (
-            /* ── Paid workshop ── */
-            <>
-              <View className="flex-1 mr-3">
-                <Text className="text-xs" style={{ color: theme.mutedForeground }}>{t('workshop.price_from')}</Text>
-                <Text className="text-lg font-bold" style={{ color: theme.foreground }}>
-                  {workshop.defaultPrice.toLocaleString('vi-VN')} ₫
-                </Text>
-              </View>
-              <TouchableOpacity
-                onPress={async () => {
-                  if (isChatLoading) return;
-                  setIsChatLoading(true);
-                  try {
-                    const room = await createOrOpenRoom(
-                      'VENDOR_CHAT',
-                      [workshop.vendorId],
-                      workshop.name
-                    );
-                    navigation.navigate('ChatRoom', {
-                      roomId: room.id,
-                      workshopSnippet: {
-                        workshopId: workshop.id,
-                        title: workshop.name,
-                        price: workshop.defaultPrice,
-                        thumbnailUrl: workshop.images.find(img => img.isThumbnail)?.imageUrl || (workshop.images[0]?.imageUrl ?? ''),
-                      },
-                    });
-                  } catch (e) {
-                    console.error('Failed to open vendor chat', e);
-                  } finally {
-                    setIsChatLoading(false);
-                  }
-                }}
-                className="flex-row items-center rounded-xl px-5 py-3"
-                style={{ backgroundColor: theme.primary }}
-                activeOpacity={0.8}
-                disabled={isChatLoading}
-              >
-                <Ionicons name="chatbubble-outline" size={18} color="#FFFFFF" />
-                <Text className="ml-2 font-bold text-white">
-                  {isChatLoading ? t('common.loading') : t('workshop.chat_vendor')}
-                </Text>
-              </TouchableOpacity>
-            </>
+            <View className="flex-1 mr-3">
+              <Text className="text-xs" style={{ color: theme.mutedForeground }}>
+                {t('workshop.price_from')}
+              </Text>
+              <Text className="text-lg font-bold" style={{ color: theme.foreground }}>
+                {workshop.defaultPrice.toLocaleString('vi-VN')} ₫
+              </Text>
+            </View>
           )}
+
+          {/* Right side: chat with vendor (always visible — free workshops can ask too) */}
+          <TouchableOpacity
+            onPress={async () => {
+              if (isChatLoading) return;
+              setIsChatLoading(true);
+              try {
+                const room = await createOrOpenRoom(
+                  'VENDOR_CHAT',
+                  [workshop.vendorId],
+                  workshop.name
+                );
+                navigation.navigate('ChatRoom', {
+                  roomId: room.id,
+                  workshopSnippet: {
+                    workshopId: workshop.id,
+                    title: workshop.name,
+                    price: workshop.defaultPrice,
+                    thumbnailUrl: workshop.images.find(img => img.isThumbnail)?.imageUrl || (workshop.images[0]?.imageUrl ?? ''),
+                  },
+                });
+              } catch (e) {
+                console.error('Failed to open vendor chat', e);
+              } finally {
+                setIsChatLoading(false);
+              }
+            }}
+            className="flex-row items-center rounded-xl px-5 py-3"
+            style={{ backgroundColor: theme.primary }}
+            activeOpacity={0.8}
+            disabled={isChatLoading}
+          >
+            <Ionicons name="chatbubble-outline" size={18} color="#FFFFFF" />
+            <Text className="ml-2 font-bold text-white">
+              {isChatLoading ? t('common.loading') : t('workshop.chat_vendor')}
+            </Text>
+          </TouchableOpacity>
         </View>
       )}
 

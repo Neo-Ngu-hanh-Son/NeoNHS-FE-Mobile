@@ -13,4 +13,6 @@ export const reviewEndpoints = {
   createReview: () => `reviews`,
   /** PUT /api/reviews/{id} */
   updateReview: (id: string) => `reviews/${id}`,
+  /** GET /api/reviews/eligibility */
+  checkEligibility: () => `reviews/eligibility`,
 } as const;
