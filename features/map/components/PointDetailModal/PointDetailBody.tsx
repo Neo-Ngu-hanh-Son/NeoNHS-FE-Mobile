@@ -16,8 +16,8 @@ type PointDetailBodyProps = {
   participantsStr: string;
   workshopOrganizerName?: string;
   estTimeStr: string;
-  panoramaImageUrl?: string;
   theme: typeof THEME.light;
+  address?: string;
 };
 
 function Divider({ theme }: { theme: typeof THEME.light }) {
@@ -34,19 +34,33 @@ export default function PointDetailBody({
   participantsStr,
   workshopOrganizerName,
   estTimeStr,
-  panoramaImageUrl,
   theme,
+  address
 }: PointDetailBodyProps) {
   const { t } = useTranslation();
   return (
     <View style={styles.body}>
+      {address ? (
+        <>
+          <InfoRow
+            icon="location-outline"
+            iconColor={accentColor}
+            iconBg={hexAlpha(accentColor, '18')}
+            label={t('map.address', 'Address')}
+            value={address}
+            theme={theme}
+          />
+          <Divider theme={theme} />
+        </>
+      ) : null}
+
       {/* ── Description ─────────────────────────── */}
       {description ? (
         <>
           <Text style={[styles.sectionLabel, { color: theme.mutedForeground }]}>{t('map.about', 'About')}</Text>
-          <Text style={[styles.description, { color: theme.foreground }]}>{description}</Text>
+          <Text style={[styles.description, { color: theme.foreground }]} numberOfLines={3}>{description}</Text>
           {shortDescription && shortDescription !== description ? (
-            <Text style={[styles.shortDesc, { color: theme.mutedForeground }]}>{shortDescription}</Text>
+            <Text style={[styles.shortDesc, { color: theme.mutedForeground }]} className='line-clamp-3'>{shortDescription}</Text>
           ) : null}
           <Divider theme={theme} />
         </>
@@ -57,6 +71,7 @@ export default function PointDetailBody({
           <Divider theme={theme} />
         </>
       ) : null}
+
 
       {/* ── Event / Workshop info card ────────────── */}
       {isEventOrWorkshop ? (
@@ -110,7 +125,7 @@ export default function PointDetailBody({
       ) : null}
 
       {/* ── Static POI info card ─────────────────── */}
-      {!isEventOrWorkshop && (estTimeStr || panoramaImageUrl) ? (
+      {!isEventOrWorkshop && (estTimeStr) ? (
         <View style={[styles.infoCard, { backgroundColor: theme.background, borderColor: theme.border }]}>
           <InfoRow
             icon="walk-outline"
@@ -120,19 +135,6 @@ export default function PointDetailBody({
             value={estTimeStr || null}
             theme={theme}
           />
-          {panoramaImageUrl ? (
-            <>
-              {estTimeStr ? <View style={[styles.infoCardDivider, { backgroundColor: theme.border }]} /> : null}
-              <InfoRow
-                icon="images-outline"
-                iconColor="#0284c7"
-                iconBg={hexAlpha('#0284c7', '18')}
-                label={t('map.experience', 'Experience')}
-                value={t('map.panorama_available', '360° Panorama available')}
-                theme={theme}
-              />
-            </>
-          ) : null}
         </View>
       ) : null}
     </View>

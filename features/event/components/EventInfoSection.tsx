@@ -108,7 +108,7 @@ export default function EventInfoSection({ event, theme, onOpenTimelineMap }: Ev
             <Ionicons name="pricetag-outline" size={20} color="#f59e0b" />
           </View>
           <Text className="text-sm font-bold" style={{ color: theme.primary }}>
-            {event.isTicketRequired ? 'Yêu cầu vé' : 'Miễn phí'}
+            {event.isTicketRequired ? 'Yêu cầu vé' : 'Miễn phí '}
           </Text>
         </View>
       </View>

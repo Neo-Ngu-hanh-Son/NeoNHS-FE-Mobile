@@ -21,9 +21,13 @@ import {
   PointDetailReviews,
   PointDetailBottomBar,
 } from '../components';
+import { useGenericReviews } from '../hooks/useGenericReviews';
+import { ReviewTypeFlg } from '@/features/reviews/types';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslatedQuery } from '@/hooks/useTranslatedQuery';
 import { logger } from '@/utils/logger';
 import { usePanorama } from '@/app/providers/PanoramaProvider';
+import { ReportTypes } from '@/features/report/type';
 
 type Props = CompositeScreenProps<
   StackScreenProps<MainStackParamList, 'PointDetail'>,
@@ -45,11 +49,48 @@ export default function PointDetailScreen({ navigation, route }: Props) {
     isLoading,
     isError,
     refetch,
-  } = useQuery({
+  } = useTranslatedQuery({
     queryKey: ['pointDetail', pointId],
     queryFn: async () => {
       const response = await discoverService.getPointById(pointId);
       return response.data;
+    },
+    extractTranslatableFields: (point) => {
+      const fields: Record<string, string> = {};
+      if (point.name) fields.name = point.name;
+      if (point.description) fields.description = point.description;
+      if (point.history) fields.history = point.history;
+      if (point.address) fields.address = point.address;
+      return fields;
+    },
+    mergeTranslatedFields: (point, translated) => ({
+      ...point,
+      name: translated.name || point.name,
+      description: translated.description || point.description,
+      history: translated.history || point.history,
+      address: translated.address || point.address,
+    }),
+  });
+
+  /** Prefetch first page of reviews in parallel with point detail (shared query key with PointDetailReviews). */
+  const reviewsQuery = useGenericReviews(pointId, ReviewTypeFlg.POINT);
+
+  const {
+    data: publicImages,
+    isLoading: isImagesLoading,
+    isError: isImagesError,
+    refetch: refetchImages,
+  } = useQuery({
+    queryKey: ['pointPublicCheckinImages', pointId],
+    queryFn: async () => {
+      const response = await discoverService.getPointPublicCheckinImages(pointId, {
+        page: 0,
+        size: 10,
+        sortBy: 'createdAt',
+        sortDir: 'desc',
+        search: '',
+      });
+      return response.data.content;
     },
   });
 
@@ -97,10 +138,20 @@ export default function PointDetailScreen({ navigation, route }: Props) {
     // navigation.navigate('Panorama', { pointId });
   };
 
-  // ─── Loading state ───
-  if (isLoading) {
+  // ─── Loading state: point + first page of reviews (single full-screen pass) ───
+  const awaitingReviewsFirstPage = !isError && !!point && reviewsQuery.isPending;
+
+  if (isLoading || awaitingReviewsFirstPage) {
     return <FullScreenLoader message={t('point.loading_details', 'Loading point details...')} />;
   }
+
+  const handleReport = () => {
+    navigation.navigate('ReportScreen', {
+      initialTargetId: pointId,
+      initialTargetType: ReportTypes.POINT,
+      reportTargetName: point?.name ?? '',
+    });
+  };
 
   if (isError || !point) {
     logger.error('Error fetching point details:', isError);
@@ -127,6 +178,7 @@ export default function PointDetailScreen({ navigation, route }: Props) {
           onBack={() => navigation.goBack()}
           onToggleFavorite={() => setIsFavorite((prev) => !prev)}
           onShare={handleShare}
+          onReport={handleReport}
         />
 
         {/* Content sections */}
@@ -146,7 +198,12 @@ export default function PointDetailScreen({ navigation, route }: Props) {
           <PointDetailPanorama point={point} onOpenPanorama={handleOpenPanorama} />
 
           {/* Check-in gallery */}
-          <PointDetailGallery />
+          <PointDetailGallery
+            publicImages={publicImages || []}
+            isLoading={isImagesLoading}
+            isError={isImagesError}
+            refetchImages={refetchImages}
+          />
 
           {/* Reviews */}
           <PointDetailReviews

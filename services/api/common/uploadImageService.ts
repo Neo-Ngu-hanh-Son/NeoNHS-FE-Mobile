@@ -40,7 +40,7 @@ const uploadImageService = async (image: MultipartCheckinImage, token: string) =
     type: image.type,
   } as any);
   try {
-    const response = await fetch(`${API_URL}/upload/image`, {
+    const response = await fetch(`${API_URL}/public/upload/image`, {
       method: 'POST',
       body: formData,
       headers: { Authorization: `Bearer ${token}` },
@@ -63,32 +63,7 @@ const uploadImageService = async (image: MultipartCheckinImage, token: string) =
   }
 };
 
-const useUploadImage = () => {
-  return useMutation<UploadImageResponse, Error, UploadImagePayload>({
-    mutationFn: (payload: UploadImagePayload) => {
-      return uploadImageService(payload.image, payload.token);
-    },
-    gcTime: 0,
-    onError: (error) => logger.error('[uploadImageService] TanStackQuery POST failed:', error),
-  });
-};
-
-const useDeleteImage = () => {
-  return useMutation<string, Error, string>({
-    mutationFn: async (publicId: string) => {
-      const response = await apiClient.delete<string>(`/upload/image/${publicId}`, {
-        requiresAuth: true,
-      });
-      return response.data;
-    },
-    // We don't need to cache the "deleted" state
-    gcTime: 0,
-  });
-};
-
 const imageService = {
   uploadImage: uploadImageService,
-  useUploadImage,
-  useDeleteImage,
 };
 export default imageService;

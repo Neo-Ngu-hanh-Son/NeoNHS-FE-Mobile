@@ -8,29 +8,34 @@ import { THEME } from '@/lib/theme';
 import { RatingSummary } from './RatingSummary';
 import { ReviewCard } from './ReviewCard';
 import { WriteReviewSheet, WriteReviewSheetRef } from './WriteReviewSheet';
-import type { Review } from '../types';
+import type { Review, ReviewResponse } from '../types';
 import { useAuth } from '@/features/auth';
 import { useTranslation } from 'react-i18next';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
+import { ReportTypes } from '@/features/report/type';
 
 export interface ReviewSectionProps {
   /** Target identifier (e.g., workshopId, artisanId) */
   targetId: string;
   /** Presentation name (e.g., workshop name, user name) */
   targetName: string;
-  
+
   averageRating: number;
   totalRatings: number;
-  
+
   /** All loaded reviews to display and calculate distributions */
   reviews: Review[];
   isLoading: boolean;
-  
+
   /** My review if any */
   myReview?: Review;
 
-  onSubmitReview: (rating: number, text: string) => Promise<void>;
+  onSubmitReview: (rating: number, text: string, reviewId: string) => Promise<void>;
   onViewAll: () => void;
   onSheetVisibilityChange?: (visible: boolean) => void;
+  isEligible?: boolean;
 }
 
 export function ReviewSection({
@@ -44,12 +49,14 @@ export function ReviewSection({
   onSubmitReview,
   onViewAll,
   onSheetVisibilityChange,
+  isEligible,
 }: ReviewSectionProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const { user } = useAuth();
   const { t } = useTranslation();
-  
+  const navigation = useNavigation<StackNavigationProp<MainStackParamList>>();
+
   const sheetRef = useRef<WriteReviewSheetRef>(null);
 
   // Show only first 2 reviews as a preview
@@ -63,6 +70,14 @@ export function ReviewSection({
     return counts;
   }, [reviews]);
 
+  const handleReport = (review: ReviewResponse) => {
+    navigation.navigate('ReportScreen', {
+      initialTargetId: review.id,
+      initialTargetType: ReportTypes.REVIEW,
+      reportTargetName: review.user.fullname,
+    });
+  };
+
   const reviewButtonLabel = myReview ? t('review.edit_review') : t('review.write_review');
   const reviewButtonIcon = myReview ? 'pencil-outline' : 'create-outline';
 
@@ -70,7 +85,7 @@ export function ReviewSection({
     <View className="gap-4">
       <View className="flex-row items-center justify-between">
         <Text className="text-xl font-black tracking-tight">{t('review.title')}</Text>
-        {user && (
+        {user && (isEligible !== false || myReview) && (
           <TouchableOpacity
             className="flex-row items-center gap-1"
             activeOpacity={0.7}
@@ -91,10 +106,15 @@ export function ReviewSection({
         </View>
       ) : previewReviews.length > 0 ? (
         previewReviews.map((review) => (
-          <ReviewCard key={review.id} item={review} isOwn={review.user.id === user?.id} />
+          <ReviewCard
+            key={review.id}
+            item={review}
+            isOwn={review.user.id === user?.id}
+            onReport={(item: ReviewResponse) => handleReport(item)}
+          />
         ))
       ) : (
-        <View className="items-center py-8 gap-2">
+        <View className="items-center gap-2 py-8">
           <Ionicons name="chatbubble-outline" size={32} color={theme.mutedForeground} />
           <Text className="text-sm" style={{ color: theme.mutedForeground }}>
             {t('review.be_first')}
@@ -117,6 +137,7 @@ export function ReviewSection({
       <WriteReviewSheet
         ref={sheetRef}
         targetName={targetName}
+        myReviewId={myReview?.id}
         initialRating={myReview?.rating}
         initialText={myReview?.comment ?? ''}
         onSubmit={onSubmitReview}

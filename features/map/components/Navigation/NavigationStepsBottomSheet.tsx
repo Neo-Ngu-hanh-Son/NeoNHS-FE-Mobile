@@ -31,9 +31,11 @@ const NavigationStepsBottomSheet = forwardRef<BottomSheet, NavigationStepsBottom
         const isCurrentStep = index === clampedCurrentStepIndex;
         const stepDistance = item.localizedValues?.distance?.text;
         const stepDuration = item.localizedValues?.staticDuration?.text;
-        const stepInstruction = item.navigationInstruction?.instructions ?? 'Continue';
+        const stepInstruction = item.navigationInstruction?.instructions ?? 'Follow the path';
         const cardBorderColor = isCurrentStep ? `${theme.primary}66` : theme.border;
         const cardBackgroundColor = isCurrentStep ? `${theme.primary}1A` : theme.background;
+
+        if (stepInstruction.includes('CUSTOM')) return null;
 
         return (
           <View style={[styles.stepCard, { borderColor: cardBorderColor, backgroundColor: cardBackgroundColor }]}>

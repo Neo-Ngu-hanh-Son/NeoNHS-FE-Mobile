@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import type { RootStackParamList } from './NavigationParamTypes';
+import { rootNavigationRef } from './rootNavigationRef';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { NAV_THEME } from '@/lib/theme';
 import { PanoramaProvider } from '../providers/PanoramaProvider';
@@ -18,7 +19,7 @@ export default function RootNavigator() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View className={`flex-1 ${isDarkColorScheme ? 'dark' : ''}`}>
-        <NavigationContainer theme={NAV_THEME[colorScheme]}>
+        <NavigationContainer ref={rootNavigationRef} theme={NAV_THEME[colorScheme]}>
           <PanoramaProvider>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
               <Stack.Screen name="Main" component={MainNavigator} />

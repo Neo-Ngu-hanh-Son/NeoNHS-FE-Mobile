@@ -58,13 +58,13 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     };
 
     loadTheme();
-  }, [systemColorScheme]);
+  }, [setNativeColorScheme, systemColorScheme]);
 
   const setColorScheme = useCallback(async (scheme: ColorScheme) => {
     setColorSchemeState(scheme);
     await storage.setItem(THEME_STORAGE_KEY, scheme);
     setNativeColorScheme(scheme);
-  }, []);
+  }, [setNativeColorScheme]);
 
   const toggleColorScheme = useCallback(() => {
     const newScheme = colorScheme === 'light' ? 'dark' : 'light';

@@ -10,6 +10,7 @@ export interface CartItem {
     eventName?: string;
     // Workshop info (for workshop sessions)
     workshopSessionId?: string;
+    workshopTemplateId?: string;
     workshopName?: string;
 }
 

@@ -1,17 +1,20 @@
 const MAP_CONSTANTS = {
   CHECKINPOINT_DETECT_RADIUS_M: 20, // Radius to detect nearby check-in points (UI)
   FETCH_CHECKIN_RADIUS_M: 100, // Default radius for fetching nearby check-in points (For proximity check)
-  DISTANCE_LIMIT_BEFORE_REFETCH_M: 20,
+  DISTANCE_LIMIT_BEFORE_REFETCH_CHECKIN_M: 20,
 
   // Radius to consider user is "on" the step for navigation guidance
   STEP_RADIUS_M: 30,
   ARRIVAL_RADIUS_M: 10, // Radius to consider user has arrived at the destination
 
   // The minimum time interval between user location updates to prevent excessive re-renders and computations
-  UPDATE_USER_LOCATION_THROTTLE_MS: 3000,
+  UPDATE_USER_LOCATION_THROTTLE_MS: 1000,
 
-  DISTANCE_BEFORE_UPDATE_USER_LOCATION_M: 3, // Minimum distance in meters that the user must move
+  DISTANCE_BEFORE_UPDATE_USER_LOCATION_M: 3, // Minimum distance in meters that the user must move before updating
   ADVANCE_THRESHOLD_M: 0.5, // The distance in meters threshold for advancing to the next step
+
+  NAVIGATION_DIRECTION_REFETCH_INTERVAL_MS: 5000,
+  NAVIGATION_DISTANCE_LIMIT_BEFORE_REFETCH_OFF_ROUTE_M: 20,
 
   GOOGLE_MAP_STYLE: [
     {

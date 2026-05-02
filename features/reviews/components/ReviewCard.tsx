@@ -7,14 +7,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { formatTimeAgo } from '../utils';
-import type { Review } from '../types';
+import type { Review, ReviewResponse } from '../types';
 import { ReviewImageGallery } from './ReviewImageGallery';
 
 export interface ReviewCardProps {
   item: Review;
   isOwn: boolean;
   onEdit?: () => void;
-  onReport?: () => void;
+  onReport?: (review: ReviewResponse) => void;
 }
 
 export function ReviewCard({ item, isOwn, onEdit, onReport }: ReviewCardProps) {
@@ -71,8 +71,8 @@ export function ReviewCard({ item, isOwn, onEdit, onReport }: ReviewCardProps) {
                 <Ionicons name="pencil-outline" size={16} color={theme.primary} />
               </TouchableOpacity>
             ) : !isOwn && onReport ? (
-              <TouchableOpacity className="p-1" onPress={onReport}>
-                <Ionicons name="ellipsis-vertical" size={16} color={theme.mutedForeground} />
+              <TouchableOpacity className="p-1" onPress={() => onReport(item)}>
+                <Ionicons name="flag-sharp" size={16} color={theme.destructive} />
               </TouchableOpacity>
             ) : null
           }

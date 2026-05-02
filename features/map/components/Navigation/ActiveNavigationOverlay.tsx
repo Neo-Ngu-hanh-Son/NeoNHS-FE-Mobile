@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
-import { getManeuverPresentation } from '../../helpers';
+import { getManeuverPresentation } from '../../utils/helpers';
 import type { NavigationGuideOverlayProps } from './types';
 import { logger } from '@/utils/logger';
 
@@ -38,7 +38,7 @@ export default function ActiveNavigationOverlay({
 
   const hasActiveInstruction = !!currentNavigationStepData?.currentInstructionText;
   const maneuverPresentation = getManeuverPresentation(currentNavigationStepData?.currentManeuver);
-  const topCardTitle = hasActiveInstruction ? formatedNavigationStepText() : statusTitle;
+  let topCardTitle = hasActiveInstruction ? formatedNavigationStepText() : statusTitle;
 
   let topCardSubtitle = statusSubtitle;
   if (hasActiveInstruction) {
@@ -48,6 +48,11 @@ export default function ActiveNavigationOverlay({
       currentNavigationStepData?.currentStepDurationText,
     ].filter(Boolean);
     topCardSubtitle = `${maneuverPresentation.label}${stepMeta.length > 0 ? ` · ${stepMeta.join(' · ')}` : ''}`;
+  }
+
+  if (currentNavigationStepData?.currentManeuver === 'CUSTOM') {
+    topCardTitle = 'Keep following main path';
+    topCardSubtitle = 'Follow the main path.';
   }
 
   return (

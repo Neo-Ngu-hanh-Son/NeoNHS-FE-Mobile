@@ -193,6 +193,17 @@ export default function CartListScreen() {
 
     const renderCartItem = ({ item }: { item: CartItem }) => {
         const isSelected = selectedItems.has(item.id);
+        const isWorkshop = !!item.workshopSessionId;
+        const isEventTicket = !!item.eventId;
+
+        const typeMeta = isWorkshop
+            ? { color: '#a855f7', label: t('cart.workshop', 'Workshop'), icon: 'self-improvement' as const, parent: item.workshopName }
+            : isEventTicket
+                ? { color: '#3b82f6', label: t('cart.event_ticket', 'Event'), icon: 'event' as const, parent: item.eventName }
+                : { color: '#f59e0b', label: t('cart.ticket', 'Ticket'), icon: 'confirmation-number' as const, parent: undefined };
+
+        const canDecrement = item.quantity > 1;
+
         return (
             <TouchableOpacity
                 style={[
@@ -200,57 +211,119 @@ export default function CartListScreen() {
                     {
                         backgroundColor: theme.card,
                         borderColor: isSelected ? theme.primary : theme.border,
-                        borderWidth: isSelected ? 2 : 1
-                    }
+                        borderWidth: isSelected ? 2 : 1,
+                    },
                 ]}
                 onPress={() => toggleSelection(item.id)}
-                activeOpacity={0.7}
+                activeOpacity={0.85}
             >
-                <View style={[
-                    styles.checkbox,
-                    {
-                        borderColor: isSelected ? theme.primary : theme.mutedForeground,
-                        backgroundColor: isSelected ? theme.primary : 'transparent'
-                    }
-                ]}>
-                    {isSelected && <Ionicons name="checkmark" size={16} color="white" />}
-                </View>
-                <View style={{ flex: 1 }}>
-                    <View style={styles.row}>
-                        <Text style={[styles.itemName, { color: theme.foreground, flex: 1 }]}>{item.itemName}</Text>
-                        <TouchableOpacity onPress={() => handleRemoveItem(item.id)} style={{ padding: 4 }}>
-                            <Ionicons name="trash-outline" size={20} color="#ef4444" />
-                        </TouchableOpacity>
+                {/* Header: checkbox + name + delete */}
+                <View style={styles.cardHeader}>
+                    <View
+                        style={[
+                            styles.checkbox,
+                            {
+                                borderColor: isSelected ? theme.primary : theme.mutedForeground,
+                                backgroundColor: isSelected ? theme.primary : 'transparent',
+                            },
+                        ]}
+                    >
+                        {isSelected && <Ionicons name="checkmark" size={14} color="white" />}
                     </View>
 
-                    <View style={styles.row}>
-                        <Text style={{ color: theme.mutedForeground }}>{t('cart.price', 'Price:')}</Text>
-                        <Text style={{ color: theme.foreground }}>{item.price.toLocaleString()} VND</Text>
-                    </View>
+                    <View style={styles.headerTextWrap}>
+                        <Text
+                            style={[styles.itemName, { color: theme.foreground }]}
+                            numberOfLines={2}
+                            ellipsizeMode="tail"
+                        >
+                            {item.itemName}
+                        </Text>
 
-                    <View style={[styles.row, { alignItems: 'center', marginTop: 4 }]}>
-                        <Text style={{ color: theme.mutedForeground }}>{t('cart.quantity')}:</Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8, borderWidth: 1, borderColor: theme.border, borderRadius: 6 }}>
-                            <TouchableOpacity
-                                onPress={() => handleUpdateQuantity(item.id, item.quantity - 1)}
-                                style={{ padding: 4, paddingHorizontal: 8 }}
-                            >
-                                <Ionicons name="remove" size={16} color={theme.foreground} />
-                            </TouchableOpacity>
-                            <Text style={{ color: theme.foreground, paddingHorizontal: 8, fontWeight: 'bold' }}>{item.quantity}</Text>
-                            <TouchableOpacity
-                                onPress={() => handleUpdateQuantity(item.id, item.quantity + 1)}
-                                style={{ padding: 4, paddingHorizontal: 8 }}
-                            >
-                                <Ionicons name="add" size={16} color={theme.foreground} />
-                            </TouchableOpacity>
+                        {/* Type badge + parent name */}
+                        <View style={styles.subRow}>
+                            <View style={[styles.typeBadge, { backgroundColor: typeMeta.color + '22' }]}>
+                                <MaterialIcons name={typeMeta.icon} size={11} color={typeMeta.color} />
+                                <Text style={[styles.typeBadgeText, { color: typeMeta.color }]}>
+                                    {typeMeta.label}
+                                </Text>
+                            </View>
+                            {typeMeta.parent ? (
+                                <Text
+                                    style={[styles.parentName, { color: theme.mutedForeground }]}
+                                    numberOfLines={1}
+                                    ellipsizeMode="tail"
+                                >
+                                    {typeMeta.parent}
+                                </Text>
+                            ) : null}
                         </View>
                     </View>
 
-                    <View style={[styles.row, { marginTop: 4 }]}>
-                        <Text style={{ color: theme.mutedForeground }}>{t('cart.subtotal', 'Total:')}</Text>
-                        <Text style={{ color: theme.primary, fontWeight: 'bold' }}>{item.totalPrice.toLocaleString()} VND</Text>
+                    <TouchableOpacity
+                        onPress={() => handleRemoveItem(item.id)}
+                        hitSlop={8}
+                        style={styles.trashBtn}
+                    >
+                        <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                    </TouchableOpacity>
+                </View>
+
+                {/* Divider */}
+                <View style={[styles.divider, { backgroundColor: theme.border }]} />
+
+                {/* Footer row 1: unit price + quantity stepper */}
+                <View style={styles.priceRow}>
+                    <View style={styles.priceWrap}>
+                        <Text style={[styles.metaLabel, { color: theme.mutedForeground }]}>
+                            {t('cart.price', 'Price')}
+                        </Text>
+                        <Text
+                            style={[styles.priceText, { color: theme.foreground }]}
+                            numberOfLines={1}
+                            adjustsFontSizeToFit
+                        >
+                            {item.price.toLocaleString()} VND
+                        </Text>
                     </View>
+
+                    <View style={[styles.stepper, { borderColor: theme.border, backgroundColor: theme.background }]}>
+                        <TouchableOpacity
+                            onPress={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                            style={styles.stepperBtn}
+                            hitSlop={6}
+                            disabled={!canDecrement}
+                            activeOpacity={canDecrement ? 0.6 : 1}
+                        >
+                            <Ionicons
+                                name="remove"
+                                size={16}
+                                color={canDecrement ? theme.foreground : theme.mutedForeground}
+                            />
+                        </TouchableOpacity>
+                        <Text style={[styles.stepperValue, { color: theme.foreground }]}>{item.quantity}</Text>
+                        <TouchableOpacity
+                            onPress={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                            style={styles.stepperBtn}
+                            hitSlop={6}
+                        >
+                            <Ionicons name="add" size={16} color={theme.foreground} />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
+                {/* Footer row 2: subtotal */}
+                <View style={styles.subtotalRow}>
+                    <Text style={[styles.metaLabel, { color: theme.mutedForeground }]}>
+                        {t('cart.subtotal', 'Subtotal')}
+                    </Text>
+                    <Text
+                        style={[styles.subtotalValue, { color: theme.primary }]}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                    >
+                        {item.totalPrice.toLocaleString()} VND
+                    </Text>
                 </View>
             </TouchableOpacity>
         );
@@ -442,31 +515,103 @@ const styles = StyleSheet.create({
         paddingBottom: 220, // Increased bottom padding to accommodate updated footer
     },
     card: {
-        flexDirection: 'row',
-        alignItems: 'center', // Changed from flex-start to center for better alignment
-        padding: 16,
-        borderRadius: 12,
+        padding: 14,
+        borderRadius: 14,
         marginBottom: 12,
+    },
+    cardHeader: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
         gap: 12,
     },
+    headerTextWrap: {
+        flex: 1,
+        minWidth: 0,
+        gap: 6,
+    },
     checkbox: {
-        width: 24,
-        height: 24,
+        width: 22,
+        height: 22,
         borderRadius: 6,
         borderWidth: 2,
         alignItems: 'center',
         justifyContent: 'center',
+        marginTop: 2,
     },
     itemName: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '600',
-        marginBottom: 8,
+        lineHeight: 20,
     },
-    row: {
+    subRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 4,
+        gap: 8,
+    },
+    parentName: {
+        flex: 1,
+        minWidth: 0,
+        fontSize: 12,
+    },
+    trashBtn: {
+        padding: 6,
+        borderRadius: 8,
+        marginTop: -2,
+    },
+    divider: {
+        height: StyleSheet.hairlineWidth,
+        marginVertical: 12,
+        opacity: 0.7,
+    },
+    priceRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 12,
+    },
+    priceWrap: {
+        flex: 1,
+        minWidth: 0,
+    },
+    metaLabel: {
+        fontSize: 11,
+        fontWeight: '500',
+        textTransform: 'uppercase',
+        letterSpacing: 0.4,
+    },
+    priceText: {
+        fontSize: 14,
+        fontWeight: '600',
+        marginTop: 2,
+    },
+    stepper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderRadius: 8,
+    },
+    stepperBtn: {
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+    },
+    stepperValue: {
+        fontWeight: '700',
+        fontSize: 14,
+        minWidth: 22,
+        textAlign: 'center',
+    },
+    subtotalRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 12,
+        marginTop: 10,
+    },
+    subtotalValue: {
+        fontSize: 16,
+        fontWeight: '800',
+        flexShrink: 1,
+        textAlign: 'right',
     },
     footer: {
         position: 'absolute',
@@ -491,5 +636,17 @@ const styles = StyleSheet.create({
     emptyContainer: {
         padding: 40,
         alignItems: 'center',
-    }
+    },
+    typeBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 6,
+    },
+    typeBadgeText: {
+        fontSize: 10,
+        fontWeight: '700',
+    },
 });

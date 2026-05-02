@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, Alert } from 'react-native';
+import { View, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, Alert, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -18,6 +18,11 @@ import {
 } from '../components';
 import { useEventDetail } from '../hooks/useEventDetail';
 import { useTicketCatalogs } from '../hooks/useTicketCatalogs';
+import { useGenericReviews } from '@/features/point/hooks/useGenericReviews';
+import { ReviewTypeFlg } from '@/features/reviews/types';
+import SmartMenu from '@/components/common/MenuTriggerBtn';
+import { ReportTypes } from '@/features/report/type';
+import { useTranslation } from 'react-i18next';
 
 type Props = StackScreenProps<MainStackParamList, 'EventDetail'>;
 
@@ -29,8 +34,12 @@ export default function EventDetailScreen({ navigation, route }: Props) {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'info' | 'tickets'>('info');
   const [isReviewSheetVisible, setIsReviewSheetVisible] = useState(false);
+  const { t } = useTranslation();
 
   const { data: event, isLoading: loading, refetch: refetchEvent } = useEventDetail(eventId);
+
+  /** Prefetch first page of reviews in parallel (shared query key with EventDetailReviews). */
+  const reviewsQuery = useGenericReviews(eventId, ReviewTypeFlg.EVENT);
 
   const {
     data: tickets,
@@ -60,9 +69,26 @@ export default function EventDetailScreen({ navigation, route }: Props) {
     navigation.navigate('EventTimeLineMap', { eventId });
   }, [eventId, navigation]);
 
+  const handleShare = useCallback(() => {
+    Share.share({
+      title: event?.name ?? "",
+      message: event?.shortDescription ?? "",
+    });
+  }, [event]);
+
+  const handleReport = useCallback(() => {
+    navigation.navigate('ReportScreen', {
+      initialTargetId: eventId ?? "",
+      initialTargetType: ReportTypes.EVENT,
+      reportTargetName: event?.name ?? "",
+    });
+  }, [event?.name, eventId, navigation]);
+
+  const awaitingReviewsFirstPage = !!event && reviewsQuery.isPending;
+
   // ── Loading state ──
 
-  if (loading) {
+  if (loading || awaitingReviewsFirstPage) {
     return (
       <SafeAreaView
         className="flex-1 items-center justify-center"
@@ -108,7 +134,25 @@ export default function EventDetailScreen({ navigation, route }: Props) {
         <Text className="ml-2 flex-1 text-lg font-bold" style={{ color: theme.foreground }} numberOfLines={1}>
           {event.name}
         </Text>
-        <View className="w-10" />
+        <View className="w-10">
+          <SmartMenu
+            trigger={
+              <View className="-mr-2 p-2">
+                <Ionicons name="ellipsis-vertical-sharp" size={22} color={theme.foreground} />
+              </View>
+            }
+            items={[
+              {
+                label: t('common.share'), onPress: handleShare,
+                icon: <Ionicons name='share' size={16} color={theme.foreground} />
+              },
+              {
+                label: t('common.report'), onPress: handleReport,
+                icon: <Ionicons name='flag' size={16} color={theme.destructive} />, isDestructive: true
+              },
+            ]}
+          />
+        </View>
       </View>
 
       <ScrollView

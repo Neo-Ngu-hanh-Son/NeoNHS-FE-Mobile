@@ -76,7 +76,7 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
 
   const [refreshing, setRefreshing] = useState(false);
 
-  const { data: allAttractions, isLoading: loading, refetch: refetchAttractions } = useAttractions();
+  const { data: allAttractions, isLoading: loading, refetch: refetchAttractions } = useAttractions('');
 
   const {
     data: eventsData,
@@ -242,20 +242,20 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
     [navigation, theme.border, theme.card, theme.foreground, theme.mutedForeground, theme.primary]
   );
 
-  const renderBlogItem = useCallback(
-    ({ item }: { item: (typeof BLOGS)[number] }) => (
-      <TouchableOpacity className="w-80">
-        <SmartImage uri={item.image} className="mb-3 h-44 w-full rounded-2xl object-cover shadow-sm" />
-        <Text className="mb-1 text-lg font-bold leading-tight" style={{ color: theme.foreground }}>
-          {item.title}
-        </Text>
-        <Text className="line-clamp-2 text-sm" style={{ color: theme.mutedForeground }}>
-          {item.summary}
-        </Text>
-      </TouchableOpacity>
-    ),
-    [theme.foreground, theme.mutedForeground]
-  );
+  // const renderBlogItem = useCallback(
+  //   ({ item }: { item: (typeof BLOGS)[number] }) => (
+  //     <TouchableOpacity className="w-80">
+  //       <SmartImage uri={item.image} className="mb-3 h-44 w-full rounded-2xl object-cover shadow-sm" />
+  //       <Text className="mb-1 text-lg font-bold leading-tight" style={{ color: theme.foreground }}>
+  //         {item.title}
+  //       </Text>
+  //       <Text className="line-clamp-2 text-sm" style={{ color: theme.mutedForeground }}>
+  //         {item.summary}
+  //       </Text>
+  //     </TouchableOpacity>
+  //   ),
+  //   [theme.foreground, theme.mutedForeground]
+  // );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -397,7 +397,7 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
         </View>
 
         {/* Travel Blogs */}
-        <SectionHeader
+        {/* <SectionHeader
           title={t('discover.travel_blogs')}
           onSeeAll={() => navigation.navigate('AllDestinations', { initialTab: 'Blogs' })}
         />
@@ -409,7 +409,7 @@ export default function DiscoverScreen({ navigation }: DiscoverScreenProps) {
           keyExtractor={(item) => item.id}
           ItemSeparatorComponent={renderHorizontalSpacer}
           renderItem={renderBlogItem}
-        />
+        /> */}
       </ScrollView>
     </SafeAreaView>
   );

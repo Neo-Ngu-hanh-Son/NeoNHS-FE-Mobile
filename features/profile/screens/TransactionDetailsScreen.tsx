@@ -166,6 +166,11 @@ export default function TransactionDetailsScreen() {
                         {selectedTicket && (
                             <View style={styles.ticketDetailContainer}>
                                 <Text style={[styles.ticketTitle, { color: theme.foreground }]}>{selectedTicket.itemName}</Text>
+                                {(selectedTicket.eventName || selectedTicket.workshopName) && (
+                                    <Text style={{ textAlign: 'center', color: theme.mutedForeground, marginBottom: 16, marginTop: -12, fontSize: 15, fontWeight: '600' }}>
+                                        {selectedTicket.eventName || selectedTicket.workshopName}
+                                    </Text>
+                                )}
 
                                 <View style={styles.row}>
                                     <Text style={styles.label}>Ticket Code</Text>
@@ -192,13 +197,13 @@ export default function TransactionDetailsScreen() {
                                 <View style={styles.row}>
                                     <Text style={styles.label}>Valid From</Text>
                                     <Text style={[styles.value, { color: theme.foreground }]}>
-                                        {new Date(selectedTicket.validFrom).toLocaleDateString('vi-VN')}
+                                        {new Date(selectedTicket.validFrom).toLocaleDateString('vi-VN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                     </Text>
                                 </View>
                                 <View style={styles.row}>
                                     <Text style={styles.label}>Valid To</Text>
                                     <Text style={[styles.value, { color: theme.foreground }]}>
-                                        {new Date(selectedTicket.validTo).toLocaleDateString('vi-VN')}
+                                        {new Date(selectedTicket.validTo).toLocaleDateString('vi-VN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                     </Text>
                                 </View>
 

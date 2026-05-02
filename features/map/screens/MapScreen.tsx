@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Keyboard } from 'react-native';
+import { Keyboard, BackHandler } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { MainStackParamList, TabsStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { logger } from '@/utils/logger';
-import { MapPoint, PolylineCoordinate } from '../types';
+import { MapPoint, PolylineCoordinate, TravelMode } from '../types';
 import MapPointDetailModal from '../components/PointDetailModal/PointDetailModal';
 import type { MapPointDetailSheetRef } from '../components/PointDetailModal/PointDetailModal';
 import { NHSMap } from '../components/Map/NHSMap';
@@ -13,7 +13,7 @@ import { mapService } from '../services/mapServices';
 import { useModal } from '@/app/providers/ModalProvider';
 import { useMapMarkerFilters, useMapNavigationGuidance, useMapSearch, useUserLocation } from '../hooks';
 import { mapData } from '../data';
-import { CompositeScreenProps } from '@react-navigation/native';
+import { CompositeScreenProps, useFocusEffect } from '@react-navigation/native';
 import { ScreenLayout } from '@/components/common/ScreenLayout';
 import { useQuery } from '@tanstack/react-query';
 import CheckinCameraButton from '../components/CheckinCameraButton';
@@ -21,12 +21,14 @@ import MAP_CONSTANTS from '../constants';
 import { LocationAccuracy } from 'expo-location';
 import BottomSheet from '@gorhom/bottom-sheet';
 import NavigationStepsBottomSheet from '../components/Navigation/NavigationStepsBottomSheet';
-import { decodeRoutePolyline } from '../helpers';
+import { decodeRoutePolyline } from '../utils/helpers';
 import { useMapStore } from '../store/useMapStore';
 import { useMapNavigationPreviewController } from '../hooks/Navigation/useMapNavigationPreviewController';
 import { QUERY_KEYS } from '@/services/api/tanstack/queryKeyConstants';
 import { useMapCameraController } from '../hooks/MapCamera/useMapCameraController';
 import { useMapScreenController } from '../hooks/useMapScreenController';
+import * as turf from '@turf/turf';
+import { useDynamicPolyline } from '../hooks/Navigation/useDynamicPolyline';
 
 type MapScreenProps = CompositeScreenProps<
   StackScreenProps<TabsStackParamList, 'Map'>,
@@ -44,8 +46,32 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
   // Route params
   const initialPointId = route.params?.pointId;
   const targetNavigationPointId = route.params?.targetNavigationPointId;
+  const fromChatRoomId = route.params?.fromChatRoomId;
   const [manualTargetNavigationPointId, setManualTargetNavigationPointId] = useState<string | undefined>(undefined);
   const effectiveTargetNavigationPointId = manualTargetNavigationPointId ?? targetNavigationPointId;
+
+  const handleBackToChat = useCallback(() => {
+    if (fromChatRoomId) {
+      // Clear fromChatRoomId from params so if we come back it doesn't stay
+      navigation.setParams({ fromChatRoomId: undefined });
+      navigation.navigate('ChatRoom', { roomId: fromChatRoomId });
+    }
+  }, [navigation, fromChatRoomId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (fromChatRoomId) {
+          handleBackToChat();
+          return true; // Prevent default back (which goes to Home)
+        }
+        return false;
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [fromChatRoomId, handleBackToChat])
+  );
 
   // Zustand store for managing map-wide states like view mode
   const viewMode = useMapStore((state) => state.viewMode);
@@ -57,8 +83,6 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
   const mapRef = useRef<NHSMapRef>(null);
   const navigationStepsSheetRef = useRef<BottomSheet>(null);
   const pointDetailSheetRef = useRef<MapPointDetailSheetRef>(null);
-
-  const { alert } = useModal();
 
   const { filters: markerFilters, setShowAll, toggleFilter } = useMapMarkerFilters();
 
@@ -118,21 +142,21 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
   });
 
   const {
-    activeGuidanceTargetPointId,
     navigationTargetPoint,
     previewDistanceText,
     previewDurationText,
     previewErrorMessage,
-    canStartGuidance,
     activeTravelModeLabel,
     previewRouteSummary,
     previewRouteQuery,
-    selectedTravelMode,
     confirmedTravelMode,
+    canStartGuidance,
+    previewDestination,
+    effectiveTravelMode: selectedTravelMode,
+    routingSource,
     handleStartNavigationWithSelectedMode,
-    clearTargetNavigationParam: clearTargetNavigationParamAuto,
+    clearTargetNavigationParam,
     handleTravelModeSelection,
-    handleCancelTransportSelection: handleCancelTransportSelectionAuto,
     setConfirmedTravelMode,
   } = useMapNavigationPreviewController({
     targetNavigationPointId: effectiveTargetNavigationPointId,
@@ -147,15 +171,9 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     fitCameraToCoordinates,
   });
 
-  const clearTargetNavigationParam = useCallback(() => {
-    setManualTargetNavigationPointId(undefined);
-    clearTargetNavigationParamAuto();
-  }, [clearTargetNavigationParamAuto]);
 
-  const handleCancelTransportSelection = useCallback(() => {
-    setManualTargetNavigationPointId(undefined);
-    handleCancelTransportSelectionAuto();
-  }, [handleCancelTransportSelectionAuto]);
+  const hasValidNavInput =
+    userLocation && previewDestination && confirmedTravelMode;
 
   const {
     directionError,
@@ -164,20 +182,21 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     handleExitGuidance,
     isUserArrived,
     currentNavigationStepData,
-  } = useMapNavigationGuidance({
-    targetNavigationPointId: activeGuidanceTargetPointId,
-    mapPoints,
-    userLocation,
-    permissionStatus,
-    isTracking,
-    startTracking,
-    alert,
-    clearTargetNavigationParam,
-    travelMode: confirmedTravelMode,
-    previewRouteSummary,
-    previewErrorMessage,
-    viewMode,
-  });
+    routeSummary
+  } = useMapNavigationGuidance(
+    hasValidNavInput
+      ? {
+        origin: userLocation,
+        destination: previewDestination,
+        source: routingSource,
+        travelMode: confirmedTravelMode,
+        userLocation,
+        startTracking,
+        previewRouteSummary,
+        viewMode,
+      }
+      : ({} as any)
+  );
 
   const handleClosePointSheetModal = useCallback(() => {
     pointDetailSheetRef.current?.dismiss();
@@ -207,32 +226,19 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     [clearSearch, focusOnPoint, handleOpenPointSheetModal]
   );
 
-  const lastValidRouteRef = useRef<PolylineCoordinate[] | null>(null);
-  const memorizedEncodedPolyline = useMemo(() => {
-    if (viewMode === 'EXPLORING') {
-      return '';
-    }
-    if (!previewRouteSummary?.routes?.[0]?.polyline?.encodedPolyline) {
-      return '';
-    }
+  const routeToDisplay = viewMode === 'NAVIGATING' ? routeSummary : previewRouteSummary;
 
-    return previewRouteSummary?.routes?.[0]?.polyline?.encodedPolyline;
-  }, [previewRouteSummary?.routes, viewMode]);
+  const { displayCoordinates, isDrawingRoute } = useDynamicPolyline({
+    userLocation: userLocation,
+    animationIntervalMs: 50,
+    enableAnimation: true,
+    isFetching: previewRouteQuery.isFetching,
+    viewMode: viewMode,
+    routeSummary: routeToDisplay,
+  });
 
-  const navigationPolylineCoordinates = useMemo(() => {
-    const decoded = decodeRoutePolyline(memorizedEncodedPolyline);
-    return decoded;
-  }, [memorizedEncodedPolyline]);
-
-  const displayCoordinates = useMemo(() => {
-    if (navigationPolylineCoordinates && navigationPolylineCoordinates.length >= 2) {
-      lastValidRouteRef.current = navigationPolylineCoordinates;
-      return navigationPolylineCoordinates;
-    }
-
-    return lastValidRouteRef.current ?? [];
-  }, [navigationPolylineCoordinates]);
-  const isNavPolylineVisible = !!(navigationPolylineCoordinates && navigationPolylineCoordinates.length >= 2);
+  // const isNavPolylineVisible = !!(navigationPolylineCoordinates && navigationPolylineCoordinates.length >= 2);
+  const isNavPolylineVisible = !!(displayCoordinates && displayCoordinates.length >= 2);
 
   // Auto request permission on mount if not granted or denied
   useEffect(() => {
@@ -255,16 +261,25 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     navigationStepsSheetRef.current?.close();
   }, []);
 
-  function onNavigationExit(): void {
-    logger.debug('Exiting navigation');
-    handleCloseNavigationSteps();
-    setConfirmedTravelMode(null);
-    handleExitGuidance();
-    // mapRef.current?.reloadMap();
-  }
+  const resetAllNavigation = useCallback(() => {
+    setManualTargetNavigationPointId(undefined);
+    handleCloseNavigationSteps(); // Close the steps sheet
+    clearTargetNavigationParam(); // Map preview reset
+    handleExitGuidance(); // Guidance reset
+    setViewMode('EXPLORING');
+    navigation.setParams({
+      targetNavigationPointId: undefined,
+    });
+  }, [clearTargetNavigationParam, handleCloseNavigationSteps, handleExitGuidance, navigation, setViewMode]);
+
+  const excludedModes: TravelMode[] = useMemo(() => {
+    return routingSource === 'CUSTOM'
+      ? ['BICYCLE', 'TWO_WHEELER', 'DRIVE']
+      : [];
+  }, [routingSource]);
 
   return (
-    <ScreenLayout showBackButton={false}>
+    <ScreenLayout showBackButton={!!fromChatRoomId} onBack={handleBackToChat}>
       {/* Main map */}
       <NHSMap
         ref={mapRef}
@@ -279,6 +294,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
         startTrackingCallback={startTracking}
         onMapReadyCallback={handleOnMapReady}
         navigationPolylineCoordinates={displayCoordinates}
+        selectedTravelMode={selectedTravelMode ?? MAP_CONSTANTS.DEFAULT_TRAVEL_MODE}
         isNavPolylineVisible={isNavPolylineVisible}
         isMapInteractionEnabled={true}
         markerFilters={markerFilters}
@@ -332,7 +348,8 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
           canStartNavigation={canStartGuidance}
           onSelectMode={handleTravelModeSelection}
           onStartNavigation={handleStartNavigationWithSelectedMode}
-          onCancel={handleCancelTransportSelection}
+          onCancel={resetAllNavigation}
+          excludedModes={excludedModes}
         />
       )}
 
@@ -343,7 +360,7 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
             isLoading={navigationSteps == null || navigationSteps.length === 0}
             errorMessage={directionError}
             travelModeLabel={activeTravelModeLabel}
-            onExit={onNavigationExit}
+            onExit={resetAllNavigation}
             onOpenSteps={handleOpenNavigationSteps}
             currentNavigationStepData={currentNavigationStepData}
             isUserArrived={isUserArrived}

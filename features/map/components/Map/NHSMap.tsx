@@ -13,21 +13,21 @@ import React, {
 import { MapPoint } from '../..';
 import MapView, { Camera, Marker, Polyline, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { MAP_CENTER } from '../../data';
-import { renderRoutes } from '../../data/mapDataOptimized';
 import MapMarkerVisual from '../Marker/MapMarkerVisual';
 import { logger } from '@/utils/logger';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { UserLocationMarker, FollowUserButton } from '../UserLocation';
 import { MapPointCheckin } from '../../types';
-import { hasCheckinPointsChanged } from '../../helpers';
+import { hasCheckinPointsChanged } from '../../utils/helpers';
 import { useCheckinProximity } from '../../hooks/Navigation/useCheckinProximity';
 import type { MapMarkerFilters } from '../../hooks';
 import { useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { distanceUtils } from '@/utils/distanceUtils';
 import MAP_CONSTANTS from '../../constants';
 import { useMapStore } from '../../store/useMapStore';
 import type { NHSMapProps, NHSMapRef } from './types.ts';
+import { ThuySonMapData } from '../../data/ThuySonMapData';
+import { distanceUtils } from '@/utils/distanceUtils';
 
 const NHSMapInner = <T extends MapPoint>(
   {
@@ -42,6 +42,7 @@ const NHSMapInner = <T extends MapPoint>(
     startTrackingCallback,
     onMapReadyCallback,
     navigationPolylineCoordinates,
+    selectedTravelMode,
     isNavPolylineVisible,
     isMapInteractionEnabled = true,
     markerFilters,
@@ -243,7 +244,6 @@ const NHSMapInner = <T extends MapPoint>(
    */
   useEffect(() => {
     if (viewMode !== 'EXPLORING' || !enableCheckinMode) {
-      logger.debug('[NHSMap] Skipping checkin sync - not in exploring mode or checkin mode disabled');
       return;
     }
     let isCancelled = false;
@@ -266,7 +266,7 @@ const NHSMapInner = <T extends MapPoint>(
         { latitude: previousCoords.latitude, longitude: previousCoords.longitude }
       );
 
-      if (distanceMoved <= MAP_CONSTANTS.DISTANCE_LIMIT_BEFORE_REFETCH_M && previousLocation) {
+      if (distanceMoved <= MAP_CONSTANTS.DISTANCE_LIMIT_BEFORE_REFETCH_CHECKIN_M && previousLocation) {
         logger.debug(`[NHSMap] Distance moved: ${distanceMoved.toFixed(2)}m. Skipping fetch.`);
         return;
       }
@@ -318,20 +318,23 @@ const NHSMapInner = <T extends MapPoint>(
   // Memoize the routes of Thuy Son mountain
   // markerEpoch in key forces polyline re-creation on focus to fix stale rendering
   const memoizedRoutes = useMemo((): React.ReactNode[] => {
-    return renderRoutes.map((line) => (
-      <Polyline key={`${line.id}`} coordinates={line.coordinates} strokeColor="#fafafa50" strokeWidth={8} />
+    const SUBTLE_NAV_COLOR = isDarkColorScheme
+      ? '#94A3B8CC' // Slate 400 with 80% opacity
+      : '#475569BB'; // Slate 600 with ~70% opacity
+    return ThuySonMapData.routes.map((line) => (
+      <Polyline key={`${line.id}`} coordinates={line.coordinates} strokeColor={SUBTLE_NAV_COLOR} strokeWidth={8} />
     ));
-  }, []);
+  }, [isDarkColorScheme]);
 
   // Memoize the navigation route
   const memoizedNavigationRoute = useMemo(() => {
-    // Instead of returing null, modify the polyline to be transparent when not visible
+    // because React Native sucks, we don't have the option to display dynamic polyline or else it will just broke the app
     return (
       <Polyline
-        key={`nav-route-${markerEpoch}`}
+        key={`nav-route-stable-${markerEpoch}`}
         coordinates={navigationPolylineCoordinates}
-        strokeColor={isNavPolylineVisible ? theme.primary : `${theme.primary}00`}
-        strokeWidth={isNavPolylineVisible ? 6 : 0}
+        strokeColor={isNavPolylineVisible ? theme.primary : 'transparent'}
+        strokeWidth={6}
         lineCap="round"
         lineJoin="round"
         zIndex={40}
@@ -375,7 +378,6 @@ const NHSMapInner = <T extends MapPoint>(
   // 2. Memoize the map points
   const memoizedMarkers = useMemo(() => {
     if (!isMapReady || !mapPoints) return null;
-    console.log('Memmoizing markers ran');
 
     const parentMarkers = mapPoints
       .filter((poi) => poi.latitude !== -1 && poi.longitude !== -1 && shouldShowParentPoint(poi))
@@ -397,7 +399,7 @@ const NHSMapInner = <T extends MapPoint>(
               }
               onMarkerPressRef.current?.(poi);
             }}
-            zIndex={0}>
+            zIndex={2}>
             <MapMarkerVisual
               point={poi}
               showName={shouldDisplayMarkerName}
@@ -434,7 +436,7 @@ const NHSMapInner = <T extends MapPoint>(
                 panoramaImageUrl: checkin.panoramaImageUrl,
                 defaultYaw: checkin.defaultYaw,
                 defaultPitch: checkin.defaultPitch,
-              } as T;
+              } as unknown as T;
 
               if (renderMarker) {
                 return renderMarker(checkinAsPoint, shouldDisplayMarkerName);
@@ -448,7 +450,7 @@ const NHSMapInner = <T extends MapPoint>(
                     latitude: checkin.latitude,
                     longitude: checkin.longitude,
                   }}
-                  zIndex={2}
+                  zIndex={0}
                   onPress={() => {
                     if (isGuidanceMode) {
                       return;
@@ -459,7 +461,7 @@ const NHSMapInner = <T extends MapPoint>(
                   }}>
                   <MapMarkerVisual
                     point={checkinAsPoint}
-                    showName={shouldDisplayMarkerName}
+                    showName={false} // To make it clear
                     // isSelected={selectedPointId === checkin.id} (Because performance issues, this is removed)
                   />
                 </Marker>

@@ -1,5 +1,6 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import { UserVoucherResponse } from '@/features/voucher/types/voucher.types';
+import { ReportTypes } from '@/features/report/type';
 /* ============================================================
    AUTH STACK
    ============================================================ */
@@ -21,7 +22,7 @@ export type TabsStackParamList = {
   Home: undefined;
   Discover: undefined;
   Voucher: undefined;
-  Map: { pointId?: string; targetNavigationPointId?: string; userCheckedInPointId?: string } | undefined;
+  Map: { pointId?: string; targetNavigationPointId?: string; userCheckedInPointId?: string; fromChatRoomId?: string } | undefined;
   Bookings: undefined;
   Profile: undefined;
   Chat: undefined;
@@ -81,8 +82,17 @@ export type MapRoutes = {
   AudioGuide: { pointId: string };
   PointHistoryAudio: { pointId: string };
   Panorama: { pointId: string };
-  CheckinCamera: { pointId?: string | null; pointName: string; pointRewardPoints?: number };
-  CheckinComplete: { imageUrl?: string; rewardPoints?: number; userTotalPoints?: number };
+  CheckinCamera: { checkinPointId?: string | null; pointName: string; pointRewardPoints?: number };
+  CheckinComplete: {
+    imageUrl?: string;
+    rewardPoints?: number;
+    userTotalPoints?: number;
+    pointId?: string;
+    destinationName?: string;
+    checkinPointId?: string;
+    parentCheckinPointId?: string;
+    imageUrls?: string[];
+  };
 };
 
 /* Events */
@@ -140,6 +150,12 @@ export type VoucherRoutes = {
   MyVoucherDetail: { userVoucher: UserVoucherResponse };
 };
 
+
+/* Report */
+export type ReportRoutes = {
+  ReportScreen: { initialTargetId: string; initialTargetType: ReportTypes, reportTargetName: string | null };
+};
+
 /* ============================================================
    MAIN STACK (MERGED)
    ============================================================ */
@@ -179,7 +195,9 @@ export type MainStackParamList = BaseMainRoutes &
     MapDirection: { pointId?: string; targetNavigationPointId?: string };
     Cart: undefined;
   } &
-  VoucherRoutes;
+  VoucherRoutes &
+  ReportRoutes;
+
 
 /* ============================================================
    ROOT STACK

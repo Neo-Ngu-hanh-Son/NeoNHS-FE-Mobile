@@ -3,6 +3,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 
 import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { AllReviewsTemplate } from '@/features/reviews';
+import { useReviewEligibility } from '@/features/reviews/hooks/useReviewEligibility';
 import { useAuth } from '@/features/auth';
 import { useGenericReviews } from '@/features/point/hooks/useGenericReviews';
 import { useCreateEventReview } from '../hooks/useCreateEventReview';
@@ -33,6 +34,9 @@ export default function EventAllReviewsScreen({ navigation, route }: Props) {
 
   const createReviewMutation = useCreateEventReview(eventId);
   const updateReviewMutation = useUpdateEventReview(eventId);
+
+  const { data: eligibilityData } = useReviewEligibility(eventId, 'EVENT', { enabled: !!user });
+  const isEligible = eligibilityData?.data?.eligible ?? false;
 
   const avgRating = useMemo(() => data?.pages[0].avgRating ?? 0, [data]);
   const totalRatings = useMemo(() => data?.pages[0].totalReviews ?? 0, [data]);
@@ -77,6 +81,7 @@ export default function EventAllReviewsScreen({ navigation, route }: Props) {
       }}
       onSubmitReview={handleSubmitReview}
       onGoBack={() => navigation.goBack()}
+      isEligible={isEligible}
     />
   );
 }

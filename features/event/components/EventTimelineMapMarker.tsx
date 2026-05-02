@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Marker } from 'react-native-maps';
 import { StrokeText } from '@charmy.tech/react-native-stroke-text';
 import type { EventMapPoint } from '../types';
-import { defaultListStyleSpecs } from 'react-native-render-html';
 
 type EventTimelineMapMarkerProps = {
   point: EventMapPoint;
@@ -24,6 +23,19 @@ export default function EventTimelineMapMarker({
   onPress,
 }: EventTimelineMapMarkerProps) {
   const iconUri = point.eventPointTag?.iconUrl ?? point.thumbnailUrl ?? null;
+  const [shouldTrack, setShouldTrack] = useState(true);
+
+  useEffect(() => {
+    if (shouldTrack) {
+      const timer = setTimeout(() => setShouldTrack(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [shouldTrack]);
+
+  const handleImageLoad = () => {
+    setShouldTrack(true);
+    setTimeout(() => setShouldTrack(false), 500);
+  };
 
   return (
     <Marker
@@ -44,7 +56,12 @@ export default function EventTimelineMapMarker({
         <View style={styles.markerContainer}>
           <View style={styles.bubble}>
             {iconUri ? (
-              <Image source={{ uri: iconUri }} style={styles.iconImage} contentFit="cover" />
+              <Image
+                source={{ uri: iconUri }}
+                style={styles.iconImage}
+                contentFit="cover"
+                onLoadEnd={handleImageLoad}
+              />
             ) : (
               <View style={styles.fallbackDot} />
             )}

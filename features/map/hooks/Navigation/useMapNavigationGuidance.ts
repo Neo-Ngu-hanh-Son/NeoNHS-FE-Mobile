@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { logger } from '@/utils/logger';
 import {
   decodeRoutePolyline,
@@ -6,10 +6,10 @@ import {
   formatDistanceText,
   formatDurationText,
   parseDurationSeconds,
-} from '../../helpers';
+} from '../../utils/helpers';
 import {
   CurrentNavigationStepData,
-  MapPoint,
+  MapDirectionSource,
   NavigationStatusState,
   PolylineCoordinate,
   RouteResponse,
@@ -17,36 +17,25 @@ import {
   TravelMode,
   TripMetadata,
 } from '../../types';
-import type { LocationPermissionStatus, UserLocation } from '../useUserLocation';
+import type { UserLocation } from '../useUserLocation';
 import { distanceUtils } from '@/utils/distanceUtils';
 import MAP_CONSTANTS from '../../constants';
+import * as Speech from 'expo-speech';
+import { useLanguage } from '@/app/providers/LanguageProvider';
+import { useDirectionsNavigation } from './useDirectionsNavigation';
+import { LatLng } from 'react-native-maps/dist/src/specs/NativeComponentMarker';
+import { SPEECH_LANGUAGE_MAP } from '@/utils/languageUtils';
 
 type UseMapNavigationGuidanceParams = {
-  targetNavigationPointId?: string;
-  travelMode: TravelMode | null;
-  mapPoints: MapPoint[];
-  userLocation: UserLocation | null;
-  permissionStatus: LocationPermissionStatus;
-  isTracking: boolean;
-  startTracking: () => Promise<void>;
-  alert: (title: string, message: string) => void;
-  clearTargetNavigationParam: () => void;
-  previewRouteSummary: RouteResponse | null;
-  previewErrorMessage: string | null;
-  viewMode: string;
-};
+  origin: LatLng;
+  destination: LatLng;
+  source: MapDirectionSource;
+  travelMode: TravelMode;
 
-type UseMapNavigationGuidanceReturn = {
-  isDirectionsLoading: boolean;
-  isDirectionsReady: boolean;
-  directionError: string | null;
-  routeSummary: RouteResponse | null;
-  navigationSteps: Step[];
-  currentUserStepIndex: number;
-  navigationPolylineCoordinates: PolylineCoordinate[];
-  handleExitGuidance: () => void;
-  isUserArrived: boolean;
-  currentNavigationStepData: CurrentNavigationStepData;
+  userLocation: UserLocation | null;
+  startTracking: () => Promise<void>;
+  viewMode: string;
+  previewRouteSummary: RouteResponse | null;
 };
 
 const EMPTY_TRIP_METADATA: TripMetadata = {
@@ -60,45 +49,83 @@ const EMPTY_TRIP_METADATA: TripMetadata = {
   tripRemainingDuration: undefined,
 };
 
-// TODO: Format this function holy shiba
 export function useMapNavigationGuidance({
-  targetNavigationPointId,
+  origin,
+  destination,
+  source,
   travelMode,
-  mapPoints,
+
   userLocation,
-  permissionStatus,
-  isTracking,
   startTracking,
-  alert,
-  clearTargetNavigationParam,
-  previewRouteSummary,
-  previewErrorMessage,
   viewMode,
-}: UseMapNavigationGuidanceParams): UseMapNavigationGuidanceReturn {
+  previewRouteSummary,
+}: UseMapNavigationGuidanceParams) {
   const [navigationStatus, setNavigationStatus] = useState<NavigationStatusState>({
     isMapReady: false,
     isUserArrived: false,
   });
 
-  const isGuidanceMode = viewMode === 'NAVIGATING';
-  const isDirectionsLoading = previewRouteSummary === null || previewRouteSummary === undefined;
-  const isDirectionsReady = previewRouteSummary !== null || previewRouteSummary !== undefined;
-  const directionError = previewErrorMessage;
+  const [currentUserStepIndex, setCurrentUserStepIndex] = useState(0);
+  const currentStepIndexRef = useRef(0); // This is solely for calculations
+  const { language } = useLanguage();
 
-  // 1. Extract the base legs for cleaner access
-  const routeLeg = previewRouteSummary?.routes?.[0]?.legs?.[0];
+  const isGuidanceMode = viewMode === 'NAVIGATING';
+
+  const [routeFetchOrigin, setRouteFetchOrigin] = useState<LatLng>(
+    userLocation ? { latitude: userLocation.latitude, longitude: userLocation.longitude } : origin
+  );
+
+  const navigationParams = useMemo(() => {
+    let safeOrigin = undefined;
+
+    if (
+      routeFetchOrigin &&
+      typeof routeFetchOrigin.latitude === 'number' &&
+      typeof routeFetchOrigin.longitude === 'number'
+    ) {
+      safeOrigin = routeFetchOrigin;
+    } else if (userLocation && typeof userLocation.latitude === 'number') {
+      safeOrigin = { latitude: userLocation.latitude, longitude: userLocation.longitude };
+    } else {
+      safeOrigin = origin;
+    }
+
+    return {
+      origin: safeOrigin,
+      destination: destination,
+      source: source,
+      travelMode: travelMode,
+      language: language,
+    };
+  }, [routeFetchOrigin, destination, source, travelMode, userLocation, origin, language]);
+
+  const navigationQuery = useDirectionsNavigation({
+    params: navigationParams,
+    enabled: isGuidanceMode,
+    initialData: previewRouteSummary,
+    originKey: routeFetchOrigin,
+    language: language,
+  });
+
+  const routeSummary = navigationQuery.data;
+  const errorMessage = navigationQuery.error?.message ?? null;
+
+  const isDirectionsReady = routeSummary != null;
+
+  // Extract the base legs for cleaner access
+  const routeLeg = useMemo(() => routeSummary?.routes?.[0]?.legs?.[0], [routeSummary]);
 
   const steps = useMemo(() => {
-    return previewRouteSummary?.routes?.[0]?.legs?.[0]?.steps ?? [];
-  }, [previewRouteSummary]);
+    return routeLeg?.steps ?? [];
+  }, [routeLeg]);
 
-  // 3. Derived Polyline (Memoized because decoding can be CPU intensive)
+  // Derived Polyline (Memoized because decoding can be CPU intensive)
   const navigationPolylineCoordinates = useMemo(() => {
-    const encoded = previewRouteSummary?.routes?.[0]?.polyline?.encodedPolyline;
+    const encoded = routeSummary?.routes?.[0]?.polyline?.encodedPolyline;
     return encoded ? decodeRoutePolyline(encoded) : [];
-  }, [previewRouteSummary]);
+  }, [routeSummary]);
 
-  // 4. Derived Endpoints (Memoized to prevent unnecessary re-renders in Map components)
+  // Derived Endpoints (Memoized to prevent unnecessary re-renders in Map components)
   const navigationEndpoints = useMemo(() => {
     const start = routeLeg?.startLocation?.latLng;
     const end = routeLeg?.endLocation?.latLng;
@@ -117,132 +144,217 @@ export function useMapNavigationGuidance({
     };
   }, [routeLeg]);
 
-  const routeSummary = previewRouteSummary;
-
-  const [currentUserStepIndex, setCurrentUserStepIndex] = useState(0);
-
-  const getTrackingStartContext = useCallback(() => {
-    if (!isGuidanceMode || !targetNavigationPointId) {
-      return null;
-    }
-    if (permissionStatus !== 'granted' || !userLocation || isTracking) {
-      return null;
-    }
-
-    return { targetId: targetNavigationPointId };
-  }, [isGuidanceMode, targetNavigationPointId, permissionStatus, userLocation, isTracking]);
-
   const handleExitGuidance = useCallback(() => {
     setNavigationStatus((prev) => ({
       ...prev,
       isGuidanceMode: false,
       isUserArrived: false,
     }));
-    clearTargetNavigationParam();
-  }, [clearTargetNavigationParam]);
+  }, []);
+
+  const isOffRoute = useMemo(() => {
+    if (!userLocation || steps.length === 0) return false;
+
+    const userLocationPoint = {
+      longitude: userLocation.longitude,
+      latitude: userLocation.latitude,
+    };
+    const index = currentStepIndexRef.current;
+    // Check multiple steps ahead to find the closest one and use it as measurement for off-route detection
+    const checkSteps = steps.slice(Math.max(0, index - 1), index + 2);
+    if (checkSteps.length === 0) return false;
+
+    let minDistance = Infinity;
+
+    for (const step of checkSteps) {
+      const distance = distanceUtils.calculatePointToLineDistance(
+        userLocationPoint,
+        {
+          latitude: step.startLocation.latLng.latitude,
+          longitude: step.startLocation.latLng.longitude,
+        },
+        {
+          latitude: step.endLocation.latLng.latitude,
+          longitude: step.endLocation.latLng.longitude,
+        }
+      );
+
+      if (distance < minDistance) {
+        minDistance = distance;
+      }
+    }
+    // logger.info(
+    //   'Off route status: ',
+    //   minDistance,
+    //   'Threshold: ',
+    //   MAP_CONSTANTS.NAVIGATION_DISTANCE_LIMIT_BEFORE_REFETCH_OFF_ROUTE_M
+    // );
+    return minDistance > MAP_CONSTANTS.NAVIGATION_DISTANCE_LIMIT_BEFORE_REFETCH_OFF_ROUTE_M;
+  }, [userLocation, steps]);
+
+  /**
+   * Use effect to refetch map directions only when the user is off route
+   */
+  useEffect(() => {
+    if (!isGuidanceMode || !userLocation || navigationQuery.isFetching) return;
+
+    if (isOffRoute) {
+      // logger.info('User is off route. Updating origin to trigger a new route fetch.', {
+      //   reason: 'off-route',
+      // });
+
+      const newOrigin = {
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+      };
+
+      // logger.info('off-route: routeFetchOrigin: ', routeFetchOrigin, ' newOrigin: ', newOrigin);
+      if (!routeFetchOrigin) {
+        setRouteFetchOrigin(newOrigin);
+        return;
+      }
+
+      const distFromLastFetch = distanceUtils.calculateDistance(newOrigin, routeFetchOrigin);
+
+      if (distFromLastFetch > MAP_CONSTANTS.NAVIGATION_DISTANCE_LIMIT_BEFORE_REFETCH_OFF_ROUTE_M) {
+        setRouteFetchOrigin(newOrigin);
+      }
+    }
+  }, [userLocation, isGuidanceMode, isOffRoute, navigationQuery.isFetching, navigationQuery, routeFetchOrigin]);
 
   /**
    * Use effect to start tracking user location if guidance mode is initiated and tracking hasn't started yet
    */
   useEffect(() => {
-    const trackingStartContext = getTrackingStartContext();
-    if (!trackingStartContext) {
-      return;
+    if (isGuidanceMode) {
+      startTracking();
     }
-
-    startTracking();
-  }, [getTrackingStartContext, startTracking]);
+  }, [isGuidanceMode, startTracking]);
 
   // sync state with new route
   useEffect(() => {
     setNavigationStatus((prev) => ({
       ...prev,
-      isDirectionsLoading: previewRouteSummary == null,
-      isDirectionsReady: previewRouteSummary != null,
-      directionError: previewErrorMessage,
+      isDirectionsLoading: navigationQuery.isLoading,
+      isDirectionsReady: routeSummary != null,
+      directionError: errorMessage,
     }));
-  }, [previewRouteSummary, previewErrorMessage]);
+  }, [routeSummary, errorMessage, navigationQuery.isLoading]);
 
   // reset step on new route
   useEffect(() => {
     setCurrentUserStepIndex(0);
+    currentStepIndexRef.current = 0;
   }, [steps]);
 
+  const handleSpeakSteps = useCallback(
+    async (instructions: string | undefined) => {
+      if (!instructions) {
+        logger.warn('[handleSpeakSteps] No instructions to speak');
+        return;
+      }
+
+      if (instructions.includes('CUSTOM')) {
+        logger.info('[handleSpeakSteps] Custom instruction, skipping speech');
+        return;
+      }
+
+      let speechText = instructions.slice(0, Speech.maxSpeechInputLength);
+
+      const speechLanguage = SPEECH_LANGUAGE_MAP[language] || 'en-US';
+
+      Speech.speak(speechText, {
+        language: speechLanguage,
+        rate: 1.0,
+        pitch: 1.0,
+      });
+    },
+    [language]
+  );
+
+  /**
+   * This effect watches for changes in the user's location and updates the current navigation step accordingly.
+   * Note: Steps will only advance instead of going backwards to prevent jerky UI
+   */
   /**
    * This effect watches for changes in the user's location and updates the current navigation step accordingly.
    */
   useEffect(() => {
-    if (!userLocation || steps.length === 0 || !isGuidanceMode) {
-      return;
-    }
-    const userLocationPoint = {
-      longitude: userLocation.longitude,
-      latitude: userLocation.latitude,
-    };
-    const nearestStepIndex = distanceUtils.findCurrentUserStepIndex(userLocationPoint, currentUserStepIndex, steps);
+    const handleNextSteps = async () => {
+      if (!userLocation || steps.length === 0 || !isGuidanceMode) {
+        return;
+      }
+      const userLocationPoint = {
+        longitude: userLocation.longitude,
+        latitude: userLocation.latitude,
+      };
 
-    let boundedStepIndex = Math.min(Math.max(nearestStepIndex, 0), steps.length - 1);
+      const nearestStepIndex = distanceUtils.findCurrentUserStepIndex(userLocationPoint, currentUserStepIndex, steps);
 
-    const currentStep = steps[boundedStepIndex];
-    const nextStep = steps[boundedStepIndex + 1];
+      // Never allow the step index to go backwards.
+      let candidateIndex = Math.max(currentUserStepIndex, nearestStepIndex);
+      candidateIndex = Math.min(candidateIndex, steps.length - 1);
 
-    // // Transition guard: nearest-segment matching can lag by one step around junctions.
-    // // If user is close to the current step end, or clearly closer to the next segment,
-    // // proactively advance to avoid one-step-behind UI.
-    if (currentStep && nextStep) {
-      const distanceToCurrentStepEnd = distanceUtils.calculateDistance(userLocationPoint, {
-        latitude: currentStep.endLocation.latLng.latitude,
-        longitude: currentStep.endLocation.latLng.longitude,
-      });
+      const currentStep = steps[candidateIndex];
+      const nextStep = steps[candidateIndex + 1];
 
-      const distanceToCurrentStepStart = distanceUtils.calculateDistance(userLocationPoint, {
-        latitude: currentStep.startLocation.latLng.latitude,
-        longitude: currentStep.startLocation.latLng.longitude,
-      });
-
-      const currentSegmentDistance = distanceUtils.calculatePointToLineDistance(
-        userLocationPoint,
-        {
-          latitude: currentStep.startLocation.latLng.latitude,
-          longitude: currentStep.startLocation.latLng.longitude,
-        },
-        {
+      // Around junctions, proactively advance to next step if needed
+      if (currentStep && nextStep) {
+        const distanceToCurrentStepEnd = distanceUtils.calculateDistance(userLocationPoint, {
           latitude: currentStep.endLocation.latLng.latitude,
           longitude: currentStep.endLocation.latLng.longitude,
-        }
-      );
-
-      const nextSegmentDistance = distanceUtils.calculatePointToLineDistance(
-        userLocationPoint,
-        {
-          latitude: nextStep.startLocation.latLng.latitude,
-          longitude: nextStep.startLocation.latLng.longitude,
-        },
-        {
-          latitude: nextStep.endLocation.latLng.latitude,
-          longitude: nextStep.endLocation.latLng.longitude,
-        }
-      );
-
-      const shouldAdvance =
-        distanceToCurrentStepEnd <= MAP_CONSTANTS.STEP_RADIUS_M ||
-        nextSegmentDistance + MAP_CONSTANTS.ADVANCE_THRESHOLD_M < currentSegmentDistance;
-      if (shouldAdvance) {
-        logger.info('[useMapNavigationGuidance] Advancing to next step', {
-          currentStepIndex: boundedStepIndex,
-          distanceToCurrentStepEnd,
-          distanceToCurrentStepStart,
-          currentSegmentDistance,
-          nextSegmentDistance,
         });
-        boundedStepIndex = Math.min(boundedStepIndex + 1, steps.length - 1);
-      }
-    }
 
-    if (boundedStepIndex !== currentUserStepIndex) {
-      setCurrentUserStepIndex(boundedStepIndex);
-    }
-  }, [currentUserStepIndex, isGuidanceMode, steps, userLocation]);
+        const currentSegmentDistance = distanceUtils.calculatePointToLineDistance(
+          userLocationPoint,
+          {
+            latitude: currentStep.startLocation.latLng.latitude,
+            longitude: currentStep.startLocation.latLng.longitude,
+          },
+          {
+            latitude: currentStep.endLocation.latLng.latitude,
+            longitude: currentStep.endLocation.latLng.longitude,
+          }
+        );
+
+        const nextSegmentDistance = distanceUtils.calculatePointToLineDistance(
+          userLocationPoint,
+          {
+            latitude: nextStep.startLocation.latLng.latitude,
+            longitude: nextStep.startLocation.latLng.longitude,
+          },
+          {
+            latitude: nextStep.endLocation.latLng.latitude,
+            longitude: nextStep.endLocation.latLng.longitude,
+          }
+        );
+
+        const shouldAdvance =
+          distanceToCurrentStepEnd <= MAP_CONSTANTS.STEP_RADIUS_M ||
+          nextSegmentDistance + MAP_CONSTANTS.ADVANCE_THRESHOLD_M < currentSegmentDistance;
+
+        if (shouldAdvance) {
+          candidateIndex = Math.min(candidateIndex + 1, steps.length - 1);
+        }
+      }
+
+      // Only trigger speech and state updates if we are actually moving FORWARD.
+      if (candidateIndex > currentUserStepIndex) {
+        setCurrentUserStepIndex(candidateIndex);
+        currentStepIndexRef.current = candidateIndex;
+
+        const nextInstruction = steps[candidateIndex].navigationInstruction?.instructions;
+
+        if (nextInstruction) {
+          Speech.stop(); // Immediately stop the previous instruction
+          await handleSpeakSteps(nextInstruction);
+          // logger.debug('Speaking:', nextInstruction);
+        }
+      }
+    };
+
+    handleNextSteps();
+  }, [currentUserStepIndex, handleSpeakSteps, isGuidanceMode, steps, userLocation]);
 
   const tripMetadata = useMemo<TripMetadata>(() => {
     const leg = routeSummary?.routes?.[0]?.legs?.[0];
@@ -326,8 +438,8 @@ export function useMapNavigationGuidance({
   }, [currentIndex, steps, totalSteps]);
 
   const currentNavigationStepData: CurrentNavigationStepData = useMemo(() => {
-    // note: Base maneuever is the instruction for the end point of a road, not the start point. But there is an
-    // exception of the first road, which contain both the initial instruction and an instruction for the end.
+    // note: Base maneuever is the instruction for the end point of a road, not the start point.
+    // But there is an exception of the first road, which contain both the start and end instruction step.
     const baseManeuver = currentStep?.navigationInstruction?.maneuver ?? null;
     const baseInstruction = currentStep?.navigationInstruction?.instructions;
 
@@ -356,7 +468,8 @@ export function useMapNavigationGuidance({
       const shouldEnterContinueStraight =
         distanceToNextManeuver > MAP_CONSTANTS.STEP_RADIUS_M &&
         distanceToPreviousManeuver > MAP_CONSTANTS.STEP_RADIUS_M;
-      // If the user is in between the two start and end point, displaying a generic message: "Continue follow the {streetName}"
+      // If the user is in between the start and end point of a step,
+      // display a generic message: "Continue follow the {streetName}"
       if (shouldEnterContinueStraight) {
         const streetName = extractStreetNameFromInstruction(baseInstruction);
         currentManeuver = 'STRAIGHT';
@@ -389,9 +502,9 @@ export function useMapNavigationGuidance({
   ]);
 
   return {
-    isDirectionsLoading,
+    isDirectionsLoading: navigationQuery.isLoading,
     isDirectionsReady,
-    directionError,
+    directionError: errorMessage,
     routeSummary,
     navigationSteps: steps,
     currentUserStepIndex,

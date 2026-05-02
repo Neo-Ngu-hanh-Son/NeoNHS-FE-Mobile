@@ -16,8 +16,8 @@ import { CheckinDraftImage, useSubmitUserCheckin } from '@/features/map/hooks/us
 import { useModal } from '@/app/providers/ModalProvider';
 import { CheckinSessionGalleryImage } from '../../map/types';
 import { useAuth } from '@/features/auth';
-import imageService from '@/services/api/common/uploadImageService';
 import { generateImageUploadData } from '@/utils/uploadImageHelper';
+import { useDeleteImage, useUploadImage } from '@/hooks/useImageUtils';
 
 type CheckinCameraScreenProps = StackScreenProps<MainStackParamList, 'CheckinCamera'>;
 
@@ -32,8 +32,8 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
   const historySheetRef = useRef<BottomSheet>(null);
   const reviewSheetRef = useRef<BottomSheet>(null);
   const { isSubmitting, submit } = useSubmitUserCheckin();
-  const { mutateAsync: uploadImageAsync } = imageService.useUploadImage();
-  const { mutateAsync: deleteImageAsync } = imageService.useDeleteImage();
+  const { mutateAsync: uploadImageAsync } = useUploadImage();
+  const { mutateAsync: deleteImageAsync } = useDeleteImage();
   const { isDarkColorScheme } = useTheme();
   const { user, updateUser, accessToken } = useAuth();
   const { alert } = useModal();
@@ -66,15 +66,15 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
 
     const currentImage = capturedPhotoUri
       ? [
-          {
-            id: 'current-capture',
-            uri: capturedPhotoUri,
-            caption: capturedCaption.trim() || undefined,
-            label: 'Current photo',
-            uploadStatus: capturedImageUrl ? ('uploaded' as const) : ('pending' as const),
-            draftId: 'current-capture',
-          },
-        ]
+        {
+          id: 'current-capture',
+          uri: capturedPhotoUri,
+          caption: capturedCaption.trim() || undefined,
+          label: 'Current photo',
+          uploadStatus: capturedImageUrl ? ('uploaded' as const) : ('pending' as const),
+          draftId: 'current-capture',
+        },
+      ]
       : [];
 
     return [...currentImage, ...draftGallery];
@@ -95,10 +95,10 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
           currentImages.map((image) =>
             image.id === draft.id
               ? {
-                  ...image,
-                  uploadStatus: 'failed',
-                  uploadError: 'You are not authenticated to upload images.',
-                }
+                ...image,
+                uploadStatus: 'failed',
+                uploadError: 'You are not authenticated to upload images.',
+              }
               : image
           )
         );
@@ -109,10 +109,10 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
         currentImages.map((image) =>
           image.id === draft.id
             ? {
-                ...image,
-                uploadStatus: 'pending',
-                uploadError: undefined,
-              }
+              ...image,
+              uploadStatus: 'pending',
+              uploadError: undefined,
+            }
             : image
         )
       );
@@ -126,12 +126,12 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
             currentImages.map((image) =>
               image.id === draft.id
                 ? {
-                    ...image,
-                    uploadStatus: 'uploaded',
-                    imageUrl: uploadResponse.mediaUrl,
-                    publicId: uploadResponse.publicId,
-                    uploadError: undefined,
-                  }
+                  ...image,
+                  uploadStatus: 'uploaded',
+                  imageUrl: uploadResponse.mediaUrl,
+                  publicId: uploadResponse.publicId,
+                  uploadError: undefined,
+                }
                 : image
             )
           );
@@ -142,11 +142,11 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
             currentImages.map((image) =>
               image.id === draft.id
                 ? {
-                    ...image,
-                    uploadStatus: 'failed',
-                    uploadError:
-                      error instanceof Error ? error.message : 'Unable to upload this image. Please try again.',
-                  }
+                  ...image,
+                  uploadStatus: 'failed',
+                  uploadError:
+                    error instanceof Error ? error.message : 'Unable to upload this image. Please try again.',
+                }
                 : image
             )
           );
@@ -196,12 +196,20 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
    */
   const handleFinishCheckin = useCallback(() => {
     if (!checkinPointId) {
-      alert('Missing check-in point', 'No check-in point detected. Please return to the map and try again.');
+      alert({
+        title: 'Missing check-in point',
+        message: 'No check-in point detected. Please return to the map and try again.',
+        cancelable: false
+      });
       return;
     }
 
     if (!draftImages.length && !capturedPhotoUri) {
-      alert('No photo selected', 'Please capture at least one photo before finishing check-in.');
+      alert({
+        title: 'No photo selected',
+        message: 'Please capture at least one photo before finishing check-in.',
+        cancelable: false
+      });
       return;
     }
 
@@ -259,20 +267,25 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
 
     if (failedCount > 0) {
       setIsFinalizing(false);
-      alert('Upload incomplete', `${failedCount} photo(s) failed to upload. Retry failed uploads?`, [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Retry',
-          style: 'default',
-          onPress: () => {
-            failedDrafts.forEach((failedDraft) => startUploadForDraft(failedDraft, true));
-            setIsFinalizing(true);
+      alert({
+        title: "Upload incomplete",
+        message: `${failedCount} photo(s) failed to upload. Retry failed uploads?`,
+        buttons: [
+          {
+            text: 'Cancel',
+            style: 'cancel',
           },
-        },
-      ]);
+          {
+            text: 'Retry',
+            style: 'default',
+            onPress: () => {
+              failedDrafts.forEach((failedDraft) => startUploadForDraft(failedDraft, true));
+              setIsFinalizing(true);
+            },
+          },
+        ],
+        cancelable: true
+      })
       return;
     }
 
@@ -319,10 +332,11 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
       } catch (error) {
         logger.error('[CheckinCameraScreen] Failed to finish check-in', error);
         setIsFinalizing(false);
-        alert(
-          'Check-in failed',
-          error instanceof Error ? error.message : 'Unable to complete check-in right now. Please try again later.'
-        );
+        alert({
+          title: 'Check-in failed',
+          message: error instanceof Error ? error.message : 'Unable to complete check-in right now. Please try again later.',
+          cancelable: true
+        });
       }
     };
 
@@ -345,22 +359,38 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
    */
   const handleSavePhoto = useCallback(async () => {
     if (!capturedPhotoUri) {
-      alert('No image to save', 'Please capture an image before saving.');
+      alert({
+        title: 'No image to save',
+        message: 'Please capture an image before saving.',
+        cancelable: true
+      });
       return;
     }
     setIsSavingPhoto(true);
     try {
       const permission = await MediaLibrary.requestPermissionsAsync();
       if (!permission.granted) {
-        alert('Permission required', 'Please allow media library permission to save photos.');
+        alert({
+          title: 'Permission required',
+          message: 'Please allow media library permission to save photos.',
+          cancelable: true
+        });
         return;
       }
 
       await MediaLibrary.saveToLibraryAsync(capturedPhotoUri);
-      alert('Saved', 'Photo has been saved to your device.');
+      alert({
+        title: 'Saved',
+        message: 'Photo has been saved to your device.',
+        cancelable: true
+      });
     } catch (error) {
       logger.error('[CheckinCameraScreen] Failed to save review photo', error);
-      alert('Save failed', 'Could not save this photo right now.');
+      alert({
+        title: 'Save failed',
+        message: 'Could not save this photo right now.',
+        cancelable: true
+      });
     } finally {
       setIsSavingPhoto(false);
     }
@@ -445,7 +475,11 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
           await deleteImageAsync(targetDraft.publicId);
         } catch (error) {
           logger.error('[CheckinCameraScreen] Failed to delete image from server', error);
-          alert('Delete failed', 'Could not delete this image from server. Please try again.');
+          alert({
+            title: 'Delete failed',
+            message: 'Could not delete this image from server. Please try again.',
+            cancelable: true
+          });
           return;
         }
       }

@@ -8,7 +8,7 @@ import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { ChatRoomWithDetails } from '../types';
-import { formatChatRoomTime } from '../utils/helpers';
+import { formatChatMessageTime, formatChatRoomTime } from '../utils/helpers';
 
 interface ChatRoomItemProps {
   room: ChatRoomWithDetails;
@@ -140,7 +140,7 @@ export function ChatRoomItem({ room, onPress, onHide, onMarkAsRead }: ChatRoomIt
             className={`text-sm ${hasUnread ? 'font-semibold' : ''}`}
             style={{ color: hasUnread ? theme.foreground : theme.mutedForeground }}
             numberOfLines={1}>
-            {room.lastMessagePreview ? room.lastMessagePreview : room.lastMessageAt ? '📷 Image' : 'No messages yet'}
+            {room.lastMessagePreview ? room.lastMessagePreview : room.lastMessageAt ? formatChatMessageTime(room.lastMessageAt || '') : 'No messages yet'}
           </Text>
         </View>
       </TouchableOpacity>

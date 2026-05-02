@@ -1,11 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import {
-  View,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
+import { View, FlatList, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -18,7 +12,11 @@ import { useTranslation } from 'react-i18next';
 import { RatingSummary } from './RatingSummary';
 import { ReviewCard } from './ReviewCard';
 import { WriteReviewSheet, WriteReviewSheetRef } from './WriteReviewSheet';
-import type { Review } from '../types';
+import { ReviewResponse, ReviewTypeFlg, type Review } from '../types';
+import { useNavigation } from '@react-navigation/native';
+import { MainStackParamList, RootStackParamList } from '@/app/navigations/NavigationParamTypes';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { ReportTypes } from '@/features/report/type';
 
 export interface AllReviewsTemplateProps {
   targetName: string;
@@ -37,6 +35,8 @@ export interface AllReviewsTemplateProps {
   onLoadMore: () => void;
   onSubmitReview: (rating: number, text: string) => Promise<void>;
   onGoBack: () => void;
+  /** Same rule as ReviewSection: hide write unless eligible, always allow edit when user already has a review. */
+  isEligible?: boolean;
 }
 
 const FILTER_STARS = [0, 5, 4, 3, 2, 1] as const;
@@ -59,7 +59,9 @@ export function AllReviewsTemplate({
   onLoadMore,
   onSubmitReview,
   onGoBack,
+  isEligible,
 }: AllReviewsTemplateProps) {
+  const navigation = useNavigation<StackNavigationProp<MainStackParamList>>();
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const { user } = useAuth();
@@ -93,20 +95,38 @@ export function AllReviewsTemplate({
       onLoadMore();
     }
   };
+  const onReport = (review: ReviewResponse) => {
+    Alert.alert(
+      t('review.alert.report_title'),
+      t('review.alert.report_message'),
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Report',
+          onPress: () => {
+            navigation.navigate('ReportScreen', {
+              initialTargetId: review.id,
+              initialTargetType: ReportTypes.REVIEW,
+              reportTargetName: review.user.fullname,
+            });
+          },
+        },
+      ]
+    );
+  };
 
   const ListHeader = (
     <View>
-      <View className="px-4 pt-4 pb-2">
-        <RatingSummary
-          averageRating={averageRating}
-          totalRatings={totalRatings}
-          barCounts={barCounts}
-        />
+      <View className="px-4 pb-2 pt-4">
+        <RatingSummary averageRating={averageRating} totalRatings={totalRatings} barCounts={barCounts} />
       </View>
 
       {/* Sort chips */}
       {sortOptions.length > 0 && (
-        <View className="px-4 mb-2">
+        <View className="mb-2 px-4">
           <FlatList<{ label: string; value: string }>
             data={sortOptions}
             horizontal
@@ -138,7 +158,7 @@ export function AllReviewsTemplate({
       )}
 
       {/* Star filter chips */}
-      <View className="px-4 mb-4">
+      <View className="mb-4 px-4">
         <FlatList<FilterStar>
           data={[...FILTER_STARS]}
           horizontal
@@ -169,11 +189,7 @@ export function AllReviewsTemplate({
                 </Text>
               ) : (
                 <>
-                  <Ionicons
-                    name="star"
-                    size={11}
-                    color={activeStar === item ? '#fff' : '#f97316'}
-                  />
+                  <Ionicons name="star" size={11} color={activeStar === item ? '#fff' : '#f97316'} />
                   <Text
                     style={{
                       fontSize: 12,
@@ -191,7 +207,7 @@ export function AllReviewsTemplate({
 
       {/* Error / empty states — use Boolean() so `unknown` is not a direct React child */}
       {!!error && (
-        <View className="items-center py-10 gap-2 mx-4">
+        <View className="mx-4 items-center gap-2 py-10">
           <Ionicons name="cloud-offline-outline" size={36} color={theme.mutedForeground} />
           <Text style={{ color: theme.mutedForeground, fontSize: 13, textAlign: 'center' }}>
             {t('review.load_error')}
@@ -200,7 +216,7 @@ export function AllReviewsTemplate({
       )}
 
       {!isLoading && !error && displayedReviews.length === 0 && (
-        <View className="items-center py-16 gap-3">
+        <View className="items-center gap-3 py-16">
           <Ionicons name="chatbubble-outline" size={40} color={theme.mutedForeground} />
           <Text style={{ color: theme.mutedForeground, fontSize: 14 }}>
             {activeStar === 0 ? t('review.be_first') : t('review.no_reviews_for_rating')}
@@ -219,16 +235,14 @@ export function AllReviewsTemplate({
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
       {/* Header */}
-      <View
-        className="flex-row items-center justify-between border-b px-4 py-3"
-        style={{ borderColor: theme.border }}>
+      <View className="flex-row items-center justify-between border-b px-4 py-3" style={{ borderColor: theme.border }}>
         <TouchableOpacity onPress={onGoBack} className="-ml-2 p-2">
           <Ionicons name="arrow-back" size={24} color={theme.foreground} />
         </TouchableOpacity>
-        <Text className="flex-1 ml-2 text-lg font-bold" style={{ color: theme.foreground }}>
+        <Text className="ml-2 flex-1 text-lg font-bold" style={{ color: theme.foreground }}>
           {t('review.title')}
         </Text>
-        {user && (
+        {user && (isEligible !== false || myReview) && (
           <TouchableOpacity
             onPress={() => sheetRef.current?.present()}
             activeOpacity={0.8}
@@ -261,11 +275,15 @@ export function AllReviewsTemplate({
           ListHeaderComponent={ListHeader}
           ListFooterComponent={ListFooter}
           renderItem={({ item }) => (
-            <View className="px-4 mb-3">
+            <View className="mb-3 px-4">
               <ReviewCard
                 item={item}
                 isOwn={item.user.id === user?.id}
-                onEdit={() => sheetRef.current?.present()}
+                onEdit={
+                  isEligible !== false || myReview
+                    ? () => sheetRef.current?.present()
+                    : undefined
+                }
                 onReport={() => Alert.alert(t('review.alert.report_title'), t('review.alert.report_message'))}
               />
             </View>

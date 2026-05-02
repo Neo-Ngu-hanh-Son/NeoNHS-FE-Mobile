@@ -25,7 +25,7 @@ type LoginScreenProps = CompositeScreenProps<
 >;
 
 export default function LoginScreen({ navigation }: LoginScreenProps) {
-  const { login, loginWithGoogle} = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const [loading, setLoading] = useState(false);
   const loginingRef = useRef(false);
 
@@ -62,10 +62,11 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         errorMessage.toLowerCase().includes('not activated') ||
         errorMessage.toLowerCase().includes('not verified')
       ) {
-        alert(
-          t('auth.alert.email_not_verified_title'),
-          t('auth.alert.email_not_verified_message'),
-          [
+        alert({
+          title: t('auth.alert.email_not_verified_title'),
+          message: t('auth.alert.email_not_verified_message'),
+          cancelable: true,
+          buttons: [
             {
               text: t('common.cancel'),
               style: 'cancel',
@@ -75,11 +76,25 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               onPress: () => navigation.navigate('VerifyEmail', { email: email.trim() }),
             },
           ]
-        );
+        });
         return;
       }
 
-      alert(t('auth.alert.login_failed_title'), errorMessage || t('auth.alert.login_failed_message'));
+      alert({
+        title: t('auth.alert.login_failed_title'),
+        message: errorMessage || t('auth.alert.login_failed_message'),
+        cancelable: true,
+        buttons: [
+          {
+            text: t('common.cancel'),
+            style: 'cancel',
+          },
+          {
+            text: t('auth.alert.verify_now'),
+            onPress: () => navigation.navigate('VerifyEmail', { email: email.trim() }),
+          },
+        ]
+      });
     } finally {
       loginingRef.current = false;
       setLoading(false);
@@ -120,7 +135,17 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       );
     } catch (error) {
       logger.error('[LoginScreen] Google login failed:', error);
-      alert(t('auth.alert.google_login_failed_title'), t('auth.alert.google_login_failed_message'));
+      alert({
+        title: t('auth.alert.google_login_failed_title'),
+        message: t('auth.alert.google_login_failed_message'),
+        cancelable: true,
+        buttons: [
+          {
+            text: t('common.ok'),
+            style: 'default',
+          },
+        ]
+      });
     } finally {
       loginingRef.current = false;
     }

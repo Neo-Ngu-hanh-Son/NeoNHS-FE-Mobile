@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,7 +19,10 @@ import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { WorkshopImageGallery, WorkshopInfoSection, WorkshopSessionList, WorkshopDetailReviews } from '../components';
 import { useWorkshopDetail } from '../hooks/useWorkshopDetail';
 import { useWorkshopSessions } from '../hooks/useWorkshopSessions';
+import { useWorkshopReviews } from '../hooks/useWorkshopReviews';
 import { useChatContext } from '@/features/chat/context/ChatProvider';
+import SmartMenu from '@/components/common/MenuTriggerBtn';
+import { ReportTypes } from '@/features/report/type';
 
 type Props = StackScreenProps<MainStackParamList, 'WorkshopDetail'>;
 
@@ -40,6 +44,9 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
     refetch: refetchWorkshop,
   } = useWorkshopDetail(workshopId);
 
+  /** Prefetch first page of reviews in parallel (shared query key with WorkshopDetailReviews). */
+  const reviewsQuery = useWorkshopReviews(workshopId, 'createdAt,desc');
+
   const {
     data: sessions,
     isLoading: sessionsLoading,
@@ -54,7 +61,26 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
     ]).finally(() => setRefreshing(false));
   }, [refetchWorkshop, refetchSessions, activeTab]);
 
-  if (loading) {
+  const handleShare = useCallback(() => {
+    if (!workshop) return;
+    Share.share({
+      title: workshop.name,
+      message: workshop.shortDescription ?? '',
+    });
+  }, [workshop]);
+
+  const handleReport = useCallback(() => {
+    navigation.navigate('ReportScreen', {
+      initialTargetId: workshopId,
+      initialTargetType: ReportTypes.WORKSHOP,
+      reportTargetName: workshop?.name ?? '',
+    });
+  }, [workshop?.name, workshopId, navigation]);
+
+  const awaitingReviewsFirstPage =
+    !!workshop && reviewsQuery.isPending;
+
+  if (loading || awaitingReviewsFirstPage) {
     return (
       <SafeAreaView
         className="flex-1 items-center justify-center"
@@ -108,9 +134,21 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
           numberOfLines={1}>
           {workshop.name}
         </Text>
-        <TouchableOpacity className="-mr-2 p-2">
-          <Ionicons name="share-outline" size={22} color={theme.foreground} />
-        </TouchableOpacity>
+        <SmartMenu
+          trigger={<View className="-mr-2 p-2">
+            <Ionicons name="ellipsis-vertical-sharp" size={22} color={theme.foreground} />
+          </View>}
+          items={[
+            {
+              label: t('common.share'), onPress: handleShare,
+              icon: <Ionicons name='share' size={16} color={theme.foreground} />
+            },
+            {
+              label: t('common.report'), onPress: handleReport,
+              icon: <Ionicons name='flag' size={16} color={theme.destructive} />, isDestructive: true
+            },
+          ]}
+        />
       </View>
 
       <ScrollView
@@ -209,24 +247,41 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
         </View>
       </ScrollView>
 
-      {/* Sticky bottom: Consult with Artisan (Hidden when review sheet is open) */}
+      {/* Sticky bottom: Price/Free + Chat with vendor (Hidden when review sheet is open) */}
       {!isReviewSheetVisible && (
         <View
           className="px-5 py-3 border-t flex-row items-center"
           style={{ borderColor: theme.border, backgroundColor: theme.card }}
         >
-          <View className="flex-1 mr-3">
-            <Text className="text-xs" style={{ color: theme.mutedForeground }}>{t('workshop.price_from')}</Text>
-            <Text className="text-lg font-bold" style={{ color: theme.foreground }}>
-              {workshop.defaultPrice.toLocaleString('vi-VN')} ₫
-            </Text>
-          </View>
+          {/* Left side: FREE badge or price */}
+          {workshop.defaultPrice === 0 ? (
+            <View className="flex-1 mr-3 flex-row items-center gap-2">
+              <View
+                className="rounded-xl px-3 py-1.5"
+                style={{ backgroundColor: '#dcfce7' }}
+              >
+                <Text className="text-sm font-extrabold" style={{ color: '#16a34a' }}>
+                  🎉 FREE
+                </Text>
+              </View>
+            </View>
+          ) : (
+            <View className="flex-1 mr-3">
+              <Text className="text-xs" style={{ color: theme.mutedForeground }}>
+                {t('workshop.price_from')}
+              </Text>
+              <Text className="text-lg font-bold" style={{ color: theme.foreground }}>
+                {workshop.defaultPrice.toLocaleString('vi-VN')} ₫
+              </Text>
+            </View>
+          )}
+
+          {/* Right side: chat with vendor (always visible — free workshops can ask too) */}
           <TouchableOpacity
             onPress={async () => {
               if (isChatLoading) return;
               setIsChatLoading(true);
               try {
-                const thumbnailImg = workshop.images.find(img => img.isThumbnail);
                 const room = await createOrOpenRoom(
                   'VENDOR_CHAT',
                   [workshop.vendorId],
@@ -238,7 +293,7 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
                     workshopId: workshop.id,
                     title: workshop.name,
                     price: workshop.defaultPrice,
-                    thumbnailUrl: thumbnailImg?.imageUrl || (workshop.images[0]?.imageUrl ?? ''),
+                    thumbnailUrl: workshop.images.find(img => img.isThumbnail)?.imageUrl || (workshop.images[0]?.imageUrl ?? ''),
                   },
                 });
               } catch (e) {
@@ -259,6 +314,7 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
           </TouchableOpacity>
         </View>
       )}
+
     </SafeAreaView>
   );
 }

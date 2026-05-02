@@ -40,6 +40,8 @@ const PointItem = memo(({ item, theme, onPress }: {
   );
 }, (prevProps, nextProps) => {
   return prevProps.item.id === nextProps.item.id &&
+    prevProps.item.name === nextProps.item.name &&
+    prevProps.item.description === nextProps.item.description &&
     prevProps.theme.card === nextProps.theme.card;
 });
 

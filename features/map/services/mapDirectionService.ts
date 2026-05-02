@@ -9,7 +9,8 @@ const ROUTES_API_URL = 'https://routes.googleapis.com/directions/v2:computeRoute
 const buildDirectionsRequestBody = (
   origin: LatLng,
   destination: LatLng,
-  travelMode: TravelMode
+  travelMode: TravelMode,
+  language?: string
 ): DirectionsRequestBody => {
   const body: DirectionsRequestBody = {
     origin: {
@@ -35,7 +36,7 @@ const buildDirectionsRequestBody = (
       avoidHighways: false,
       avoidFerries: false,
     },
-    languageCode: 'en-US',
+    languageCode: language ?? 'en-US',
     units: 'METRIC',
   };
 
@@ -65,7 +66,8 @@ export const mapDirectionService = {
   getDirections: async (
     origin: LatLng,
     destination: LatLng,
-    travelMode: TravelMode
+    travelMode: TravelMode,
+    language?: string
   ): Promise<ApiResponse<RouteResponse>> => {
     const googleMapsApiKey = process.env.EXPO_PUBLIC_GOOGLE_MAP_API;
 
@@ -75,34 +77,16 @@ export const mapDirectionService = {
       throw new Error(message);
     }
 
-    const requestBody = buildDirectionsRequestBody(origin, destination, travelMode);
+    const requestBody = buildDirectionsRequestBody(origin, destination, travelMode, language);
 
     try {
       const response = await axios.post<RouteResponse>(ROUTES_API_URL, requestBody, {
-        // requiresAuth: false,
         headers: {
           'X-Goog-Api-Key': googleMapsApiKey,
           'Content-Type': 'application/json',
           'X-Goog-FieldMask': ROUTES_FIELD_MASK,
         },
       });
-
-      /**
-       * In legs.steps.navigationInstruction:
-       * "instructions": "Head southeast on Thanh Khê 6 toward Lý Thái Tông\nPass by Ngã tư (on left)"},
-       * There will be 2 navigation instructions separated by a newline, we only get the first one
-       */
-      // response.data.routes.forEach((route) => {
-      //   route.legs.forEach((leg) => {
-      //     leg.steps.forEach((step) => {
-      //       try {
-      //         step.navigationInstruction.instructions = step.navigationInstruction.instructions.split('\n')[0];
-      //       } catch (e) {
-      //         logger.warn(`[mapDirectionService] Failed to split navigation instruction, skipping ${e}`);
-      //       }
-      //     });
-      //   });
-      // });
       return response;
     } catch (error) {
       logger.error('[mapDirectionService] Network error while fetching directions', error);
