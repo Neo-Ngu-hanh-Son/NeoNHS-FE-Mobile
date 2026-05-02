@@ -35,7 +35,7 @@ const calculatePointToLineDistance = (
     [lineStart.longitude, lineStart.latitude],
     [lineEnd.longitude, lineEnd.latitude],
   ]);
-  return turf.pointToLineDistance(pt, line);
+  return turf.pointToLineDistance(pt, line, { units: 'meters' });
 };
 
 const findCurrentUserStepIndex = (
@@ -61,7 +61,7 @@ const findCurrentUserStepIndex = (
         [step.endLocation.latLng.longitude, step.endLocation.latLng.latitude],
       ]);
 
-      const distance = turf.pointToLineDistance(userPoint, stepLine);
+      const distance = turf.pointToLineDistance(userPoint, stepLine, { units: 'meters' });
       if (distance < closestDistance) {
         closestDistance = distance;
         closestStepIndex = index;
@@ -80,8 +80,13 @@ const hasUserArrivedAtDestination = (
   return distance <= MAP_CONSTANTS.ARRIVAL_RADIUS_M;
 };
 
-const generateNodeId = (x: number, y: number): string => {
-  return `${x.toFixed(7)},${y.toFixed(7)}`;
+export const generateNodeId = (x: number, y: number): string => {
+  const factor = 10000000;
+
+  const xRounded = Math.round(x * factor) / factor;
+  const yRounded = Math.round(y * factor) / factor;
+
+  return `${xRounded},${yRounded}`;
 };
 
 /**
@@ -254,6 +259,16 @@ const getNavigationPath = (
 
   const startSnap = snapLocationToEdge(userLoc, nearestStart);
   const goalSnap = snapLocationToEdge(destLoc, nearestGoal);
+  logger.info(
+    '🗺️ [distanceUtils] Snap location: ' +
+      startSnap.snapPoint.x +
+      ', ' +
+      startSnap.snapPoint.y +
+      ' -> ' +
+      goalSnap.snapPoint.x +
+      ', ' +
+      goalSnap.snapPoint.y
+  );
 
   // EDGE CASE: If the user is standing on the exact same line segment as the goal
   if (nearestStart.edge.routeId === nearestGoal.edge.routeId && nearestStart.edge.id1 === nearestGoal.edge.id1) {
@@ -278,9 +293,7 @@ const getNavigationPath = (
 
   const pathIds = findAStarPath('V_START', 'V_GOAL', graph, combinedOverlay);
 
-  // TODO: Debug
   logger.info(`🗺️ [distanceUtils] A* computed in ${executionTimeMs}ms`);
-  logger.info(`🗺️ [distanceUtils] Path contains ${pathIds.length} nodes`);
 
   if (pathIds.length === 0) {
     logger.error(`⚠️ [distanceUtils] A* failed to find a path!`);

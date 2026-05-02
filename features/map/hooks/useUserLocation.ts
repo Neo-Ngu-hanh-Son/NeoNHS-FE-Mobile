@@ -6,6 +6,7 @@ import { MapPointCheckin } from '../types';
 import MAP_CONSTANTS from '../constants';
 import { useFocusEffect } from '@react-navigation/native';
 import { distanceUtils } from '@/utils/distanceUtils';
+import { AppState, AppStateStatus } from 'react-native';
 
 /**
  * User location data structure
@@ -177,7 +178,7 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
    */
   const startTracking = useCallback(async (): Promise<void> => {
     if (isTrackingRef.current) {
-      // logger.info('Location tracking already active');
+      logger.info('Location tracking already active');
       return;
     }
     isTrackingRef.current = true;
@@ -297,17 +298,15 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
   // Keeping this mount-scoped prevents unintended restarts when consumers
   // explicitly stop tracking (e.g. on screen blur).
   // Revert to normal useEffect if you experiencing weird stuff
-  useFocusEffect(
-    useCallback(() => {
-      if (mergedOptions.autoStart) {
-        startTracking();
-      }
+  useEffect(() => {
+    if (mergedOptions.autoStart) {
+      startTracking();
+    }
 
-      return () => {
-        stopTracking();
-      };
-    }, [startTracking, stopTracking, mergedOptions.autoStart])
-  );
+    return () => {
+      stopTracking();
+    };
+  }, [startTracking, stopTracking, mergedOptions.autoStart]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -318,6 +317,46 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
       }
     };
   }, []);
+
+  // TODO: Clean this in production but for now it is needed for demo lol
+  // ... existing code ...
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (locationSubscription.current) {
+        locationSubscription.current.remove();
+        locationSubscription.current = null;
+      }
+    };
+  }, []);
+
+  /**
+   * THE FIX: Monitor AppState to resurrect dead GPS subscriptions
+   * after alt-tabbing and using Fake GPS.
+   */
+  const appState = useRef(AppState.currentState);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        if (isTrackingRef.current) {
+          logger.info('App returned to foreground. Forcing GPS subscription refresh for Fake GPS compatibility...');
+
+          stopTracking();
+
+          setTimeout(() => {
+            startTracking();
+          }, 1000);
+        }
+      }
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [startTracking, stopTracking]);
 
   return {
     location,

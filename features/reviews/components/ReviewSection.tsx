@@ -32,7 +32,7 @@ export interface ReviewSectionProps {
   /** My review if any */
   myReview?: Review;
 
-  onSubmitReview: (rating: number, text: string) => Promise<void>;
+  onSubmitReview: (rating: number, text: string, reviewId: string) => Promise<void>;
   onViewAll: () => void;
   onSheetVisibilityChange?: (visible: boolean) => void;
   isEligible?: boolean;
@@ -106,13 +106,15 @@ export function ReviewSection({
         </View>
       ) : previewReviews.length > 0 ? (
         previewReviews.map((review) => (
-          <ReviewCard key={review.id}
+          <ReviewCard
+            key={review.id}
             item={review}
             isOwn={review.user.id === user?.id}
-            onReport={(item: ReviewResponse) => handleReport(item)} />
+            onReport={(item: ReviewResponse) => handleReport(item)}
+          />
         ))
       ) : (
-        <View className="items-center py-8 gap-2">
+        <View className="items-center gap-2 py-8">
           <Ionicons name="chatbubble-outline" size={32} color={theme.mutedForeground} />
           <Text className="text-sm" style={{ color: theme.mutedForeground }}>
             {t('review.be_first')}
@@ -135,6 +137,7 @@ export function ReviewSection({
       <WriteReviewSheet
         ref={sheetRef}
         targetName={targetName}
+        myReviewId={myReview?.id}
         initialRating={myReview?.rating}
         initialText={myReview?.comment ?? ''}
         onSubmit={onSubmitReview}
