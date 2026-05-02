@@ -77,7 +77,7 @@ export const mapDirectionService = {
       throw new Error(message);
     }
 
-    const requestBody = buildDirectionsRequestBody(origin, destination, travelMode);
+    const requestBody = buildDirectionsRequestBody(origin, destination, travelMode, language);
 
     try {
       const response = await axios.post<RouteResponse>(ROUTES_API_URL, requestBody, {

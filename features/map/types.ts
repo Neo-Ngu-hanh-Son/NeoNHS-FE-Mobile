@@ -228,7 +228,8 @@ export type Maneuver =
   | 'FERRY'
   | 'ROUNDABOUT_LEFT'
   | 'ROUNDABOUT_RIGHT'
-  | 'NAME_CHANGE';
+  | 'NAME_CHANGE'
+  | 'CUSTOM'; // This is for our custom routing so that no steps will be displayed.
 
 export interface RouteResponse {
   routes: Route[];
@@ -345,4 +346,5 @@ export type UseDirectionsNavigationParams = {
   enabled?: boolean;
   initialData?: RouteResponse | null;
   originKey?: LatLng;
+  language?: string;
 };

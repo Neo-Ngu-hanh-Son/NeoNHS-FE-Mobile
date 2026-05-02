@@ -319,20 +319,8 @@ export function useUserLocation(options: UseUserLocationOptions = {}): UseUserLo
   }, []);
 
   // TODO: Clean this in production but for now it is needed for demo lol
-  // ... existing code ...
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (locationSubscription.current) {
-        locationSubscription.current.remove();
-        locationSubscription.current = null;
-      }
-    };
-  }, []);
-
   /**
-   * THE FIX: Monitor AppState to resurrect dead GPS subscriptions
+   * Monitor AppState to resurrect dead GPS subscriptions
    * after alt-tabbing and using Fake GPS.
    */
   const appState = useRef(AppState.currentState);

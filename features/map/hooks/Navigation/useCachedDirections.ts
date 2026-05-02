@@ -29,20 +29,17 @@ export const buildDirectionsQueryKey = (params: DirectionsCacheParams) => {
 
 /**
  * Get the directions for preview (and for navigation as well)
- *
- * ONly pass the edges if you know what you are doing.
  */
 export function useDirectionsPreview(
   params: DirectionsCacheParams | null,
   enabled: boolean,
   source: MapDirectionSource = MapDirectionSource.GOOGLE,
-  edges?: ManualMapEdge[],
   language?: string
 ) {
   return useQuery({
     queryKey: params ? buildDirectionsQueryKey(params) : ['map-directions', 'disabled'],
     queryFn: async (): Promise<RouteResponse> => {
-      logger.info('[useCachedDirections] Fetching directions for preview');
+      logger.info('[useCachedDirections] Fetching directions for preview with language', language);
       if (!params) {
         throw new Error('Directions preview requires origin and destination.');
       }
