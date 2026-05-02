@@ -24,6 +24,7 @@ import * as Speech from 'expo-speech';
 import { useLanguage } from '@/app/providers/LanguageProvider';
 import { useDirectionsNavigation } from './useDirectionsNavigation';
 import { LatLng } from 'react-native-maps/dist/src/specs/NativeComponentMarker';
+import { SPEECH_LANGUAGE_MAP } from '@/utils/languageUtils';
 
 type UseMapNavigationGuidanceParams = {
   origin: LatLng;
@@ -85,6 +86,7 @@ export function useMapNavigationGuidance({
     enabled: isGuidanceMode,
     initialData: previewRouteSummary,
     originKey: routeFetchOrigin,
+    language: language,
   });
 
   const routeSummary = navigationQuery.data;
@@ -217,20 +219,30 @@ export function useMapNavigationGuidance({
     currentStepIndexRef.current = 0;
   }, [steps]);
 
-  const handleSpeakSteps = useCallback(async (instructions: string | undefined) => {
-    if (!instructions) {
-      logger.warn('[handleSpeakSteps] No instructions to speak');
-      return;
-    }
-    // let listOfVoices = await Speech.getAvailableVoicesAsync();
-    // logger.debug('List of voices: ', listOfVoices);
-    let speechText = instructions.slice(0, Speech.maxSpeechInputLength);
-    Speech.speak(speechText, {
-      language: 'en',
-      rate: 1.0,
-      pitch: 1.0,
-    });
-  }, []);
+  const handleSpeakSteps = useCallback(
+    async (instructions: string | undefined) => {
+      if (!instructions) {
+        logger.warn('[handleSpeakSteps] No instructions to speak');
+        return;
+      }
+
+      if (instructions.includes('CUSTOM')) {
+        logger.info('[handleSpeakSteps] Custom instruction, skipping speech');
+        return;
+      }
+
+      let speechText = instructions.slice(0, Speech.maxSpeechInputLength);
+
+      const speechLanguage = SPEECH_LANGUAGE_MAP[language] || 'en-US';
+
+      Speech.speak(speechText, {
+        language: speechLanguage,
+        rate: 1.0,
+        pitch: 1.0,
+      });
+    },
+    [language]
+  );
 
   /**
    * This effect watches for changes in the user's location and updates the current navigation step accordingly.

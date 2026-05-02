@@ -65,7 +65,7 @@ export const customMapDirectionService = {
     let totalDurationSec = 0;
     const steps: Step[] = [];
 
-    // 3. Build the Steps
+    // 3. Build the Steps (Note: We don't build steps description here)
     for (let i = 0; i < pathCoords.length - 1; i++) {
       const startLoc = pathCoords[i];
       const endLoc = pathCoords[i + 1];
@@ -84,8 +84,8 @@ export const customMapDirectionService = {
         startLocation: { latLng: startLoc },
         endLocation: { latLng: endLoc },
         navigationInstruction: {
-          maneuver: 'STRAIGHT',
-          instructions: 'Walk along the mountain path',
+          maneuver: 'CUSTOM',
+          instructions: 'CUSTOM',
         },
         localizedValues: {
           distance: { text: stepDist > 1000 ? `${(stepDist / 1000).toFixed(1)} km` : `${stepDist} m` },

@@ -10,6 +10,8 @@ import { useModal } from '@/app/providers/ModalProvider';
 import { logger } from '@/utils/logger';
 import { NHSMapRef } from '../../components';
 import { distanceUtils } from '@/utils/distanceUtils';
+import { useLanguage } from '@/app/providers/LanguageProvider';
+import { useDirectionsNavigation } from './useDirectionsNavigation';
 
 interface UseMapNavigationPreviewControllerProps {
   targetNavigationPointId?: string;
@@ -41,6 +43,7 @@ export const useMapNavigationPreviewController = ({
   const { alert } = useModal();
   const [confirmedTravelMode, setConfirmedTravelMode] = useState<TravelMode | null>(null);
   const [selectedTravelMode, setSelectedTravelMode] = useState<TravelMode | null>(null);
+  const { language } = useLanguage();
 
   const navigationTargetPoint = useMemo(() => {
     if (!targetNavigationPointId) return null;
@@ -112,7 +115,18 @@ export const useMapNavigationPreviewController = ({
   // The fetching itself.
   const shouldFetchPreviewRoute =
     Boolean(previewParams) && !!targetNavigationPointId && viewMode === 'PREVIEWING_NAVIGATION';
-  const previewRouteQuery = useDirectionsPreview(previewParams, shouldFetchPreviewRoute, routingSource);
+  // const previewRouteQuery = useDirectionsNavigation(previewParams, shouldFetchPreviewRoute, routingSource, language);
+
+  const previewRouteQuery = useDirectionsNavigation({
+    params: {
+      origin: previewParams?.origin ?? { latitude: 0, longitude: 0 },
+      destination: previewParams?.destination ?? { latitude: 0, longitude: 0 },
+      source: previewParams?.source ?? MapDirectionSource.GOOGLE,
+      travelMode: previewParams?.travelMode ?? MAP_CONSTANTS.DEFAULT_TRAVEL_MODE,
+    },
+    enabled: shouldFetchPreviewRoute,
+    language: language,
+  });
 
   // Data extraction
   const previewRouteSummary = previewRouteQuery.data ?? null;

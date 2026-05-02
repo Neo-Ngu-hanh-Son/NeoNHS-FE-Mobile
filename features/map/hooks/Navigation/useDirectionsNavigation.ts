@@ -5,7 +5,13 @@ import { thuySonMapGraph } from '../../data/ThuySonNodesAndAdjList';
 import { customMapDirectionService } from '../../services/customMapService';
 import { mapDirectionService } from '../../services/mapDirectionService';
 
-export function useDirectionsNavigation({ params, initialData, enabled, originKey }: UseDirectionsNavigationParams) {
+export function useDirectionsNavigation({
+  params,
+  initialData,
+  enabled,
+  originKey,
+  language,
+}: UseDirectionsNavigationParams) {
   const queryKey = [
     'navigation-route',
     originKey?.latitude,
@@ -19,7 +25,7 @@ export function useDirectionsNavigation({ params, initialData, enabled, originKe
   return useQuery({
     queryKey: queryKey,
     queryFn: async (): Promise<RouteResponse> => {
-      logger.info('[useDirectionsNavigation] Getting directions from ', params.source);
+      logger.info('[useDirectionsNavigation] Getting directions from ', params.source, 'with language ', language);
       if (!params.origin || !params.destination) {
         throw new Error('Directions preview requires origin and destination.');
       }
@@ -36,7 +42,7 @@ export function useDirectionsNavigation({ params, initialData, enabled, originKe
           params.origin,
           params.destination,
           params.travelMode,
-          params.language
+          language
         );
         return response.data;
       }

@@ -35,6 +35,8 @@ const NavigationStepsBottomSheet = forwardRef<BottomSheet, NavigationStepsBottom
         const cardBorderColor = isCurrentStep ? `${theme.primary}66` : theme.border;
         const cardBackgroundColor = isCurrentStep ? `${theme.primary}1A` : theme.background;
 
+        if (stepInstruction.includes('CUSTOM')) return null;
+
         return (
           <View style={[styles.stepCard, { borderColor: cardBorderColor, backgroundColor: cardBackgroundColor }]}>
             <Text className="text-xs font-semibold" style={{ color: theme.mutedForeground }}>
