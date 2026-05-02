@@ -112,7 +112,7 @@ export interface NHSMapProps<T extends MapPoint = MapPoint> {
   /**
    * Use to manually refetch newest map point from the server
    */
-  refetchMapPoints?: (options?: RefetchOptions | undefined) => Promise<QueryObserverResult<MapPoint[], Error>>;
+  refetchMapPoints?: (options?: RefetchOptions) => Promise<QueryObserverResult<MapPoint[] | any, Error>>;
 
   /**
    * Used to display the polyine (If using walk, display dot-like polylines)
