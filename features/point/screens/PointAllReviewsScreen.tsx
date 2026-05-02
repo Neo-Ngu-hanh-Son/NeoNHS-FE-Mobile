@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { StackScreenProps } from '@react-navigation/stack';
 import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { AllReviewsTemplate } from '@/features/reviews';
+import { useReviewEligibility } from '@/features/reviews/hooks/useReviewEligibility';
 import { useAuth } from '@/features/auth';
 import { useCreatePointReview, usePointReviews, useUpdatePointReview } from '@/features/point/hooks';
 import type { ReviewSortKey } from '@/features/point/hooks';
@@ -29,6 +30,9 @@ export default function PointAllReviewsScreen({ navigation, route }: Props) {
 
   const createReviewMutation = useCreatePointReview(pointId);
   const updateReviewMutation = useUpdatePointReview(pointId);
+
+  const { data: eligibilityData } = useReviewEligibility(pointId, 'POINT', { enabled: !!user });
+  const isEligible = eligibilityData?.data?.eligible ?? false;
 
   const avgRating = useMemo(() => data?.pages[0].avgRating ?? 0, [data]);
   const totalRatings = useMemo(() => data?.pages[0].totalReviews ?? 0, [data]);
@@ -76,6 +80,7 @@ export default function PointAllReviewsScreen({ navigation, route }: Props) {
       }}
       onSubmitReview={handleSubmitReview}
       onGoBack={() => navigation.goBack()}
+      isEligible={isEligible}
     />
   );
 }

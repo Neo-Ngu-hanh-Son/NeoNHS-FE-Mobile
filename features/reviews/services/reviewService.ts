@@ -61,6 +61,12 @@ export const reviewService = {
 
   updateReview: async (reviewId: string, request: UpdateReviewRequest): Promise<ApiResponse<ReviewResponse>> =>
     apiClient.put<ReviewResponse>(endpoints.reviews.updateReview(reviewId), request, { requiresAuth: true }),
+
+  checkEligibility: async (reviewTypeId: string, reviewTypeFlg: 'WORKSHOP' | 'EVENT' | 'POINT'): Promise<ApiResponse<{ eligible: boolean, message: string }>> =>
+    apiClient.get<{ eligible: boolean, message: string }>(endpoints.reviews.checkEligibility(), {
+      params: { reviewTypeId, reviewTypeFlg },
+      requiresAuth: true,
+    }),
 };
 
 export default reviewService;

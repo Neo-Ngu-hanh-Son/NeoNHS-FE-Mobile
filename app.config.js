@@ -27,6 +27,7 @@ export default {
       package: 'com.neonhs.app',
       versionCode: 1,
       versionName: '1.0.0',
+      usesCleartextTraffic: true,
       edgeToEdgeEnabled: true,
       adaptiveIcon: {
         foregroundImage: './assets/images/NeoNHSLogo_Optimized.jpg',

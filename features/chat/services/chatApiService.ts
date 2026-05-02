@@ -55,9 +55,9 @@ export const ChatRestService = {
     page = 0,
     size = 20
   ): Promise<PageResponse<ChatMessage>> => {
-    const res = await apiClient.get<PageResponse<ChatMessage>>(
-      `/chat/rooms/${roomId}/messages?page=${page}&size=${size}`
-    );
+    const res = await apiClient.get<PageResponse<ChatMessage>>(`chat/rooms/${roomId}/messages`, {
+      params: { page, size },
+    });
     return res.data;
   },
 

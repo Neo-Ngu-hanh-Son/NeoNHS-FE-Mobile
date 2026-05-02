@@ -22,6 +22,8 @@ import {
 } from '../utils/transferHuman';
 import { ChatMessage, ProductSnippetParams } from '../types';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { logger } from '@/utils/logger';
+import { ApiErrorCode } from '@/services/api/types';
 import { useChatContext } from '../context/ChatProvider';
 import { ChatRestService } from '../services/chatApiService';
 import { streamAiReply } from '../services/aiChatService';
@@ -51,7 +53,7 @@ export default function ChatScreen({ route, navigation }: any) {
   const roomId = route.params?.roomId;
   const workshopSnippet: ProductSnippetParams | undefined = route.params?.workshopSnippet;
 
-  const { user } = useAuth();
+  const { user, accessToken } = useAuth();
   const currentUserId = user?.id?.toString() || '';
 
   const {
@@ -86,7 +88,6 @@ export default function ChatScreen({ route, navigation }: any) {
   const displayParticipant = room?.otherParticipant;
   const displayName = displayParticipant?.fullname || room?.name || 'Chat';
   const displayAvatar = displayParticipant?.avatarUrl;
-  const { accessToken } = useAuth();
 
   const messages = messagesByRoom[roomId] || [];
 
@@ -124,8 +125,9 @@ export default function ChatScreen({ route, navigation }: any) {
   }, [isAiRoom, messages, currentUserId]);
 
   const loadRoomHistory = useCallback(async () => {
-    if (!roomId) return;
-    try {
+    if (!roomId || !accessToken) return;
+
+    const applyPage = async () => {
       const page = await ChatRestService.getRoomMessages(roomId, 0, 50);
       const historyMsgs = page.content;
 
@@ -143,10 +145,36 @@ export default function ChatScreen({ route, navigation }: any) {
           sendReadReceipt(roomId, newest.id);
         }
       }
-    } catch (e) {
-      console.error('Failed to load history', e);
+    };
+
+    try {
+      await applyPage();
+    } catch (e: unknown) {
+      const err = e as { code?: string; status?: number; message?: string };
+      const isTransientNetwork =
+        err?.code === ApiErrorCode.NETWORK_ERROR ||
+        err?.code === ApiErrorCode.TIMEOUT ||
+        err?.status === 0;
+
+      if (isTransientNetwork) {
+        await new Promise((r) => setTimeout(r, 750));
+        try {
+          await applyPage();
+          return;
+        } catch (e2) {
+          logger.warn('[ChatScreen] loadRoomHistory failed after retry', e2);
+        }
+      } else {
+        logger.warn('[ChatScreen] loadRoomHistory failed', e);
+      }
+
+      if (__DEV__) {
+        logger.warn(
+          '[ChatScreen] If this is NETWORK_ERROR on a real device, set EXPO_PUBLIC_API_URL to your machine LAN IP (not localhost). Android HTTP may need cleartext config.'
+        );
+      }
     }
-  }, [roomId, currentUserId, setMessagesByRoom, sendReadReceipt]);
+  }, [roomId, accessToken, currentUserId, setMessagesByRoom, sendReadReceipt]);
 
   // ── Fetch history + mark active ──────────────────────
   useEffect(() => {

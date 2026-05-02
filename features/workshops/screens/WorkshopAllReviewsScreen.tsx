@@ -3,6 +3,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 
 import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { AllReviewsTemplate } from '@/features/reviews';
+import { useReviewEligibility } from '@/features/reviews/hooks/useReviewEligibility';
 import { useAuth } from '@/features/auth';
 import { useWorkshopReviews, useCreateWorkshopReview, useUpdateWorkshopReview, useWorkshopDetail } from '../hooks';
 import type { ReviewSortKey } from '../hooks';
@@ -39,6 +40,9 @@ export default function WorkshopAllReviewsScreen({ navigation, route }: Props) {
 
   const createReviewMutation = useCreateWorkshopReview(workshopId);
   const updateReviewMutation = useUpdateWorkshopReview(workshopId);
+
+  const { data: eligibilityData } = useReviewEligibility(workshopId, 'WORKSHOP', { enabled: !!user });
+  const isEligible = eligibilityData?.data?.eligible ?? false;
 
   // Flatten all pages into a single list
   const allReviews = useMemo(
@@ -88,6 +92,7 @@ export default function WorkshopAllReviewsScreen({ navigation, route }: Props) {
       }}
       onSubmitReview={handleSubmitReview}
       onGoBack={() => navigation.goBack()}
+      isEligible={isEligible}
     />
   );
 }

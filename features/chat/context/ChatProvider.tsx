@@ -174,7 +174,19 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
   // ── Initial load + WS connection ─────────────────────
   useEffect(() => {
-    if (!accessToken || !currentUserId) return;
+    if (!accessToken || !currentUserId) {
+      // Logged out (or not yet logged in): wipe any state belonging to the
+      // previous account so the next sign-in doesn't inherit stale data.
+      setRooms([]);
+      setMessagesByRoom({});
+      setIsConnected(false);
+      activeRoomIdRef.current = null;
+      return;
+    }
+
+    // Switching accounts: clear data from the previous user before loading.
+    setRooms([]);
+    setMessagesByRoom({});
 
     void loadRoomsFromServer({ showLoadingSpinner: true });
 

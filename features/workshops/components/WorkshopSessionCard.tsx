@@ -152,7 +152,6 @@ export default function WorkshopSessionCard({ session, theme }: WorkshopSessionC
       </View>
 
       {/* Book button — hidden when free */}
-      {!isFree && (
         <TouchableOpacity
           className="py-3 rounded-xl items-center flex-row justify-center gap-2"
           style={{
@@ -174,7 +173,6 @@ export default function WorkshopSessionCard({ session, theme }: WorkshopSessionC
             {isFull ? "Fully Booked" : "Book This Session"}
           </Text>
         </TouchableOpacity>
-      )}
 
       {/* Add to Cart Modal */}
       <Modal

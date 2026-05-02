@@ -29,7 +29,8 @@ export function FloatingChatButton() {
   const insets = useSafeAreaInsets();
   const { width: screenW, height: screenH } = useWindowDimensions();
   const { supportUnreadCount, createOrOpenRoom, rooms } = useChatContext();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const currentUserId = user?.id?.toString() || "";
   const navigation = useNavigation<any>();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -66,17 +67,27 @@ export function FloatingChatButton() {
   };
 
   const handlePress = useCallback(async () => {
-    if (supportRoomIdRef.current) {
+    // Only reuse the cached id if it actually belongs to the current user's
+    // room list. After a user switch, `rooms` is reloaded from the server for
+    // the new account, so a stale id from a previous account won't match.
+    const cachedId = supportRoomIdRef.current;
+    const cachedRoomBelongsToCurrentUser =
+      cachedId && rooms?.some((r) => r.id === cachedId && r.roomType === "AI_CHAT");
+
+    if (cachedRoomBelongsToCurrentUser) {
       navigation.navigate("Main", {
         screen: "ChatRoom",
-        params: { roomId: supportRoomIdRef.current },
+        params: { roomId: cachedId },
       });
       return;
     }
+
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const room = await createOrOpenRoom("AI_CHAT", [], "Trợ lý AI");
+      // Prefer an existing AI_CHAT room for the current user before creating a new one.
+      const existing = rooms?.find((r) => r.roomType === "AI_CHAT");
+      const room = existing ?? (await createOrOpenRoom("AI_CHAT", [], "Trợ lý AI"));
       supportRoomIdRef.current = room.id;
       setSupportRoomId(room.id);
       navigation.navigate("Main", {
@@ -88,7 +99,7 @@ export function FloatingChatButton() {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, createOrOpenRoom, navigation]);
+  }, [isLoading, createOrOpenRoom, navigation, rooms]);
 
   const onTap = useCallback(() => {
     handlePress();
@@ -150,9 +161,21 @@ export function FloatingChatButton() {
   const [supportRoomId, setSupportRoomId] = useState<string | null>(null);
   const supportRoomIdRef = React.useRef<string | null>(null);
   const preloadAttemptedRef = React.useRef(false);
+  const lastUserIdRef = React.useRef<string>("");
+
+  // Reset the per-user cached refs whenever the authenticated user changes
+  // (e.g. logout / switch account). Without this, account #2 would inherit
+  // account #1's AI chat room id and skip creating its own.
+  useEffect(() => {
+    if (lastUserIdRef.current === currentUserId) return;
+    lastUserIdRef.current = currentUserId;
+    preloadAttemptedRef.current = false;
+    supportRoomIdRef.current = null;
+    setSupportRoomId(null);
+  }, [currentUserId]);
 
   useEffect(() => {
-    if (!isAuthenticated || preloadAttemptedRef.current) return;
+    if (!isAuthenticated || !currentUserId || preloadAttemptedRef.current) return;
     preloadAttemptedRef.current = true;
 
     const existing = rooms?.find((r) => r.roomType === "AI_CHAT");
@@ -165,11 +188,13 @@ export function FloatingChatButton() {
           setSupportRoomId(room.id);
           supportRoomIdRef.current = room.id;
         })
-        .catch((err) =>
-          console.log("Silent support chat preload failed:", err?.message || err),
-        );
+        .catch((err) => {
+          // Allow a retry on the next render if the request failed.
+          preloadAttemptedRef.current = false;
+          console.log("Silent support chat preload failed:", err?.message || err);
+        });
     }
-  }, [isAuthenticated, rooms, createOrOpenRoom]);
+  }, [isAuthenticated, currentUserId, rooms, createOrOpenRoom]);
 
   // Keep initial position in sync when layout changes
   useEffect(() => {
