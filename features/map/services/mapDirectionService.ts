@@ -9,7 +9,8 @@ const ROUTES_API_URL = 'https://routes.googleapis.com/directions/v2:computeRoute
 const buildDirectionsRequestBody = (
   origin: LatLng,
   destination: LatLng,
-  travelMode: TravelMode
+  travelMode: TravelMode,
+  language?: string
 ): DirectionsRequestBody => {
   const body: DirectionsRequestBody = {
     origin: {
@@ -35,7 +36,7 @@ const buildDirectionsRequestBody = (
       avoidHighways: false,
       avoidFerries: false,
     },
-    languageCode: 'en-US',
+    languageCode: language ?? 'en-US',
     units: 'METRIC',
   };
 
@@ -65,7 +66,8 @@ export const mapDirectionService = {
   getDirections: async (
     origin: LatLng,
     destination: LatLng,
-    travelMode: TravelMode
+    travelMode: TravelMode,
+    language?: string
   ): Promise<ApiResponse<RouteResponse>> => {
     const googleMapsApiKey = process.env.EXPO_PUBLIC_GOOGLE_MAP_API;
 
@@ -79,7 +81,6 @@ export const mapDirectionService = {
 
     try {
       const response = await axios.post<RouteResponse>(ROUTES_API_URL, requestBody, {
-        // requiresAuth: false,
         headers: {
           'X-Goog-Api-Key': googleMapsApiKey,
           'Content-Type': 'application/json',

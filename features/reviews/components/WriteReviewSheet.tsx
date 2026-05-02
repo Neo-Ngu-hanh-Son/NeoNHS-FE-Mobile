@@ -11,6 +11,7 @@ import {
 import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
+import { useModal } from '@/app/providers/ModalProvider';
 
 export interface WriteReviewSheetProps {
   /** The name of the product/artisan or target to be reviewed */
@@ -18,8 +19,9 @@ export interface WriteReviewSheetProps {
   /** When provided the sheet opens in edit mode with pre-filled values. */
   initialRating?: number;
   initialText?: string;
-  onSubmit: (rating: number, text: string) => Promise<void>;
+  onSubmit: (rating: number, text: string, reviewId: string) => Promise<void>;
   onVisibilityChange?: (visible: boolean) => void;
+  myReviewId?: string;
 }
 
 export interface WriteReviewSheetRef {
@@ -28,7 +30,7 @@ export interface WriteReviewSheetRef {
 }
 
 export const WriteReviewSheet = forwardRef<WriteReviewSheetRef, WriteReviewSheetProps>(
-  ({ targetName, initialRating, initialText, onSubmit, onVisibilityChange }, ref) => {
+  ({ targetName, initialRating, initialText, onSubmit, onVisibilityChange, myReviewId }, ref) => {
     const { isDarkColorScheme } = useTheme();
     const theme = isDarkColorScheme ? THEME.dark : THEME.light;
 
@@ -40,6 +42,8 @@ export const WriteReviewSheet = forwardRef<WriteReviewSheetRef, WriteReviewSheet
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const starScales = useRef(Array.from({ length: 5 }, () => new Animated.Value(1))).current;
+
+    const { alert } = useModal();
 
     useImperativeHandle(ref, () => ({
       present: () => sheetRef.current?.present(),
@@ -65,19 +69,28 @@ export const WriteReviewSheet = forwardRef<WriteReviewSheetRef, WriteReviewSheet
 
     const handleSubmit = async () => {
       if (selectedRating === 0) {
-        Alert.alert('Rating required', 'Please select a star rating before submitting.');
+        alert({
+          title: 'Rating required',
+          message: 'Please select a star rating before submitting.',
+        });
         return;
       }
       if (reviewText.trim().length < 10) {
-        Alert.alert('Review too short', 'Please write at least 10 characters.');
+        alert({
+          title: 'Review too short',
+          message: 'Please write at least 10 characters.',
+        });
         return;
       }
       setIsSubmitting(true);
       try {
-        await onSubmit(selectedRating, reviewText.trim());
+        await onSubmit(selectedRating, reviewText.trim(), myReviewId ?? '');
         sheetRef.current?.dismiss();
       } catch (error: any) {
-        Alert.alert('Error', error?.message);
+        alert({
+          title: 'Error',
+          message: error?.message,
+        });
       } finally {
         setIsSubmitting(false);
       }

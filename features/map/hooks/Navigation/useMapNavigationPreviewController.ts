@@ -36,20 +36,11 @@ export const useMapNavigationPreviewController = ({
   navigation,
   setViewMode,
   mapIsReady = false,
-  mapRef,
-  focusOnPoint,
   fitCameraToCoordinates,
 }: UseMapNavigationPreviewControllerProps) => {
   const { alert } = useModal();
   const [confirmedTravelMode, setConfirmedTravelMode] = useState<TravelMode | null>(null);
   const [selectedTravelMode, setSelectedTravelMode] = useState<TravelMode | null>(null);
-  const [selectedDirectionsRoute, setSelectedDirectionsRoute] = useState<RouteResponse | null>(null);
-
-  // State overrides for dynamic refetching (e.g. off-track handling)
-  const [originOverride, setOriginOverride] = useState<LatLng | null>(null);
-  const [destinationOverride, setDestinationOverride] = useState<LatLng | null>(null);
-
-  const activeGuidanceTargetPointId = confirmedTravelMode ? targetNavigationPointId : undefined;
 
   const navigationTargetPoint = useMemo(() => {
     if (!targetNavigationPointId) return null;
@@ -93,19 +84,20 @@ export const useMapNavigationPreviewController = ({
 
   // Use the override if it exists, otherwise fallback to the userLocation prop
   const previewOrigin = useMemo(() => {
-    if (originOverride) return originOverride;
-    if (!userLocation) return null;
-    return { latitude: userLocation.latitude, longitude: userLocation.longitude } as LatLng;
-  }, [originOverride, userLocation]);
+    return userLocation ? { latitude: userLocation.latitude, longitude: userLocation.longitude } : null;
+  }, [userLocation]);
 
   // Use the override if it exists, otherwise fallback to the target point prop
   const previewDestination = useMemo(() => {
-    if (destinationOverride) return destinationOverride;
     if (!navigationTargetPoint) return null;
-    const latitude = parseFloatOrDefault(navigationTargetPoint.latitude, NaN);
-    const longitude = parseFloatOrDefault(navigationTargetPoint.longitude, NaN);
-    return Number.isFinite(latitude) && Number.isFinite(longitude) ? { latitude, longitude } : null;
-  }, [destinationOverride, navigationTargetPoint]);
+
+    const lat = parseFloatOrDefault(navigationTargetPoint.latitude, NaN);
+    const lng = parseFloatOrDefault(navigationTargetPoint.longitude, NaN);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+
+    return { latitude: lat, longitude: lng };
+  }, [navigationTargetPoint]);
 
   const previewParams = useMemo(() => {
     if (!previewOrigin || !previewDestination || !effectiveTravelMode) return null;
@@ -117,54 +109,27 @@ export const useMapNavigationPreviewController = ({
     };
   }, [effectiveTravelMode, previewDestination, previewOrigin, routingSource]);
 
-  const shouldFetchPreviewRoute = Boolean(targetNavigationPointId && viewMode === 'PREVIEWING_NAVIGATION');
-
   // The fetching itself.
+  const shouldFetchPreviewRoute =
+    Boolean(previewParams) && !!targetNavigationPointId && viewMode === 'PREVIEWING_NAVIGATION';
   const previewRouteQuery = useDirectionsPreview(previewParams, shouldFetchPreviewRoute, routingSource);
+
+  // Data extraction
   const previewRouteSummary = previewRouteQuery.data ?? null;
-
   const previewRouteLeg = previewRouteQuery.data?.routes?.[0]?.legs?.[0];
-
   const previewDistanceText = useMemo(() => formatDistanceText(previewRouteLeg?.distanceMeters), [previewRouteLeg]);
   const previewDurationText = useMemo(() => formatDurationText(previewRouteLeg?.duration), [previewRouteLeg]);
-
   const activeTravelModeLabel = useMemo(() => {
     if (!selectedTravelMode) return null;
-    return MAP_CONSTANTS.TRAVEL_MODE_LABELS[confirmedTravelMode ?? selectedTravelMode];
+    return MAP_CONSTANTS.TRAVEL_MODE_LABELS[
+      confirmedTravelMode ?? selectedTravelMode ?? MAP_CONSTANTS.DEFAULT_TRAVEL_MODE
+    ];
   }, [confirmedTravelMode, selectedTravelMode]);
 
-  /**
-   * Updates current routing parameters and automatically triggers a route refetch.
-   * Partial updates allowed. Will not clear existing parameters.
-   */
-  const updateNavigationParams = useCallback(
-    (params: Partial<{ origin: LatLng; destination: LatLng; travelMode: TravelMode }>) => {
-      if (params.origin) setOriginOverride(params.origin);
-      if (params.destination) setDestinationOverride(params.destination);
-      if (params.travelMode) setSelectedTravelMode(params.travelMode);
-    },
-    []
-  );
-
-  /**
-   * Explicitly clears state overrides so routing falls back to prop-driven origins/destinations.
-   */
-  const clearNavigationOverrides = useCallback(() => {
-    setOriginOverride(null);
-    setDestinationOverride(null);
-  }, []);
-
-  // ---------------------------------------------------
-
   const clearTargetNavigationParam = useCallback(() => {
-    navigation.setParams({
-      targetNavigationPointId: undefined,
-      transportMode: undefined,
-      navigationRequestId: undefined,
-    });
-    setViewMode('EXPLORING');
-    clearNavigationOverrides();
-  }, [navigation, setViewMode, clearNavigationOverrides]);
+    setConfirmedTravelMode(null);
+    setSelectedTravelMode(null);
+  }, []);
 
   const handleStartNavigationWithSelectedMode = useCallback(async () => {
     if (!previewParams) {
@@ -174,19 +139,30 @@ export const useMapNavigationPreviewController = ({
       });
       return;
     }
-
+    if (!selectedTravelMode) {
+      alert({
+        title: 'Select a transport mode',
+        message: 'Please choose how you want to travel.',
+      });
+      return;
+    }
+    if (confirmedTravelMode) {
+      logger.warn('Already started navigation with mode: ', confirmedTravelMode);
+      return;
+    } // In case user spam the start button
     try {
       setConfirmedTravelMode(selectedTravelMode);
+      setViewMode('NAVIGATING');
+      logger.info('Starting navigation');
     } catch (error) {
       logger.error('[useMapNavigationController] Failed to start navigation with selected transport mode', error);
       alert({
         title: 'Navigation Unavailable',
         message: 'Failed to load this route mode. Please try again.',
       });
-    } finally {
-      setViewMode('NAVIGATING');
+      clearTargetNavigationParam();
     }
-  }, [alert, previewParams, selectedTravelMode, setViewMode]);
+  }, [alert, clearTargetNavigationParam, confirmedTravelMode, previewParams, selectedTravelMode, setViewMode]);
 
   const handleFitRoute = useCallback(() => {
     if (!mapIsReady) return;
@@ -208,42 +184,39 @@ export const useMapNavigationPreviewController = ({
     [previewParams, handleFitRoute]
   );
 
-  const handleCancelTransportSelection = useCallback(() => {
-    setConfirmedTravelMode(null);
-    clearTargetNavigationParam();
-    setViewMode('EXPLORING');
-  }, [clearTargetNavigationParam, setViewMode]);
-
-  const shouldAnimateRef = useRef(true);
+  /**
+   * use effect to fit camera when start previewing
+   */
   useEffect(() => {
-    if (!shouldAnimateRef.current) return;
     if (viewMode !== 'PREVIEWING_NAVIGATION') return;
-    if (!previewOrigin || !previewDestination) return;
+    if (!previewRouteSummary) return;
     if (!mapIsReady) return;
 
     handleFitRoute();
-    shouldAnimateRef.current = false;
-  }, [handleFitRoute, previewOrigin, previewDestination, viewMode, mapIsReady]);
+  }, [handleFitRoute, viewMode, mapIsReady, previewRouteSummary]);
 
+  /**
+   * Use effect to previewing route if targetNavigationPointId exist
+   */
   useEffect(() => {
     if (!targetNavigationPointId) {
       setConfirmedTravelMode(null);
+      setSelectedTravelMode(null);
       setViewMode('EXPLORING');
-      clearNavigationOverrides(); // Clean up state when target is lost
       return;
     }
 
-    setSelectedTravelMode(MAP_CONSTANTS.DEFAULT_TRAVEL_MODE);
-    setConfirmedTravelMode(null);
+    setSelectedTravelMode((prev) => prev ?? MAP_CONSTANTS.DEFAULT_TRAVEL_MODE);
+
     setViewMode('PREVIEWING_NAVIGATION');
-  }, [targetNavigationPointId, setViewMode, mapRef, clearNavigationOverrides]);
+  }, [setViewMode, targetNavigationPointId]);
 
   const previewErrorMessage = useMemo(() => {
     if (!previewRouteQuery.isError) return null;
     logger.error(
       '[useMapNavigationPreviewController] Error states - previewOrigin:',
       previewOrigin,
-      'previewDestination:',
+      ' previewDestination:',
       previewDestination,
       'isError:',
       previewRouteQuery.isError
@@ -255,13 +228,16 @@ export const useMapNavigationPreviewController = ({
   }, [previewDestination, previewOrigin, previewRouteQuery.isError, targetNavigationPointId]);
 
   const canStartGuidance = useMemo(() => {
-    return (
-      Boolean(previewRouteSummary?.routes?.[0]?.legs?.[0]) && !previewRouteQuery.isFetching && !previewErrorMessage
-    );
-  }, [previewRouteSummary, previewRouteQuery.isFetching, previewErrorMessage]);
+    // Just check if has the following: Has origin and destination, has route preview summary, has selected mode
+    return !!previewOrigin && !!previewDestination && !!previewRouteSummary && !!selectedTravelMode;
+  }, [previewOrigin, previewDestination, previewRouteSummary, selectedTravelMode]);
+
+  // This will be used to pass to the other hook to start navigation.
+  const activeGuidanceTargetPointId = useMemo(() => {
+    return confirmedTravelMode ? targetNavigationPointId : undefined;
+  }, [confirmedTravelMode, targetNavigationPointId]);
 
   return {
-    activeGuidanceTargetPointId,
     previewOrigin,
     previewDestination,
     navigationTargetPoint,
@@ -269,7 +245,6 @@ export const useMapNavigationPreviewController = ({
     previewDistanceText,
     previewDurationText,
     previewErrorMessage,
-    canStartGuidance,
     activeTravelModeLabel,
     previewRouteLeg,
     previewRouteSummary,
@@ -277,17 +252,13 @@ export const useMapNavigationPreviewController = ({
     selectedTravelMode,
     effectiveTravelMode,
     confirmedTravelMode,
-    selectedDirectionsRoute,
     routingSource,
-
-    // Expose the new updater functions
-    updateNavigationParams,
-    clearNavigationOverrides,
+    canStartGuidance,
+    activeGuidanceTargetPointId,
 
     handleStartNavigationWithSelectedMode,
     clearTargetNavigationParam,
     handleTravelModeSelection,
-    handleCancelTransportSelection,
     setConfirmedTravelMode,
   };
 };

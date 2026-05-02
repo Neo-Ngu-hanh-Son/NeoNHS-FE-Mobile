@@ -6,6 +6,7 @@ import { ReviewSection, ReviewTypeFlg } from '@/features/reviews';
 import { useCreatePointReview, usePointReviews, useUpdatePointReview } from '@/features/point/hooks';
 import { logger } from '@/utils/logger';
 import { useGenericReviews } from '../hooks/useGenericReviews';
+import { useModal } from '@/app/providers/ModalProvider';
 
 interface PointDetailReviewsProps {
   pointId: string;
@@ -25,6 +26,7 @@ export function PointDetailReviews({
   const { data, isLoading } = useGenericReviews(pointId, ReviewTypeFlg.POINT);
   const { mutateAsync: createReview, error: createError } = useCreatePointReview(pointId);
   const { mutateAsync: updateReview, error: updateError } = useUpdatePointReview(pointId);
+  const { alert } = useModal();
 
   const allReviews = useMemo(() => data?.pages.flatMap((page) => page.reviews?.content ?? []) ?? [], [data]);
   const myReview = useMemo(
@@ -32,20 +34,32 @@ export function PointDetailReviews({
     [allReviews, user]
   );
 
-
   const avgRating = useMemo(() => data?.pages[0].avgRating ?? 0, [data]);
   const totalRatings = useMemo(() => data?.pages[0].totalReviews ?? 0, [data]);
 
   /**
    * Note : Update review is prohibited.
    */
-  const handleSubmit = async (rating: number, text: string): Promise<void> => {
-    const res = await createReview({
-      rating,
-      comment: text,
-    });
-    if (!res.success) {
-      throw new Error('Failed to create review: ' + res.message);
+  const handleSubmit = async (rating: number, text: string, reviewId: string): Promise<void> => {
+    if (myReview) {
+      const res = await updateReview({
+        reviewId,
+        request: {
+          rating,
+          comment: text,
+        },
+      });
+      if (!res.success) {
+        alert({ title: 'Error', message: `Review update failed: ${res.message}` });
+      }
+    } else {
+      const res = await createReview({
+        rating,
+        comment: text,
+      });
+      if (!res.success) {
+        alert({ title: 'Error', message: `Review submission failed: ${res.message}` });
+      }
     }
   };
 

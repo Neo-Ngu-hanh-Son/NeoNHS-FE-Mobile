@@ -331,3 +331,18 @@ export enum MapDirectionSource {
   GOOGLE = 'GOOGLE',
   CUSTOM = 'CUSTOM',
 }
+
+export type DirectionsCacheParams = {
+  origin?: LatLng;
+  destination?: LatLng;
+  travelMode: TravelMode;
+  source: MapDirectionSource;
+  language?: string;
+};
+
+export type UseDirectionsNavigationParams = {
+  params: DirectionsCacheParams;
+  enabled?: boolean;
+  initialData?: RouteResponse | null;
+  originKey?: LatLng;
+};

@@ -2,22 +2,35 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { LatLng } from 'react-native-maps';
 import * as turf from '@turf/turf';
 import { decodeRoutePolyline } from '../../utils/helpers';
+import { MapViewMode } from '../../store/useMapStore';
+import { RouteResponse } from '../../types';
 
 interface UseDynamicPolylineProps {
-  encodedPolyline?: string | null;
   userLocation?: { latitude: number; longitude: number } | null;
   animationIntervalMs?: number; // How fast the snake draws
   enableDynamicSlicing?: boolean; // Allows turning off the "consumption" feature
   enableAnimation?: boolean; // Allows turning off the animation
+  isFetching: boolean;
+  viewMode: MapViewMode;
+  routeSummary?: RouteResponse | null;
 }
 
 export const useDynamicPolyline = ({
-  encodedPolyline,
   userLocation,
   animationIntervalMs = 15,
   enableDynamicSlicing = true,
   enableAnimation = true,
+  isFetching,
+  viewMode,
+  routeSummary
 }: UseDynamicPolylineProps) => {
+  const encodedPolyline = routeSummary?.routes?.[0]?.polyline?.encodedPolyline;
+
+  const memorizedEncodedPolyline = useMemo(() => {
+    if (viewMode === 'EXPLORING') return '';
+    return encodedPolyline ?? '';
+  }, [encodedPolyline, viewMode]);
+
   const [animatedCoordinates, setAnimatedCoordinates] = useState<LatLng[]>([]);
   const [isDrawingRoute, setIsDrawingRoute] = useState(false);
 
@@ -25,9 +38,9 @@ export const useDynamicPolyline = ({
   const animationFrameRef = useRef<number | null>(null);
 
   const fullPath = useMemo(() => {
-    if (!encodedPolyline) return [];
-    return decodeRoutePolyline(encodedPolyline);
-  }, [encodedPolyline]);
+    if (!memorizedEncodedPolyline) return [];
+    return decodeRoutePolyline(memorizedEncodedPolyline);
+  }, [memorizedEncodedPolyline]);
 
   useEffect(() => {
     // 1. Cleanup previous animations if the route changes
@@ -41,8 +54,14 @@ export const useDynamicPolyline = ({
       return;
     }
 
+    // NO animation unless preview mode
+    if (viewMode !== 'PREVIEWING_NAVIGATION') {
+      setAnimatedCoordinates(fullPath);
+      setIsDrawingRoute(false);
+      return;
+    }
+
     // 2. UX Safety: Skip animation for massive city routes
-    // Nobody wants to wait 5 seconds for a line to draw to Hoi An.
     if (fullPath.length > 800) {
       console.log('🛣️ Route is massive, skipping animation for instant UX.');
       setAnimatedCoordinates(fullPath);
@@ -57,7 +76,7 @@ export const useDynamicPolyline = ({
     // Set initial state
     setAnimatedCoordinates(currentCoords);
 
-    // Dynamic chunking: Ensure animation always takes roughly 0.5s, 
+    // Dynamic chunking: Ensure animation always takes roughly 0.5s,
     // regardless of whether the path is 50 points or 500 points.
     const pointsPerFrame = Math.max(1, Math.floor(fullPath.length / 30));
 
@@ -90,6 +109,7 @@ export const useDynamicPolyline = ({
 
   // 3. The Slicing / Display Logic
   const displayCoordinates = useMemo(() => {
+    if (isFetching) return [];
     // Show animation if running, OR if we disabled slicing, just return the animated/full path
     if (isDrawingRoute || !enableDynamicSlicing || !userLocation) {
       return animatedCoordinates.length > 0 ? animatedCoordinates : fullPath;
@@ -99,23 +119,20 @@ export const useDynamicPolyline = ({
 
     try {
       const userPoint = turf.point([userLocation.longitude, userLocation.latitude]);
-      const line = turf.lineString(fullPath.map(p => [p.longitude, p.latitude]));
+      const line = turf.lineString(fullPath.map((p) => [p.longitude, p.latitude]));
 
       const snapped = turf.nearestPointOnLine(line, userPoint);
-      const endPoint = turf.point([
-        fullPath[fullPath.length - 1].longitude,
-        fullPath[fullPath.length - 1].latitude
-      ]);
+      const endPoint = turf.point([fullPath[fullPath.length - 1].longitude, fullPath[fullPath.length - 1].latitude]);
 
       const sliced = turf.lineSlice(snapped, endPoint, line);
 
-      return sliced.geometry.coordinates.map(coord => ({
+      return sliced.geometry.coordinates.map((coord) => ({
         latitude: coord[1],
         longitude: coord[0],
       }));
     } catch (error) {
-      // Fallback just in case Turf.js fails on a mathematical anomaly 
-      console.warn("⚠️ [useDynamicPolyline] Turf slicing failed, falling back to full path", error);
+      // Fallback just in case Turf.js fails on a mathematical anomaly
+      console.warn('⚠️ [useDynamicPolyline] Turf slicing failed, falling back to full path', error);
       return fullPath;
     }
   }, [isDrawingRoute, animatedCoordinates, fullPath, userLocation, enableDynamicSlicing]);

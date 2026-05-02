@@ -23,11 +23,11 @@ import { useCheckinProximity } from '../../hooks/Navigation/useCheckinProximity'
 import type { MapMarkerFilters } from '../../hooks';
 import { useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { distanceUtils } from '@/utils/distanceUtils';
 import MAP_CONSTANTS from '../../constants';
 import { useMapStore } from '../../store/useMapStore';
 import type { NHSMapProps, NHSMapRef } from './types.ts';
 import { ThuySonMapData } from '../../data/ThuySonMapData';
+import { distanceUtils } from '@/utils/distanceUtils';
 
 const NHSMapInner = <T extends MapPoint>(
   {
@@ -266,7 +266,7 @@ const NHSMapInner = <T extends MapPoint>(
         { latitude: previousCoords.latitude, longitude: previousCoords.longitude }
       );
 
-      if (distanceMoved <= MAP_CONSTANTS.DISTANCE_LIMIT_BEFORE_REFETCH_M && previousLocation) {
+      if (distanceMoved <= MAP_CONSTANTS.DISTANCE_LIMIT_BEFORE_REFETCH_CHECKIN_M && previousLocation) {
         logger.debug(`[NHSMap] Distance moved: ${distanceMoved.toFixed(2)}m. Skipping fetch.`);
         return;
       }
@@ -318,10 +318,13 @@ const NHSMapInner = <T extends MapPoint>(
   // Memoize the routes of Thuy Son mountain
   // markerEpoch in key forces polyline re-creation on focus to fix stale rendering
   const memoizedRoutes = useMemo((): React.ReactNode[] => {
+    const SUBTLE_NAV_COLOR = isDarkColorScheme
+      ? '#94A3B8CC' // Slate 400 with 80% opacity
+      : '#475569BB'; // Slate 600 with ~70% opacity
     return ThuySonMapData.routes.map((line) => (
-      <Polyline key={`${line.id}`} coordinates={line.coordinates} strokeColor={theme.muted} strokeWidth={8} />
+      <Polyline key={`${line.id}`} coordinates={line.coordinates} strokeColor={SUBTLE_NAV_COLOR} strokeWidth={8} />
     ));
-  }, [theme.muted]);
+  }, [isDarkColorScheme]);
 
   // Memoize the navigation route
   const memoizedNavigationRoute = useMemo(() => {
@@ -400,7 +403,7 @@ const NHSMapInner = <T extends MapPoint>(
             <MapMarkerVisual
               point={poi}
               showName={shouldDisplayMarkerName}
-            // isSelected={selectedPointId === poi.id}
+              // isSelected={selectedPointId === poi.id}
             />
           </Marker>
         );
@@ -410,61 +413,61 @@ const NHSMapInner = <T extends MapPoint>(
 
     const checkinMarkers = canShowCheckinMarkers
       ? mapPoints.flatMap((parentPoint) =>
-        (parentPoint.checkinPoints ?? [])
-          .filter(
-            (checkin) => checkin && checkin.isActive !== false && checkin.latitude !== -1 && checkin.longitude !== -1
-          )
-          .map((checkin) => {
-            const isUserCheckedIn = checkin.isUserCheckedIn ?? false;
-            let pointType = checkin.type ?? 'CHECKIN';
-            if (isUserCheckedIn) {
-              pointType = 'USER_CHECKIN';
-            }
+          (parentPoint.checkinPoints ?? [])
+            .filter(
+              (checkin) => checkin && checkin.isActive !== false && checkin.latitude !== -1 && checkin.longitude !== -1
+            )
+            .map((checkin) => {
+              const isUserCheckedIn = checkin.isUserCheckedIn ?? false;
+              let pointType = checkin.type ?? 'CHECKIN';
+              if (isUserCheckedIn) {
+                pointType = 'USER_CHECKIN';
+              }
 
-            const checkinAsPoint = {
-              id: checkin.id,
-              name: checkin.name,
-              description: checkin.description,
-              thumbnailUrl: checkin.thumbnailUrl,
-              latitude: checkin.latitude,
-              longitude: checkin.longitude,
-              type: pointType,
-              attractionId: parentPoint.id,
-              panoramaImageUrl: checkin.panoramaImageUrl,
-              defaultYaw: checkin.defaultYaw,
-              defaultPitch: checkin.defaultPitch,
-            } as unknown as T;
+              const checkinAsPoint = {
+                id: checkin.id,
+                name: checkin.name,
+                description: checkin.description,
+                thumbnailUrl: checkin.thumbnailUrl,
+                latitude: checkin.latitude,
+                longitude: checkin.longitude,
+                type: pointType,
+                attractionId: parentPoint.id,
+                panoramaImageUrl: checkin.panoramaImageUrl,
+                defaultYaw: checkin.defaultYaw,
+                defaultPitch: checkin.defaultPitch,
+              } as unknown as T;
 
-            if (renderMarker) {
-              return renderMarker(checkinAsPoint, shouldDisplayMarkerName);
-            }
+              if (renderMarker) {
+                return renderMarker(checkinAsPoint, shouldDisplayMarkerName);
+              }
 
-            return (
-              <Marker
-                tracksViewChanges={track}
-                key={`checkin-${checkin.id}-${markerEpoch}`}
-                coordinate={{
-                  latitude: checkin.latitude,
-                  longitude: checkin.longitude,
-                }}
-                zIndex={0}
-                onPress={() => {
-                  if (isGuidanceMode) {
-                    return;
-                  }
-                  // Sneak the id as parent point id so that the view detals work
-                  let newCheckinAsPoint = { ...checkinAsPoint, id: parentPoint.id } as T;
-                  onMarkerPressRef.current?.(newCheckinAsPoint);
-                }}>
-                <MapMarkerVisual
-                  point={checkinAsPoint}
-                  showName={false} // To make it clear
-                // isSelected={selectedPointId === checkin.id} (Because performance issues, this is removed)
-                />
-              </Marker>
-            );
-          })
-      )
+              return (
+                <Marker
+                  tracksViewChanges={track}
+                  key={`checkin-${checkin.id}-${markerEpoch}`}
+                  coordinate={{
+                    latitude: checkin.latitude,
+                    longitude: checkin.longitude,
+                  }}
+                  zIndex={0}
+                  onPress={() => {
+                    if (isGuidanceMode) {
+                      return;
+                    }
+                    // Sneak the id as parent point id so that the view detals work
+                    let newCheckinAsPoint = { ...checkinAsPoint, id: parentPoint.id } as T;
+                    onMarkerPressRef.current?.(newCheckinAsPoint);
+                  }}>
+                  <MapMarkerVisual
+                    point={checkinAsPoint}
+                    showName={false} // To make it clear
+                    // isSelected={selectedPointId === checkin.id} (Because performance issues, this is removed)
+                  />
+                </Marker>
+              );
+            })
+        )
       : [];
 
     return [...parentMarkers, ...checkinMarkers];

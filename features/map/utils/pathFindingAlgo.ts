@@ -43,6 +43,12 @@ export const findAStarPath = (
 ): string[] => {
   const { nodes, adj } = graph;
 
+  logger.debug(
+    `🔍 [findAStarPath] startId=${startId}, goalId=${goalId}, graphLength=${Object.keys(nodes).length}, virtualOverlayLength=${Object.keys(virtualOverlay).length}`
+  );
+
+  logger.debug('🔍 [findAStarPath] virtualOverlay: ', virtualOverlay);
+
   // Min-Heap: prioritize lower f-score (g + h)
   const openSet = new PriorityQueue<ScoredNode>((a, b) => a.f - b.f);
 
@@ -73,6 +79,16 @@ export const findAStarPath = (
 
     // Merge static neighbors from the pre-built graph with injected dynamic neighbors
     const neighbors: ManualMapAdj[] = [...(adj[current] || []), ...(virtualOverlay[current]?.neighbors || [])];
+    if (current !== startId && current !== goalId) {
+      if (!adj[current]) {
+        if (!virtualOverlay[current]) {
+          logger.error(
+            `🚨 BROKEN BRIDGE: Node '${current}' was injected, but does NOT exist in the static 'adj'
+            AND virtual overlay list! Check string formatting.`
+          );
+        }
+      }
+    }
 
     for (const edge of neighbors) {
       const neighborId = edge.to;
