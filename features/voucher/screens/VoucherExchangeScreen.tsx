@@ -68,15 +68,8 @@ export default function VoucherExchangeScreen() {
     [selectedType, selectedProduct, appliedSearch]
   );
 
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    isRefetching,
-    refetch,
-  } = useAvailableVouchers(scopeTab, filters, 10);
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isRefetching, refetch } =
+    useAvailableVouchers(scopeTab, filters, 10);
 
   const collectMutation = useCollectVoucher();
 
@@ -139,7 +132,6 @@ export default function VoucherExchangeScreen() {
   const renderVoucher = ({ item }: { item: VoucherResponse }) => (
     <VoucherCard
       voucher={item}
-      theme={theme}
       userPoints={userPoints}
       onCollect={handleCollect}
       onPress={handleVoucherPress}
@@ -161,21 +153,13 @@ export default function VoucherExchangeScreen() {
     return (
       <View style={styles.emptyContainer}>
         <Ionicons name="pricetag-outline" size={64} color={theme.mutedForeground} />
-        <Text style={[styles.emptyTitle, { color: theme.foreground }]}>
-          {t('voucher.empty_title')}
-        </Text>
-        <Text style={[styles.emptySubtitle, { color: theme.mutedForeground }]}>
-          {t('voucher.empty_subtitle')}
-        </Text>
+        <Text style={[styles.emptyTitle, { color: theme.foreground }]}>{t('voucher.empty_title')}</Text>
+        <Text style={[styles.emptySubtitle, { color: theme.mutedForeground }]}>{t('voucher.empty_subtitle')}</Text>
       </View>
     );
   };
 
-  const renderFilterChip = (
-    label: string,
-    isActive: boolean,
-    onPress: () => void
-  ) => (
+  const renderFilterChip = (label: string, isActive: boolean, onPress: () => void) => (
     <TouchableOpacity
       key={label}
       style={[
@@ -186,16 +170,8 @@ export default function VoucherExchangeScreen() {
         },
       ]}
       onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <Text
-        style={[
-          styles.filterChipText,
-          { color: isActive ? '#fff' : theme.mutedForeground },
-        ]}
-      >
-        {label}
-      </Text>
+      activeOpacity={0.7}>
+      <Text style={[styles.filterChipText, { color: isActive ? '#fff' : theme.mutedForeground }]}>{label}</Text>
     </TouchableOpacity>
   );
 
@@ -203,32 +179,20 @@ export default function VoucherExchangeScreen() {
     <View style={{ gap: 10, marginBottom: 14 }}>
       {/* Voucher Type filter */}
       <View>
-        <Text style={[styles.filterLabel, { color: theme.mutedForeground }]}>
-          {t('voucher.filter_type')}
-        </Text>
+        <Text style={[styles.filterLabel, { color: theme.mutedForeground }]}>{t('voucher.filter_type')}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
           {VOUCHER_TYPE_OPTIONS.map((opt) =>
-            renderFilterChip(
-              t(opt.labelKey),
-              selectedType === opt.key,
-              () => setSelectedType(opt.key)
-            )
+            renderFilterChip(t(opt.labelKey), selectedType === opt.key, () => setSelectedType(opt.key))
           )}
         </ScrollView>
       </View>
 
       {/* Applicable Product filter */}
       <View>
-        <Text style={[styles.filterLabel, { color: theme.mutedForeground }]}>
-          {t('voucher.filter_product')}
-        </Text>
+        <Text style={[styles.filterLabel, { color: theme.mutedForeground }]}>{t('voucher.filter_product')}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
           {PRODUCT_OPTIONS.map((opt) =>
-            renderFilterChip(
-              t(opt.labelKey),
-              selectedProduct === opt.key,
-              () => setSelectedProduct(opt.key)
-            )
+            renderFilterChip(t(opt.labelKey), selectedProduct === opt.key, () => setSelectedProduct(opt.key))
           )}
         </ScrollView>
       </View>
@@ -242,15 +206,11 @@ export default function VoucherExchangeScreen() {
         <View style={styles.headerRow}>
           <View style={{ flex: 1 }}>
             <Text style={[styles.title, { color: theme.foreground }]}>{t('voucher.title')}</Text>
-            <Text style={[styles.subtitle, { color: theme.mutedForeground }]}>
-              {t('voucher.subtitle')}
-            </Text>
+            <Text style={[styles.subtitle, { color: theme.mutedForeground }]}>{t('voucher.subtitle')}</Text>
           </View>
           <View style={[styles.pointsBadge, { backgroundColor: `${theme.primary}15` }]}>
             <Ionicons name="diamond" size={16} color={theme.primary} />
-            <Text style={[styles.pointsText, { color: theme.primary }]}>
-              {userPoints.toLocaleString()}
-            </Text>
+            <Text style={[styles.pointsText, { color: theme.primary }]}>{userPoints.toLocaleString()}</Text>
           </View>
         </View>
       </View>
@@ -262,13 +222,9 @@ export default function VoucherExchangeScreen() {
           return (
             <TouchableOpacity
               key={tab.key}
-              style={[
-                styles.scopeTab,
-                isActive && { borderBottomColor: theme.primary, borderBottomWidth: 2 },
-              ]}
+              style={[styles.scopeTab, isActive && { borderBottomColor: theme.primary, borderBottomWidth: 2 }]}
               onPress={() => setScopeTab(tab.key)}
-              activeOpacity={0.7}
-            >
+              activeOpacity={0.7}>
               <Ionicons
                 name={(isActive ? tab.iconFocused : tab.icon) as any}
                 size={18}
@@ -279,8 +235,7 @@ export default function VoucherExchangeScreen() {
                   styles.scopeTabText,
                   { color: isActive ? theme.primary : theme.mutedForeground },
                   isActive && { fontWeight: '700' },
-                ]}
-              >
+                ]}>
                 {t(tab.key === 'PLATFORM' ? 'voucher.scope_platform' : 'voucher.scope_vendor')}
               </Text>
             </TouchableOpacity>
@@ -302,7 +257,11 @@ export default function VoucherExchangeScreen() {
             returnKeyType="search"
           />
           {searchText.length > 0 ? (
-            <TouchableOpacity onPress={() => { setSearchText(''); setAppliedSearch(''); }}>
+            <TouchableOpacity
+              onPress={() => {
+                setSearchText('');
+                setAppliedSearch('');
+              }}>
               <Ionicons name="close-circle" size={18} color={theme.mutedForeground} />
             </TouchableOpacity>
           ) : null}
@@ -313,9 +272,7 @@ export default function VoucherExchangeScreen() {
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.primary} />
-          <Text style={{ color: theme.mutedForeground, marginTop: 12 }}>
-            {t('common.loading')}
-          </Text>
+          <Text style={{ color: theme.mutedForeground, marginTop: 12 }}>{t('common.loading')}</Text>
         </View>
       ) : (
         <FlatList

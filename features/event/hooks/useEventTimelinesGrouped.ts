@@ -15,19 +15,19 @@ export function useEventTimelinesGrouped(eventId: string, enabled = true) {
       const fields: Record<string, string> = {};
       data.forEach((group, gIdx) => {
         if (group.dayLabel) fields[`g_${gIdx}_dayLabel`] = group.dayLabel;
-        
+
         group.timelines.forEach((img, tIdx) => {
           if (img.name) fields[`g_${gIdx}_t_${tIdx}_name`] = img.name;
           if (img.description) fields[`g_${gIdx}_t_${tIdx}_desc`] = img.description;
           if (img.organizer) fields[`g_${gIdx}_t_${tIdx}_org`] = img.organizer;
           if (img.coOrganizer) fields[`g_${gIdx}_t_${tIdx}_coOrg`] = img.coOrganizer;
-          
+
           if (img.eventPoint) {
             const ep = img.eventPoint;
             if (ep.name) fields[`g_${gIdx}_t_${tIdx}_ep_name`] = ep.name;
             if (ep.description) fields[`g_${gIdx}_t_${tIdx}_ep_desc`] = ep.description;
             if (ep.address) fields[`g_${gIdx}_t_${tIdx}_ep_addr`] = ep.address;
-            
+
             if (ep.eventPointTag?.name) {
               fields[`g_${gIdx}_t_${tIdx}_ep_tag_name`] = ep.eventPointTag.name;
             }
@@ -42,7 +42,7 @@ export function useEventTimelinesGrouped(eventId: string, enabled = true) {
           ...group,
           dayLabel: translated[`g_${gIdx}_dayLabel`] ?? group.dayLabel,
         };
-        
+
         mergedGroup.timelines = group.timelines.map((img, tIdx) => {
           const mergedTimeline = {
             ...img,
@@ -51,7 +51,7 @@ export function useEventTimelinesGrouped(eventId: string, enabled = true) {
             organizer: translated[`g_${gIdx}_t_${tIdx}_org`] ?? img.organizer,
             coOrganizer: translated[`g_${gIdx}_t_${tIdx}_coOrg`] ?? img.coOrganizer,
           };
-          
+
           if (img.eventPoint) {
             const ep = img.eventPoint;
             mergedTimeline.eventPoint = {
@@ -60,7 +60,7 @@ export function useEventTimelinesGrouped(eventId: string, enabled = true) {
               description: translated[`g_${gIdx}_t_${tIdx}_ep_desc`] ?? ep.description,
               address: translated[`g_${gIdx}_t_${tIdx}_ep_addr`] ?? ep.address,
             };
-            
+
             if (ep.eventPointTag) {
               mergedTimeline.eventPoint.eventPointTag = {
                 ...ep.eventPointTag,
@@ -70,7 +70,7 @@ export function useEventTimelinesGrouped(eventId: string, enabled = true) {
           }
           return mergedTimeline;
         });
-        
+
         return mergedGroup;
       });
     },

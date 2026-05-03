@@ -233,13 +233,19 @@ export const useMapNavigationPreviewController = ({
       ' previewDestination:',
       previewDestination,
       'isError:',
-      previewRouteQuery.isError
+      previewRouteQuery.error?.message
     );
     if (targetNavigationPointId && !previewOrigin) return 'Getting current location...';
     if (targetNavigationPointId && !previewDestination) return 'Unable to read destination coordinates.';
     if (previewRouteQuery.isError) return 'Failed to load route preview.';
     return null;
-  }, [previewDestination, previewOrigin, previewRouteQuery.isError, targetNavigationPointId]);
+  }, [
+    previewDestination,
+    previewOrigin,
+    previewRouteQuery.isError,
+    previewRouteQuery.error?.message,
+    targetNavigationPointId,
+  ]);
 
   const canStartGuidance = useMemo(() => {
     // Just check if has the following: Has origin and destination, has route preview summary, has selected mode

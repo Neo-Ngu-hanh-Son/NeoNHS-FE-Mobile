@@ -47,12 +47,12 @@ export default function WorkshopSessionCard({ session, theme }: WorkshopSessionC
   const handleAddToCart = async () => {
     const qty = parseInt(quantity);
     if (isNaN(qty) || qty <= 0) {
-      Alert.alert("Invalid Quantity", "Please enter a valid quantity greater than 0.");
+      Alert.alert("Số lượng không hợp lệ", "Vui lòng nhập số lượng lớn hơn 0.");
       return;
     }
 
     if (qty > session.availableSlots) {
-      Alert.alert("Quantity Exceeded", `Only ${session.availableSlots} spots left.`);
+      Alert.alert("Vượt quá số lượng", `Chỉ còn ${session.availableSlots} chỗ trống.`);
       return;
     }
 
@@ -60,15 +60,15 @@ export default function WorkshopSessionCard({ session, theme }: WorkshopSessionC
     try {
       const response = await cartService.addWorkshopSessionToCart(session.id, qty);
       if (response && response.success) {
-        Alert.alert("Success", "Session added to cart successfully", [
-          { text: "OK", onPress: () => setModalVisible(false) }
+        Alert.alert("Thành công", "Đã thêm suất học vào giỏ hàng thành công", [
+          { text: "Đồng ý", onPress: () => setModalVisible(false) }
         ]);
       } else {
         // Fallback for custom backend wrappers
-        Alert.alert("Error", response?.message || "Failed to add to cart");
+        Alert.alert("Lỗi", response?.message || "Thêm vào giỏ hàng thất bại");
       }
     } catch (error: any) {
-      Alert.alert("Error", error.message || "An error occurred");
+      Alert.alert("Lỗi", error.message || "Đã xảy ra lỗi");
     } finally {
       setIsAdding(false);
     }
@@ -108,7 +108,7 @@ export default function WorkshopSessionCard({ session, theme }: WorkshopSessionC
               className="rounded-lg px-2 py-1"
               style={{ backgroundColor: '#dcfce7' }}
             >
-              <Text className="text-sm font-extrabold" style={{ color: '#16a34a' }}>FREE</Text>
+              <Text className="text-sm font-extrabold" style={{ color: '#16a34a' }}>MIỄN PHÍ</Text>
             </View>
           ) : (
             <Text className="text-lg font-bold" style={{ color: theme.primary }}>
@@ -125,7 +125,7 @@ export default function WorkshopSessionCard({ session, theme }: WorkshopSessionC
             <View className="flex-row items-center gap-1">
               <Ionicons name="people-outline" size={14} color={theme.mutedForeground} />
               <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-                {session.currentEnrolled} / {session.maxParticipants} enrolled
+                {session.currentEnrolled} / {session.maxParticipants} đã đăng ký
               </Text>
             </View>
             <View className="flex-row items-center gap-1">
@@ -134,7 +134,7 @@ export default function WorkshopSessionCard({ session, theme }: WorkshopSessionC
                 style={{ backgroundColor: slotsColor }}
               />
               <Text className="text-xs font-bold" style={{ color: slotsColor }}>
-                {isFull ? "Full" : `${session.availableSlots} spots left`}
+                {isFull ? "Đã kín chỗ" : `Còn ${session.availableSlots} chỗ`}
               </Text>
             </View>
           </View>
@@ -173,7 +173,7 @@ export default function WorkshopSessionCard({ session, theme }: WorkshopSessionC
             className="font-bold text-sm"
             style={{ color: isFull ? theme.mutedForeground : "#fff" }}
           >
-            {isFull ? "Fully Booked" : "Book This Session"}
+            {isFull ? "Đã kín chỗ" : "Đặt buổi workshop này"}
           </Text>
         </TouchableOpacity>
       )}
@@ -188,21 +188,21 @@ export default function WorkshopSessionCard({ session, theme }: WorkshopSessionC
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" }}>
           <View style={{ width: "85%", backgroundColor: theme.card, borderRadius: 20, padding: 20, alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4, elevation: 5 }}>
             <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 15, color: theme.foreground, textAlign: 'center' }}>
-              Book Session
+              Đặt buổi workshop
             </Text>
 
             <Text style={{ fontSize: 14, color: theme.mutedForeground, marginBottom: 15, textAlign: 'center' }}>
-              {formatShortDate(session.startTime)} at {formatTime(session.startTime)}
+              {formatShortDate(session.startTime)} lúc {formatTime(session.startTime)}
             </Text>
 
             {isFree ? (
               /* Free session — no quantity picker needed, just 1 slot */
               <Text style={{ fontSize: 14, color: '#16a34a', fontWeight: '600', marginBottom: 20, textAlign: 'center' }}>
-                🎉 This session is free! Register 1 spot.
+                🎉 Buổi workshop này miễn phí! Đăng ký 1 chỗ.
               </Text>
             ) : (
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
-                <Text style={{ fontSize: 16, color: theme.foreground, marginRight: 10 }}>Quantity:</Text>
+                <Text style={{ fontSize: 16, color: theme.foreground, marginRight: 10 }}>Số lượng:</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', borderColor: theme.border, borderWidth: 1, borderRadius: 8 }}>
                   <TouchableOpacity
                     onPress={() => setQuantity(prev => Math.max(1, parseInt(prev || "0") - 1).toString())}
@@ -238,7 +238,7 @@ export default function WorkshopSessionCard({ session, theme }: WorkshopSessionC
                   <Ionicons name="cart" size={20} color="#fff" style={{ marginRight: 8 }} />
                 )}
                 <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 16 }}>
-                  {isAdding ? "Adding..." : isFree ? "Register Now" : "Add to Cart"}
+                  {isAdding ? "Đang thêm..." : isFree ? "Đăng ký ngay" : "Thêm vào giỏ hàng"}
                 </Text>
               </TouchableOpacity>
 
@@ -247,7 +247,7 @@ export default function WorkshopSessionCard({ session, theme }: WorkshopSessionC
                 onPress={() => setModalVisible(false)}
                 disabled={isAdding}
               >
-                <Text style={{ color: theme.foreground, fontWeight: "bold" }}>Cancel</Text>
+                <Text style={{ color: theme.foreground, fontWeight: "bold" }}>Hủy</Text>
               </TouchableOpacity>
             </View>
           </View>
