@@ -163,7 +163,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
               <View>
                 <Text style={styles.pointsLabel}>{t('profile.your_points')}</Text>
                 <Text style={styles.pointsValue} numberOfLines={1} ellipsizeMode='tail'>
-                  {(user.userPoint ?? 0).toLocaleString('en-US')}
+                  {(user.userPoint ?? 0).toLocaleString('vi-VN')}
                 </Text>
               </View>
             </View>

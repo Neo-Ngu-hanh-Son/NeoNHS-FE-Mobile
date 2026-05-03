@@ -111,6 +111,24 @@ export function useEventTimelineMapController({
     return [{ id: ALL_TAG_ID, name: 'All', color: null }, ...mapped];
   }, [resolvedTags]);
 
+  const groupedTagsForSelectedDate: EventTimelineTagOption[] = useMemo(() => {
+    let timelines = groupedTimelines.find((group) => group.date === selectedDate)?.timelines;
+    let groupedTags = timelines?.flatMap((timeline) => timeline.eventPoint.eventPointTag) ?? [];
+    let tagOptions =
+      groupedTags?.map((tag) => ({
+        id: tag?.id ?? '',
+        name: tag?.name ?? '',
+        color: tag?.tagColor ?? null,
+      })) ?? [];
+
+    // Remove duplicate tags
+    tagOptions = tagOptions.filter((tag, index) => tagOptions.findIndex((t) => t.id === tag.id) === index);
+    // Add a tag for ALL
+    tagOptions.unshift({ id: ALL_TAG_ID, name: 'Tất cả', color: null });
+
+    return tagOptions;
+  }, [groupedTimelines, selectedDate]);
+
   useEffect(() => {
     if (activeTagId === ALL_TAG_ID) {
       return;
@@ -189,5 +207,6 @@ export function useEventTimelineMapController({
     isSearching,
     visiblePoints,
     searchResults,
+    groupedTagsForSelectedDate,
   };
 }

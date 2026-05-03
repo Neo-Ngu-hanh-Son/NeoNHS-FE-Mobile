@@ -70,10 +70,10 @@ const EventTimelineListBottomSheet = forwardRef<EventTimelineListSheetRef, Props
       >
         <View style={styles.header}>
           <Text style={[styles.headerTitle, { color: theme.foreground }]}>
-            {selectedDateLabel || "Daily Schedule"}
+            Lịch trình các sự kiện {selectedDateLabel || "hôm nay"}
           </Text>
           <Text style={[styles.headerCount, { color: theme.mutedForeground }]}>
-            {rows.length} scheduled items
+            {rows.length} {rows.length === 1 ? 'lịch trình' : 'lịch trình'}
           </Text>
         </View>
 

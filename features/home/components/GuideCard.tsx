@@ -41,7 +41,7 @@ export default function GuideCard({ title, description, imageUrl, onPress }: Gui
           <Text className="text-base font-bold leading-5" style={{ color: theme.foreground }} numberOfLines={2}>
             {title}
           </Text>
-          <Text className="mt-1 text-sm leading-5" style={{ color: theme.mutedForeground }} numberOfLines={3}>
+          <Text className="mt-1 text-sm leading-5" style={{ color: theme.mutedForeground }} numberOfLines={2}>
             {description}
           </Text>
         </View>

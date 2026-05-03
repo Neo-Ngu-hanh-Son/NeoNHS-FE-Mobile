@@ -93,7 +93,7 @@ export default function BlogDetailsScreen({ route, navigation }: Props) {
 
 
   if (isLoading) {
-    return <FullScreenLoader message={t('common.loading')} />;
+    return <FullScreenLoader message={t('common.loading')} hideBack />;
   }
 
   if (isError || !blog) {

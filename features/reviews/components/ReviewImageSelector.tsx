@@ -9,6 +9,7 @@ import { THEME } from '@/lib/theme';
 import { Text } from '@/components/ui/text';
 import { generateImageUploadData } from '@/utils/uploadImageHelper';
 import { useCheckinGallery } from '@/features/reviews/hooks/useReview';
+import { useUploadImage } from '@/hooks/useImageUtils';
 
 type UploadingImageItem = {
   id: string;
@@ -211,7 +212,3 @@ export function ReviewImageSelector({ checkinPointId, selectedUrls, onSelectionC
     </View>
   );
 }
-function useUploadImage(): { mutateAsync: any; } {
-  throw new Error('Function not implemented.');
-}
-

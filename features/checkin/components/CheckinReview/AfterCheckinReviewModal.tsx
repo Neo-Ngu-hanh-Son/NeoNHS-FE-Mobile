@@ -111,6 +111,8 @@ export const AfterCheckinReviewModal = ({
             placeholderTextColor="#94A3B8"
             value={description}
             onChangeText={setDescription}
+            autoCorrect={false}
+            spellCheck={false}
           />
         </Animated.View>
 

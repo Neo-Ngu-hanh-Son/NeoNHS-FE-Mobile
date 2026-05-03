@@ -26,7 +26,7 @@ const GRID_COLUMN_COUNT = 3;
 
 function formatDateTitle(isoDate: string) {
   const date = new Date(isoDate);
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat('vi-VN', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
@@ -36,7 +36,7 @@ function formatDateTitle(isoDate: string) {
 
 function formatDateTime(isoDate: string) {
   const date = new Date(isoDate);
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat('vi-VN', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',

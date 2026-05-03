@@ -167,7 +167,6 @@ export default function PointDetailScreen({ navigation, route }: Props) {
     );
   }
 
-  // ─── Main content ───
   return (
     <View className="flex-1 bg-background">
       <RefreshableScrollView onRefresh={() => refetch()} contentContainerStyle={{ paddingBottom: 120 }} edges={[]}>

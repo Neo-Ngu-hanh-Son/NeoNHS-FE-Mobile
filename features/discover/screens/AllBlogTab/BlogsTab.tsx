@@ -24,7 +24,7 @@ export default function BlogsTab() {
   const [selectedCategorySlug, setSelectedCategorySlug] = useState<string | null>(null);
 
   // Fetch categories for filter chips
-  const { data: categoriesPage } = useBlogCategory({ size: 50 });
+  const { data: categoriesPage, refetch: refetchCategories } = useBlogCategory({ size: 50 });
   const categories = useMemo(() => categoriesPage?.content ?? [], [categoriesPage]);
 
   // Infinite blog list with server-side search + category filtering
@@ -34,7 +34,7 @@ export default function BlogsTab() {
     hasNextPage,
     isFetchingNextPage,
     isLoading,
-    refetch,
+    refetch: refetchBlogList,
   } = useInfiniteBlogList({
     search: searchQuery,
     categorySlug: selectedCategorySlug ?? undefined,
@@ -79,11 +79,16 @@ export default function BlogsTab() {
     );
   };
 
+  const handleRefetch = () => {
+    refetchCategories();
+    refetchBlogList();
+  }
+
   return (
     <>
       <DebouncedInput
         onSearch={(value) => setSearchQuery(value)}
-        placeholder="Search blogs..."
+        placeholder="Tìm kiếm blogs..."
         delay={500}
       />
       <FilterChips<BlogCategoryResponse>
@@ -92,7 +97,7 @@ export default function BlogsTab() {
         onSelectedId={setSelectedCategorySlug}
         getId={(item) => item.slug}
         getLabel={(item) => item.name}
-        allLabel="All Categories"
+        allLabel="Tất cả danh mục"
       />
       <FlatList
         data={blogs}
@@ -105,7 +110,7 @@ export default function BlogsTab() {
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
-            onRefresh={refetch}
+            onRefresh={handleRefetch}
             tintColor={theme.primary}
             colors={[theme.primary]}
           />

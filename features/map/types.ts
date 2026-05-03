@@ -46,17 +46,17 @@ export type Edge = {
 };
 
 export enum PointVibe {
-  SPIRITUAL = 'SPIRITUAL',
-  RELAXING = 'RELAXING',
-  ENERGETIC = 'ENERGETIC',
-  SCENIC = 'SCENIC',
-  HISTORICAL = 'HISTORICAL',
+  SPIRITUAL = 'spiritual',
+  RELAXING = 'relaxing',
+  ENERGETIC = 'energetic',
+  SCENIC = 'scenic',
+  HISTORICAL = 'historical',
 }
 
 export enum PointDifficulty {
-  EASY = 'EASY',
-  MEDIUM = 'MEDIUM',
-  HARD = 'HARD',
+  EASY = 'easy',
+  MEDIUM = 'moderate',
+  HARD = 'hard',
 }
 
 // These are special points used for map markers and interactions (They are not necessarily nodes in the graph, but can be on the edges)

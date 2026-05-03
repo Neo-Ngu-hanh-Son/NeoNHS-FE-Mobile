@@ -53,7 +53,7 @@ export function getTicketStatusLabel(status: TicketCatalogStatus): string {
 export function formatDateTime(dateStr?: string | null): string {
   if (!dateStr) return 'TBD';
   const d = new Date(dateStr);
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString('vi-VN', {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
@@ -65,7 +65,7 @@ export function formatDateTime(dateStr?: string | null): string {
 export function formatDate(dateStr?: string | null): string {
   if (!dateStr) return 'TBD';
   const d = new Date(dateStr);
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString('vi-VN', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -91,6 +91,23 @@ export function formatDaysOfWeek(days?: string | null): string {
     FRI: 'Fri',
     SAT: 'Sat',
     SUN: 'Sun',
+  };
+  return days
+    .split(',')
+    .map((d) => dayMap[d.trim()] || d.trim())
+    .join(', ');
+}
+
+export function formatDaysOfWeekVN(days?: string | null): string {
+  if (!days) return 'All days';
+  const dayMap: Record<string, string> = {
+    MON: 'T2',
+    TUE: 'T3',
+    WED: 'T4',
+    THU: 'T5',
+    FRI: 'T6',
+    SAT: 'T7',
+    SUN: 'CN',
   };
   return days
     .split(',')
@@ -154,12 +171,12 @@ function normalizeEventPoint(rawPoint: unknown): EventPointResponse | null {
 
   const eventPointTag = isRecord(rawPoint.eventPointTag)
     ? {
-      id: typeof rawPoint.eventPointTag.id === 'string' ? rawPoint.eventPointTag.id : '',
-      name: typeof rawPoint.eventPointTag.name === 'string' ? rawPoint.eventPointTag.name : '',
-      description: typeof rawPoint.eventPointTag.description === 'string' ? rawPoint.eventPointTag.description : null,
-      tagColor: typeof rawPoint.eventPointTag.tagColor === 'string' ? rawPoint.eventPointTag.tagColor : null,
-      iconUrl: typeof rawPoint.eventPointTag.iconUrl === 'string' ? rawPoint.eventPointTag.iconUrl : null,
-    }
+        id: typeof rawPoint.eventPointTag.id === 'string' ? rawPoint.eventPointTag.id : '',
+        name: typeof rawPoint.eventPointTag.name === 'string' ? rawPoint.eventPointTag.name : '',
+        description: typeof rawPoint.eventPointTag.description === 'string' ? rawPoint.eventPointTag.description : null,
+        tagColor: typeof rawPoint.eventPointTag.tagColor === 'string' ? rawPoint.eventPointTag.tagColor : null,
+        iconUrl: typeof rawPoint.eventPointTag.iconUrl === 'string' ? rawPoint.eventPointTag.iconUrl : null,
+      }
     : null;
 
   return {
@@ -456,11 +473,11 @@ export function buildEventTimelineDayOptions(groups: EventTimelineGroupResponse[
       ? group.dayLabel
       : group.date === UNSCHEDULED_DATE_KEY
         ? 'Unscheduled'
-        : new Date(`${group.date}T00:00:00`).toLocaleDateString('en-US', {
-          weekday: 'short',
-          month: 'short',
-          day: '2-digit',
-        }),
+        : new Date(`${group.date}T00:00:00`).toLocaleDateString('vi-VN', {
+            weekday: 'short',
+            month: 'short',
+            day: '2-digit',
+          }),
     eventCount: group.timelines.length,
   }));
 }
@@ -510,7 +527,6 @@ export function filterEventMapPointsBySearch(points: EventMapPoint[], query: str
     return combinedContent.includes(normalizedQuery);
   });
 }
-
 
 export function formatSimpleTime(time?: string): string {
   if (!time) return '--:--';

@@ -36,22 +36,22 @@ export function formatEstTime(minutes?: number): string {
 
 export function resolveTypeLabel(type: MapPoint['type']): string {
   const map: Partial<Record<MapPoint['type'], string>> = {
-    PAGODA: 'Pagoda',
-    CAVE: 'Cave',
-    VIEWPOINT: 'Viewpoint',
-    GENERAL: 'General',
+    PAGODA: 'Chùa',
+    CAVE: 'Hang động',
+    VIEWPOINT: 'Điểm ngắm cảnh',
+    GENERAL: 'Chung',
     CHECKIN: 'Check-in',
-    STATUE: 'Statue / Monument',
-    GATE: 'Gate',
-    SHOP: 'Shop',
-    ELEVATOR: 'Elevator',
-    EVENT: 'Event',
+    STATUE: 'Tượng / Đài tưởng niệm',
+    GATE: 'Cổng',
+    SHOP: 'Cửa hàng',
+    ELEVATOR: 'Thang máy',
+    EVENT: 'Sự kiện',
     WORKSHOP: 'Workshop',
-    ATTRACTION: 'Attraction',
-    DEFAULT: 'Point',
-    USER_CHECKIN: 'Your Check-in',
+    ATTRACTION: 'Điểm tham quan',
+    DEFAULT: 'Điểm',
+    USER_CHECKIN: 'Check-in của bạn',
   };
-  return map[type] ?? 'Point';
+  return map[type] ?? 'Điểm';
 }
 
 // ─── Status ──────────────────────────────────────────────────────────────────

@@ -100,7 +100,7 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
       }
 
       mapRef.current.fitToCoordinates(coordinates, {
-        top: 220,
+        top: 320,
         right: 64,
         bottom: 220,
         left: 64,
@@ -187,7 +187,6 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
     handleStartNavigationWithSelectedMode,
     clearTargetNavigationParam,
     handleTravelModeSelection,
-    setConfirmedTravelMode,
   } = useMapNavigationPreviewController({
     targetNavigationPointId: effectiveTargetNavigationPointId,
     mapPoints,
@@ -386,7 +385,7 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
             dayOptions={timelineController.dayOptions}
             selectedDate={timelineController.selectedDate}
             onSelectDate={timelineController.setSelectedDate}
-            tagOptions={timelineController.tagOptions}
+            tagOptions={timelineController.groupedTagsForSelectedDate ?? []}
             activeTagId={timelineController.activeTagId}
             onSelectTag={timelineController.setActiveTagId}
           />
@@ -402,10 +401,10 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
                 shadowColor: theme.primary,
               },
             ]}
-            accessibilityLabel="View schedule for this day"
+            accessibilityLabel="Xem lịch trình ngày hôm nay"
           >
             <List size={18} color="#fff" />
-            <Text style={floatingStyles.scheduleBtnText}>Schedule</Text>
+            <Text style={floatingStyles.scheduleBtnText}>Xem tất cả lịch trình</Text>
           </TouchableOpacity>
 
           <EventTimelinePointDetailBottomSheet
@@ -419,7 +418,7 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
             points={mapPoints}
             selectedDateLabel={
               timelineController.dayOptions.find((d) => d.date === timelineController.selectedDate)?.label ??
-              'Schedule'
+              'Lịch trình'
             }
             onFocusPoint={(point) => {
               focusOnPoint(point);

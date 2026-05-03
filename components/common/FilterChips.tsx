@@ -57,7 +57,7 @@ export default function FilterChips<T>({
   getId,
   getColor,
   showAll = true,
-  allLabel = "All",
+  allLabel = "Tất cả",
   containerClassName = "py-3",
 }: FilterChipsProps<T>) {
   const { isDarkColorScheme } = useTheme();
