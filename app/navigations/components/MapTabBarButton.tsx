@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, StyleSheet, Platform } from 'react-native';
+import { TouchableOpacity, View, StyleSheet } from 'react-native';
 import { THEME } from '@/lib/theme';
 
 type ThemeType = typeof THEME.dark | typeof THEME.light;

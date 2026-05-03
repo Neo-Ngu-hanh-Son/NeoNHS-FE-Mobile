@@ -9,7 +9,7 @@ import { Text } from '@/components/ui/text';
 import { logger } from '@/utils/logger';
 import CheckinCameraCenterHint from '@/features/checkin/components/Camera/CheckinCameraCenterHint';
 import { CameraIcon } from 'lucide-react-native';
-import { ImageManipulator } from 'expo-image-manipulator';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
 type CheckinCameraCaptureProps = {
   isBusy: boolean;
@@ -52,11 +52,10 @@ export default function CheckinCameraCapture({
         return;
       }
 
-      const manipulated = await ImageManipulator.manipulateAsync(
-        photo.uri,
-        [{ resize: { width: 1200 } }],
-        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
-      );
+      const manipulated = await manipulateAsync(photo.uri, [{ resize: { width: 1200 } }], {
+        compress: 0.7,
+        format: SaveFormat.JPEG,
+      });
 
       onImageSelected(manipulated.uri);
     } catch (error) {
@@ -81,11 +80,10 @@ export default function CheckinCameraCapture({
         return;
       }
 
-      const manipulated = await ImageManipulator.manipulateAsync(
-        result.assets[0].uri,
-        [{ resize: { width: 1200 } }],
-        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
-      );
+      const manipulated = await manipulateAsync(result.assets[0].uri, [{ resize: { width: 1200 } }], {
+        compress: 0.7,
+        format: SaveFormat.JPEG,
+      });
 
       onImageSelected(manipulated.uri);
     } catch (error) {

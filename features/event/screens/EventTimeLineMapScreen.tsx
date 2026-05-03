@@ -40,6 +40,7 @@ import { THEME } from '@/lib/theme';
 import { List } from 'lucide-react-native';
 import { useDynamicPolyline } from '@/features/map/hooks/Navigation/useDynamicPolyline';
 import MAP_CONSTANTS from '@/features/map/constants';
+import { RefetchOptions } from '@tanstack/react-query';
 
 type EventTimeLineMapScreenProps = StackScreenProps<MainStackParamList, 'EventTimeLineMap'>;
 
@@ -368,6 +369,7 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
         selectedTravelMode={selectedTravelMode ?? MAP_CONSTANTS.DEFAULT_TRAVEL_MODE}
         enableCheckinMode={false}
         renderMarker={renderTimelineMarker}
+        refetchMapPoints={groupedTimelineQuery.refetch}
       />
 
       {viewMode === 'EXPLORING' && (
