@@ -12,6 +12,8 @@ export interface CartItem {
     workshopSessionId?: string;
     workshopTemplateId?: string;
     workshopName?: string;
+    // Vendor info (for vendor-scoped voucher matching)
+    vendorId?: string;
 }
 
 export interface Cart {
@@ -39,6 +41,9 @@ export interface Voucher {
     startDate: string | null;
     endDate: string | null;
     isAvailable: boolean;
+    // Vendor info (for vendor-scoped vouchers)
+    vendorId?: string;
+    vendorName?: string;
 }
 
 export interface PreCheckoutResponse {

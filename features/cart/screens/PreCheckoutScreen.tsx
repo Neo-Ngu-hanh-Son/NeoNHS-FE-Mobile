@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 interface GroupedItems {
     groupName: string;
     groupType: 'event' | 'workshop' | 'other';
+    vendorId?: string;
     items: CartItem[];
 }
 
@@ -43,7 +44,7 @@ function groupCartItems(cartItems: CartItem[]): GroupedItems[] {
         }
 
         if (!groups[key]) {
-            groups[key] = { groupName, groupType, items: [] };
+            groups[key] = { groupName, groupType, vendorId: item.vendorId, items: [] };
         }
         groups[key].items.push(item);
     }
@@ -71,13 +72,27 @@ export default function PreCheckoutScreen() {
     }, [preCheckoutData]);
 
     // Calculate how much discount applies to each group
-    const getGroupDiscount = (groupType: 'event' | 'workshop' | 'other'): number => {
+    // Vendor-scoped vouchers only apply to groups matching the voucher's vendor
+    const getGroupDiscount = (group: GroupedItems): number => {
         const voucher = preCheckoutData?.appliedVoucher;
         if (!voucher || preCheckoutData.discountValue <= 0) return 0;
         const ap: ApplicableProduct = voucher.applicableProduct;
-        if (ap === 'ALL') return 0; // shown globally in Payment Summary
-        if (ap === 'EVENT_TICKET' && groupType === 'event') return preCheckoutData.discountValue;
-        if (ap === 'WORKSHOP' && groupType === 'workshop') return preCheckoutData.discountValue;
+
+        // Platform voucher with ALL → shown globally in Payment Summary
+        if (ap === 'ALL' && !voucher.vendorId) return 0;
+
+        // Vendor-scoped voucher: must match the group's vendor
+        if (voucher.vendorId) {
+            if (group.vendorId !== voucher.vendorId) return 0;
+            // Vendor matches and product type matches (or ALL for vendor)
+            if (ap === 'WORKSHOP' && group.groupType === 'workshop') return preCheckoutData.discountValue;
+            if (ap === 'ALL' && group.groupType === 'workshop') return preCheckoutData.discountValue;
+            return 0;
+        }
+
+        // Platform voucher scoped to a product type
+        if (ap === 'EVENT_TICKET' && group.groupType === 'event') return preCheckoutData.discountValue;
+        if (ap === 'WORKSHOP' && group.groupType === 'workshop') return preCheckoutData.discountValue;
         return 0;
     };
 
@@ -182,7 +197,7 @@ export default function PreCheckoutScreen() {
                                 </View>
                             ))}
                             {/* Per-group voucher discount indicator */}
-                            {getGroupDiscount(group.groupType) > 0 && (
+                            {getGroupDiscount(group) > 0 && (
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, paddingLeft: 8 }}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                                         <MaterialIcons name="local-offer" size={13} color="#22c55e" />
@@ -191,7 +206,7 @@ export default function PreCheckoutScreen() {
                                         </Text>
                                     </View>
                                     <Text style={{ color: '#22c55e', fontWeight: '600', fontSize: 13 }}>
-                                        -{(getGroupDiscount(group.groupType) ?? 0).toLocaleString()} VND
+                                        -{(getGroupDiscount(group) ?? 0).toLocaleString()} VND
                                     </Text>
                                 </View>
                             )}
@@ -212,14 +227,6 @@ export default function PreCheckoutScreen() {
                         <Text style={{ color: '#22c55e' }}>-{(preCheckoutData.discountValue ?? 0).toLocaleString()} VND</Text>
                     </View>
 
-                    {preCheckoutData.appliedVoucher && (
-                        <View style={[styles.voucherRow, { backgroundColor: 'rgba(34, 197, 94, 0.1)' }]}>
-                            <MaterialIcons name="local-offer" size={16} color="#22c55e" />
-                            <Text style={{ color: '#22c55e', fontSize: 12, marginLeft: 4 }}>
-                                Applied: {preCheckoutData.appliedVoucher.code}
-                            </Text>
-                        </View>
-                    )}
 
                     <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
