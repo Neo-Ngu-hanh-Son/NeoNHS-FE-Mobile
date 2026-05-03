@@ -51,9 +51,9 @@ export function getTicketStatusLabel(status: TicketCatalogStatus): string {
 }
 
 export function formatDateTime(dateStr?: string | null): string {
-  if (!dateStr) return 'TBD';
+  if (!dateStr) return 'Đang cập nhật';
   const d = new Date(dateStr);
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString('vi-VN', {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
@@ -63,11 +63,11 @@ export function formatDateTime(dateStr?: string | null): string {
 }
 
 export function formatDate(dateStr?: string | null): string {
-  if (!dateStr) return 'TBD';
+  if (!dateStr) return 'Đang cập nhật';
   const d = new Date(dateStr);
-  return d.toLocaleDateString('en-US', {
-    day: '2-digit',
-    month: '2-digit',
+  return d.toLocaleDateString('vi-VN', {
+    day: 'numeric',
+    month: 'long',
     year: 'numeric',
   });
 }
@@ -82,15 +82,15 @@ export function calcDiscount(price: number, originalPrice?: number | null): numb
 }
 
 export function formatDaysOfWeek(days?: string | null): string {
-  if (!days) return 'All days';
+  if (!days) return 'Tất cả ngày';
   const dayMap: Record<string, string> = {
-    MON: 'Mon',
-    TUE: 'Tue',
-    WED: 'Wed',
-    THU: 'Thu',
-    FRI: 'Fri',
-    SAT: 'Sat',
-    SUN: 'Sun',
+    MON: 'Thứ Hai',
+    TUE: 'Thứ Ba',
+    WED: 'Thứ Tư',
+    THU: 'Thứ Năm',
+    FRI: 'Thứ Sáu',
+    SAT: 'Thứ Bảy',
+    SUN: 'Chủ Nhật',
   };
   return days
     .split(',')
@@ -455,8 +455,8 @@ export function buildEventTimelineDayOptions(groups: EventTimelineGroupResponse[
     label: group.dayLabel
       ? group.dayLabel
       : group.date === UNSCHEDULED_DATE_KEY
-        ? 'Unscheduled'
-        : new Date(`${group.date}T00:00:00`).toLocaleDateString('en-US', {
+        ? 'Không lịch trình'
+        : new Date(`${group.date}T00:00:00`).toLocaleDateString('vi-VN', {
           weekday: 'short',
           month: 'short',
           day: '2-digit',

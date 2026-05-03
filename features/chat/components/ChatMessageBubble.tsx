@@ -169,7 +169,7 @@ const splitSectionBodyAndTail = (section: string): { body: string; tail: string 
 
   let cut = lines.length;
 
-  for (let i = lines.length - 1; i >= 1; i--) {
+  for (let i = lines.length - 1; i >= 0; i--) {
     const raw = lines[i];
     const line = raw.trim();
     if (!line) continue;

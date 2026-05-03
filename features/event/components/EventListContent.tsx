@@ -24,10 +24,10 @@ const PAGE_SIZE = 10;
 const DEBOUNCE_MS = 800;
 
 const STATUS_OPTIONS = [
-  { label: 'Upcoming', value: EventStatus.UPCOMING },
-  { label: 'Ongoing', value: EventStatus.ONGOING },
-  { label: 'Completed', value: EventStatus.COMPLETED },
-  { label: 'Cancelled', value: EventStatus.CANCELLED },
+  { label: 'Sắp tới', value: EventStatus.UPCOMING },
+  { label: 'Đang diễn ra', value: EventStatus.ONGOING },
+  { label: 'Hoàn thành', value: EventStatus.COMPLETED },
+  { label: 'Đã hủy', value: EventStatus.CANCELLED },
 ];
 
 export interface EventListContentProps {
@@ -110,7 +110,7 @@ export function EventListContent({ initialStatus }: EventListContentProps) {
         <View className="flex-1 flex-row items-center gap-2 rounded-xl px-4 py-3" style={{ backgroundColor: theme.muted }}>
           <Ionicons name="search" size={20} color={theme.mutedForeground} />
           <TextInput
-            placeholder="Search events..."
+            placeholder="Tìm sự kiện..."
             placeholderTextColor={theme.mutedForeground}
             className="flex-1 text-sm"
             style={{ color: theme.foreground, paddingTop: 0, paddingBottom: 0 }}
@@ -141,7 +141,7 @@ export function EventListContent({ initialStatus }: EventListContentProps) {
       {showFilters && (
         <View className="mt-3 rounded-xl border p-3" style={{ backgroundColor: theme.card, borderColor: theme.border }}>
           <Text className="mb-2 text-xs font-bold uppercase tracking-wider" style={{ color: theme.mutedForeground }}>
-            Status
+            Trạng thái
           </Text>
           <View className="flex-row flex-wrap gap-2">
             <TouchableOpacity
@@ -149,7 +149,7 @@ export function EventListContent({ initialStatus }: EventListContentProps) {
               style={{ backgroundColor: !selectedStatus ? theme.primary : theme.muted }}
               onPress={() => setSelectedStatus(null)}>
               <Text className="text-xs font-bold" style={{ color: !selectedStatus ? '#fff' : theme.mutedForeground }}>
-                All
+                Tất cả
               </Text>
             </TouchableOpacity>
             {STATUS_OPTIONS.map((opt) => (
@@ -168,7 +168,7 @@ export function EventListContent({ initialStatus }: EventListContentProps) {
           {tags.length > 0 && (
             <>
               <Text className="mb-2 mt-3 text-xs font-bold uppercase tracking-wider" style={{ color: theme.mutedForeground }}>
-                Event Tags
+                Tag sự kiện
               </Text>
               <View className="flex-row flex-wrap gap-2">
                 {tags.map((tag) => {
@@ -202,13 +202,13 @@ export function EventListContent({ initialStatus }: EventListContentProps) {
           )}
 
           <Text className="mb-2 mt-3 text-xs font-bold uppercase tracking-wider" style={{ color: theme.mutedForeground }}>
-            Ticket Required
+            Cần vé
           </Text>
           <View className="flex-row gap-2">
             {[
-              { label: 'All', value: null },
-              { label: 'Requires Ticket', value: true },
-              { label: 'Free Event', value: false },
+              { label: 'Tất cả', value: null },
+              { label: 'Cần vé', value: true },
+              { label: 'Miễn phí', value: false },
             ].map((opt) => (
               <TouchableOpacity
                 key={String(opt.value)}
@@ -228,7 +228,7 @@ export function EventListContent({ initialStatus }: EventListContentProps) {
             <TouchableOpacity className="mt-3 flex-row items-center justify-center gap-1" onPress={clearFilters}>
               <Ionicons name="refresh-outline" size={14} color={theme.primary} />
               <Text className="text-xs font-semibold" style={{ color: theme.primary }}>
-                Clear filters
+                Xóa bộ lọc
               </Text>
             </TouchableOpacity>
           )}
@@ -237,7 +237,7 @@ export function EventListContent({ initialStatus }: EventListContentProps) {
 
       <View className="mb-1 mt-2 px-1">
         <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-          {totalElements} event{totalElements !== 1 ? 's' : ''} found
+          {totalElements} sự kiện đã tìm thấy
         </Text>
       </View>
     </View>
@@ -264,7 +264,7 @@ export function EventListContent({ initialStatus }: EventListContentProps) {
             </Text>
           )}
           <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-            {item.locationName || 'TBD'}
+            {item.locationName || 'Đang cập nhật'}
           </Text>
           <View className="flex-row items-center gap-2">
             <View className="flex-row items-center gap-1">
@@ -335,7 +335,10 @@ export function EventListContent({ initialStatus }: EventListContentProps) {
           <View className="items-center py-16">
             <Ionicons name="calendar-outline" size={40} color={theme.mutedForeground} />
             <Text className="mt-3 text-base font-bold" style={{ color: theme.foreground }}>
-              No events found
+              Không tìm thấy sự kiện.
+            </Text>
+            <Text className="mt-1 px-10 text-center text-sm" style={{ color: theme.mutedForeground }}>
+              Vui lòng kiểm tra lại từ khóa hoặc bộ lọc.
             </Text>
           </View>
         )

@@ -110,13 +110,13 @@ export default function EventDetailScreen({ navigation, route }: Props) {
         edges={['top']}>
         <Ionicons name="alert-circle-outline" size={48} color={theme.mutedForeground} />
         <Text className="mt-3 text-lg font-bold" style={{ color: theme.foreground }}>
-          Event not found
+          Không tìm thấy sự kiện.
         </Text>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           className="mt-4 rounded-full px-6 py-2"
           style={{ backgroundColor: theme.primary }}>
-          <Text className="font-semibold text-white">Go Back</Text>
+          <Text className="font-semibold text-white">Quay lại</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -187,7 +187,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
             <Text
               className={`text-sm font-bold ${activeTab === 'info' ? 'text-white' : ''}`}
               style={activeTab !== 'info' ? { color: theme.mutedForeground } : undefined}>
-              Details
+              Chi tiết
             </Text>
           </TouchableOpacity>
           {event.isTicketRequired && (
@@ -198,7 +198,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
               <Text
                 className={`text-sm font-bold ${activeTab === 'tickets' ? 'text-white' : ''}`}
                 style={activeTab !== 'tickets' ? { color: theme.mutedForeground } : undefined}>
-                Buy Tickets
+                Mua vé
               </Text>
             </TouchableOpacity>
           )}
@@ -212,7 +212,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
                 <EventContent html={event.fullDescription} />
               ) : (
                 <Text className="text-sm italic" style={{ color: theme.mutedForeground }}>
-                  No detailed description available.
+                  Không có chi tiết sự kiện.
                 </Text>
               )}
 
