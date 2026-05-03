@@ -12,9 +12,7 @@ import { useAuth } from '../context/AuthContext';
 import AuthLayout from '../components/AuthLayout';
 import AppLink from '@/components/Navigator/AppLink';
 import LoginForm from '../components/LoginForm';
-import {
-  GoogleSignin,
-} from '@react-native-google-signin/google-signin';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { logger } from '@/utils/logger';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -57,25 +55,25 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     } catch (error) {
       const errorMessage = (error as Error).message || '';
       logger.error('[LoginScreen] Login failed:', errorMessage);
+      let buttons = [
+        {
+          text: t('common.cancel'),
+          style: 'cancel',
+        },
+      ] as any;
+      if (errorMessage.toLowerCase() === 'not activated') {
+        buttons.push({
+          text: t('auth.alert.verify_now'),
+          onPress: () => navigation.navigate('VerifyEmail', { email: email.trim() }),
+        });
+      }
       // Check if account is not activated
-      if (
-        errorMessage.toLowerCase().includes('not activated') ||
-        errorMessage.toLowerCase().includes('not verified')
-      ) {
+      if (errorMessage.toLowerCase().includes('not activated') || errorMessage.toLowerCase().includes('not verified')) {
         alert({
           title: t('auth.alert.email_not_verified_title'),
           message: t('auth.alert.email_not_verified_message'),
           cancelable: true,
-          buttons: [
-            {
-              text: t('common.cancel'),
-              style: 'cancel',
-            },
-            {
-              text: t('auth.alert.verify_now'),
-              onPress: () => navigation.navigate('VerifyEmail', { email: email.trim() }),
-            },
-          ]
+          buttons: buttons,
         });
         return;
       }
@@ -89,11 +87,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             text: t('common.cancel'),
             style: 'cancel',
           },
-          {
-            text: t('auth.alert.verify_now'),
-            onPress: () => navigation.navigate('VerifyEmail', { email: email.trim() }),
-          },
-        ]
+        ],
       });
     } finally {
       loginingRef.current = false;
@@ -144,7 +138,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             text: t('common.ok'),
             style: 'default',
           },
-        ]
+        ],
       });
     } finally {
       loginingRef.current = false;
@@ -161,9 +155,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         {/* Header */}
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.foreground }]}>{t('auth.welcome_back')}</Text>
-          <Text style={[styles.subtitle, { color: theme.mutedForeground }]}>
-            {t('auth.sign_in_subtitle')}
-          </Text>
+          <Text style={[styles.subtitle, { color: theme.mutedForeground }]}>{t('auth.sign_in_subtitle')}</Text>
         </View>
 
         <LoginForm onSubmit={handleLogin} isLoading={loading} />
@@ -171,9 +163,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         {/* Divider */}
         <View style={styles.dividerContainer}>
           <Separator className="flex-1" />
-          <Text style={[styles.dividerText, { color: theme.mutedForeground }]}>
-            {t('auth.or_continue_with')}
-          </Text>
+          <Text style={[styles.dividerText, { color: theme.mutedForeground }]}>{t('auth.or_continue_with')}</Text>
           <Separator className="flex-1" />
         </View>
 
@@ -191,9 +181,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
         {/* Register Link */}
         <View style={styles.footer}>
-          <Text style={[styles.footerText, { color: theme.mutedForeground }]}>
-            {t('auth.no_account')}{' '}
-          </Text>
+          <Text style={[styles.footerText, { color: theme.mutedForeground }]}>{t('auth.no_account')} </Text>
           <AppLink screen="Register" params={{}}>
             {t('auth.button.register')}
           </AppLink>
