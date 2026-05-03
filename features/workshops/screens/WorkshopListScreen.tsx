@@ -29,11 +29,11 @@ type SortOption = {
 };
 
 const SORT_OPTIONS: SortOption[] = [
-  { label: 'Newest', value: 'createdAt', dir: 'desc' },
-  { label: 'Top Rated', value: 'averageRating', dir: 'desc' },
-  { label: 'Price: Low', value: 'defaultPrice', dir: 'asc' },
-  { label: 'Price: High', value: 'defaultPrice', dir: 'desc' },
-  { label: 'Duration', value: 'estimatedDuration', dir: 'asc' },
+  { label: 'Mới nhất', value: 'createdAt', dir: 'desc' },
+  { label: 'Đánh giá cao nhất', value: 'averageRating', dir: 'desc' },
+  { label: 'Giá: Thấp nhất', value: 'defaultPrice', dir: 'asc' },
+  { label: 'Giá: Cao nhất', value: 'defaultPrice', dir: 'desc' },
+  { label: 'Thời lượng', value: 'estimatedDuration', dir: 'asc' },
 ];
 
 const PAGE_SIZE = 10;
@@ -125,7 +125,7 @@ export function WorkshopListContent({ onNavigateToDetail }: WorkshopListContentP
           style={{ backgroundColor: theme.muted }}>
           <Ionicons name="search" size={20} color={theme.mutedForeground} />
           <TextInput
-            placeholder="Search workshops..."
+            placeholder="Tìm workshop..."
             placeholderTextColor={theme.mutedForeground}
             className="flex-1 text-sm"
             style={{ color: theme.foreground, paddingTop: 0, paddingBottom: 0 }}
@@ -155,7 +155,7 @@ export function WorkshopListContent({ onNavigateToDetail }: WorkshopListContentP
       {showFilters && (
         <View className="mt-3 rounded-xl border p-3" style={{ backgroundColor: theme.card, borderColor: theme.border }}>
           <Text className="mb-2 text-xs font-bold uppercase tracking-wider" style={{ color: theme.mutedForeground }}>
-            Category
+            Danh mục
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
             <TouchableOpacity
@@ -163,7 +163,7 @@ export function WorkshopListContent({ onNavigateToDetail }: WorkshopListContentP
               style={{ backgroundColor: !selectedTag ? theme.primary : theme.muted }}
               onPress={() => setSelectedTag(null)}>
               <Text className="text-xs font-bold" style={{ color: !selectedTag ? '#fff' : theme.mutedForeground }}>
-                All
+                Tất cả
               </Text>
             </TouchableOpacity>
             {isLoadingTags ? (
@@ -189,7 +189,7 @@ export function WorkshopListContent({ onNavigateToDetail }: WorkshopListContentP
           <Text
             className="mb-2 mt-3 text-xs font-bold uppercase tracking-wider"
             style={{ color: theme.mutedForeground }}>
-            Sort by
+            Sắp xếp theo
           </Text>
           <View className="flex-row flex-wrap gap-2">
             {SORT_OPTIONS.map((option) => (
@@ -215,7 +215,7 @@ export function WorkshopListContent({ onNavigateToDetail }: WorkshopListContentP
             <TouchableOpacity className="mt-3 flex-row items-center justify-center gap-1" onPress={clearFilters}>
               <Ionicons name="refresh-outline" size={14} color={theme.primary} />
               <Text className="text-xs font-semibold" style={{ color: theme.primary }}>
-                Clear filters
+                Xóa bộ lọc
               </Text>
             </TouchableOpacity>
           )}
@@ -228,12 +228,12 @@ export function WorkshopListContent({ onNavigateToDetail }: WorkshopListContentP
           <View className="flex-row items-center gap-2">
             {/* <ActivityIndicator size="small" color={theme.primary} /> */}
             <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-              Searching…
+              Đang tìm kiếm…
             </Text>
           </View>
         ) : (
           <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-            {totalElements} workshop{totalElements !== 1 ? 's' : ''} found
+            {totalElements} workshop{totalElements !== 1 ? 's' : ''} đã tìm thấy
           </Text>
         )}
         {selectedSort.label !== 'Newest' && (
@@ -330,7 +330,7 @@ export function WorkshopListContent({ onNavigateToDetail }: WorkshopListContentP
         <View className="items-center py-16">
           <ActivityIndicator size="large" color={theme.primary} />
           <Text className="mt-3 text-sm" style={{ color: theme.mutedForeground }}>
-            Loading workshops…
+            Đang tải workshop…
           </Text>
         </View>
       );
@@ -341,16 +341,16 @@ export function WorkshopListContent({ onNavigateToDetail }: WorkshopListContentP
         <View className="items-center py-16">
           <Ionicons name="cloud-offline-outline" size={40} color={theme.mutedForeground} />
           <Text className="mt-3 text-base font-bold" style={{ color: theme.foreground }}>
-            Something went wrong
+            Đã xảy ra lỗi
           </Text>
           <Text className="mt-1 px-10 text-center text-sm" style={{ color: theme.mutedForeground }}>
-            Could not load workshops. Please try again.
+            Không thể tải workshop. Vui lòng thử lại.
           </Text>
           <TouchableOpacity
             className="mt-4 rounded-full px-6 py-2"
             style={{ backgroundColor: theme.primary }}
             onPress={() => refetch()}>
-            <Text className="text-sm font-bold text-white">Retry</Text>
+            <Text className="text-sm font-bold text-white">Thử lại</Text>
           </TouchableOpacity>
         </View>
       );
@@ -360,10 +360,10 @@ export function WorkshopListContent({ onNavigateToDetail }: WorkshopListContentP
       <View className="items-center py-16">
         <Ionicons name="search-outline" size={40} color={theme.mutedForeground} />
         <Text className="mt-3 text-base font-bold" style={{ color: theme.foreground }}>
-          No workshops found
+          Không tìm thấy workshop.
         </Text>
         <Text className="mt-1 px-10 text-center text-sm" style={{ color: theme.mutedForeground }}>
-          Try adjusting your search or filters.
+          Vui lòng kiểm tra lại từ khóa hoặc bộ lọc.
         </Text>
       </View>
     );
@@ -418,7 +418,7 @@ export default function WorkshopListScreen({ navigation }: WorkshopListScreenPro
           <Ionicons name="arrow-back" size={24} color={theme.foreground} />
         </TouchableOpacity>
         <Text className="ml-2 flex-1 text-lg font-bold" style={{ color: theme.foreground }}>
-          Workshops
+          Workshop
         </Text>
         <View className="w-10" />
       </View>

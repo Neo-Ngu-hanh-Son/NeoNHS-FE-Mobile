@@ -32,7 +32,7 @@ export default function EventInfoSection({ event, theme, onOpenTimelineMap }: Ev
           </View>
           {event.isTicketRequired && (
             <View className="rounded-lg bg-amber-500/20 px-2.5 py-1">
-              <Text className="text-xs font-bold text-amber-600">Ticket Required</Text>
+              <Text className="text-xs font-bold text-amber-600">Cần vé</Text>
             </View>
           )}
         </View>
@@ -61,7 +61,7 @@ export default function EventInfoSection({ event, theme, onOpenTimelineMap }: Ev
             </Text>
             {event.endTime && (
               <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-                to {formatDateTime(event.endTime)}
+                đến {formatDateTime(event.endTime)}
               </Text>
             )}
           </View>
@@ -87,7 +87,7 @@ export default function EventInfoSection({ event, theme, onOpenTimelineMap }: Ev
             </View>
             <View className="flex-1">
               <Text className="text-sm font-semibold" style={{ color: theme.foreground }}>
-                {event.currentEnrolled || 0} / {event.maxParticipants} attendees
+                {event.currentEnrolled || 0} / {event.maxParticipants} người tham dự
               </Text>
               <View className="mt-1 h-1.5 overflow-hidden rounded-full" style={{ backgroundColor: theme.muted }}>
                 <View
@@ -108,7 +108,7 @@ export default function EventInfoSection({ event, theme, onOpenTimelineMap }: Ev
             <Ionicons name="pricetag-outline" size={20} color="#f59e0b" />
           </View>
           <Text className="text-sm font-bold" style={{ color: theme.primary }}>
-            {event.isTicketRequired ? 'Yêu cầu vé' : 'Miễn phí '}
+            {event.isTicketRequired ? 'Cần vé' : 'Miễn phí '}
           </Text>
         </View>
       </View>
@@ -142,12 +142,12 @@ export default function EventInfoSection({ event, theme, onOpenTimelineMap }: Ev
             {hasEventTimeline ? (
               <>
                 <Ionicons name="map-outline" size={18} color="#ffffff" />
-                <Text className="text-sm font-bold text-white">Open Timeline Map</Text>
+                <Text className="text-sm font-bold text-white">Mở bản đồ</Text>
               </>
             ) : (
               <>
                 <Ionicons name="map-outline" size={18} className="text-muted-foreground" />
-                <Text className="text-sm font-bold text-muted-foreground">No Timeline Available</Text>
+                <Text className="text-sm font-bold text-muted-foreground">Không có bản đồ</Text>
               </>
             )}
           </TouchableOpacity>
