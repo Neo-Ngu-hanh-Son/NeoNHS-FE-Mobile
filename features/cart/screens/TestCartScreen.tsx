@@ -285,11 +285,11 @@ export default function TestCartScreen() {
                                 <Text style={{ color: theme.foreground, fontWeight: 'bold' }}>Final Total:</Text>
                                 <Text style={{ color: theme.primary, fontWeight: 'bold', fontSize: 18 }}>{preCheckoutData.finalTotalPrice.toLocaleString()} VND</Text>
                             </View>
-                            {preCheckoutData.appliedVoucher && (
-                                <Text style={{ color: '#22c55e', fontSize: 12, marginTop: 4 }}>
-                                    Applied Voucher: {preCheckoutData.appliedVoucher.code} (-{preCheckoutData.appliedVoucher.discountValue.toLocaleString()})
+                            {preCheckoutData.appliedVouchers && preCheckoutData.appliedVouchers.map((detail, idx) => (
+                                <Text key={idx} style={{ color: '#22c55e', marginTop: 4 }}>
+                                    Applied Voucher: {detail.voucher.code} (-{detail.discountAmount.toLocaleString()})
                                 </Text>
-                            )}
+                            ))}
                         </View>
                     )}
                 </View>

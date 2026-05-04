@@ -14,6 +14,7 @@ export interface CartItem {
     workshopName?: string;
     // Vendor info (for vendor-scoped voucher matching)
     vendorId?: string;
+    vendorName?: string;
 }
 
 export interface Cart {
@@ -46,6 +47,11 @@ export interface Voucher {
     vendorName?: string;
 }
 
+export interface AppliedVoucherDetail {
+    voucher: Voucher;
+    discountAmount: number;
+}
+
 export interface PreCheckoutResponse {
     cartItems: CartItem[];
     totalPrice: number;
@@ -53,7 +59,7 @@ export interface PreCheckoutResponse {
     invalidVouchers: Voucher[];
     discountValue: number;
     finalTotalPrice: number;
-    appliedVoucher: Voucher | null;
+    appliedVouchers: AppliedVoucherDetail[];
     transactionDate: string;
 }
 
