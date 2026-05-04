@@ -58,7 +58,7 @@ export default function EventTimelineMapOverlay({
       const name = item.pointName?.trim() || item.name;
       const address = item.address;
       const timelineCount = item.timelineInfos?.length ?? 0;
-      const subtitle = timelineCount > 0 ? `${timelineCount} ${timelineCount === 1 ? 'timeline' : 'timelines'}` : '';
+      const subtitle = timelineCount > 0 ? `${timelineCount} ${timelineCount === 1 ? 'lịch trình' : 'lịch trình'}` : '';
 
       return (
         <EvtMapSearchResultComponent
@@ -90,6 +90,7 @@ export default function EventTimelineMapOverlay({
         renderSearchResult={renderSearchResult}
       />
 
+      {/* Days and tags filter */}
       {(hasDays || hasTags) && (
         <EvtMapDayAndTagsSelector
           topInset={topInset}

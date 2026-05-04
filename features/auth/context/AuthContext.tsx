@@ -386,7 +386,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={value}>
       {children}
-      <LoadingOverlay visible={state.isLoading} message="Loading..." />
+      <LoadingOverlay visible={state.isLoading} message="Đang tải..." />
     </AuthContext.Provider>
   );
 }

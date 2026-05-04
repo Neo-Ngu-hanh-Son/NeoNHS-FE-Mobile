@@ -10,6 +10,7 @@ import { rootNavigationRef } from './rootNavigationRef';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { NAV_THEME } from '@/lib/theme';
 import { PanoramaProvider } from '../providers/PanoramaProvider';
+import { DeepLinkProvider } from '../providers/DeepLinkProvider';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -20,12 +21,14 @@ export default function RootNavigator() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View className={`flex-1 ${isDarkColorScheme ? 'dark' : ''}`}>
         <NavigationContainer ref={rootNavigationRef} theme={NAV_THEME[colorScheme]}>
-          <PanoramaProvider>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="Main" component={MainNavigator} />
-              <Stack.Screen name="Auth" component={AuthNavigator} />
-            </Stack.Navigator>
-          </PanoramaProvider>
+          <DeepLinkProvider>
+            <PanoramaProvider>
+              <Stack.Navigator screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="Main" component={MainNavigator} />
+                <Stack.Screen name="Auth" component={AuthNavigator} />
+              </Stack.Navigator>
+            </PanoramaProvider>
+          </DeepLinkProvider>
         </NavigationContainer>
       </View>
     </GestureHandlerRootView>

@@ -95,7 +95,7 @@ export default function TransactionDetailsScreen() {
     if (loading) {
         return (
             <View style={[styles.container, { backgroundColor: isDarkColorScheme ? theme.background : '#F7F9FC', justifyContent: 'center', alignItems: 'center' }]}>
-                <Text style={{ color: theme.foreground }}>Loading...</Text>
+                <Text style={{ color: theme.foreground }}>Đang tải...</Text>
             </View>
         );
     }

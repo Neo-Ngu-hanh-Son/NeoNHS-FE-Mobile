@@ -5,6 +5,7 @@ import { Text } from '@/components/ui/text';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { TravelMode } from '../../types';
+import { useTranslation } from 'react-i18next';
 
 type TransportModeSelectorSheetProps = {
   excludedModes?: TravelMode[];
@@ -64,15 +65,16 @@ export default function TransportModeSelectorSheet({
 }: TransportModeSelectorSheetProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+  const { t } = useTranslation();
 
   const summaryText = useMemo(() => {
     const summaryParts = [previewDistanceText, previewDurationText].filter(Boolean);
     if (summaryParts.length === 0) {
-      return isLoading ? 'Loading route preview...' : 'Choose a transport mode to preview route details.';
+      return isLoading ? t('map.loading_route_preview') : t('map.choose_transport_mode');
     }
 
     return summaryParts.join(' • ');
-  }, [isLoading, previewDistanceText, previewDurationText]);
+  }, [isLoading, previewDistanceText, previewDurationText, t]);
 
   const makeModePressHandler = useCallback(
     (mode: TravelMode) => {
@@ -104,15 +106,15 @@ export default function TransportModeSelectorSheet({
         }}>
         <View className="flex-row items-start justify-between gap-3">
           <View className="flex-1">
-            <Text className="text-base font-bold">Choose transportation</Text>
+            <Text className="text-base font-bold">{t('map.choose_transport')}</Text>
             <Text numberOfLines={1} className="mt-0.5 text-sm text-muted-foreground">
-              {destinationName ? `To ${destinationName}` : 'Select how you want to travel'}
+              {destinationName ? `${t('map.to')} ${destinationName}` : t('map.select_mode_text')}
             </Text>
           </View>
 
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel="Cancel navigation"
+            accessibilityLabel={t('common.cancel')}
             activeOpacity={0.85}
             onPress={onCancel}
             className="h-8 w-8 items-center justify-center rounded-full border border-border bg-background">
@@ -142,12 +144,12 @@ export default function TransportModeSelectorSheet({
 
         <View className="mt-2.5 rounded-lg border border-border/40 px-2.5 py-2">
           <Text className="font-semibold">
-            {selectedModeLabel ? `Travel by: ${selectedModeLabel}` : 'Select a travel mode'}
+            {selectedModeLabel ? `${t('map.travel_by')} ${t(`map.${selectedModeLabel.toLowerCase()}`)}` : t('map.select_travel_mode')}
           </Text>
         </View>
 
         <View className="mt-2.5 rounded-lg border border-border/40 bg-background px-2.5 py-2">
-          <Text className="text-xs font-semibold text-muted-foreground">Route preview</Text>
+          <Text className="text-xs font-semibold text-muted-foreground">{t('map.route_preview')}</Text>
           <Text className="mt-0.5 font-semibold">{summaryText}</Text>
           {errorMessage ? <Text className="mt-1 text-xs text-destructive">{errorMessage}</Text> : null}
         </View>
@@ -163,7 +165,7 @@ export default function TransportModeSelectorSheet({
               }`}>
             <Text
               className={`font-semibold ${canStartNavigation ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
-              {canStartNavigation ? 'Start Navigation' : 'Loading Navigation...'}
+              {canStartNavigation ? t('map.start_navigation') : t('map.loading_navigation')}
             </Text>
           </TouchableOpacity>
         </View>

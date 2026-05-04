@@ -10,6 +10,7 @@ import { useTheme } from '@/app/providers/ThemeProvider';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
+import { ImageViewerModal } from '@/components/common/ImageViewerModal';
 
 interface EventContentProps {
   html: string;
@@ -57,9 +58,9 @@ export default function EventContent({ html }: EventContentProps) {
             width: contentWidth,
             height: computedHeight,
             borderRadius: 8,
-            resizeMode: 'cover',
             alignSelf: 'center',
           }}
+          contentFit='contain'
         />
       </Pressable>
     );
@@ -129,28 +130,12 @@ export default function EventContent({ html }: EventContentProps) {
         </TouchableOpacity>
       )}
 
-      {/* Fullscreen Image Modal */}
-      <Modal visible={modalVisible} transparent animationType="fade">
-        <Pressable
-          onPress={() => setModalVisible(false)}
-          style={{
-            flex: 1,
-            backgroundColor: 'rgba(0,0,0,0.85)',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-          {selectedImage && (
-            <SmartImage
-              uri={selectedImage}
-              style={{
-                width: width,
-                height: height,
-                resizeMode: 'contain',
-              }}
-            />
-          )}
-        </Pressable>
-      </Modal>
+      <ImageViewerModal
+        visible={modalVisible}
+        initialIndex={0}
+        images={selectedImage ? [{ imageUrl: selectedImage }] : []}
+        onClose={() => setModalVisible(false)}
+      />
     </>
   );
 }

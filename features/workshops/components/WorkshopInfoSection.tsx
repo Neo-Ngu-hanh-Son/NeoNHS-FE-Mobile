@@ -88,7 +88,7 @@ export default function WorkshopInfoSection({ workshop, theme }: WorkshopInfoSec
                 className="rounded-lg px-2 py-1 self-start"
                 style={{ backgroundColor: '#dcfce7' }}
               >
-                <Text className="text-sm font-extrabold" style={{ color: '#16a34a' }}>FREE</Text>
+                <Text className="text-sm font-extrabold" style={{ color: '#16a34a' }}>MIỄN PHÍ</Text>
               </View>
             ) : (
               <>

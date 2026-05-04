@@ -53,7 +53,7 @@ export default function DestinationListHeader({ attraction }: Props) {
           className="text-[10px] font-bold tracking-tight"
           style={{ color: attraction.status === 'OPEN' ? '#10b981' : '#ef4444' }}
         >
-          {attraction.status || 'CLOSED'}
+          {attraction.status === 'OPEN' ? 'Hoạt động' : 'Đóng cửa'}
         </Text>
       </View>
     </View>

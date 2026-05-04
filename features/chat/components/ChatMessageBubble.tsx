@@ -586,7 +586,7 @@ const ChatMessageBubbleBase = ({
                   <Ionicons name="cloud-upload-outline" size={22} color="#FFFFFF" />
                 </View>
                 <Text className="mt-2 text-xs font-medium" style={{ color: '#FFFFFF' }}>
-                  Uploading...
+                  Đang tải lên...
                 </Text>
               </View>
             </View>

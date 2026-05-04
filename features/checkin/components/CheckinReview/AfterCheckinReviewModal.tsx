@@ -55,7 +55,7 @@ export const AfterCheckinReviewModal = ({
 
   const handlePostReview = async () => {
     if (rating <= 0) {
-      Alert.alert('Rating required', 'Please select a star rating before posting your review.');
+      Alert.alert('Đánh giá', 'Vui lòng chọn đánh giá trước khi đăng.');
       return;
     }
 
@@ -78,9 +78,9 @@ export const AfterCheckinReviewModal = ({
       <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 32 }}>
         {/* Header */}
         <Animated.View entering={FadeInDown.duration(400)}>
-          <Text className="text-center text-2xl font-black text-foreground">Review your visit</Text>
+          <Text className="text-center text-2xl font-black text-foreground">Đánh giá trải nghiệm</Text>
           <Text className="mt-1 text-center text-sm text-muted-foreground">
-            How was your time at {destinationName}?
+            Bạn đã có một chuyến đi tuyệt vời? Hãy chia sẻ với mọi người.
           </Text>
         </Animated.View>
 
@@ -101,16 +101,18 @@ export const AfterCheckinReviewModal = ({
 
         {/* Description Input */}
         <Animated.View entering={FadeInUp.delay(200)} className="mb-6">
-          <Text className="mb-2 ml-1 text-sm font-bold text-muted-foreground">DESCRIPTION</Text>
+          <Text className="mb-2 ml-1 text-sm font-bold text-muted-foreground">MÔ TẢ</Text>
           <TextInput
             multiline
             numberOfLines={4}
             textAlignVertical="top"
-            placeholder="Share your experience with other travelers..."
+            placeholder="Hãy chia sẻ trải nghiệm của bạn với những người du lịch khác..."
             className="h-32 rounded-3xl border border-muted/50 bg-muted/30 p-4 text-start align-top text-base text-foreground"
             placeholderTextColor="#94A3B8"
             value={description}
             onChangeText={setDescription}
+            autoCorrect={false}
+            spellCheck={false}
           />
         </Animated.View>
 
@@ -132,7 +134,7 @@ export const AfterCheckinReviewModal = ({
             {isSubmitting ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
-              <Text className="text-xl font-black text-white">Post Review</Text>
+              <Text className="text-xl font-black text-white">Đăng đánh giá</Text>
             )}
           </Button>
         </Animated.View>

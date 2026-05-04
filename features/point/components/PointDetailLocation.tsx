@@ -41,7 +41,7 @@ export function PointDetailLocation({ point, onOpenMap }: PointDetailLocationPro
       </TouchableOpacity>
       <View>
         <Text variant="muted" className="text-start">
-          {point.address || 'Ngũ Hành Sơn, Đà Nẵng'}
+          Địa chỉ: {point.address || 'Ngũ Hành Sơn, Đà Nẵng'}
         </Text>
       </View>
     </View>

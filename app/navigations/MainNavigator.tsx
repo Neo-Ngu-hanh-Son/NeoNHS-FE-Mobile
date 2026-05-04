@@ -46,6 +46,7 @@ import ReportScreen from '@/features/report/screens/ReportScreen';
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
 export default function MainNavigator() {
+
   return (
     <>
       <Stack.Navigator

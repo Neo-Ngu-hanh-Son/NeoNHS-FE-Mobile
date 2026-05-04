@@ -28,6 +28,7 @@ import { useTranslatedQuery } from '@/hooks/useTranslatedQuery';
 import { logger } from '@/utils/logger';
 import { usePanorama } from '@/app/providers/PanoramaProvider';
 import { ReportTypes } from '@/features/report/type';
+import { buildPointLink, shareLink } from '@/utils/deeplink';
 
 type Props = CompositeScreenProps<
   StackScreenProps<MainStackParamList, 'PointDetail'>,
@@ -105,9 +106,15 @@ export default function PointDetailScreen({ navigation, route }: Props) {
   const handleShare = async () => {
     if (!point) return;
     try {
-      await Share.share({ message: `Check out ${point.name} on NeoNHS!` });
+      const url = buildPointLink(pointId);
+      logger.debug(`Testing share url: ${url}`);
+      await Share.share({
+        message: url,
+        title: 'Hãy khám phá địa điểm này với NeoNHS!',
+        url,
+      });
     } catch (error) {
-      console.log(error);
+      console.error('Error sharing point:', error);
     }
   };
 
@@ -167,7 +174,6 @@ export default function PointDetailScreen({ navigation, route }: Props) {
     );
   }
 
-  // ─── Main content ───
   return (
     <View className="flex-1 bg-background">
       <RefreshableScrollView onRefresh={() => refetch()} contentContainerStyle={{ paddingBottom: 120 }} edges={[]}>

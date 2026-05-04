@@ -86,8 +86,8 @@ export default function CheckinPhotoPreviewModal({
           {/* Header Section */}
           <View className="mb-6 flex-row items-center justify-between">
             <View>
-              <Text className="text-2xl font-bold text-foreground">Review Photo</Text>
-              <Text className="text-sm text-muted-foreground">Add a note to your check-in</Text>
+              <Text className="text-2xl font-bold text-foreground">Ảnh check-in</Text>
+              <Text className="text-sm text-muted-foreground">Thêm một ghi chú cho check-in của bạn</Text>
             </View>
             <TouchableOpacity
               onPress={handleCancelCheckinPhoto}

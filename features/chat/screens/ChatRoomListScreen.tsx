@@ -9,6 +9,7 @@ import { THEME } from "@/lib/theme";
 
 import { ChatRoomItem } from "../components/ChatRoomItem";
 import { useChatContext } from "../context/ChatProvider";
+import { useTranslation } from "react-i18next";
 
 type TabKey = "all" | "support" | "artist";
 const TABS: { key: TabKey; label: string }[] = [
@@ -25,6 +26,7 @@ export default function ChatRoomListScreen({ navigation }: any) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [refreshingRooms, setRefreshingRooms] = useState(false);
+  const { t } = useTranslation();
 
   const handleRefreshRooms = useCallback(async () => {
     setRefreshingRooms(true);
@@ -55,6 +57,17 @@ export default function ChatRoomListScreen({ navigation }: any) {
     return list;
   }, [rooms, searchQuery, activeTab]);
 
+  const getVNTabLabel = (tab: TabKey) => {
+    switch (tab) {
+      case "all":
+        return "Tất cả";
+      case "support":
+        return "Hỗ trợ";
+      case "artist":
+        return "Nghệ nhân";
+    }
+  };
+
   const renderHeader = () => (
     <View className="px-4 py-3">
       {/* Page Title */}
@@ -63,7 +76,7 @@ export default function ChatRoomListScreen({ navigation }: any) {
           <Ionicons name="arrow-back" size={24} color={theme.foreground} />
         </TouchableOpacity>
         <Text className="text-2xl font-bold flex-1 ml-2" style={{ color: theme.foreground }}>
-          Chats
+          Tin nhắn
         </Text>
         <TouchableOpacity className="p-2">
           <Ionicons name="create-outline" size={24} color={theme.primary} />
@@ -74,7 +87,7 @@ export default function ChatRoomListScreen({ navigation }: any) {
       <View className="flex-row items-center rounded-xl px-4 py-2.5 gap-2" style={{ backgroundColor: theme.muted }}>
         <Ionicons name="search" size={20} color={theme.mutedForeground} />
         <TextInput
-          placeholder="Search chats..."
+          placeholder="Tìm kiếm..."
           placeholderTextColor={theme.mutedForeground}
           className="flex-1 text-base leading-5"
           style={{ color: theme.foreground, paddingTop: 0, paddingBottom: 0 }}
@@ -106,7 +119,7 @@ export default function ChatRoomListScreen({ navigation }: any) {
                 className="text-sm font-semibold"
                 style={{ color: isActive ? "#FFFFFF" : theme.mutedForeground }}
               >
-                {tab.label}
+                {getVNTabLabel(tab.key)}
               </Text>
             </TouchableOpacity>
           );
@@ -143,7 +156,7 @@ export default function ChatRoomListScreen({ navigation }: any) {
           <View className="py-20 items-center">
             <Ionicons name="chatbubble-ellipses-outline" size={48} color={theme.mutedForeground} />
             <Text className="mt-4 text-base" style={{ color: theme.mutedForeground }}>
-              {activeTab === "all" ? "No chats found." : `No ${activeTab === "support" ? "support" : "artist"} chats found.`}
+              {activeTab === "all" ? "Không tìm thấy cuộc trò chuyện." : `Không có cuộc trò chuyện ${activeTab === "support" ? "với bộ phận hỗ trợ nào" : "với nghệ nhân nào"}.`}
             </Text>
           </View>
         )}

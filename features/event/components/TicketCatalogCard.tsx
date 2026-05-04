@@ -12,6 +12,7 @@ import {
   calcDiscount,
   formatDaysOfWeek,
   formatDate,
+  formatDaysOfWeekVN,
 } from "../utils/helpers";
 import { cartService } from "../../cart/services/cartService";
 
@@ -208,7 +209,7 @@ export default function TicketCatalogCard({
             className="text-xs"
             style={{ color: theme.mutedForeground }}
           >
-            Available: {formatDaysOfWeek(ticket.applyOnDays)}
+            Available: {formatDaysOfWeekVN(ticket.applyOnDays)}
           </Text>
         </View>
 

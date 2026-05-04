@@ -34,7 +34,7 @@ export default function KnowBeforeYouGoSection({ guides, loading, error }: Props
         <SectionHeader title={t('home.know_before_you_go')} />
         <SectionStateMessage
           tone="error"
-          message="Failed to fetch guides. Please pull to refresh."
+          message="Không thể tải blogs. Vui lòng kéo để tải lại."
         />
       </View>
     );
@@ -44,7 +44,7 @@ export default function KnowBeforeYouGoSection({ guides, loading, error }: Props
     return (
       <View className="mb-4">
         <SectionHeader title={t('home.know_before_you_go')} />
-        <SectionStateMessage message="No guides found." />
+        <SectionStateMessage message="Không tìm thấy blogs." />
       </View>
     );
   }

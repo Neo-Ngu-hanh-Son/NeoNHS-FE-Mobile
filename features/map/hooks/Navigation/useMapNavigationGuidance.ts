@@ -343,7 +343,7 @@ export function useMapNavigationGuidance({
         setCurrentUserStepIndex(candidateIndex);
         currentStepIndexRef.current = candidateIndex;
 
-        const nextInstruction = steps[candidateIndex].navigationInstruction?.instructions;
+        const nextInstruction = steps[candidateIndex].navigationInstruction?.maneuver;
 
         if (nextInstruction) {
           Speech.stop(); // Immediately stop the previous instruction

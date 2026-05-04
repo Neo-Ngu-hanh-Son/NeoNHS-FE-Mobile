@@ -99,7 +99,7 @@ const EventTimelinePointDetailBottomSheet = forwardRef<
   return (
     <BottomSheetModal
       ref={ref}
-      snapPoints={['50%', '100%']}
+      snapPoints={['50%', '75%', '100%']}
       onDismiss={onAfterClose}
       topInset={top}
       enablePanDownToClose
@@ -138,7 +138,7 @@ const EventTimelinePointDetailBottomSheet = forwardRef<
               <View style={[styles.countChip, { backgroundColor: hexAlpha(tagColor, '18'), borderColor: tagBorder }]}>
                 <CalendarDays size={16} color={tagColor} />
                 <Text style={[styles.countText, { color: tagColor }]}>
-                  {timelines.length} {timelines.length === 1 ? 'timeline' : 'timelines'}
+                  {timelines.length} {timelines.length === 1 ? 'lịch trình' : 'lịch trình'}
                 </Text>
               </View>
             </View>
@@ -155,7 +155,7 @@ const EventTimelinePointDetailBottomSheet = forwardRef<
               <View style={[styles.countChip, { backgroundColor: hexAlpha(tagColor, '18'), borderColor: tagBorder }]}>
                 <CalendarDays size={16} color={tagColor} />
                 <Text style={[styles.countText, { color: tagColor }]}>
-                  {timelines.length} {timelines.length === 1 ? 'event' : 'events'}
+                  {timelines.length} {timelines.length === 1 ? 'lịch trình' : 'lịch trình'}
                 </Text>
               </View>
             ) : null}
@@ -190,8 +190,8 @@ const EventTimelinePointDetailBottomSheet = forwardRef<
 
           {/* ── Timeline accordion ───────────────────────── */}
           <View style={styles.timelineSection}>
-            <Text style={[styles.sectionLabel, { color: theme.mutedForeground }]}>Event happening in this day</Text>
-            <Text style={[styles.timelineHint, { color: theme.mutedForeground }]}>Tap to view details.</Text>
+            <Text style={[styles.sectionLabel, { color: theme.mutedForeground }]}>Các hoạt động diễn ra tại đây</Text>
+            <Text style={[styles.timelineHint, { color: theme.mutedForeground }]}>Bấm để xem chi tiết.</Text>
             <EventTimelineAccordion point={point} />
           </View>
 
@@ -222,7 +222,7 @@ const EventTimelinePointDetailBottomSheet = forwardRef<
             style={[styles.cta, { backgroundColor: tagColor }]}
             accessibilityLabel="Start navigation action">
             <Compass size={20} color="#fff" style={{ marginRight: 8 }} />
-            <Text style={styles.ctaText}>Get Directions</Text>
+            <Text style={styles.ctaText}>Chỉ đường</Text>
           </TouchableOpacity>
         </View>
       </BottomSheetScrollView>

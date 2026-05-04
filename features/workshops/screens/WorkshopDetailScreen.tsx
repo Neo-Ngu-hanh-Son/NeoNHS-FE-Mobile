@@ -23,6 +23,7 @@ import { useWorkshopReviews } from '../hooks/useWorkshopReviews';
 import { useChatContext } from '@/features/chat/context/ChatProvider';
 import SmartMenu from '@/components/common/MenuTriggerBtn';
 import { ReportTypes } from '@/features/report/type';
+import { buildPointLink, buildWorkshopLink } from '@/utils/deeplink';
 
 type Props = StackScreenProps<MainStackParamList, 'WorkshopDetail'>;
 
@@ -63,9 +64,10 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
 
   const handleShare = useCallback(() => {
     if (!workshop) return;
+
     Share.share({
       title: workshop.name,
-      message: workshop.shortDescription ?? '',
+      message: buildWorkshopLink(workshop.id),
     });
   }, [workshop]);
 
@@ -194,8 +196,8 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
             <Text
               className={`text-sm font-bold ${activeTab === 'sessions' ? 'text-white' : ''}`}
               style={activeTab !== 'sessions' ? { color: theme.mutedForeground } : undefined}>
-              {!workshop.defaultPrice || workshop.defaultPrice === 0 
-                ? t('workshop.view_sessions') 
+              {!workshop.defaultPrice || workshop.defaultPrice === 0
+                ? t('workshop.view_sessions')
                 : t('workshop.book_sessions')}
             </Text>
           </TouchableOpacity>
@@ -263,7 +265,7 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
                 style={{ backgroundColor: '#dcfce7' }}
               >
                 <Text className="text-sm font-extrabold" style={{ color: '#16a34a' }}>
-                  🎉 FREE
+                  🎉 MIỄN PHÍ
                 </Text>
               </View>
             </View>

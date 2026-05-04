@@ -308,7 +308,7 @@ export function WorkshopListContent({ onNavigateToDetail }: WorkshopListContentP
                 {workshop.vendorName}
               </Text>
               {workshop.defaultPrice === 0 ? (
-                <Text className="text-sm font-extrabold" style={{ color: '#16a34a' }}>FREE</Text>
+                <Text className="text-sm font-extrabold" style={{ color: '#16a34a' }}>MIỄN PHÍ</Text>
               ) : (
                 <Text className="text-sm font-bold" style={{ color: theme.primary }}>
                   {formatPrice(workshop.defaultPrice)}

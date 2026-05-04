@@ -36,11 +36,11 @@ function formatParticipantRole(role?: string): string {
   if (!role) return '';
   switch (role.toUpperCase()) {
     case 'ADMIN':
-      return 'Admin';
+      return 'Quản trị viên';
     case 'VENDOR':
-      return 'Vendor';
+      return 'Nghệ nhân';
     case 'TOURIST':
-      return 'Tourist';
+      return 'Khách du lịch';
     default:
       return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
   }
@@ -501,7 +501,7 @@ export default function ChatScreen({ route, navigation }: any) {
             </Text>
           ) : isOtherTyping ? (
             <Text className="text-xs" style={{ color: theme.primary }}>
-              typing...
+              Đang gõ...
             </Text>
           ) : isAiRoom ? (
             <Text className="text-xs" style={{ color: theme.mutedForeground }}>
@@ -745,7 +745,7 @@ export default function ChatScreen({ route, navigation }: any) {
             <TextInput
               className="flex-1 text-base leading-5"
               style={{ color: theme.foreground, paddingTop: 0, paddingBottom: 0 }}
-              placeholder="Message..."
+              placeholder="Nhập tin nhắn..."
               placeholderTextColor={theme.mutedForeground}
               multiline
               value={messageText}

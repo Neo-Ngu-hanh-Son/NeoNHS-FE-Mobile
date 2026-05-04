@@ -110,7 +110,7 @@ export default function DestinationsTab({ initialAttractionId }: { initialAttrac
     <>
       <DebouncedInput
         onSearch={(value) => setSearchQuery(value)}
-        placeholder={`Search destinations...`}
+        placeholder={`Tìm kiếm địa điểm...`}
         delay={500}
       />
       <FilterChips<Attraction>

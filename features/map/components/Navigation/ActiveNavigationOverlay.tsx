@@ -8,6 +8,7 @@ import { THEME } from '@/lib/theme';
 import { getManeuverPresentation } from '../../utils/helpers';
 import type { NavigationGuideOverlayProps } from './types';
 import { logger } from '@/utils/logger';
+import { useTranslation } from 'react-i18next';
 
 type ActiveNavigationOverlayProps = Omit<NavigationGuideOverlayProps, 'visible' | 'isUserArrived' | 'isReady'>;
 
@@ -21,7 +22,7 @@ export default function ActiveNavigationOverlay({
 }: ActiveNavigationOverlayProps) {
   const { isDarkColorScheme } = useTheme();
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
-
+  const { t } = useTranslation();
   const formatedNavigationStepText = () => {
     if (!currentNavigationStepData?.currentInstructionText) return '';
     try {
@@ -32,9 +33,9 @@ export default function ActiveNavigationOverlay({
     }
   };
 
-  const statusTitle = isLoading ? 'Preparing route...' : isLoading ? 'Route ready' : 'Waiting for navigation data...';
+  const statusTitle = isLoading ? t('map.please_wait_while_route_loads') : isLoading ? t('map.route_ready') : t('map.waiting_for_navigation_data');
   const statusSubtitle =
-    errorMessage ?? (isLoading ? 'Fetching directions from your current location' : 'Fetching route data...');
+    errorMessage ?? (isLoading ? t('map.please_wait_while_route_loads') : t('map.waiting_for_navigation_data'));
 
   const hasActiveInstruction = !!currentNavigationStepData?.currentInstructionText;
   const maneuverPresentation = getManeuverPresentation(currentNavigationStepData?.currentManeuver);
@@ -51,8 +52,8 @@ export default function ActiveNavigationOverlay({
   }
 
   if (currentNavigationStepData?.currentManeuver === 'CUSTOM') {
-    topCardTitle = 'Keep following main path';
-    topCardSubtitle = 'Follow the main path.';
+    topCardTitle = t('map.keep_following_main_path');
+    topCardSubtitle = t('map.follow_the_main_path');
   }
 
   return (
@@ -92,7 +93,7 @@ export default function ActiveNavigationOverlay({
               className={`rounded-full bg-white/10 px-3 py-1`}
               accessibilityRole="button"
               accessibilityLabel="Open navigation steps">
-              <Text className={`text-xs font-semibold text-white/70`}>Steps</Text>
+              <Text className={`text-xs font-semibold text-white/70`}>{t('map.steps')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -108,11 +109,11 @@ export default function ActiveNavigationOverlay({
           <View className="flex-row items-center justify-between gap-3">
             <View className="flex-1">
               <Text className="text-base font-bold text-white">
-                {currentNavigationStepData?.tripDurationText ?? (isLoading ? 'Calculating...' : 'Navigation')}
+                {currentNavigationStepData?.tripDurationText ?? (isLoading ? t('map.please_wait_while_route_loads') : t('map.navigation'))}
                 {currentNavigationStepData?.tripDistanceText ? ` · ${currentNavigationStepData.tripDistanceText}` : ''}
               </Text>
               <Text className="text-xs text-white/80">
-                {isLoading ? 'Please wait while route loads' : 'No active route'}
+                {isLoading ? t('map.please_wait_while_route_loads') : t('map.no_active_route')}
               </Text>
             </View>
 
@@ -124,7 +125,7 @@ export default function ActiveNavigationOverlay({
               className="flex-row items-center gap-2 rounded-full px-4 py-2"
               style={{ backgroundColor: '#b91c1c' }}>
               <Ionicons name="close" size={16} color="#ffffff" />
-              <Text className="text-sm font-semibold text-white">Exit</Text>
+              <Text className="text-sm font-semibold text-white">{t('map.exit')}</Text>
             </TouchableOpacity>
           </View>
         </View>
