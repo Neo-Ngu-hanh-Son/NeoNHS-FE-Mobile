@@ -64,6 +64,13 @@ export default function CartListScreen() {
                     groups[key] = { vendorId: item.vendorId, vendorName: item.vendorName || item.workshopName || 'Workshop', items: [] };
                 }
                 groups[key].items.push(item);
+            } else if (item.eventId) {
+                // Group event tickets together as a pseudo-vendor
+                const key = 'event';
+                if (!groups[key]) {
+                    groups[key] = { vendorId: 'event', vendorName: t('cart.event_tickets', 'Vé sự kiện'), items: [] };
+                }
+                groups[key].items.push(item);
             }
         }
         return Object.values(groups);
@@ -73,6 +80,10 @@ export default function CartListScreen() {
     const getFilteredVouchers = () => {
         if (voucherModalTarget === 'platform') {
             return vouchers.filter(v => !v.vendorId);
+        }
+        if (voucherModalTarget === 'event') {
+            // Event vouchers are platform vouchers (no vendorId) that apply to events
+            return vouchers.filter(v => !v.vendorId && (v.applicableProduct === 'EVENT_TICKET' || v.applicableProduct === 'ALL'));
         }
         return vouchers.filter(v => v.vendorId === voucherModalTarget);
     };

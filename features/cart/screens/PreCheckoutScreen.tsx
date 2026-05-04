@@ -21,7 +21,7 @@ interface GroupedItems {
     items: CartItem[];
 }
 
-function groupCartItems(cartItems: CartItem[]): GroupedItems[] {
+function groupCartItems(cartItems: CartItem[], t: any): GroupedItems[] {
     const groups: Record<string, GroupedItems> = {};
 
     for (const item of cartItems) {
@@ -29,9 +29,9 @@ function groupCartItems(cartItems: CartItem[]): GroupedItems[] {
         let groupName: string;
         let groupType: 'event' | 'workshop' | 'other';
 
-        if (item.eventId && item.eventName) {
-            key = `event-${item.eventId}`;
-            groupName = item.eventName;
+        if (item.eventId) {
+            key = 'event';
+            groupName = t('cart.event_tickets', 'Vé sự kiện');
             groupType = 'event';
         } else if (item.workshopSessionId && item.vendorId) {
             key = `vendor-${item.vendorId}`;
@@ -72,8 +72,8 @@ export default function PreCheckoutScreen() {
 
     const groupedItems = useMemo(() => {
         if (!preCheckoutData) return [];
-        return groupCartItems(preCheckoutData.cartItems);
-    }, [preCheckoutData]);
+        return groupCartItems(preCheckoutData.cartItems, t);
+    }, [preCheckoutData, t]);
 
     // Find the applied voucher detail that matches a given group
     const getGroupVoucherDetail = (group: GroupedItems): AppliedVoucherDetail | null => {
