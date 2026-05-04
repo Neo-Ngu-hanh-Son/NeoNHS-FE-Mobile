@@ -5,6 +5,7 @@ import {
   extractStreetNameFromInstruction,
   formatDistanceText,
   formatDurationText,
+  getFirstInstruction,
   parseDurationSeconds,
 } from '../../utils/helpers';
 import {
@@ -25,6 +26,7 @@ import { useLanguage } from '@/app/providers/LanguageProvider';
 import { useDirectionsNavigation } from './useDirectionsNavigation';
 import { LatLng } from 'react-native-maps/dist/src/specs/NativeComponentMarker';
 import { SPEECH_LANGUAGE_MAP } from '@/utils/languageUtils';
+import { useTranslation } from 'react-i18next';
 
 type UseMapNavigationGuidanceParams = {
   origin: LatLng;
@@ -68,6 +70,7 @@ export function useMapNavigationGuidance({
   const [currentUserStepIndex, setCurrentUserStepIndex] = useState(0);
   const currentStepIndexRef = useRef(0); // This is solely for calculations
   const { language } = useLanguage();
+  const { t } = useTranslation();
 
   const isGuidanceMode = viewMode === 'NAVIGATING';
 
@@ -260,10 +263,10 @@ export function useMapNavigationGuidance({
       }
 
       let speechText = instructions.slice(0, Speech.maxSpeechInputLength);
-
+      let firstInstruction = getFirstInstruction(speechText);
       const speechLanguage = SPEECH_LANGUAGE_MAP[language] || 'en-US';
 
-      Speech.speak(speechText, {
+      Speech.speak(firstInstruction, {
         language: speechLanguage,
         rate: 1.0,
         pitch: 1.0,
@@ -343,7 +346,7 @@ export function useMapNavigationGuidance({
         setCurrentUserStepIndex(candidateIndex);
         currentStepIndexRef.current = candidateIndex;
 
-        const nextInstruction = steps[candidateIndex].navigationInstruction?.maneuver;
+        const nextInstruction = steps[candidateIndex].navigationInstruction?.instructions;
 
         if (nextInstruction) {
           Speech.stop(); // Immediately stop the previous instruction
@@ -473,7 +476,7 @@ export function useMapNavigationGuidance({
       if (shouldEnterContinueStraight) {
         const streetName = extractStreetNameFromInstruction(baseInstruction);
         currentManeuver = 'STRAIGHT';
-        currentInstructionText = streetName ? `Follow the road` : 'Follow the road';
+        currentInstructionText = streetName ? t('map.follow_the_road') : t('map.follow_the_road');
       }
 
       // Show dynamic remaining distance to current maneuver in the top card metadata.

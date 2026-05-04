@@ -106,10 +106,10 @@ export default function ArrivalConfirmationScreen({ navigation, route }: Props) 
           {/* Title and Subtitle */}
           <View className="mb-8 items-center">
             <Text className="mb-2 text-center text-3xl font-bold tracking-tight" style={{ color: theme.foreground }}>
-              You have arrived!
+              Bạn đã đến nơi!
             </Text>
             <Text className="text-center text-lg" style={{ color: theme.mutedForeground }}>
-              Welcome to{' '}
+              Chào mừng tới{' '}
               <Text className="font-semibold" style={{ color: theme.foreground }}>
                 {point?.name}
               </Text>
@@ -117,7 +117,7 @@ export default function ArrivalConfirmationScreen({ navigation, route }: Props) 
           </View>
 
           {/* Stats Bar */}
-          <View className="mb-8 w-full flex-row items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
+          {/* <View className="mb-8 w-full flex-row items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
             <View className="flex-1 flex-row items-center justify-center gap-2 border-r border-slate-200 dark:border-slate-700">
               <Ionicons name="navigate-outline" size={20} color={theme.primary} />
               <Text className="text-sm font-semibold" style={{ color: theme.foreground }}>
@@ -130,21 +130,21 @@ export default function ArrivalConfirmationScreen({ navigation, route }: Props) 
                 15 min
               </Text>
             </View>
-          </View>
+          </View> */}
 
           {/* Actions */}
           <View className="w-full gap-3">
             <Button
               onPress={() => navigation.navigate('PointDetail', { pointId })}
               className="h-14 w-full rounded-2xl bg-primary shadow-lg shadow-primary/25">
-              <Text className="text-lg font-bold text-white">View Attraction Details</Text>
+              <Text className="text-lg font-bold text-white">Xem chi tiết địa điểm</Text>
             </Button>
             <TouchableOpacity
               onPress={onShare}
               className="h-14 w-full flex-row items-center justify-center gap-2 rounded-2xl border-2 border-primary/20">
               <Ionicons name="share-social-outline" size={20} color={theme.primary} />
               <Text className="text-lg font-bold" style={{ color: theme.primary }}>
-                Share Trip
+                Chia sẻ chuyến đi
               </Text>
             </TouchableOpacity>
           </View>

@@ -29,44 +29,44 @@ export const decodeRoutePolyline = (encodedPolyline: string): PolylineCoordinate
 export const getManeuverPresentation = (maneuver?: Maneuver | null): ManeuverPresentation => {
   switch (maneuver) {
     case 'DEPART':
-      return { iconName: 'navigate', label: 'Depart' };
+      return { iconName: 'navigate', label: 'Khởi hành' };
     case 'TURN_LEFT':
-      return { iconName: 'arrow-back', label: 'Turn left' };
+      return { iconName: 'arrow-back', label: 'Rẽ trái' };
     case 'TURN_RIGHT':
-      return { iconName: 'arrow-forward', label: 'Turn right' };
+      return { iconName: 'arrow-forward', label: 'Rẽ phải' };
     case 'TURN_SLIGHT_LEFT':
-      return { iconName: 'arrow-undo', label: 'Slight left' };
+      return { iconName: 'arrow-undo', label: 'Rẽ trái nhẹ' };
     case 'TURN_SLIGHT_RIGHT':
-      return { iconName: 'arrow-redo', label: 'Slight right' };
+      return { iconName: 'arrow-redo', label: 'Rẽ phải nhẹ' };
     case 'TURN_SHARP_LEFT':
-      return { iconName: 'return-up-back', label: 'Sharp left' };
+      return { iconName: 'return-up-back', label: 'Rẽ trái gắt' };
     case 'TURN_SHARP_RIGHT':
-      return { iconName: 'return-up-forward', label: 'Sharp right' };
+      return { iconName: 'return-up-forward', label: 'Rẽ phải gắt' };
     case 'UTURN_LEFT':
     case 'UTURN_RIGHT':
-      return { iconName: 'return-up-back', label: 'Make a U-turn' };
+      return { iconName: 'return-up-back', label: 'Quay đầu' };
     case 'STRAIGHT':
-      return { iconName: 'arrow-up', label: 'Go straight' };
+      return { iconName: 'arrow-up', label: 'Đi thẳng' };
     case 'RAMP_LEFT':
-      return { iconName: 'trending-back', label: 'Take left ramp' };
+      return { iconName: 'trending-back', label: 'Đi vào lối rẽ trái' };
     case 'RAMP_RIGHT':
-      return { iconName: 'trending-forward', label: 'Take right ramp' };
+      return { iconName: 'trending-forward', label: 'Đi vào lối rẽ phải' };
     case 'MERGE':
-      return { iconName: 'git-merge', label: 'Merge' };
+      return { iconName: 'git-merge', label: 'Đi vào làn nhập' };
     case 'FORK_LEFT':
-      return { iconName: 'git-branch', label: 'Keep left' };
+      return { iconName: 'git-branch', label: 'Đi sang trái' };
     case 'FORK_RIGHT':
-      return { iconName: 'git-branch', label: 'Keep right' };
+      return { iconName: 'git-branch', label: 'Đi sang phải' };
     case 'FERRY':
-      return { iconName: 'boat', label: 'Take ferry' };
+      return { iconName: 'boat', label: 'Đi phà' };
     case 'ROUNDABOUT_LEFT':
     case 'ROUNDABOUT_RIGHT':
-      return { iconName: 'sync-circle', label: 'Enter roundabout' };
+      return { iconName: 'sync-circle', label: 'Vào vòng xuyến' };
     case 'NAME_CHANGE':
-      return { iconName: 'swap-horizontal', label: 'Continue' };
+      return { iconName: 'swap-horizontal', label: 'Đi tiếp' };
     case 'MANEUVER_UNSPECIFIED':
     default:
-      return { iconName: 'navigate', label: 'Continue' };
+      return { iconName: 'navigate', label: 'Đi tiếp' };
   }
 };
 
@@ -153,4 +153,14 @@ export function extractStreetNameFromInstruction(instruction?: string): string |
     return undefined;
   }
   return street;
+}
+
+export function getFirstInstruction(text: string): string {
+  try {
+    if (typeof text !== 'string') return text;
+    const first = text.split('\n')[0];
+    return first ? first.trim() : text;
+  } catch (err) {
+    return text;
+  }
 }

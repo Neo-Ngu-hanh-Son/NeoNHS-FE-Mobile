@@ -123,7 +123,7 @@ export function RefreshableScreenLayout({
       {title && (
         <View
           style={{ top: insets.top + 12 }}
-          className="pointer-events-none absolute left-0 right-0 h-10 items-center justify-center">
+          className="pointer-events-none absolute left-0 right-0 h-10 items-center justify-center bg-background">
           <Text className="text-xl font-bold text-foreground">{title}</Text>
         </View>
       )}

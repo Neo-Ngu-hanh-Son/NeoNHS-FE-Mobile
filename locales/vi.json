@@ -86,10 +86,12 @@
     "navigation": "Chỉ đường",
     "waiting_for_navigation_data": "Đang chờ dữ liệu chỉ đường",
     "route_ready": "Tuyến đường đã sẵn sàng",
-    "step": "Bước",
+    "step": "Chỉ dẫn",
     "proceed_to_next_instruction": "Đi theo chỉ dẫn tiếp theo",
-    "route_steps": "Các bước",
-    "follow_these_instructions": "Đi theo các chỉ dẫn sau đây"
+    "route_steps": "Các chỉ dẫn",
+    "follow_these_instructions": "Đi theo các chỉ dẫn sau đây",
+    "exit": "Thoát",
+    "follow_the_road": "Đi theo đường dẫn"
   },
   "auth": {
     "welcome_back": "Chào mừng trở lại",
