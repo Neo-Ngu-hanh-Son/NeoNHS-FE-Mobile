@@ -24,9 +24,12 @@ export default function CartListScreen() {
     const [cart, setCart] = useState<Cart | null>(null);
     const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
     const [vouchers, setVouchers] = useState<Voucher[]>([]);
-    const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
+    // Map: vendorId (or 'platform') → selected Voucher
+    const [selectedVouchers, setSelectedVouchers] = useState<Record<string, Voucher>>({});
     const [showVoucherModal, setShowVoucherModal] = useState(false);
     const [loadingVouchers, setLoadingVouchers] = useState(false);
+    // Which vendor the voucher modal is selecting for
+    const [voucherModalTarget, setVoucherModalTarget] = useState<string>('platform');
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Format discount value based on type
@@ -48,6 +51,30 @@ export default function CartListScreen() {
             case 'TICKET': return { label: t('cart.ticket'), color: '#f59e0b' };
             default: return { label: t('cart.all_items'), color: '#22c55e' };
         }
+    };
+
+    // Get unique vendor groups from selected cart items
+    const getVendorGroups = () => {
+        const items = cart?.items.filter(item => selectedItems.has(item.id)) || [];
+        const groups: Record<string, { vendorId: string; vendorName: string; items: CartItem[] }> = {};
+        for (const item of items) {
+            if (item.workshopSessionId && item.vendorId) {
+                const key = item.vendorId;
+                if (!groups[key]) {
+                    groups[key] = { vendorId: item.vendorId, vendorName: item.vendorName || item.workshopName || 'Workshop', items: [] };
+                }
+                groups[key].items.push(item);
+            }
+        }
+        return Object.values(groups);
+    };
+
+    // Filter vouchers relevant to a vendor target
+    const getFilteredVouchers = () => {
+        if (voucherModalTarget === 'platform') {
+            return vouchers.filter(v => !v.vendorId);
+        }
+        return vouchers.filter(v => v.vendorId === voucherModalTarget);
     };
 
     const fetchCart = async () => {
@@ -104,9 +131,10 @@ export default function CartListScreen() {
             return;
         }
         const selectedIds = validSelectedItems.map(item => item.id);
+        const selectedVoucherIds = Object.values(selectedVouchers).map(v => v.userVoucherId);
         navigation.navigate('PreCheckout', {
             selectedIds,
-            selectedVoucherId: selectedVoucher?.userVoucherId
+            selectedVoucherIds,
         });
     };
     const handleUpdateQuantity = (itemId: string, newQuantity: number) => {
@@ -373,7 +401,7 @@ export default function CartListScreen() {
                 <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' }}>
                     <View style={{ backgroundColor: theme.background, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '70%', paddingBottom: 40 }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                            <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.foreground }}>Select Voucher</Text>
+                            <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.foreground }}>{t('cart.select_voucher', 'Chọn voucher')}</Text>
                             <TouchableOpacity onPress={() => setShowVoucherModal(false)}>
                                 <MaterialIcons name="close" size={24} color={theme.foreground} />
                             </TouchableOpacity>
@@ -383,10 +411,11 @@ export default function CartListScreen() {
                             <Text style={{ color: theme.foreground, textAlign: 'center', padding: 20 }}>Loading vouchers...</Text>
                         ) : (
                             <FlatList
-                                data={vouchers}
+                                data={getFilteredVouchers()}
                                 keyExtractor={(item) => item.userVoucherId}
                                 renderItem={({ item }) => {
                                     const apInfo = getApplicableLabel(item.applicableProduct);
+                                    const isCurrentlySelected = selectedVouchers[voucherModalTarget]?.userVoucherId === item.userVoucherId;
                                     return (
                                         <TouchableOpacity
                                             style={{
@@ -397,9 +426,13 @@ export default function CartListScreen() {
                                                 justifyContent: 'space-between',
                                                 alignItems: 'flex-start',
                                                 gap: 12,
+                                                backgroundColor: isCurrentlySelected ? 'rgba(34, 197, 94, 0.08)' : 'transparent',
                                             }}
                                             onPress={() => {
-                                                setSelectedVoucher(item);
+                                                setSelectedVouchers(prev => ({
+                                                    ...prev,
+                                                    [voucherModalTarget]: item,
+                                                }));
                                                 setShowVoucherModal(false);
                                             }}
                                         >
@@ -411,11 +444,11 @@ export default function CartListScreen() {
                                                     <View style={{ backgroundColor: apInfo.color + '22', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
                                                         <Text style={{ color: apInfo.color, fontSize: 10, fontWeight: '600' }}>{apInfo.label}</Text>
                                                     </View>
+                                                    {isCurrentlySelected && (
+                                                        <MaterialIcons name="check-circle" size={16} color="#22c55e" />
+                                                    )}
                                                 </View>
                                                 <View style={{ flexDirection: 'row', gap: 12, flexWrap: 'wrap' }}>
-                                                    {/* <Text style={{ color: theme.mutedForeground, fontSize: 11 }}>
-                                                        Min: {item.minOrderValue.toLocaleString()} VND
-                                                    </Text> */}
                                                     {item.maxDiscountValue ? (
                                                         <Text style={{ color: theme.mutedForeground, fontSize: 11 }}>
                                                             {t('cart.max_save')}: {item.maxDiscountValue.toLocaleString()} VND
@@ -443,38 +476,60 @@ export default function CartListScreen() {
             </Modal>
 
             <View style={[styles.footer, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
-                <TouchableOpacity
-                    onPress={() => {
-                        fetchVouchers();
-                        setShowVoucherModal(true);
-                    }}
-                    style={{
-                        padding: 12,
-                        marginBottom: 12,
-                        borderWidth: 1,
-                        borderColor: theme.border || '#e5e5e5',
-                        borderRadius: 8,
-                        backgroundColor: theme.background,
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
-                    }}
-                >
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <MaterialIcons name="local-offer" size={20} color={theme.primary} style={{ marginRight: 8 }} />
-                        <Text style={{ color: selectedVoucher ? theme.primary : theme.mutedForeground }}>
-                            {selectedVoucher ? `${selectedVoucher.code} (${formatDiscount(selectedVoucher)})` : "Select Voucher / Coupon"}
-                        </Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        {selectedVoucher && (
-                            <TouchableOpacity onPress={() => setSelectedVoucher(null)} style={{ marginRight: 8 }}>
-                                <MaterialIcons name="close" size={20} color={theme.mutedForeground} />
-                            </TouchableOpacity>
-                        )}
-                        <MaterialIcons name="chevron-right" size={24} color={theme.mutedForeground} />
-                    </View>
-                </TouchableOpacity>
+                {/* Per-vendor voucher selection */}
+                {getVendorGroups().map((group) => {
+                    const selectedV = selectedVouchers[group.vendorId];
+                    return (
+                        <TouchableOpacity
+                            key={group.vendorId}
+                            onPress={() => {
+                                setVoucherModalTarget(group.vendorId);
+                                fetchVouchers();
+                                setShowVoucherModal(true);
+                            }}
+                            style={{
+                                padding: 10,
+                                marginBottom: 8,
+                                borderWidth: 1,
+                                borderColor: selectedV ? theme.primary : (theme.border || '#e5e5e5'),
+                                borderRadius: 8,
+                                backgroundColor: selectedV ? 'rgba(34, 197, 94, 0.05)' : theme.background,
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                <MaterialIcons name="local-offer" size={16} color={selectedV ? '#22c55e' : theme.mutedForeground} style={{ marginRight: 6 }} />
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ color: theme.mutedForeground, fontSize: 11 }} numberOfLines={1}>
+                                        {group.vendorName}
+                                    </Text>
+                                    <Text style={{ color: selectedV ? theme.primary : theme.mutedForeground, fontSize: 13 }} numberOfLines={1}>
+                                        {selectedV ? `${selectedV.code} (${formatDiscount(selectedV)})` : t('cart.select_voucher', 'Chọn voucher')}
+                                    </Text>
+                                </View>
+                            </View>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                {selectedV && (
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setSelectedVouchers(prev => {
+                                                const next = { ...prev };
+                                                delete next[group.vendorId];
+                                                return next;
+                                            });
+                                        }}
+                                        style={{ marginRight: 4 }}
+                                    >
+                                        <MaterialIcons name="close" size={18} color={theme.mutedForeground} />
+                                    </TouchableOpacity>
+                                )}
+                                <MaterialIcons name="chevron-right" size={20} color={theme.mutedForeground} />
+                            </View>
+                        </TouchableOpacity>
+                    );
+                })}
 
                 <View style={styles.totalRow}>
                     <Text style={{ color: theme.foreground }}>{t('cart.selected', 'Selected')}: {validSelectedCount}</Text>
