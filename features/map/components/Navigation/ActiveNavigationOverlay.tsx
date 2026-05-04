@@ -112,9 +112,10 @@ export default function ActiveNavigationOverlay({
                 {currentNavigationStepData?.tripDurationText ?? (isLoading ? t('map.please_wait_while_route_loads') : t('map.navigation'))}
                 {currentNavigationStepData?.tripDistanceText ? ` · ${currentNavigationStepData.tripDistanceText}` : ''}
               </Text>
-              <Text className="text-xs text-white/80">
-                {isLoading ? t('map.please_wait_while_route_loads') : t('map.no_active_route')}
-              </Text>
+              {/* <Text className="text-xs text-white/80">
+                {isLoading ? t('map.please_wait_while_route_loads')
+                  : `Thời gian di chuyển: ${currentNavigationStepData?.tripDurationText} · Quãng đường: ${currentNavigationStepData?.tripDistanceText}`}
+              </Text> */}
             </View>
 
             <TouchableOpacity
