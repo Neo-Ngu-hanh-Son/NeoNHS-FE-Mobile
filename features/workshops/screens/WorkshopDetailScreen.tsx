@@ -23,6 +23,7 @@ import { useWorkshopReviews } from '../hooks/useWorkshopReviews';
 import { useChatContext } from '@/features/chat/context/ChatProvider';
 import SmartMenu from '@/components/common/MenuTriggerBtn';
 import { ReportTypes } from '@/features/report/type';
+import { buildPointLink, buildWorkshopLink } from '@/utils/deeplink';
 
 type Props = StackScreenProps<MainStackParamList, 'WorkshopDetail'>;
 
@@ -63,9 +64,10 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
 
   const handleShare = useCallback(() => {
     if (!workshop) return;
+
     Share.share({
       title: workshop.name,
-      message: workshop.shortDescription ?? '',
+      message: buildWorkshopLink(workshop.id),
     });
   }, [workshop]);
 

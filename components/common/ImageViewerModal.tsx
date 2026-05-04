@@ -47,7 +47,7 @@ export function ImageViewerModal({
 
   // Helper to safely get the location name
   const getLocationName = (img: ViewerImageItem) => {
-    return img.parentPointName || img.destinationName || img.checkinPointName || 'Unknown destination';
+    return img.parentPointName || img.destinationName || img.checkinPointName || 'Địa điểm không xác định';
   };
 
 

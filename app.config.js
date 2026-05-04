@@ -18,6 +18,11 @@ export default {
     },
 
     assetBundlePatterns: ['**/*'],
+    extra: {
+      eas: {
+        projectId: "ac061500-3be3-4ec9-b779-93680d9cbc39"
+      }
+    },
 
     ios: {
       supportsTablet: true,
@@ -42,17 +47,18 @@ export default {
       "intentFilters": [
         {
           "action": "VIEW",
-          "autoVerify": true,
+          "autoVerify": false,
           "data": [
             {
               "scheme": "https",
               "host": "www.neonhs.id.vn",
-              "pathPrefix": "/records"
+              "pathPrefix": "/"
             }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
         }
-      ]
+      ],
+
     }
   },
 
@@ -98,5 +104,4 @@ export default {
       projectId: "ac061500-3be3-4ec9-b779-93680d9cbc39"
     }
   }
-},
 };

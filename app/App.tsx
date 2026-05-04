@@ -18,35 +18,6 @@ function ThemedStatusBar() {
   return <StatusBar style={isDarkColorScheme ? 'light' : 'dark'} />;
 }
 
-// function handleDeepLink(url: string) {
-//   const match = url.match(/records\/(\d+)/);
-
-//   if (match) {
-//     const id = match[1];
-
-//     Navigation.push('ROOT_STACK', {
-//       component: {
-//         name: 'RecordDetail',
-//         passProps: { id },
-//       },
-//     });
-//   }
-// }
-
-// export default function RootNavigator() {
-//   useEffect(() => {
-//     // Cold start
-//     Linking.getInitialURL().then(url => {
-//       if (url) handleDeepLink(url);
-//     });
-
-//     // App already open
-//     const sub = Linking.addEventListener('url', ({ url }) => {
-//       handleDeepLink(url);
-//     });
-
-//     return () => sub.remove();
-//   }, []);
 
 export default function App() {
   return (

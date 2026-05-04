@@ -23,6 +23,7 @@ import { ReviewTypeFlg } from '@/features/reviews/types';
 import SmartMenu from '@/components/common/MenuTriggerBtn';
 import { ReportTypes } from '@/features/report/type';
 import { useTranslation } from 'react-i18next';
+import { buildEventLink } from '@/utils/deeplink';
 
 type Props = StackScreenProps<MainStackParamList, 'EventDetail'>;
 
@@ -70,11 +71,12 @@ export default function EventDetailScreen({ navigation, route }: Props) {
   }, [eventId, navigation]);
 
   const handleShare = useCallback(() => {
+    if (!event) return;
     Share.share({
-      title: event?.name ?? "",
-      message: event?.shortDescription ?? "",
+      title: event.name,
+      message: buildEventLink(eventId),
     });
-  }, [event]);
+  }, [event, eventId]);
 
   const handleReport = useCallback(() => {
     navigation.navigate('ReportScreen', {

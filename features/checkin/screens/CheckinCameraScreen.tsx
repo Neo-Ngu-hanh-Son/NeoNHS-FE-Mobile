@@ -97,7 +97,7 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
               ? {
                 ...image,
                 uploadStatus: 'failed',
-                uploadError: 'You are not authenticated to upload images.',
+                uploadError: 'Bạn chưa đăng nhập.',
               }
               : image
           )
@@ -145,7 +145,7 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
                   ...image,
                   uploadStatus: 'failed',
                   uploadError:
-                    error instanceof Error ? error.message : 'Unable to upload this image. Please try again.',
+                    error instanceof Error ? error.message : 'Không thể tải ảnh lên. Vui lòng thử lại.',
                 }
                 : image
             )
@@ -197,8 +197,8 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
   const handleFinishCheckin = useCallback(() => {
     if (!checkinPointId) {
       alert({
-        title: 'Missing check-in point',
-        message: 'No check-in point detected. Please return to the map and try again.',
+        title: 'Không tìm thấy điểm check-in',
+        message: 'Không tìm thấy điểm check-in. Vui lòng quay lại bản đồ và thử lại.',
         cancelable: false
       });
       return;
@@ -206,8 +206,8 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
 
     if (!draftImages.length && !capturedPhotoUri) {
       alert({
-        title: 'No photo selected',
-        message: 'Please capture at least one photo before finishing check-in.',
+        title: 'Không có ảnh',
+        message: 'Vui lòng chụp ít nhất một ảnh trước khi hoàn thành check-in.',
         cancelable: false
       });
       return;
@@ -268,15 +268,15 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
     if (failedCount > 0) {
       setIsFinalizing(false);
       alert({
-        title: "Upload incomplete",
-        message: `${failedCount} photo(s) failed to upload. Retry failed uploads?`,
+        title: "Upload ảnh thất bại",
+        message: `${failedCount} ảnh không tải lên được. Thử tải lại ảnh thất bại?`,
         buttons: [
           {
-            text: 'Cancel',
+            text: 'Hủy',
             style: 'cancel',
           },
           {
-            text: 'Retry',
+            text: 'Thử lại',
             style: 'default',
             onPress: () => {
               failedDrafts.forEach((failedDraft) => startUploadForDraft(failedDraft, true));
@@ -333,8 +333,8 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
         logger.error('[CheckinCameraScreen] Failed to finish check-in', error);
         setIsFinalizing(false);
         alert({
-          title: 'Check-in failed',
-          message: error instanceof Error ? error.message : 'Unable to complete check-in right now. Please try again later.',
+          title: 'Check-in thất bại',
+          message: error instanceof Error ? error.message : 'Không thể hoàn thành check-in ngay bây giờ. Vui lòng thử lại sau.',
           cancelable: true
         });
       }
@@ -360,8 +360,8 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
   const handleSavePhoto = useCallback(async () => {
     if (!capturedPhotoUri) {
       alert({
-        title: 'No image to save',
-        message: 'Please capture an image before saving.',
+        title: 'Không có ảnh để lưu',
+        message: 'Vui lòng chụp ảnh trước khi lưu.',
         cancelable: true
       });
       return;
@@ -371,8 +371,8 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
       const permission = await MediaLibrary.requestPermissionsAsync();
       if (!permission.granted) {
         alert({
-          title: 'Permission required',
-          message: 'Please allow media library permission to save photos.',
+          title: 'Yêu cầu quyền',
+          message: 'Vui lòng cho phép quyền truy cập thư viện ảnh để lưu ảnh.',
           cancelable: true
         });
         return;
@@ -380,15 +380,15 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
 
       await MediaLibrary.saveToLibraryAsync(capturedPhotoUri);
       alert({
-        title: 'Saved',
-        message: 'Photo has been saved to your device.',
+        title: 'Đã lưu',
+        message: 'Ảnh đã được lưu vào thiết bị của bạn.',
         cancelable: true
       });
     } catch (error) {
       logger.error('[CheckinCameraScreen] Failed to save review photo', error);
       alert({
-        title: 'Save failed',
-        message: 'Could not save this photo right now.',
+        title: 'Lỗi',
+        message: 'Không thể lưu ảnh ngay bây giờ. Vui lòng thử lại sau.',
         cancelable: true
       });
     } finally {
@@ -476,8 +476,8 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
         } catch (error) {
           logger.error('[CheckinCameraScreen] Failed to delete image from server', error);
           alert({
-            title: 'Delete failed',
-            message: 'Could not delete this image from server. Please try again.',
+            title: 'Lỗi',
+            message: 'Không thể xóa ảnh. Vui lòng thử lại.',
             cancelable: true
           });
           return;
@@ -512,14 +512,14 @@ export default function CheckinCameraScreen({ navigation, route }: CheckinCamera
 
   const uploadOverlayMessage = useMemo(() => {
     if (isFinalizing && pendingCount > 0) {
-      return `Uploading photos... ${uploadProgress.uploaded}/${uploadProgress.total || 1}`;
+      return `Đang tải ảnh lên... ${uploadProgress.uploaded}/${uploadProgress.total || 1}`;
     }
 
     if (isSubmitting) {
-      return 'Submitting final check-in...';
+      return 'Hệ thống đang xử lý ảnh của bạn...';
     }
 
-    return 'Processing check-in...';
+    return 'Hệ thống đang xử lý ảnh của bạn...';
   }, [isFinalizing, isSubmitting, pendingCount, uploadProgress.total, uploadProgress.uploaded]);
 
   return (

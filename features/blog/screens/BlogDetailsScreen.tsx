@@ -18,6 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import SmartMenu from '@/components/common/MenuTriggerBtn';
 import { ReportTypes } from '@/features/report/type';
+import { buildBlogLink } from '@/utils/deeplink';
 
 type Props = StackScreenProps<MainStackParamList, 'BlogDetails'>;
 
@@ -42,16 +43,19 @@ export default function BlogDetailsScreen({ route, navigation }: Props) {
   }, [blogId]);
 
   const handleShare = useCallback(() => {
+    if (!blog) return;
     Share.share({
-      message: `Check out this newest NeoNHS blog: ${blog?.title}`,
+      title: blog.title,
+      message: buildBlogLink(blogId),
     });
-  }, [blog]);
+  }, [blogId, blog]);
 
   const handleReport = useCallback(() => {
+    if (!blog) return;
     navigation.navigate('ReportScreen', {
-      initialTargetId: blog?.id || "",
+      initialTargetId: blog.id,
       initialTargetType: ReportTypes.BLOG,
-      reportTargetName: blog?.title || "",
+      reportTargetName: blog.title,
     });
   }, [blog, navigation]);
 

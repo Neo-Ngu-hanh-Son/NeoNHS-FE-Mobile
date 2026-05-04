@@ -69,7 +69,7 @@ export default function CheckinGalleryScreen({ navigation }: CheckinGalleryScree
       const sectionKey =
         groupingMode === 'date'
           ? formatDateTitle(image.takenAt)
-          : image.parentPointName || image.destinationName || 'Unknown destination';
+          : image.parentPointName || image.destinationName || 'Địa điểm không xác định';
 
       const currentItems = grouped.get(sectionKey) ?? [];
       currentItems.push(image);
@@ -90,7 +90,7 @@ export default function CheckinGalleryScreen({ navigation }: CheckinGalleryScree
   };
 
   if (isLoading) {
-    return <FullScreenLoader message="Loading your check-in photos..." />;
+    return <FullScreenLoader message="Đang tải ảnh check-in..." />;
   }
 
   const renderSection = (section: GroupedGallerySection) => {
@@ -124,7 +124,7 @@ export default function CheckinGalleryScreen({ navigation }: CheckinGalleryScree
           <Ionicons name="chevron-back" size={22} color={theme.foreground} />
         </TouchableOpacity>
         <Text className="text-lg font-semibold" style={{ color: theme.foreground }}>
-          Check-in Photos
+          Ảnh check-in của bạn
         </Text>
         <View style={styles.headerIconButton} />
       </View>
@@ -139,7 +139,7 @@ export default function CheckinGalleryScreen({ navigation }: CheckinGalleryScree
             },
           ]}
           onPress={() => setGroupingMode('date')}>
-          <Text style={{ color: groupingMode === 'date' ? 'white' : theme.foreground }}>Group by Date</Text>
+          <Text style={{ color: groupingMode === 'date' ? 'white' : theme.foreground }}>Theo ngày</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[
@@ -151,16 +151,16 @@ export default function CheckinGalleryScreen({ navigation }: CheckinGalleryScree
           ]}
           onPress={() => setGroupingMode('destination')}>
           <Text style={{ color: groupingMode === 'destination' ? 'white' : theme.foreground }}>
-            Group by Destination
+            Theo địa điểm
           </Text>
         </TouchableOpacity>
       </View>
 
       {!isLoading && isError ? (
         <View style={styles.centerState}>
-          <Text className="mb-3 text-sm text-foreground">Failed to load check-in photos.</Text>
+          <Text className="mb-3 text-sm text-foreground">Không thể tải ảnh check-in.</Text>
           <TouchableOpacity style={[styles.retryButton, { backgroundColor: theme.primary }]} onPress={() => refetch()}>
-            <Text style={{ color: 'white' }}>Try Again</Text>
+            <Text style={{ color: 'white' }}>Thử lại</Text>
           </TouchableOpacity>
         </View>
       ) : null}
@@ -171,7 +171,7 @@ export default function CheckinGalleryScreen({ navigation }: CheckinGalleryScree
             groupedSections.map((section) => renderSection(section))
           ) : (
             <View style={styles.centerState}>
-              <Text className="text-sm text-muted-foreground">No check-in photos yet.</Text>
+              <Text className="text-sm text-muted-foreground">Chưa có ảnh check-in nào.</Text>
             </View>
           )}
         </ScrollView>
@@ -195,14 +195,14 @@ export default function CheckinGalleryScreen({ navigation }: CheckinGalleryScree
               {activeViewerImage ? (
                 <View style={styles.viewerMetadataContainer}>
                   <Text className="text-base font-semibold text-white">
-                    {activeViewerImage.caption || 'No caption'}
+                    {activeViewerImage.caption || 'Không có chú thích'}
                   </Text>
                   <Text className="mt-1 text-xs text-white/80">{formatDateTime(activeViewerImage.takenAt)}</Text>
                   <Text className="mt-1 text-xs text-white/80">
                     {activeViewerImage.parentPointName ||
                       activeViewerImage.destinationName ||
                       activeViewerImage.checkinPointName ||
-                      'Unknown destination'}
+                      'Địa điểm không xác định'}
                   </Text>
                 </View>
               ) : null}
