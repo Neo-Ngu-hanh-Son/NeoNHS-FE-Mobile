@@ -74,7 +74,6 @@ export const useMapNavigationPreviewController = ({
     if (userIsInside && targetIsInside) {
       source = MapDirectionSource.CUSTOM;
     }
-    logger.debug('[useMapNavigationPreviewController] routingSource', source);
     return source;
   }, [userIsInside, targetIsInside]);
 

@@ -332,13 +332,13 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
   }, [routingSource]);
 
   if (showInitialTimelineLoader) {
-    return <FullScreenLoader message="Loading timeline map..." />;
+    return <FullScreenLoader message="Đang tải bản đồ lịch trình..." />;
   }
 
   if (showInitialTimelineError) {
     return (
       <FullScreenError
-        message="Failed to load timeline data. Pull down or tap retry."
+        message="Không thể tải dữ liệu lịch trình. Kéo xuống hoặc nhấn thử lại."
         onRetry={async () => {
           await groupedTimelineQuery.refetch();
         }}

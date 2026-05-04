@@ -96,7 +96,7 @@ export default function CheckinHistoryBottomSheet({
             {item.uploadStatus === 'pending' ? (
               <>
                 <ActivityIndicator size="small" color={theme.primary} />
-                <Text className="text-[11px] text-muted-foreground">Uploading...</Text>
+                <Text className="text-[11px] text-muted-foreground">Đang tải lên...</Text>
               </>
             ) : null}
 

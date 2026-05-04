@@ -1,12 +1,16 @@
-import { useWindowDimensions, Linking, View, Modal, Pressable } from 'react-native';
+import { useWindowDimensions, Linking, View, Modal, Pressable, ScrollView, TouchableOpacity } from 'react-native';
 import RenderHTML, { CustomBlockRenderer } from 'react-native-render-html';
 import TableRenderer, { cssRulesFromSpecs, tableModel } from '@native-html/table-plugin';
 import { getBlogHtmlStyleSet } from '../styles/blogHtmlStyles';
 import { logger } from '@/utils/logger';
 import WebView from 'react-native-webview';
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { SmartImage } from '@/components/ui/smart-image';
 import { useTheme } from '@/app/providers/ThemeProvider';
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+import { formatDateTime } from '@/features/event/utils/helpers';
+import { Ionicons } from '@expo/vector-icons';
+import { ImageViewerModal } from '@/components/common/ImageViewerModal';
 
 interface BlogContentProps {
   html: string;
@@ -51,7 +55,7 @@ export default function BlogContent({ html }: BlogContentProps) {
             width: contentWidth,
             height: computedHeight,
             borderRadius: 8,
-            resizeMode: 'cover',
+            resizeMode: 'contain',
             alignSelf: 'center',
           }}
         />
@@ -89,27 +93,46 @@ export default function BlogContent({ html }: BlogContentProps) {
       </View>
 
       {/* Fullscreen Image Modal */}
-      <Modal visible={modalVisible} transparent animationType="fade">
-        <Pressable
-          onPress={() => setModalVisible(false)}
-          style={{
-            flex: 1,
-            backgroundColor: 'rgba(0,0,0,0.85)',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-          {selectedImage && (
+      <ImageViewerModal
+        visible={modalVisible}
+        images={[{ imageUrl: selectedImage ?? '', caption: '' }]}
+        initialIndex={0}
+        onClose={() => setModalVisible(false)}
+      />
+      {/* <Modal visible={modalVisible} transparent animationType="fade">
+        <GestureViewer
+          data={[{ imageUrl: selectedImage }]}
+          initialIndex={0}
+          ListComponent={ScrollView}
+          renderItem={(item) => (
             <SmartImage
-              uri={selectedImage}
+              uri={item.imageUrl}
               style={{
-                width: width,
-                height: height,
-                resizeMode: 'contain',
+                width,
+                height,
               }}
+              contentFit='contain'
             />
           )}
-        </Pressable>
-      </Modal>
+          onDismiss={() => setModalVisible(false)}
+          renderContainer={(children, helpers) => (
+            <View style={{
+              flex: 1,
+              backgroundColor: 'rgba(0,0,0,0.85)',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+              {children}
+
+              <TouchableOpacity
+                className="absolute top-12 right-4 p-2 bg-black/50 rounded-full"
+                onPress={() => helpers.dismiss()}>
+                <Ionicons name="close" size={22} color="white" />
+              </TouchableOpacity>
+            </View>
+          )}
+        />
+      </Modal> */}
     </>
   );
 }

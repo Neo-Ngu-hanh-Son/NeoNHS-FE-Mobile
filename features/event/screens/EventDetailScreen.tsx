@@ -96,7 +96,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
         edges={['top']}>
         <ActivityIndicator size="large" color={theme.primary} />
         <Text className="mt-3 text-sm" style={{ color: theme.mutedForeground }}>
-          Loading...
+          Đang tải...
         </Text>
       </SafeAreaView>
     );
@@ -178,19 +178,19 @@ export default function EventDetailScreen({ navigation, route }: Props) {
         {/* Event Info (title, status, date, location, participants, price, tags) */}
         <EventInfoSection event={event} theme={theme} onOpenTimelineMap={handleOpenTimelineMap} />
 
-        {/* Tabs */}
-        <View className="mt-6 flex-row gap-2 px-5">
-          <TouchableOpacity
-            onPress={() => setActiveTab('info')}
-            className={`flex-1 items-center rounded-xl py-3 ${activeTab === 'info' ? 'bg-primary' : ''}`}
-            style={activeTab !== 'info' ? { backgroundColor: theme.muted } : undefined}>
-            <Text
-              className={`text-sm font-bold ${activeTab === 'info' ? 'text-white' : ''}`}
-              style={activeTab !== 'info' ? { color: theme.mutedForeground } : undefined}>
-              Chi tiết
-            </Text>
-          </TouchableOpacity>
-          {event.isTicketRequired && (
+        {/* Tabs (only show up if ticket is required.) */}
+        {event.isTicketRequired && (
+          <View className="mt-6 flex-row gap-2 px-5">
+            <TouchableOpacity
+              onPress={() => setActiveTab('info')}
+              className={`flex-1 items-center rounded-xl py-3 ${activeTab === 'info' ? 'bg-primary' : ''}`}
+              style={activeTab !== 'info' ? { backgroundColor: theme.muted } : undefined}>
+              <Text
+                className={`text-sm font-bold ${activeTab === 'info' ? 'text-white' : ''}`}
+                style={activeTab !== 'info' ? { color: theme.mutedForeground } : undefined}>
+                Chi tiết
+              </Text>
+            </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setActiveTab('tickets')}
               className={`flex-1 items-center rounded-xl py-3 ${activeTab === 'tickets' ? 'bg-primary' : ''}`}
@@ -201,8 +201,8 @@ export default function EventDetailScreen({ navigation, route }: Props) {
                 Mua vé
               </Text>
             </TouchableOpacity>
-          )}
-        </View>
+          </View>
+        )}
 
         {/* Tab Content */}
         <View className="mt-4 px-5">

@@ -39,49 +39,64 @@ export default {
         "ACCESS_BACKGROUND_LOCATION"
       ],
       softwareKeyboardLayoutMode: "adjustResize",
-    },
-
-    plugins: [
-      [
-        '@react-native-google-signin/google-signin',
+      "intentFilters": [
         {
-          iosUrlScheme: 'com.googleusercontent.apps.somerandomkey',
-        },
-      ],
-      [
-        'react-native-maps',
-        {
-          iosGoogleMapsApiKey: 'YOUR_KEY_HERE',
-          androidGoogleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAP_API,
-        },
-      ],
-      [
-        'expo-audio',
-        {
-          enableBackgroundPlayback: true,
-        },
-      ],
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location.",
-          isAndroidBackgroundLocationEnabled: true,
-
-        }
-      ],
-      [
-        "expo-camera",
-        {
-          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
-          "barcodeScannerEnabled": true
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "www.neonhs.id.vn",
+              "pathPrefix": "/records"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
-    ],
-
-    extra: {
-      eas: {
-        projectId: "ac061500-3be3-4ec9-b779-93680d9cbc39"
-      }
     }
   },
+
+  plugins: [
+    [
+      '@react-native-google-signin/google-signin',
+      {
+        iosUrlScheme: 'com.googleusercontent.apps.somerandomkey',
+      },
+    ],
+    [
+      'react-native-maps',
+      {
+        iosGoogleMapsApiKey: 'YOUR_KEY_HERE',
+        androidGoogleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAP_API,
+      },
+    ],
+    [
+      'expo-audio',
+      {
+        enableBackgroundPlayback: true,
+      },
+    ],
+    [
+      "expo-location",
+      {
+        "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location.",
+        isAndroidBackgroundLocationEnabled: true,
+
+      }
+    ],
+    [
+      "expo-camera",
+      {
+        "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
+        "barcodeScannerEnabled": true
+      }
+    ]
+  ],
+
+  extra: {
+    eas: {
+      projectId: "ac061500-3be3-4ec9-b779-93680d9cbc39"
+    }
+  }
+},
 };

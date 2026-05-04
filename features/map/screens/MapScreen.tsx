@@ -154,7 +154,6 @@ export default function MapScreen({ navigation, route }: MapScreenProps) {
     handleStartNavigationWithSelectedMode,
     clearTargetNavigationParam,
     handleTravelModeSelection,
-    setConfirmedTravelMode,
   } = useMapNavigationPreviewController({
     targetNavigationPointId: effectiveTargetNavigationPointId,
     mapPoints,

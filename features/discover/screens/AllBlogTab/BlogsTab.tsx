@@ -62,10 +62,10 @@ export default function BlogsTab() {
         <Ionicons name="book-outline" size={40} color={theme.mutedForeground} />
       </View>
       <Text className="mt-5 text-lg font-bold" style={{ color: theme.foreground }}>
-        No stories yet
+        Hiện chưa có bài viết nào
       </Text>
       <Text className="mt-2 text-center text-sm leading-5" style={{ color: theme.mutedForeground }}>
-        We couldn&apos;t find any blog posts. Try changing the category or pull down to refresh.
+        Thử thay đổi danh mục hoặc kéo xuống để làm mới.
       </Text>
     </View>
   );

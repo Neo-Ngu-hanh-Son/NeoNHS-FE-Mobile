@@ -194,8 +194,8 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
             <Text
               className={`text-sm font-bold ${activeTab === 'sessions' ? 'text-white' : ''}`}
               style={activeTab !== 'sessions' ? { color: theme.mutedForeground } : undefined}>
-              {!workshop.defaultPrice || workshop.defaultPrice === 0 
-                ? t('workshop.view_sessions') 
+              {!workshop.defaultPrice || workshop.defaultPrice === 0
+                ? t('workshop.view_sessions')
                 : t('workshop.book_sessions')}
             </Text>
           </TouchableOpacity>
@@ -263,7 +263,7 @@ export default function WorkshopDetailScreen({ navigation, route }: Props) {
                 style={{ backgroundColor: '#dcfce7' }}
               >
                 <Text className="text-sm font-extrabold" style={{ color: '#16a34a' }}>
-                  🎉 FREE
+                  🎉 MIỄN PHÍ
                 </Text>
               </View>
             </View>

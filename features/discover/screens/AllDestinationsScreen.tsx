@@ -32,19 +32,19 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
   }, [route.params?.initialTab]);
 
   const renderHeader = () => {
-    let title = 'Discover';
+    let title = 'Khám phá';
     switch (activeTab) {
       case 'Points':
-        title = 'Destinations';
+        title = 'Điểm đến';
         break;
       case 'Workshops':
         title = 'Workshops';
         break;
       case 'Events':
-        title = 'Upcoming Events';
+        title = 'Sự kiện sắp tới';
         break;
       case 'Blogs':
-        title = 'Travel Stories';
+        title = 'Bài viết';
         break;
     }
     return (
@@ -63,6 +63,21 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
         </View>
       </View>
     );
+  };
+
+  const getVietnameseLabel = (tab: CategoryType) => {
+    switch (tab) {
+      case 'Points':
+        return 'Điểm đến';
+      case 'Workshops':
+        return 'Workshops';
+      case 'Events':
+        return 'Sự kiện sắp tới';
+      case 'Blogs':
+        return 'Bài viết';
+      default:
+        return '';
+    }
   };
 
   const renderTabs = () => (
@@ -94,7 +109,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
                 fontWeight: '700',
                 color: activeTab === tab ? '#fff' : theme.mutedForeground,
               }}>
-              {tab}
+              {getVietnameseLabel(tab)}
             </Text>
           </TouchableOpacity>
         ))}

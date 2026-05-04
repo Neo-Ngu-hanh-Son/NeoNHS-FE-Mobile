@@ -18,35 +18,35 @@ function ThemedStatusBar() {
   return <StatusBar style={isDarkColorScheme ? 'light' : 'dark'} />;
 }
 
-// Define background tasks here (No longer used because of performance issues, but left here for reference and future use)
-// const GEOFENCING_TASK = 'CHECKIN_GEOFENCE_TASK';
+// function handleDeepLink(url: string) {
+//   const match = url.match(/records\/(\d+)/);
 
-// TaskManager.defineTask<BackgroundGeoFencingData>(
-//   GEOFENCING_TASK,
-//   async ({ data, error }) => {
-//     if (error) {
-//       throw error;
-//     }
+//   if (match) {
+//     const id = match[1];
 
-//     if (!data) return;
-
-//     const { eventType, region } = data;
-//     if (eventType === Location.GeofencingEventType.Enter) {
-//       logger.info(`[Background Task] Entered geofence for region ${region.identifier}`);
-//       await Notifications.scheduleNotificationAsync({
-//         content: {
-//           title: "📍 Nearby Check-in!",
-//           body: "You are close to a point. Open the app to check in!",
-//           data: { pointId: region.identifier },
-//         },
-//         trigger: {
-//           type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-//           seconds: 1,
-//         },
-//       });
-//     }
+//     Navigation.push('ROOT_STACK', {
+//       component: {
+//         name: 'RecordDetail',
+//         passProps: { id },
+//       },
+//     });
 //   }
-// );
+// }
+
+// export default function RootNavigator() {
+//   useEffect(() => {
+//     // Cold start
+//     Linking.getInitialURL().then(url => {
+//       if (url) handleDeepLink(url);
+//     });
+
+//     // App already open
+//     const sub = Linking.addEventListener('url', ({ url }) => {
+//       handleDeepLink(url);
+//     });
+
+//     return () => sub.remove();
+//   }, []);
 
 export default function App() {
   return (

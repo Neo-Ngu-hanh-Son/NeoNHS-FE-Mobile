@@ -28,7 +28,7 @@ export default function ReviewSubmitScreen({
   reviewTypeFlg,
   reviewTypeId,
   checkinPointId,
-  title = 'Write a review',
+  title = 'Viết đánh giá',
   subtitle,
   initialComment = '',
   initialRating = 0,
@@ -49,7 +49,7 @@ export default function ReviewSubmitScreen({
     }
 
     if (rating <= 0) {
-      Alert.alert('Rating required', 'Please select a star rating before submitting your review.');
+      Alert.alert('Vui lòng chọn đánh giá', 'Vui lòng chọn đánh giá trước khi gửi đánh giá của bạn.');
       return;
     }
 
@@ -62,10 +62,10 @@ export default function ReviewSubmitScreen({
         imageUrls: selectedUrls.length > 0 ? selectedUrls : undefined,
       });
 
-      Alert.alert('Review submitted', 'Thank you for sharing your experience.');
+      Alert.alert('Thành công', 'Cảm ơn bạn đã chia sẻ trải nghiệm của mình.');
       onSubmitted?.();
     } catch (error) {
-      Alert.alert('Submit failed', error instanceof Error ? error.message : 'Unable to submit your review right now.');
+      Alert.alert('Thất bại', error instanceof Error ? error.message : 'Không thể gửi đánh giá của bạn ngay bây giờ.');
     }
   };
 
@@ -78,7 +78,7 @@ export default function ReviewSubmitScreen({
         contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 28 }}>
         <View className="gap-6">
           <View>
-            <Text className="text-2xl font-black text-foreground">{title}</Text>
+            <Text className="text-2xl font-bold text-foreground">{title}</Text>
             {subtitle ? <Text className="mt-1 text-sm text-muted-foreground">{subtitle}</Text> : null}
           </View>
 
@@ -89,7 +89,7 @@ export default function ReviewSubmitScreen({
           />
 
           <View className="gap-3">
-            <Text className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Rating</Text>
+            <Text className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Đánh giá</Text>
             <View className="flex-row justify-center gap-3 rounded-3xl border border-border bg-card px-4 py-5">
               {[1, 2, 3, 4, 5].map((star) => {
                 const isActive = star <= rating;
@@ -112,12 +112,12 @@ export default function ReviewSubmitScreen({
           </View>
 
           <View className="gap-3">
-            <Text className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Comment</Text>
+            <Text className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Bình luận</Text>
             <TextInput
               multiline
               numberOfLines={6}
               textAlignVertical="top"
-              placeholder="Share your experience with other travelers..."
+              placeholder="Chia sẻ trải nghiệm của bạn với những người khác..."
               placeholderTextColor={theme.mutedForeground}
               value={comment}
               onChangeText={setComment}
@@ -132,7 +132,7 @@ export default function ReviewSubmitScreen({
             {createReviewMutation.isPending ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text className="text-base font-black text-white">Submit Review</Text>
+              <Text className="text-base font-black text-white">Gửi đánh giá</Text>
             )}
           </Button>
         </View>
