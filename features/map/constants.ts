@@ -1,5 +1,5 @@
 const MAP_CONSTANTS = {
-  CHECKINPOINT_DETECT_RADIUS_M: 20, // Radius to detect nearby check-in points (UI)
+  CHECKINPOINT_DETECT_RADIUS_M: 30, // Radius to detect nearby check-in points (UI)
   FETCH_CHECKIN_RADIUS_M: 100, // Default radius for fetching nearby check-in points (For proximity check)
   DISTANCE_LIMIT_BEFORE_REFETCH_CHECKIN_M: 20,
 

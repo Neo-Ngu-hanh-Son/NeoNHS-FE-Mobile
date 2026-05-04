@@ -32,7 +32,7 @@ export function PanoramaProvider({ children }: { children: ReactNode }) {
   const preloadPanorama = useCallback((pointId: string) => {
     setShouldMountPanorama(true);
     setCurrentPointId(pointId);
-    logger.info(`[PanoramaProvider] Preloading panorama for pointId ${pointId}`);
+    // logger.info(`[PanoramaProvider] Preloading panorama for pointId ${pointId}`);
   }, []);
 
   const seedPointId = (pointId: string) => {

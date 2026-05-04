@@ -43,15 +43,7 @@ function formatTimelineDate(date?: string): string {
     return date;
   }
 
-  // return parsed.toLocaleDateString('vi-VN', {
-  //   weekday: 'short',
-  //   day: '2-digit',
-  //   month: '2-digit',
-  //   year: 'numeric',
-  // });
-
-  // TODO: For now just return in English
-  return parsed.toLocaleDateString('en-US', {
+  return parsed.toLocaleDateString('vi-VN', {
     weekday: 'short',
     day: '2-digit',
     month: '2-digit',
@@ -153,7 +145,7 @@ export const TimelineItem = ({
             <View style={styles.detailBlock}>
               <View style={styles.detailLabelRow}>
                 <FileText size={16} color={theme.primary} />
-                <Text style={[styles.detailLabel, { color: theme.mutedForeground }]}>Description</Text>
+                <Text style={[styles.detailLabel, { color: theme.mutedForeground }]}>Mô tả</Text>
               </View>
               <Text style={[styles.detailText, { color: theme.foreground }]}>{description}</Text>
             </View>
@@ -163,7 +155,7 @@ export const TimelineItem = ({
             <View style={styles.detailRow}>
               <View style={styles.detailRowHeader}>
                 <BriefcaseBusiness size={16} color={theme.primary} />
-                <Text style={[styles.detailRowLabel, { color: theme.mutedForeground }]}>Organizer:</Text>
+                <Text style={[styles.detailRowLabel, { color: theme.mutedForeground }]}>Người tổ chức:</Text>
               </View>
               <Text style={[styles.detailRowValue, { color: theme.foreground }]} numberOfLines={2}>
                 {organizer}
@@ -175,7 +167,7 @@ export const TimelineItem = ({
             <View style={styles.detailRow}>
               <View style={styles.detailRowHeader}>
                 <Users size={16} color={theme.primary} />
-                <Text style={[styles.detailRowLabel, { color: theme.mutedForeground }]}>Co-Organizer:</Text>
+                <Text style={[styles.detailRowLabel, { color: theme.mutedForeground }]}>Đồng tổ chức:</Text>
               </View>
               <Text style={[styles.detailRowValue, { color: theme.foreground }]} numberOfLines={2}>
                 {coOrganizer}
@@ -271,7 +263,6 @@ const styles = StyleSheet.create({
   detailLabel: {
     fontSize: 14,
     fontWeight: '700',
-    textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   detailText: {

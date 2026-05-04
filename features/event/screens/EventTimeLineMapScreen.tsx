@@ -40,6 +40,7 @@ import { THEME } from '@/lib/theme';
 import { List } from 'lucide-react-native';
 import { useDynamicPolyline } from '@/features/map/hooks/Navigation/useDynamicPolyline';
 import MAP_CONSTANTS from '@/features/map/constants';
+import { RefetchOptions } from '@tanstack/react-query';
 
 type EventTimeLineMapScreenProps = StackScreenProps<MainStackParamList, 'EventTimeLineMap'>;
 
@@ -99,7 +100,7 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
       }
 
       mapRef.current.fitToCoordinates(coordinates, {
-        top: 220,
+        top: 320,
         right: 64,
         bottom: 220,
         left: 64,
@@ -186,7 +187,6 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
     handleStartNavigationWithSelectedMode,
     clearTargetNavigationParam,
     handleTravelModeSelection,
-    setConfirmedTravelMode,
   } = useMapNavigationPreviewController({
     targetNavigationPointId: effectiveTargetNavigationPointId,
     mapPoints,
@@ -332,13 +332,13 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
   }, [routingSource]);
 
   if (showInitialTimelineLoader) {
-    return <FullScreenLoader message="Loading timeline map..." />;
+    return <FullScreenLoader message="Đang tải bản đồ lịch trình..." />;
   }
 
   if (showInitialTimelineError) {
     return (
       <FullScreenError
-        message="Failed to load timeline data. Pull down or tap retry."
+        message="Không thể tải dữ liệu lịch trình. Kéo xuống hoặc nhấn thử lại."
         onRetry={async () => {
           await groupedTimelineQuery.refetch();
         }}
@@ -368,6 +368,7 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
         selectedTravelMode={selectedTravelMode ?? MAP_CONSTANTS.DEFAULT_TRAVEL_MODE}
         enableCheckinMode={false}
         renderMarker={renderTimelineMarker}
+        refetchMapPoints={groupedTimelineQuery.refetch}
       />
 
       {viewMode === 'EXPLORING' && (
@@ -384,7 +385,7 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
             dayOptions={timelineController.dayOptions}
             selectedDate={timelineController.selectedDate}
             onSelectDate={timelineController.setSelectedDate}
-            tagOptions={timelineController.tagOptions}
+            tagOptions={timelineController.groupedTagsForSelectedDate ?? []}
             activeTagId={timelineController.activeTagId}
             onSelectTag={timelineController.setActiveTagId}
           />
@@ -400,10 +401,10 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
                 shadowColor: theme.primary,
               },
             ]}
-            accessibilityLabel="View schedule for this day"
+            accessibilityLabel="Xem lịch trình ngày hôm nay"
           >
             <List size={18} color="#fff" />
-            <Text style={floatingStyles.scheduleBtnText}>Schedule</Text>
+            <Text style={floatingStyles.scheduleBtnText}>Xem tất cả lịch trình</Text>
           </TouchableOpacity>
 
           <EventTimelinePointDetailBottomSheet
@@ -417,7 +418,7 @@ export default function EventTimeLineMapScreen({ navigation, route }: EventTimeL
             points={mapPoints}
             selectedDateLabel={
               timelineController.dayOptions.find((d) => d.date === timelineController.selectedDate)?.label ??
-              'Schedule'
+              'Lịch trình'
             }
             onFocusPoint={(point) => {
               focusOnPoint(point);

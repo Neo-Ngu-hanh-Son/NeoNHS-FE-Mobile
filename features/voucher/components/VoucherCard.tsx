@@ -1,34 +1,48 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { Ionicons } from '@expo/vector-icons';
 import { VoucherResponse } from '../types/voucher.types';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { THEME } from '@/lib/theme';
 
 interface VoucherCardProps {
   voucher: VoucherResponse;
-  theme: any;
   userPoints: number;
   onCollect: (id: string) => void;
   onPress: (voucher: VoucherResponse) => void;
   isCollecting: boolean;
 }
 
-export default function VoucherCard({ voucher, theme, userPoints, onCollect, onPress, isCollecting }: VoucherCardProps) {
+const withOpacity = (hex: string, opacity: number) => {
+  const alpha = Math.round(opacity * 255)
+    .toString(16)
+    .padStart(2, '0');
+  return hex + alpha;
+};
+
+export default function VoucherCard({ voucher, userPoints, onCollect, onPress, isCollecting }: VoucherCardProps) {
   const { t } = useTranslation();
 
+  const { isDarkColorScheme } = useTheme();
+  const theme = isDarkColorScheme ? THEME.dark : THEME.light;
+
+  // ===== Business logic (UNCHANGED) =====
   const isSoldOut = voucher.usageCount >= voucher.usageLimit;
   const remaining = voucher.usageLimit - voucher.usageCount;
   const progress = voucher.usageLimit > 0 ? (voucher.usageCount / voucher.usageLimit) * 100 : 0;
+
   const isExpired = voucher.endDate ? new Date(voucher.endDate) < new Date() : false;
+
   const costPoints = voucher.pointCost ?? 0;
   const hasEnoughPoints = userPoints >= costPoints;
+
   const canCollect = !isSoldOut && !isExpired && hasEnoughPoints && !voucher.isCollected;
 
   const isPlatform = voucher.scope === 'PLATFORM';
   const accentColor = isPlatform ? '#ee4d2d' : '#f97316';
 
-  // Discount text
   const discountLabel =
     voucher.voucherType === 'DISCOUNT'
       ? voucher.discountType === 'PERCENT'
@@ -36,25 +50,33 @@ export default function VoucherCard({ voucher, theme, userPoints, onCollect, onP
         : `${Math.round(voucher.discountValue / 1000)}K`
       : '';
 
-  const discountSub =
-    voucher.voucherType === 'DISCOUNT'
-      ? t('voucher.discount')
-      : t('voucher.gift');
+  const discountSub = voucher.voucherType === 'DISCOUNT' ? t('voucher.discount') : t('voucher.gift');
 
+  // ===== Derived UI colors =====
+  const subtleAccent = useMemo(() => withOpacity(accentColor, 0.12), [accentColor]);
+
+  const progressBg = useMemo(() => withOpacity(accentColor, 0.2), [accentColor]);
+
+  const disabledBg = theme.muted || theme.border;
+
+  // ===== Render =====
   return (
     <TouchableOpacity
-      style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.card,
+          borderColor: theme.border,
+        },
+      ]}
       onPress={() => onPress(voucher)}
-      activeOpacity={0.7}
-    >
-      {/* ===== LEFT: Discount Badge ===== */}
+      activeOpacity={0.7}>
+      {/* ===== LEFT ===== */}
       <View style={[styles.leftSection, { backgroundColor: accentColor }]}>
-        {/* Scope label */}
         <Text style={styles.scopeLabel}>
           {isPlatform ? t('voucher.scope_platform') : voucher.vendorName || t('voucher.scope_vendor')}
         </Text>
 
-        {/* Discount value */}
         {voucher.voucherType === 'DISCOUNT' ? (
           <>
             <Text style={styles.discountBig}>{discountLabel}</Text>
@@ -67,34 +89,38 @@ export default function VoucherCard({ voucher, theme, userPoints, onCollect, onP
           </>
         )}
 
-        {/* Point cost badge */}
         <View style={styles.pointCostBadge}>
           <Ionicons name="diamond" size={10} color="#fff" />
           <Text style={styles.pointCostText}>
-            {costPoints > 0 ? t('voucher.point_cost', { points: costPoints }) : t('voucher.free')}
+            {costPoints > 0
+              ? t('voucher.point_cost', {
+                  points: costPoints,
+                })
+              : t('voucher.free')}
           </Text>
         </View>
 
-        {/* Dashed separator circles */}
+        {/* cutout */}
         <View style={[styles.cutoutTop, { backgroundColor: theme.background }]} />
         <View style={[styles.cutoutBottom, { backgroundColor: theme.background }]} />
       </View>
 
-      {/* ===== Dashed divider ===== */}
+      {/* ===== DIVIDER ===== */}
       <View style={styles.dashedDivider}>
         {Array.from({ length: 12 }).map((_, i) => (
-          <View key={i} style={[styles.dash, { backgroundColor: theme.border }]} />
+          <View key={i} style={[styles.dash, { backgroundColor: withOpacity(theme.border, 0.6) }]} />
         ))}
       </View>
 
-      {/* ===== RIGHT: Details ===== */}
+      {/* ===== RIGHT ===== */}
       <View style={styles.rightSection}>
-        {/* Code + applicable */}
+        {/* Top */}
         <View style={styles.topRow}>
           <Text style={[styles.code, { color: theme.foreground }]} numberOfLines={1}>
             {voucher.code}
           </Text>
-          <View style={[styles.applicableBadge, { backgroundColor: `${accentColor}12` }]}>
+
+          <View style={[styles.applicableBadge, { backgroundColor: subtleAccent }]}>
             <Text style={[styles.applicableText, { color: accentColor }]}>
               {voucher.applicableProduct === 'EVENT_TICKET'
                 ? t('voucher.applicable.event')
@@ -106,25 +132,24 @@ export default function VoucherCard({ voucher, theme, userPoints, onCollect, onP
         </View>
 
         {/* Description */}
-        {voucher.description ? (
+        {!!voucher.description && (
           <Text style={[styles.desc, { color: theme.mutedForeground }]} numberOfLines={2}>
             {voucher.description}
           </Text>
-        ) : null}
+        )}
 
-        {/* Conditions */}
-        {voucher.minOrderValue > 0 ? (
+        {/* Condition */}
+        {voucher.minOrderValue > 0 && (
           <Text style={[styles.condition, { color: theme.mutedForeground }]}>
             {t('voucher.min_order')} {voucher.minOrderValue.toLocaleString()}đ
           </Text>
-        ) : null}
+        )}
 
-        {/* Bottom: progress + expiry + collect */}
+        {/* Bottom */}
         <View style={styles.bottomArea}>
-          {/* Left: progress + expiry */}
           <View style={styles.bottomLeft}>
-            {/* Progress bar */}
-            <View style={[styles.progressTrack, { backgroundColor: `${accentColor}20` }]}>
+            {/* Progress */}
+            <View style={[styles.progressTrack, { backgroundColor: progressBg }]}>
               <View
                 style={[
                   styles.progressFill,
@@ -134,40 +159,60 @@ export default function VoucherCard({ voucher, theme, userPoints, onCollect, onP
                   },
                 ]}
               />
-              <Text style={styles.progressLabel}>
+              <Text
+                style={[
+                  styles.progressLabel,
+                  {
+                    color: progress > 60 ? '#fff' : theme.foreground,
+                  },
+                ]}>
                 {isSoldOut
                   ? t('voucher.sold_out')
-                  : t('voucher.remaining', { count: remaining })}
+                  : t('voucher.remaining', {
+                      count: remaining,
+                    })}
               </Text>
             </View>
 
             {/* Expiry */}
-            {voucher.endDate ? (
-              <Text style={[styles.expiry, { color: isExpired ? '#ef4444' : theme.mutedForeground }]}>
+            {!!voucher.endDate && (
+              <Text
+                style={[
+                  styles.expiry,
+                  {
+                    color: isExpired ? theme.destructive || '#ef4444' : theme.mutedForeground,
+                  },
+                ]}>
                 {isExpired
                   ? t('voucher.expired')
                   : `${t('voucher.expires')} ${new Date(voucher.endDate).toLocaleDateString('vi-VN')}`}
               </Text>
-            ) : null}
+            )}
           </View>
 
-          {/* Right: collect button */}
+          {/* Collect */}
           <TouchableOpacity
             style={[
               styles.collectBtn,
               {
-                backgroundColor: canCollect ? accentColor : theme.border,
+                backgroundColor: canCollect ? accentColor : disabledBg,
                 opacity: isCollecting ? 0.6 : 1,
               },
             ]}
             onPress={(e) => {
               e.stopPropagation();
-              if (canCollect && !isCollecting) onCollect(voucher.id);
+              if (canCollect && !isCollecting) {
+                onCollect(voucher.id);
+              }
             }}
-            disabled={!canCollect || isCollecting}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.collectText, { color: canCollect ? '#fff' : theme.mutedForeground }]}>
+            disabled={!canCollect || isCollecting}>
+            <Text
+              style={[
+                styles.collectText,
+                {
+                  color: canCollect ? '#fff' : theme.mutedForeground,
+                },
+              ]}>
               {isCollecting
                 ? '...'
                 : canCollect
@@ -193,14 +238,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     marginBottom: 12,
-    elevation: 3,
+    elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
     borderWidth: 0.5,
   },
-  // LEFT
+
   leftSection: {
     width: 100,
     alignItems: 'center',
@@ -209,29 +254,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     position: 'relative',
   },
+
   scopeLabel: {
     color: 'rgba(255,255,255,0.85)',
-    fontSize: 9,
+    fontSize: 12,
     fontWeight: '700',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
     marginBottom: 4,
     textAlign: 'center',
   },
+
   discountBig: {
     color: '#fff',
     fontSize: 26,
     fontWeight: '900',
-    letterSpacing: -1,
-    lineHeight: 30,
   },
+
   discountSub: {
     color: 'rgba(255,255,255,0.85)',
     fontSize: 10,
     fontWeight: '600',
-    textTransform: 'uppercase',
-    marginTop: 2,
   },
+
   cutoutTop: {
     position: 'absolute',
     top: -8,
@@ -240,6 +284,7 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: 8,
   },
+
   cutoutBottom: {
     position: 'absolute',
     bottom: -8,
@@ -248,55 +293,61 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: 8,
   },
-  // DASHED DIVIDER
+
   dashedDivider: {
     width: 1,
     justifyContent: 'space-evenly',
     alignItems: 'center',
     paddingVertical: 8,
   },
+
   dash: {
     width: 1,
     height: 4,
     borderRadius: 1,
   },
-  // RIGHT
+
   rightSection: {
     flex: 1,
     paddingVertical: 10,
     paddingHorizontal: 12,
     justifyContent: 'space-between',
   },
+
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 6,
   },
+
   code: {
     fontSize: 14,
     fontWeight: '800',
     flex: 1,
   },
+
   applicableBadge: {
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
   },
+
   applicableText: {
     fontSize: 9,
     fontWeight: '700',
   },
+
   desc: {
     fontSize: 12,
-    lineHeight: 16,
     marginTop: 4,
   },
+
   condition: {
     fontSize: 10,
     marginTop: 2,
   },
-  // BOTTOM
+
   bottomArea: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -304,15 +355,20 @@ const styles = StyleSheet.create({
     marginTop: 8,
     gap: 10,
   },
+
   bottomLeft: {
     flex: 1,
   },
+
   progressTrack: {
-    height: 16,
+    height: 18,
     borderRadius: 8,
+    flexDirection: 'row',
     justifyContent: 'center',
+    alignItems: 'center',
     overflow: 'hidden',
   },
+
   progressFill: {
     position: 'absolute',
     left: 0,
@@ -320,13 +376,17 @@ const styles = StyleSheet.create({
     bottom: 0,
     borderRadius: 8,
   },
+
   progressLabel: {
-    color: '#fff',
-    fontSize: 9,
+    padding: 0,
+    margin: 0,
+    fontSize: 10,
     fontWeight: '700',
     textAlign: 'center',
     zIndex: 1,
+    lineHeight: 18,
   },
+
   pointCostBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -336,16 +396,20 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 10,
     marginTop: 6,
+    justifyContent: 'center',
   },
+
   pointCostText: {
     color: '#fff',
-    fontSize: 9,
+    fontSize: 12,
     fontWeight: '700',
   },
+
   expiry: {
     fontSize: 10,
     marginTop: 4,
   },
+
   collectBtn: {
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -353,6 +417,7 @@ const styles = StyleSheet.create({
     minWidth: 60,
     alignItems: 'center',
   },
+
   collectText: {
     fontSize: 12,
     fontWeight: '800',

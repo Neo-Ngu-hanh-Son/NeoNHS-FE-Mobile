@@ -40,12 +40,12 @@ export default function ReportScreen({ route, navigation }: Props) {
   useEffect(() => {
     if (!accessToken) {
       alert({
-        title: "Not Logged In",
-        message: "Please log in to submit a report.",
+        title: "Cần đăng nhập",
+        message: "Vui lòng đăng nhập để gửi báo cáo.",
         cancelable: true,
         buttons: [
-          { text: 'Cancel', onPress: () => navigation.goBack(), style: 'cancel' },
-          { text: 'Login', onPress: () => navigation.navigate('Auth', { screen: 'Login' }) },
+          { text: 'Hủy', onPress: () => navigation.goBack(), style: 'cancel' },
+          { text: 'Đăng nhập', onPress: () => navigation.navigate('Auth', { screen: 'Login' }) },
         ],
       });
     }
@@ -53,9 +53,9 @@ export default function ReportScreen({ route, navigation }: Props) {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerTitle: "Submit Report",
+      headerTitle: "Gửi báo cáo",
       headerShown: true,
-      headerBackTitle: "Back",
+      headerBackTitle: "Quay lại",
       headerTitleStyle: { fontSize: 17, fontWeight: '600' },
     });
   }, [navigation]);
@@ -96,8 +96,8 @@ export default function ReportScreen({ route, navigation }: Props) {
       } catch (err: any) {
         setLocalImageUri(null);
         alert({
-          title: "Upload Failed",
-          message: err?.message || "Failed to upload image.",
+          title: "Upload thất bại",
+          message: err?.message || "Upload thất bại.",
           cancelable: true
         });
       }
@@ -107,8 +107,8 @@ export default function ReportScreen({ route, navigation }: Props) {
   const handleSubmit = async () => {
     if (!reason.trim() || reason.length < 10) {
       alert({
-        title: "More Detail Needed",
-        message: "Please provide at least 10 characters for the reason.",
+        title: "Cần chi tiết hơn",
+        message: "Vui lòng cung cấp ít nhất 10 ký tự cho lý do.",
         cancelable: true
       });
       return;
@@ -122,12 +122,12 @@ export default function ReportScreen({ route, navigation }: Props) {
         description,
         evidenceUrl,
       });
-      info({ title: "Submitted", message: "We've received your report." });
+      info({ title: "Gửi thành công", message: "Chúng tôi đã nhận được báo cáo của bạn." });
       navigation.goBack();
     } catch (error: any) {
       alert({
-        title: "Error",
-        message: error?.message || "Submission failed.",
+        title: "Lỗi",
+        message: error?.message || "Gửi thất bại.",
         cancelable: true
       });
     }
@@ -142,7 +142,7 @@ export default function ReportScreen({ route, navigation }: Props) {
       {/* Header Info Card */}
       <View className="mb-8">
         <Text className="text-foreground text-lg font-bold uppercase tracking-wider mb-1">
-          Reporting {initialTargetType}
+          Báo cáo {initialTargetType}:
         </Text>
         <Text className="text-lg font-semibold text-slate-900">
           {reportTargetName ?? initialTargetId}
@@ -152,9 +152,9 @@ export default function ReportScreen({ route, navigation }: Props) {
       {/* Reason Input */}
       <View className="mb-6">
         <View className="flex-row justify-between items-end mb-2 px-1">
-          <Text className="text-base font-semibold text-slate-800">Reason</Text>
+          <Text className="text-base font-semibold text-slate-800">Lý do</Text>
           <Text className={cn("text-xs font-medium", reason.length < 10 ? "text-slate-400" : "text-green-600")}>
-            {reason.length} chars
+            {reason.length} ký tự
           </Text>
         </View>
         <TextInput
@@ -172,9 +172,9 @@ export default function ReportScreen({ route, navigation }: Props) {
       {/* Description Input */}
       <View className="mb-6">
         <View className="flex-row justify-between items-end mb-2 px-1">
-          <Text className="text-base font-semibold text-slate-800">Description</Text>
+          <Text className="text-base font-semibold text-slate-800">Mô tả</Text>
           <Text className="text-xs font-medium text-slate-400">
-            {description.length} chars
+            {description.length} ký tự
           </Text>
         </View>
         <TextInput
@@ -191,7 +191,7 @@ export default function ReportScreen({ route, navigation }: Props) {
 
       {/* Evidence Upload */}
       <View className="mb-8">
-        <Text className="text-base font-semibold text-slate-800 mb-2 px-1">Evidence (Optional)</Text>
+        <Text className="text-base font-semibold text-slate-800 mb-2 px-1">Bằng chứng (Không bắt buộc)</Text>
         <View className="flex-row items-center">
           {!localImageUri ? (
             <TouchableOpacity
@@ -204,14 +204,14 @@ export default function ReportScreen({ route, navigation }: Props) {
               ) : (
                 <>
                   <ImageIcon size={18} color="#64748b" />
-                  <Text className="text-slate-600 font-medium ml-2">Upload Image</Text>
+                  <Text className="text-slate-600 font-medium ml-2">Tải lên ảnh</Text>
                 </>
               )}
             </TouchableOpacity>
           ) : isImageLoading ? (
             <View className="flex-row items-center justify-center bg-slate-50 py-3 px-5 rounded-xl border border-slate-200 border-dashed">
               <ActivityIndicator color="#64748b" />
-              <Text className="text-slate-600 font-medium ml-2">Uploading...</Text>
+              <Text className="text-slate-600 font-medium ml-2">Đang tải lên...</Text>
             </View>
           ) : (
             <View className="flex-row items-center flex-1">
@@ -220,7 +220,7 @@ export default function ReportScreen({ route, navigation }: Props) {
                 className="flex-row items-center justify-center bg-slate-100 py-3 px-5 rounded-xl border border-slate-200 flex-1"
               >
                 <ImageIcon size={18} color="#0f172a" />
-                <Text className="text-slate-900 font-medium ml-2">Show Evidence</Text>
+                <Text className="text-slate-900 font-medium ml-2">Xem bằng chứng</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -236,7 +236,7 @@ export default function ReportScreen({ route, navigation }: Props) {
         {evidenceUrl ? (
           <View className="flex-row items-center mt-2 ml-1">
             <CheckCircle2 size={14} color="#16a34a" />
-            <Text className="text-xs text-green-600 ml-1.5 font-medium">Image uploaded successfully</Text>
+            <Text className="text-xs text-green-600 ml-1.5 font-medium">Đã tải lên ảnh</Text>
           </View>
         ) : null}
       </View>
@@ -246,7 +246,7 @@ export default function ReportScreen({ route, navigation }: Props) {
         <View className="mb-6 flex-row items-center p-4 bg-red-50 border border-red-100 rounded-2xl">
           <AlertCircle size={20} color="#ef4444" />
           <Text className="ml-3 text-sm text-red-700 flex-1 font-medium">
-            {uploadError ? "Image upload failed." : "Report submission failed. Please try again."}
+            {uploadError ? "Upload ảnh thất bại." : "Gửi báo cáo thất bại. Vui lòng thử lại."}
           </Text>
         </View>
       )}
@@ -256,7 +256,7 @@ export default function ReportScreen({ route, navigation }: Props) {
         <AlertCircle size={20} color="#d97706" />
         <View className="flex-1 ml-3">
           <Text className="text-[13px] text-amber-900 leading-5">
-            Reports are reviewed within 24 hours. Abuse of the reporting system may lead to permanent account suspension.
+            Báo cáo sẽ được xem xét trong vòng 24 giờ. Lạm dụng hệ thống báo cáo có thể dẫn đến việc bị khóa tài khoản vĩnh viễn.
           </Text>
         </View>
       </View>
@@ -271,7 +271,7 @@ export default function ReportScreen({ route, navigation }: Props) {
       >
         {(isReportLoading || isImageLoading) && <ActivityIndicator color="white" />}
         <Text className='text-lg font-semibold text-white'>
-          {isImageLoading ? 'Uploading Image...' : isReportLoading ? 'Submitting Report...' : 'Submit Report'}
+          {isImageLoading ? 'Đang tải ảnh lên' : isReportLoading ? 'Đang gửi báo cáo' : 'Gửi báo cáo'}
         </Text>
       </Button>
 
@@ -299,6 +299,8 @@ export default function ReportScreen({ route, navigation }: Props) {
                     width: 44,
                     height: 44,
                     borderRadius: 22,
+                    borderWidth: 1,
+                    borderColor: '#000000',
                     backgroundColor: 'white',
                     alignItems: 'center',
                     justifyContent: 'center',

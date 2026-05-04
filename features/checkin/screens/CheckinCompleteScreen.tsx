@@ -56,9 +56,9 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
   const handleSubmitReview = async (payload: { rating: number; description: string; imageUrls: string[] }) => {
     if (!checkinPointId) {
       alert({
-        title: 'Missing check-in point',
-        message: 'Could not find this check-in point. Please try again from the map.',
-        buttons: [{ text: 'Close', onPress: () => navigation.replace('Tabs', { screen: 'Home' }) }]
+        title: 'Không tìm thấy điểm check-in',
+        message: 'Không tìm thấy điểm check-in. Vui lòng thử lại từ bản đồ.',
+        buttons: [{ text: 'Đóng', onPress: () => navigation.replace('Tabs', { screen: 'Home' }) }]
       });
       return;
     }
@@ -75,15 +75,15 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
 
       reviewSheetRef.current?.dismiss();
       alert({
-        title: 'Review submitted',
-        message: 'Thank you for sharing your experience.',
-        buttons: [{ text: 'Ok', onPress: () => navigation.replace('Tabs', { screen: 'Home' }) }]
+        title: 'Đã đăng đánh giá',
+        message: 'Cảm ơn bạn đã chia sẻ trải nghiệm.',
+        buttons: [{ text: 'Đóng', onPress: () => navigation.replace('Tabs', { screen: 'Home' }) }]
       });
     } catch (error) {
       alert({
-        title: 'Submit failed',
-        message: error instanceof Error ? error.message : 'Unable to submit your review right now. Please try again later.',
-        buttons: [{ text: 'Close', onPress: () => navigation.replace('Tabs', { screen: 'Home' }) }]
+        title: 'Lỗi khi đăng đánh giá',
+        message: error instanceof Error ? error.message : 'Không thể đăng đánh giá lúc này. Vui lòng thử lại sau.',
+        buttons: [{ text: 'Đóng', onPress: () => navigation.replace('Tabs', { screen: 'Home' }) }]
       });
     }
   };
@@ -108,7 +108,7 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
             className="h-10 w-10 items-center justify-center rounded-full bg-muted/50">
             <Ionicons name="close" size={22} color={theme.foreground} />
           </TouchableOpacity>
-          <Text className="text-lg font-bold tracking-tight">Checkin Completed!</Text>
+          <Text className="text-lg font-bold tracking-tight">Đã check-in thành công!</Text>
           <CheckinSocialShareActions
             destinationName={destinationName}
             hashtags={['NeoNHS', 'DaNang']}
@@ -135,40 +135,16 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
             </View>
 
             <Animated.View entering={FadeInUp.delay(300).springify()} className="mt-6 items-center">
-              <Text className="text-4xl font-extrabold text-foreground">Awesome!</Text>
+              <Text className="text-4xl font-extrabold text-foreground">Tuyệt vời!</Text>
               <View className="mt-3 flex-row items-center rounded-2xl bg-green-100 px-5 py-2">
                 <Ionicons name="sparkles" size={20} color={theme.primary} />
                 <Text className="ml-2 text-2xl font-black text-green-800">+{rewardPoints ?? 50}</Text>
               </View>
               <Text className="mt-3 text-sm font-medium text-muted-foreground">
-                New Balance: <Text className="font-bold text-foreground">{userTotalPoints ?? '0'} Points</Text>
+                Số điểm hiện tại: <Text className="font-bold text-foreground">{userTotalPoints ?? '0'} Điểm</Text>
               </Text>
             </Animated.View>
           </View>
-
-          {/* Animated Image Card */}
-          {imageUrl && (
-            <></>
-            // <Animated.View
-            //   entering={FadeInDown.delay(500).springify()}
-            //   className="mb-8 overflow-hidden rounded-[40px] border-[6px] border-white bg-white shadow-2xl shadow-black/20">
-            //   <SmartImage uri={imageUrl} className="h-72 w-full" />
-
-            //   {/* Floating Action Overlay */}
-            //   <View className="absolute bottom-4 right-4 flex-row gap-3">
-            //     <TouchableOpacity
-            //       onPress={handleShare}
-            //       className="h-14 w-14 items-center justify-center rounded-full bg-white/90 shadow-lg">
-            //       <Ionicons name="share-social" size={22} color="#15803d" />
-            //     </TouchableOpacity>
-            //     <TouchableOpacity
-            //       onPress={handleDownload}
-            //       className="h-14 w-14 items-center justify-center rounded-full bg-white/90 shadow-lg">
-            //       <Ionicons name="download-outline" size={22} color="#15803d" />
-            //     </TouchableOpacity>
-            //   </View>
-            // </Animated.View>
-          )}
 
           {/* Rewards Card */}
           <Animated.View
@@ -179,9 +155,9 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
                 <Ionicons name="gift" size={28} color={theme.primary} />
               </View>
               <View className="flex-1">
-                <Text className="text-lg font-bold">Rewards Unlocked</Text>
+                <Text className="text-lg font-bold">Đã mở khóa phần thưởng</Text>
                 <Text className="text-sm leading-5 text-muted-foreground">
-                  Use your point to redeem exclusive rewards and discounts!
+                  Hãy sử dụng điểm của bạn để đổi lấy phần thưởng hấp dẫn!
                 </Text>
               </View>
             </View>
@@ -195,14 +171,14 @@ export default function CheckinCompleteScreen({ navigation, route }: CheckinComp
           onPress={() => reviewSheetRef.current?.present()}
           className="h-16 rounded-2xl bg-primary shadow-xl shadow-primary/40">
           <MaterialIcons name="reviews" size={24} color="white" />
-          <Text className="text-xl font-bold text-white">Write a review!</Text>
+          <Text className="text-xl font-bold text-white">Viết đánh giá!</Text>
         </Button>
 
         <Button
           onPress={() => navigation.navigate('Tabs', { screen: 'Map' })}
           variant="outline"
           className="h-14 bg-transparent">
-          <Text className="text-lg font-bold text-foreground">Return to Map</Text>
+          <Text className="text-lg font-bold text-foreground">Quay lại bản đồ</Text>
         </Button>
       </Animated.View>
 

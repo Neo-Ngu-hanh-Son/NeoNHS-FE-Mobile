@@ -23,7 +23,6 @@ type HomeScreenProps = CompositeScreenProps<
 export default function MustSeePlacesSection({ destinations, loading, error }: Props) {
   const { navigate } = useNavigation<HomeScreenProps['navigation']>();
   const { t } = useTranslation();
-
   function handleExploreAllDestinations(): void {
     navigate('Main', { screen: 'AllDestinations', params: {} });
   }
@@ -42,7 +41,7 @@ export default function MustSeePlacesSection({ destinations, loading, error }: P
         />
         <SectionStateMessage
           tone="error"
-          message="Failed to fetch destinations. Please pull to refresh."
+          message="Không thể tải danh sách địa điểm. Vui lòng thử lại sau."
         />
       </View>
     );
@@ -56,7 +55,7 @@ export default function MustSeePlacesSection({ destinations, loading, error }: P
           showSeeAll
           onSeeAllPress={handleExploreAllDestinations}
         />
-        <SectionStateMessage message="No destinations found." />
+        <SectionStateMessage message="Hiện chưa có địa điểm." />
       </View>
     );
   }

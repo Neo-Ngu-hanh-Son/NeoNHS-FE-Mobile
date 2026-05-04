@@ -23,6 +23,7 @@ import { ReviewTypeFlg } from '@/features/reviews/types';
 import SmartMenu from '@/components/common/MenuTriggerBtn';
 import { ReportTypes } from '@/features/report/type';
 import { useTranslation } from 'react-i18next';
+import { buildEventLink } from '@/utils/deeplink';
 
 type Props = StackScreenProps<MainStackParamList, 'EventDetail'>;
 
@@ -70,11 +71,12 @@ export default function EventDetailScreen({ navigation, route }: Props) {
   }, [eventId, navigation]);
 
   const handleShare = useCallback(() => {
+    if (!event) return;
     Share.share({
-      title: event?.name ?? "",
-      message: event?.shortDescription ?? "",
+      title: event.name,
+      message: buildEventLink(eventId),
     });
-  }, [event]);
+  }, [event, eventId]);
 
   const handleReport = useCallback(() => {
     navigation.navigate('ReportScreen', {
@@ -96,7 +98,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
         edges={['top']}>
         <ActivityIndicator size="large" color={theme.primary} />
         <Text className="mt-3 text-sm" style={{ color: theme.mutedForeground }}>
-          Loading...
+          Đang tải...
         </Text>
       </SafeAreaView>
     );
@@ -110,13 +112,13 @@ export default function EventDetailScreen({ navigation, route }: Props) {
         edges={['top']}>
         <Ionicons name="alert-circle-outline" size={48} color={theme.mutedForeground} />
         <Text className="mt-3 text-lg font-bold" style={{ color: theme.foreground }}>
-          Event not found
+          Không tìm thấy sự kiện.
         </Text>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           className="mt-4 rounded-full px-6 py-2"
           style={{ backgroundColor: theme.primary }}>
-          <Text className="font-semibold text-white">Go Back</Text>
+          <Text className="font-semibold text-white">Quay lại</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -178,19 +180,19 @@ export default function EventDetailScreen({ navigation, route }: Props) {
         {/* Event Info (title, status, date, location, participants, price, tags) */}
         <EventInfoSection event={event} theme={theme} onOpenTimelineMap={handleOpenTimelineMap} />
 
-        {/* Tabs */}
-        <View className="mt-6 flex-row gap-2 px-5">
-          <TouchableOpacity
-            onPress={() => setActiveTab('info')}
-            className={`flex-1 items-center rounded-xl py-3 ${activeTab === 'info' ? 'bg-primary' : ''}`}
-            style={activeTab !== 'info' ? { backgroundColor: theme.muted } : undefined}>
-            <Text
-              className={`text-sm font-bold ${activeTab === 'info' ? 'text-white' : ''}`}
-              style={activeTab !== 'info' ? { color: theme.mutedForeground } : undefined}>
-              Details
-            </Text>
-          </TouchableOpacity>
-          {event.isTicketRequired && (
+        {/* Tabs (only show up if ticket is required.) */}
+        {event.isTicketRequired && (
+          <View className="mt-6 flex-row gap-2 px-5">
+            <TouchableOpacity
+              onPress={() => setActiveTab('info')}
+              className={`flex-1 items-center rounded-xl py-3 ${activeTab === 'info' ? 'bg-primary' : ''}`}
+              style={activeTab !== 'info' ? { backgroundColor: theme.muted } : undefined}>
+              <Text
+                className={`text-sm font-bold ${activeTab === 'info' ? 'text-white' : ''}`}
+                style={activeTab !== 'info' ? { color: theme.mutedForeground } : undefined}>
+                Chi tiết
+              </Text>
+            </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setActiveTab('tickets')}
               className={`flex-1 items-center rounded-xl py-3 ${activeTab === 'tickets' ? 'bg-primary' : ''}`}
@@ -198,11 +200,11 @@ export default function EventDetailScreen({ navigation, route }: Props) {
               <Text
                 className={`text-sm font-bold ${activeTab === 'tickets' ? 'text-white' : ''}`}
                 style={activeTab !== 'tickets' ? { color: theme.mutedForeground } : undefined}>
-                Buy Tickets
+                Mua vé
               </Text>
             </TouchableOpacity>
-          )}
-        </View>
+          </View>
+        )}
 
         {/* Tab Content */}
         <View className="mt-4 px-5">
@@ -212,7 +214,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
                 <EventContent html={event.fullDescription} />
               ) : (
                 <Text className="text-sm italic" style={{ color: theme.mutedForeground }}>
-                  No detailed description available.
+                  Không có chi tiết sự kiện.
                 </Text>
               )}
 

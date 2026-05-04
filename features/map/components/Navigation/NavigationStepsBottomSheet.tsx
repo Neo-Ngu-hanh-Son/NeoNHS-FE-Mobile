@@ -7,6 +7,7 @@ import type { BottomSheetFlatListMethods } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
+import { useTranslation } from 'react-i18next';
 
 type NavigationStepsBottomSheetProps = {
   steps: Step[];
@@ -20,6 +21,7 @@ const NavigationStepsBottomSheet = forwardRef<BottomSheet, NavigationStepsBottom
     const { isDarkColorScheme } = useTheme();
     const theme = isDarkColorScheme ? THEME.dark : THEME.light;
     const [paddingBottom, setPaddingBottom] = useState(insets.bottom);
+    const { t } = useTranslation();
 
     const clampedCurrentStepIndex = useMemo(() => {
       if (steps.length === 0) return -1;
@@ -31,7 +33,7 @@ const NavigationStepsBottomSheet = forwardRef<BottomSheet, NavigationStepsBottom
         const isCurrentStep = index === clampedCurrentStepIndex;
         const stepDistance = item.localizedValues?.distance?.text;
         const stepDuration = item.localizedValues?.staticDuration?.text;
-        const stepInstruction = item.navigationInstruction?.instructions ?? 'Follow the path';
+        const stepInstruction = item.navigationInstruction?.instructions ?? t('map.follow_the_main_path');
         const cardBorderColor = isCurrentStep ? `${theme.primary}66` : theme.border;
         const cardBackgroundColor = isCurrentStep ? `${theme.primary}1A` : theme.background;
 
@@ -40,18 +42,18 @@ const NavigationStepsBottomSheet = forwardRef<BottomSheet, NavigationStepsBottom
         return (
           <View style={[styles.stepCard, { borderColor: cardBorderColor, backgroundColor: cardBackgroundColor }]}>
             <Text className="text-xs font-semibold" style={{ color: theme.mutedForeground }}>
-              Step {index + 1}
+              {t('map.step')} {index + 1}
             </Text>
             <Text className="mt-1 text-sm font-medium" style={{ color: theme.foreground }}>
               {stepInstruction}
             </Text>
             <Text className="mt-1 text-xs" style={{ color: theme.mutedForeground }}>
-              {[stepDistance, stepDuration].filter(Boolean).join(' • ') || 'Proceed to next instruction'}
+              {[stepDistance, stepDuration].filter(Boolean).join(' • ') || t('map.proceed_to_next_instruction')}
             </Text>
           </View>
         );
       },
-      [clampedCurrentStepIndex, theme.background, theme.border, theme.foreground, theme.mutedForeground, theme.primary]
+      [clampedCurrentStepIndex, t, theme]
     );
 
     const keyExtractor = useCallback((_: Step, index: number) => index.toString(), []);
@@ -60,14 +62,14 @@ const NavigationStepsBottomSheet = forwardRef<BottomSheet, NavigationStepsBottom
       () => (
         <View className="px-4 pb-3 pt-2">
           <Text className="text-lg font-bold" style={{ color: theme.foreground }}>
-            Route steps
+            {t('map.route_steps')}
           </Text>
           <Text className="text-xs" style={{ color: theme.mutedForeground }}>
-            Follow these instructions
+            {t('map.follow_these_instructions')}
           </Text>
         </View>
       ),
-      [theme.foreground, theme.mutedForeground]
+      [t, theme.foreground, theme.mutedForeground]
     );
 
     const listRef = useRef<BottomSheetFlatListMethods>(null);

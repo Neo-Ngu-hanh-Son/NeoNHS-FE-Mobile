@@ -4,6 +4,7 @@ import { SmartImage } from '@/components/ui/smart-image';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import type { BlogResponse } from '@/features/blog/types/blog';
+import { formatDate } from '@/features/event/utils/helpers';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH * 0.8;
@@ -21,13 +22,7 @@ export default function BlogCard({ blog, onPress }: BlogCardProps) {
   const authorName = blog.user?.fullname ?? 'Unknown';
   const categoryName = blog.blogCategory?.name;
 
-  const formattedDate = blog.publishedAt
-    ? new Date(blog.publishedAt).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      })
-    : null;
+  const formattedDate = formatDate(blog.publishedAt)
 
   return (
     <Pressable

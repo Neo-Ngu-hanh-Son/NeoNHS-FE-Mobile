@@ -9,7 +9,7 @@ import { Text } from '@/components/ui/text';
 import { logger } from '@/utils/logger';
 import CheckinCameraCenterHint from '@/features/checkin/components/Camera/CheckinCameraCenterHint';
 import { CameraIcon } from 'lucide-react-native';
-import { ImageManipulator } from 'expo-image-manipulator';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
 type CheckinCameraCaptureProps = {
   isBusy: boolean;
@@ -48,20 +48,19 @@ export default function CheckinCameraCapture({
         skipProcessing: true,
       });
       if (!photo?.uri) {
-        Alert.alert('Capture failed', 'Could not capture photo. Please try again.');
+        Alert.alert('Lỗi', 'Không thể chụp ảnh. Vui lòng thử lại.');
         return;
       }
 
-      const manipulated = await ImageManipulator.manipulateAsync(
-        photo.uri,
-        [{ resize: { width: 1200 } }],
-        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
-      );
+      const manipulated = await manipulateAsync(photo.uri, [{ resize: { width: 1200 } }], {
+        compress: 0.7,
+        format: SaveFormat.JPEG,
+      });
 
       onImageSelected(manipulated.uri);
     } catch (error) {
       logger.error('[CheckinCameraCapture] Failed to capture photo', error);
-      Alert.alert('Error', 'Could not capture photo. Please try again.');
+      Alert.alert('Lỗi', 'Không thể chụp ảnh. Vui lòng thử lại.');
     }
   };
 
@@ -81,16 +80,15 @@ export default function CheckinCameraCapture({
         return;
       }
 
-      const manipulated = await ImageManipulator.manipulateAsync(
-        result.assets[0].uri,
-        [{ resize: { width: 1200 } }],
-        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
-      );
+      const manipulated = await manipulateAsync(result.assets[0].uri, [{ resize: { width: 1200 } }], {
+        compress: 0.7,
+        format: SaveFormat.JPEG,
+      });
 
       onImageSelected(manipulated.uri);
     } catch (error) {
       logger.error('[CheckinCameraCapture] Failed to pick image', error);
-      Alert.alert('Error', 'Failed to process selected photo.');
+      Alert.alert('Lỗi', 'Không thể xử lý ảnh đã chọn.');
     }
   };
 
@@ -111,10 +109,10 @@ export default function CheckinCameraCapture({
     return (
       <View className="flex-1 items-center justify-center bg-background px-6">
         <Text className="mb-4 text-center text-base text-foreground">
-          We need camera permission to take photos for check-in.
+          Chúng tôi cần quyền truy cập vào camera của bạn để chụp ảnh check-in
         </Text>
         <Button onPress={requestPermission}>
-          <Text>Grant Permission</Text>
+          <Text>Trao quyền</Text>
         </Button>
       </View>
     );
@@ -141,7 +139,7 @@ export default function CheckinCameraCapture({
 
             <View className="mx-3 flex-1">
               <Text className="text-center text-base font-semibold leading-5 text-white" numberOfLines={2}>
-                Checking in at: {pointName}
+                Đang check-in tại: {pointName}
               </Text>
             </View>
 

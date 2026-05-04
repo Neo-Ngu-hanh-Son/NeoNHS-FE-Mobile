@@ -61,7 +61,7 @@ function DayChip({
             style={[styles.countDot, { backgroundColor: isActive ? 'rgba(255,255,255,0.6)' : `${theme.primary}60` }]}
           />
           <Text style={[styles.countLabel, { color: isActive ? 'rgba(255,255,255,0.85)' : `${theme.primary}99` }]}>
-            {option.eventCount} {option.eventCount === 1 ? 'event' : 'events'}
+            {option.eventCount} {option.eventCount === 1 ? 'lịch trình' : 'lịch trình'}
           </Text>
         </View>
       </Pressable>

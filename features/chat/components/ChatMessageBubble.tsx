@@ -167,9 +167,10 @@ const splitSectionBodyAndTail = (section: string): { body: string; tail: string 
     return { body: section.trim(), tail: '' };
   }
 
-  let cut = lines.length;
+  let cut = -1;
 
-  for (let i = lines.length - 1; i >= 1; i--) {
+  // Search from the end for the last line that looks like part of the item description
+  for (let i = lines.length - 1; i >= 0; i--) {
     const raw = lines[i];
     const line = raw.trim();
     if (!line) continue;
@@ -184,8 +185,9 @@ const splitSectionBodyAndTail = (section: string): { body: string; tail: string 
     }
   }
 
-  if (cut === 1) {
-    cut = lines.length;
+  // If no descriptive markers found, default to cutting after the first line (the title)
+  if (cut === -1) {
+    cut = 1;
   }
 
   const body = lines.slice(0, cut).join('\n').trim();
@@ -584,7 +586,7 @@ const ChatMessageBubbleBase = ({
                   <Ionicons name="cloud-upload-outline" size={22} color="#FFFFFF" />
                 </View>
                 <Text className="mt-2 text-xs font-medium" style={{ color: '#FFFFFF' }}>
-                  Uploading...
+                  Đang tải lên...
                 </Text>
               </View>
             </View>
@@ -732,7 +734,50 @@ const ChatMessageBubbleBase = ({
                 )}
               </View>
             ) : null}
-            {!renderAttachedCardsInlineWithText() ? renderAttachedCards() : null}
+            {!renderAttachedCardsInlineWithText() ? (
+              <View>
+                {displayAttachedCards
+                  .filter(card => {
+                    const snippetId = meta?.workshopId || meta?.eventId || meta?.pointId;
+                    return card.id !== snippetId;
+                  })
+                  .map((card, idx) => {
+                    const isPoint = card.type === 'point';
+                    return (
+                      <TouchableOpacity
+                        key={`${card.type}:${card.id}:${idx}`}
+                        activeOpacity={0.8}
+                        onPress={() => {
+                          if (isPoint) onGoToMap?.(card.id);
+                          else onProductSnippetPress?.(card.id, card.type === 'event' ? 'event' : 'workshop');
+                        }}
+                        className="flex-row items-center p-2 my-2 rounded-xl border"
+                        style={{
+                          width: '100%',
+                          backgroundColor: isDarkColorScheme ? 'rgba(255,255,255,0.05)' : '#FFFFFF',
+                          borderColor: theme.border,
+                        }}>
+                        {card.imageUrl ? (
+                          <SmartImage uri={card.imageUrl} className="rounded-lg" style={{ width: 60, height: 60 }} />
+                        ) : (
+                          <View
+                            className="rounded-lg"
+                            style={{ width: 60, height: 60, backgroundColor: isDarkColorScheme ? '#374151' : '#E5E7EB' }}
+                          />
+                        )}
+                        <View className="flex-1 ml-3">
+                          <Text className="text-xs font-bold" style={{ color: theme.foreground }} numberOfLines={2}>
+                            {card.title}
+                          </Text>
+                          <Text className="text-[10px] font-bold mt-1" style={{ color: theme.primary }}>
+                            {isPoint ? 'Nhấn để xem đường đi →' : 'Nhấn để xem chi tiết →'}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+              </View>
+            ) : null}
           </View>
         );
       }

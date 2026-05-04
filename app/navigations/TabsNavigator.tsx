@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import HomeScreen from '@/features/home/screens/HomeScreen';
 import { DiscoverScreen } from '@/features/discover/screens';
-import { CheckinCompleteScreen, MapScreen } from '@/features/map/screens';
+import { MapScreen } from '@/features/map/screens';
 // import { BookingsScreen } from '@/features/bookings/screens';
 import ProfileScreen from '@/features/profile/screens/ProfileScreen';
 import CartListScreen from '@/features/cart/screens/CartListScreen';
@@ -14,7 +14,6 @@ import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import type { TabsStackParamList } from './NavigationParamTypes';
 import { useTranslation } from 'react-i18next';
-import CustomTabBarButton from './components/MapTabBarButton';
 
 const Tab = createBottomTabNavigator<TabsStackParamList>();
 

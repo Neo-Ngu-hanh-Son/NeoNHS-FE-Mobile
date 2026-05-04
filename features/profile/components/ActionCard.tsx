@@ -1,6 +1,6 @@
-import { memo } from "react";
-import { TouchableOpacity, View, StyleSheet } from "react-native";
-import { Text } from "@/components/ui/text";
+import { memo } from 'react';
+import { TouchableOpacity, View, StyleSheet } from 'react-native';
+import { Text } from '@/components/ui/text';
 
 type ActionCardProps = {
   title: string;

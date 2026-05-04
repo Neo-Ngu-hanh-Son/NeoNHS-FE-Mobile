@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { View, ScrollView, TouchableOpacity, TextInput, RefreshControl } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -10,7 +10,6 @@ import { THEME } from '@/lib/theme';
 import { MainStackParamList } from '@/app/navigations/NavigationParamTypes';
 import { EventListContent } from '../../event/components';
 import { WorkshopListContent } from '../../workshops/screens';
-import { useQueryClient } from '@tanstack/react-query';
 import DestinationsTab from './AllDestinationTab/DestinationsTab';
 import BlogsTab from './AllBlogTab/BlogsTab';
 import { EventStatus } from '@/features/event/types';
@@ -26,28 +25,26 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
 
   const initialAttractionId = route.params?.selectedAttractionId;
 
-
   useEffect(() => {
     if (route.params?.initialTab) {
       setActiveTab(route.params.initialTab);
     }
   }, [route.params?.initialTab]);
 
-
   const renderHeader = () => {
-    let title = 'Discover';
+    let title = 'Khám phá';
     switch (activeTab) {
       case 'Points':
-        title = 'Destinations';
+        title = 'Điểm đến';
         break;
       case 'Workshops':
         title = 'Workshops';
         break;
       case 'Events':
-        title = 'Upcoming Events';
+        title = 'Sự kiện sắp tới';
         break;
       case 'Blogs':
-        title = 'Travel Stories';
+        title = 'Bài viết';
         break;
     }
     return (
@@ -66,6 +63,21 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
         </View>
       </View>
     );
+  };
+
+  const getVietnameseLabel = (tab: CategoryType) => {
+    switch (tab) {
+      case 'Points':
+        return 'Điểm đến';
+      case 'Workshops':
+        return 'Workshops';
+      case 'Events':
+        return 'Sự kiện sắp tới';
+      case 'Blogs':
+        return 'Bài viết';
+      default:
+        return '';
+    }
   };
 
   const renderTabs = () => (
@@ -97,7 +109,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
                 fontWeight: '700',
                 color: activeTab === tab ? '#fff' : theme.mutedForeground,
               }}>
-              {tab}
+              {getVietnameseLabel(tab)}
             </Text>
           </TouchableOpacity>
         ))}
@@ -106,11 +118,13 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
   );
 
   if (activeTab === 'Events') {
-    return <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
-      {renderHeader()}
-      {renderTabs()}
-      <EventListContent initialStatus={EventStatus.UPCOMING} />
-    </SafeAreaView>;
+    return (
+      <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
+        {renderHeader()}
+        {renderTabs()}
+        <EventListContent initialStatus={EventStatus.UPCOMING} />
+      </SafeAreaView>
+    );
   }
 
   if (activeTab === 'Workshops') {
@@ -118,9 +132,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
       <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }} edges={['top']}>
         {renderHeader()}
         {renderTabs()}
-        <WorkshopListContent
-          onNavigateToDetail={(id) => navigation.navigate('WorkshopDetail', { workshopId: id })}
-        />
+        <WorkshopListContent onNavigateToDetail={(id) => navigation.navigate('WorkshopDetail', { workshopId: id })} />
       </SafeAreaView>
     );
   }
@@ -150,12 +162,7 @@ export default function AllDestinationsScreen({ navigation, route }: Props) {
         className="flex-1"
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={false}
-            onRefresh={() => { }}
-            tintColor={theme.primary}
-            colors={[theme.primary]}
-          />
+          <RefreshControl refreshing={false} onRefresh={() => { }} tintColor={theme.primary} colors={[theme.primary]} />
         }>
         {renderTabs()}
       </ScrollView>

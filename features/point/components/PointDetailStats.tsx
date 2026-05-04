@@ -43,8 +43,8 @@ export function PointDetailStats({ point }: PointDetailStatsProps) {
   const theme = isDarkColorScheme ? THEME.dark : THEME.light;
   const { t } = useTranslation();
 
-  const diffConfig = DIFFICULTY_CONFIG[point.difficulty as PointDifficulty] || DIFFICULTY_CONFIG.MEDIUM;
-  const vibeConfig = VIBE_CONFIG[point.vibe as PointVibe] || VIBE_CONFIG.ENERGETIC;
+  const diffConfig = DIFFICULTY_CONFIG[point.difficulty as PointDifficulty] || DIFFICULTY_CONFIG.moderate;
+  const vibeConfig = VIBE_CONFIG[point.vibe as PointVibe] || VIBE_CONFIG.energetic;
 
   return (
     <Card className="rounded-3xl py-5">
@@ -64,7 +64,7 @@ export function PointDetailStats({ point }: PointDetailStatsProps) {
           iconColor={diffConfig.color}
           iconBgColor={diffConfig.bgColor}
           label={t('point.difficulty')}
-          value={point.difficulty ? t(`${point.difficulty.toLowerCase()}`) : PointDifficulty.MEDIUM.toLowerCase()}
+          value={point.difficulty ? t(`point.${point.difficulty.toLowerCase()}`) : t('point.moderate')}
         />
 
         <Separator orientation="vertical" className="mx-1 h-12" />
@@ -74,7 +74,7 @@ export function PointDetailStats({ point }: PointDetailStatsProps) {
           iconColor={vibeConfig.color}
           iconBgColor={vibeConfig.bgColor}
           label={t('point.vibe')}
-          value={point.vibe ? t(`${point.vibe.toLowerCase()}`) : PointVibe.ENERGETIC.toLowerCase()}
+          value={point.vibe ? t(`point.${point.vibe.toLowerCase()}`) : t('point.energetic')}
         />
       </CardContent>
     </Card>

@@ -36,7 +36,7 @@ export function RatingSummary({ averageRating, totalRatings, barCounts }: Rating
             ))}
           </View>
           <Text className="mt-1.5 text-[11px] text-muted-foreground">
-            {totalRatings} review{totalRatings !== 1 ? 's' : ''}
+            {totalRatings} đánh giá
           </Text>
         </View>
 

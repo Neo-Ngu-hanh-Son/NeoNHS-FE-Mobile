@@ -13,10 +13,10 @@ interface BlogCardProps {
 function BlogCardComponent({ blog, onPress }: BlogCardProps) {
   const formattedDate = useMemo(() => {
     if (!blog.publishedAt) {
-      return 'Unpublished';
+      return 'Chưa xuất bản';
     }
 
-    return new Date(blog.publishedAt).toLocaleDateString('en-US', {
+    return new Date(blog.publishedAt).toLocaleDateString('vi-VN', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -47,7 +47,7 @@ function BlogCardComponent({ blog, onPress }: BlogCardProps) {
               <Text className="text-xs text-muted-foreground">{formattedDate}</Text>
             </View>
 
-            <Text className="mt-1 text-xs text-muted-foreground">{blog.viewCount} views</Text>
+            <Text className="mt-1 text-xs text-muted-foreground">{blog.viewCount} lượt xem</Text>
           </View>
         </View>
       </Card>

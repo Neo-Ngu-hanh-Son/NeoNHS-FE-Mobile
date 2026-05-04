@@ -25,7 +25,7 @@ export default function MapMarkerFilterBar({
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 4, backgroundColor: 'transparent' }}>
-        <MapMarkerFilterChip label="Show all" icon="apps-outline" active={filters.showAll} onPress={onToggleShowAll} />
+        <MapMarkerFilterChip label="Tất cả" icon="apps-outline" active={filters.showAll} onPress={onToggleShowAll} />
         <MapMarkerFilterChip
           label="Check-in"
           icon="camera-outline"
@@ -33,19 +33,19 @@ export default function MapMarkerFilterBar({
           onPress={() => onToggleFilter('checkin')}
         />
         <MapMarkerFilterChip
-          label="Workshops"
+          label="Workshop"
           icon="construct-outline"
           active={!filters.showAll && filters.showWorkshop}
           onPress={() => onToggleFilter('workshop')}
         />
         <MapMarkerFilterChip
-          label="Events"
+          label="Sự kiện"
           icon="calendar-outline"
           active={!filters.showAll && filters.showEvent}
           onPress={() => onToggleFilter('event')}
         />
         <MapMarkerFilterChip
-          label="Places"
+          label="Địa điểm"
           icon="location-outline"
           active={!filters.showAll && filters.showPlaces}
           onPress={() => onToggleFilter('places')}

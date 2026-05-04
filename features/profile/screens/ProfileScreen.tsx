@@ -134,7 +134,7 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
       {/* Main Content Area (Ô trắng) */}
       <View style={[styles.mainSheet, { backgroundColor: theme.background }]}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {/* Profile Card - Đã đưa vào trong ô trắng, không còn nổi */}
+          {/* Profile Card */}
           <View
             style={[
               styles.profileInfoCard,
@@ -144,8 +144,9 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
               <View style={styles.avatarBorder}>
                 <SmartImage uri={user.avatarUrl || 'https://via.placeholder.com/150'} style={styles.avatarImage} />
               </View>
+
               <View>
-                <Text style={[styles.userName, { color: theme.foreground }]} numberOfLines={1}>
+                <Text style={[styles.userName, { color: theme.foreground }]} numberOfLines={1} ellipsizeMode='tail'>
                   {user.fullname || 'User'}
                 </Text>
                 <TouchableOpacity onPress={handleEditProfile}>
@@ -161,9 +162,12 @@ export default function ProfileScreen({ navigation }: ProfileNavigationProp) {
               </View>
               <View>
                 <Text style={styles.pointsLabel}>{t('profile.your_points')}</Text>
-                <Text style={styles.pointsValue}>{(user.userPoint ?? 0).toLocaleString('en-US')}</Text>
+                <Text style={styles.pointsValue} numberOfLines={1} ellipsizeMode='tail'>
+                  {(user.userPoint ?? 0).toLocaleString('vi-VN')}
+                </Text>
               </View>
             </View>
+
           </View>
 
           {/* KYC Verification */}
@@ -395,12 +399,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    marginRight: 6
   },
   userName: {
     fontSize: 18,
     fontWeight: '700',
-    width: 160,
-    overflow: 'hidden',
   },
   avatarBorder: {
     width: 56,
@@ -436,6 +439,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: 'bold',
     color: 'white',
+    maxWidth: 100
   },
   scrollContent: {
     paddingHorizontal: 20,

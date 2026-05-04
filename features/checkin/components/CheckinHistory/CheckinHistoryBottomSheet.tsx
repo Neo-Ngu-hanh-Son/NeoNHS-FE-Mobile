@@ -96,14 +96,14 @@ export default function CheckinHistoryBottomSheet({
             {item.uploadStatus === 'pending' ? (
               <>
                 <ActivityIndicator size="small" color={theme.primary} />
-                <Text className="text-[11px] text-muted-foreground">Uploading...</Text>
+                <Text className="text-[11px] text-muted-foreground">Đang tải lên...</Text>
               </>
             ) : null}
 
             {item.uploadStatus === 'uploaded' ? (
               <>
                 <Ionicons name="checkmark-circle" size={14} color={theme.primary} />
-                <Text className="text-[11px] text-muted-foreground">Uploaded</Text>
+                <Text className="text-[11px] text-muted-foreground">Đã tải lên</Text>
               </>
             ) : null}
 
@@ -111,7 +111,7 @@ export default function CheckinHistoryBottomSheet({
               <>
                 <Ionicons name="alert-circle" size={14} color={theme.destructive} />
                 <Text className="text-[11px]" style={{ color: theme.destructive }}>
-                  Failed
+                  Lỗi
                 </Text>
               </>
             ) : null}
@@ -145,18 +145,18 @@ export default function CheckinHistoryBottomSheet({
         topInset={top}>
         <View style={styles.headerContainer}>
           <View>
-            <Text className="text-lg font-semibold text-foreground">Current check-in photos</Text>
+            <Text className="text-lg font-semibold text-foreground">Ảnh check-in hiện tại</Text>
             <Text className="text-xs text-muted-foreground">
               {images.length
-                ? `${images.length} photos captured here${pointName ? `: ${pointName}` : ''}`
-                : 'No photos captured yet for this check-in'}
+                ? `${images.length} ảnh đã chụp tại đây${pointName ? `: ${pointName}` : ''}`
+                : 'Chưa có ảnh'}
             </Text>
           </View>
           <TouchableOpacity
             onPress={() => sheetRef.current?.close()}
             className="h-9 w-9 items-center justify-center rounded-full bg-muted"
             accessibilityRole="button"
-            accessibilityLabel="Close check-in gallery">
+            accessibilityLabel="Đóng gallery check-in">
             <Ionicons name="close" size={20} color={theme.foreground} />
           </TouchableOpacity>
         </View>
@@ -165,12 +165,12 @@ export default function CheckinHistoryBottomSheet({
           <View style={styles.progressWrapper}>
             <View style={styles.progressTextRow}>
               <Text className="text-xs text-muted-foreground">
-                Uploaded {uploadProgress.uploaded}/{uploadProgress.total}
+                Đã tải {uploadProgress.uploaded}/{uploadProgress.total}
               </Text>
               {uploadProgress.pending > 0 ? (
                 <View style={styles.pendingIndicatorRow}>
                   <ActivityIndicator size="small" color={theme.primary} />
-                  <Text className="text-xs text-muted-foreground">Uploading...</Text>
+                  <Text className="text-xs text-muted-foreground">Đang tải lên...</Text>
                 </View>
               ) : null}
             </View>
@@ -197,7 +197,7 @@ export default function CheckinHistoryBottomSheet({
               keyboardShouldPersistTaps="handled"
               ListEmptyComponent={
                 <View style={styles.centerState}>
-                  <Text className="text-sm text-muted-foreground">No photos captured yet for this check-in.</Text>
+                  <Text className="text-sm text-muted-foreground">Chưa có ảnh nào được chụp cho điểm check-in này.</Text>
                 </View>
               }
             />
@@ -214,12 +214,12 @@ export default function CheckinHistoryBottomSheet({
               ) : (
                 <Ionicons name="checkmark-circle-outline" size={20} color="white" />
               )}
-              <Text className="text-primary-foreground">{isSubmitting ? 'Please wait...' : 'Complete check-in'}</Text>
+              <Text className="text-primary-foreground">{isSubmitting ? 'Vui lòng đợi...' : 'Hoàn tất check-in'}</Text>
             </Button>
           </>
         ) : (
           <View style={styles.centerState}>
-            <Text className="text-sm text-muted-foreground">No photos captured yet. Take a photo to get started!</Text>
+            <Text className="text-sm text-muted-foreground">Chụp ít nhất một bức ảnh để hoàn tất check-in!</Text>
           </View>
         )}
       </BottomSheet>

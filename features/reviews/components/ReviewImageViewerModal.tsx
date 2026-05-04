@@ -24,7 +24,7 @@ function formatDateTime(isoDate?: string | null) {
     return undefined;
   }
 
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat('vi-VN', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',

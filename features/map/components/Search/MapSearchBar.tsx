@@ -97,7 +97,7 @@ export default function MapSearchBar<TPoint extends MapPoint = MapPoint>({
         <TextInput
           value={value}
           onChangeText={onChangeText}
-          placeholder="Search places, events, workshops..."
+          placeholder="Tìm kiếm các địa điểm, workshop..."
           placeholderTextColor={theme.mutedForeground}
           className="flex-1 px-2 py-3"
           style={{ color: theme.foreground }}
@@ -131,7 +131,7 @@ export default function MapSearchBar<TPoint extends MapPoint = MapPoint>({
             ListEmptyComponent={
               <View className="px-4 py-4">
                 <Text className="text-sm" style={{ color: theme.mutedForeground }}>
-                  No matching locations found.
+                  Không tìm thấy kết quả.
                 </Text>
               </View>
             }
