@@ -214,17 +214,17 @@ export default function WithdrawScreen() {
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardView}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text className="mb-2 text-2xl font-bold" style={{ color: theme.foreground }}>
-          Withdraw Money
+          Rút tiền
         </Text>
         <Text className="mb-6 text-sm" style={{ color: theme.mutedForeground }}>
-          Transfer your balance to your linked bank account
+          Chuyển tiền vào tài khoản ngân hàng đã liên kết
         </Text>
 
         {/* Balance Card */}
         <View style={[styles.balanceCard, { backgroundColor: theme.primary }]}>
           <View style={styles.balanceHeader}>
             <MaterialIcons name="account-balance-wallet" size={24} color="white" />
-            <Text style={styles.balanceLabel}>Available Balance</Text>
+            <Text style={styles.balanceLabel}>Số dư khả dụng</Text>
           </View>
           <Text style={styles.balanceAmount}>{formatCurrency(balance)}</Text>
         </View>
@@ -234,7 +234,7 @@ export default function WithdrawScreen() {
           <View style={[styles.bankCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <View style={styles.bankCardHeader}>
               <MaterialIcons name="account-balance" size={20} color={theme.primary} />
-              <Text style={[styles.bankCardTitle, { color: theme.foreground }]}>Bank Account</Text>
+              <Text style={[styles.bankCardTitle, { color: theme.foreground }]}>Tài khoản ngân hàng</Text>
             </View>
             <Text style={[styles.bankDetail, { color: theme.mutedForeground }]}>
               {bankInfo.bankName} • {bankInfo.bankAccountNumber}
@@ -247,19 +247,19 @@ export default function WithdrawScreen() {
           <View style={[styles.bankCard, { backgroundColor: '#FEF3C7', borderColor: '#F59E0B' }]}>
             <View style={styles.bankCardHeader}>
               <MaterialIcons name="warning" size={20} color="#F59E0B" />
-              <Text style={[styles.bankCardTitle, { color: '#92400E' }]}>No Bank Account</Text>
+              <Text style={[styles.bankCardTitle, { color: '#92400E' }]}>Tài khoản ngân hàng</Text>
             </View>
-            <Text style={{ color: '#92400E', fontSize: 13 }}>Please update your bank info in Edit Profile first.</Text>
+            <Text style={{ color: '#92400E', fontSize: 13 }}>Vui lòng cập nhật thông tin ngân hàng trong phần Cập nhật hồ sơ trước.</Text>
           </View>
         )}
 
         {/* Amount Input */}
         <View style={styles.inputSection}>
-          <Text style={[styles.label, { color: theme.foreground }]}>Withdrawal Amount (VND)</Text>
+          <Text style={[styles.label, { color: theme.foreground }]}>Số tiền rút (VND)</Text>
           <Input
             value={amount}
             onChangeText={(text) => setAmount(text.replace(/[^0-9]/g, ''))}
-            placeholder="Enter amount"
+            placeholder="Nhập số tiền rút"
             keyboardType="numeric"
             style={[styles.amountInput, { borderColor: theme.border, fontSize: 20, fontWeight: '700' }]}
           />
@@ -301,7 +301,7 @@ export default function WithdrawScreen() {
           ]}>
           <View style={styles.buttonContent}>
             <MaterialIcons name="face" size={20} color="white" />
-            <Text style={styles.buttonText}>Next: Face Verification</Text>
+            <Text style={styles.buttonText}>Tiếp theo: Xác thực khuôn mặt</Text>
           </View>
         </Button>
 
@@ -309,7 +309,7 @@ export default function WithdrawScreen() {
         <View style={[styles.infoHint, { backgroundColor: theme.primary + '10' }]}>
           <MaterialIcons name="info-outline" size={16} color={theme.primary} />
           <Text style={[styles.infoHintText, { color: theme.mutedForeground }]}>
-            A live photo is required for identity verification before withdrawal.
+            Cần có ảnh selfie để xác thực danh tính trước khi rút tiền.
           </Text>
         </View>
       </ScrollView>
@@ -325,9 +325,9 @@ export default function WithdrawScreen() {
         <MaterialIcons name="face" size={64} color={theme.primary} />
       </View>
 
-      <Text style={[styles.faceTitle, { color: theme.foreground }]}>Face Verification</Text>
+      <Text style={[styles.faceTitle, { color: theme.foreground }]}>Xác minh khuôn mặt</Text>
       <Text style={[styles.faceSubtitle, { color: theme.mutedForeground }]}>
-        Take a live selfie to verify your identity before withdrawing{' '}
+        Chụp ảnh selfie để xác minh danh tính trước khi rút{' '}
         <Text style={{ fontWeight: '700', color: theme.primary }}>{formatCurrency(parseInt(amount, 10) || 0)}</Text>
       </Text>
 
@@ -337,7 +337,7 @@ export default function WithdrawScreen() {
           <Image source={{ uri: livePhotoUri }} style={styles.facePreviewImage} contentFit="cover" />
           <View style={styles.facePreviewBadge}>
             <MaterialIcons name="check-circle" size={18} color="#22C55E" />
-            <Text style={{ color: '#22C55E', fontWeight: '600', fontSize: 13 }}>Photo captured</Text>
+            <Text style={{ color: '#22C55E', fontWeight: '600', fontSize: 13 }}>Ảnh đã chụp</Text>
           </View>
         </View>
       )}
@@ -347,8 +347,8 @@ export default function WithdrawScreen() {
         onPress={handleOpenCamera}
         activeOpacity={0.8}>
         <MaterialIcons name="camera-alt" size={28} color="white" />
-        <Text style={styles.cameraActionBtnText}>{livePhotoUri ? 'Retake Photo' : 'Open Camera'}</Text>
-        <Text style={styles.cameraActionBtnHint}>Use your front camera</Text>
+        <Text style={styles.cameraActionBtnText}>{livePhotoUri ? 'Chụp lại ảnh' : 'Mở camera'}</Text>
+        <Text style={styles.cameraActionBtnHint}>Sử dụng camera trước</Text>
       </TouchableOpacity>
 
       {livePhotoUri && (
@@ -357,7 +357,7 @@ export default function WithdrawScreen() {
           onPress={() => setStep('confirm')}
           activeOpacity={0.8}>
           <MaterialIcons name="check" size={22} color="white" />
-          <Text style={styles.proceedBtnText}>Proceed to Confirm</Text>
+          <Text style={styles.proceedBtnText}>Xác nhận</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -375,9 +375,9 @@ export default function WithdrawScreen() {
           <MaterialIcons name="verified-user" size={56} color="#22C55E" />
         </View>
 
-        <Text style={[styles.faceTitle, { color: theme.foreground }]}>Confirm Withdrawal</Text>
+        <Text style={[styles.faceTitle, { color: theme.foreground }]}>Xác nhận rút tiền</Text>
         <Text style={[styles.faceSubtitle, { color: theme.mutedForeground }]}>
-          Review the details below before confirming
+          Xem chi tiết bên dưới trước khi xác nhận
         </Text>
 
         {/* Summary card */}
@@ -387,14 +387,14 @@ export default function WithdrawScreen() {
             <View style={styles.confirmFaceRow}>
               <Image source={{ uri: livePhotoUri }} style={styles.confirmFaceImage} contentFit="cover" />
               <View style={{ flex: 1 }}>
-                <Text style={[styles.confirmLabel, { color: theme.mutedForeground }]}>Face Verification</Text>
+                <Text style={[styles.confirmLabel, { color: theme.mutedForeground }]}>Xác minh khuôn mặt</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                   <MaterialIcons name="check-circle" size={16} color="#22C55E" />
-                  <Text style={{ color: '#22C55E', fontWeight: '600', fontSize: 13 }}>Photo ready</Text>
+                  <Text style={{ color: '#22C55E', fontWeight: '600', fontSize: 13 }}>Ảnh đã sẵn sàng</Text>
                 </View>
               </View>
               <TouchableOpacity onPress={handleRetakePhoto}>
-                <Text style={{ color: theme.primary, fontSize: 12, fontWeight: '600' }}>Retake</Text>
+                <Text style={{ color: theme.primary, fontSize: 12, fontWeight: '600' }}>Chụp lại ảnh</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -403,7 +403,7 @@ export default function WithdrawScreen() {
 
           {/* Amount */}
           <View style={styles.summaryRow}>
-            <Text style={[styles.confirmLabel, { color: theme.mutedForeground }]}>Amount</Text>
+            <Text style={[styles.confirmLabel, { color: theme.mutedForeground }]}>Số tiền</Text>
             <Text style={[styles.confirmValue, { color: theme.foreground }]}>{formatCurrency(withdrawAmount)}</Text>
           </View>
 
@@ -411,15 +411,15 @@ export default function WithdrawScreen() {
 
           {/* Bank info */}
           <View style={styles.summaryRow}>
-            <Text style={[styles.confirmLabel, { color: theme.mutedForeground }]}>Bank</Text>
+            <Text style={[styles.confirmLabel, { color: theme.mutedForeground }]}>Ngân hàng</Text>
             <Text style={[styles.confirmValue, { color: theme.foreground }]}>{bankInfo.bankName}</Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={[styles.confirmLabel, { color: theme.mutedForeground }]}>Account</Text>
+            <Text style={[styles.confirmLabel, { color: theme.mutedForeground }]}>Số tài khoản</Text>
             <Text style={[styles.confirmValue, { color: theme.foreground }]}>{bankInfo.bankAccountNumber}</Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={[styles.confirmLabel, { color: theme.mutedForeground }]}>Name</Text>
+            <Text style={[styles.confirmLabel, { color: theme.mutedForeground }]}>Tên tài khoản</Text>
             <Text style={[styles.confirmValue, { color: theme.foreground }]}>{bankInfo.bankAccountName}</Text>
           </View>
         </View>
@@ -433,19 +433,19 @@ export default function WithdrawScreen() {
           {isLoading ? (
             <View style={styles.buttonContent}>
               <ActivityIndicator color="white" />
-              <Text style={styles.buttonText}>Verifying & Withdrawing...</Text>
+              <Text style={styles.buttonText}>Đang xử lý...</Text>
             </View>
           ) : (
             <View style={styles.buttonContent}>
               <MaterialIcons name="send" size={20} color="white" />
-              <Text style={styles.buttonText}>Confirm Withdraw {formatCurrency(withdrawAmount)}</Text>
+              <Text style={styles.buttonText}>Rút tiền {formatCurrency(withdrawAmount)}</Text>
             </View>
           )}
         </TouchableOpacity>
 
         {isLoading && (
           <Text style={[styles.loadingHint, { color: theme.mutedForeground }]}>
-            Verifying your face and processing withdrawal...
+            Đang xác thực khuôn mặt và xử lý rút tiền...
           </Text>
         )}
       </ScrollView>

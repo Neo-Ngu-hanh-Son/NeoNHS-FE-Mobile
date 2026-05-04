@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { THEME } from '@/lib/theme';
 import { cartService } from '../services/cartService';
-import { PreCheckoutResponse, CartItem, Voucher, ApplicableProduct } from '../types';
+import { PreCheckoutResponse, CartItem, Voucher, ApplicableProduct, AppliedVoucherDetail } from '../types';
 import LoadingOverlay from '@/components/Loader/LoadingOverlay';
 import { logger } from '@/utils/logger';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,7 +21,7 @@ interface GroupedItems {
     items: CartItem[];
 }
 
-function groupCartItems(cartItems: CartItem[]): GroupedItems[] {
+function groupCartItems(cartItems: CartItem[], t: any): GroupedItems[] {
     const groups: Record<string, GroupedItems> = {};
 
     for (const item of cartItems) {
@@ -29,10 +29,14 @@ function groupCartItems(cartItems: CartItem[]): GroupedItems[] {
         let groupName: string;
         let groupType: 'event' | 'workshop' | 'other';
 
-        if (item.eventId && item.eventName) {
-            key = `event-${item.eventId}`;
-            groupName = item.eventName;
+        if (item.eventId) {
+            key = 'event';
+            groupName = t('cart.event_tickets', 'Vé sự kiện');
             groupType = 'event';
+        } else if (item.workshopSessionId && item.vendorId) {
+            key = `vendor-${item.vendorId}`;
+            groupName = item.vendorName || 'Workshop vendor';
+            groupType = 'workshop';
         } else if (item.workshopSessionId && item.workshopName) {
             key = `workshop-${item.workshopSessionId}`;
             groupName = item.workshopName;
@@ -59,8 +63,8 @@ export default function PreCheckoutScreen() {
     const route = useRoute<any>();
     const { t } = useTranslation();
 
-    // Expect selectedIds from route params
-    const { selectedIds, selectedVoucherId } = route.params || { selectedIds: [], selectedVoucherId: null };
+    // Expect selectedIds and selectedVoucherIds from route params
+    const { selectedIds, selectedVoucherIds = [] } = route.params || { selectedIds: [], selectedVoucherIds: [] };
 
     const [loading, setLoading] = useState(false);
     const [preCheckoutData, setPreCheckoutData] = useState<PreCheckoutResponse | null>(null);
@@ -68,32 +72,33 @@ export default function PreCheckoutScreen() {
 
     const groupedItems = useMemo(() => {
         if (!preCheckoutData) return [];
-        return groupCartItems(preCheckoutData.cartItems);
-    }, [preCheckoutData]);
+        return groupCartItems(preCheckoutData.cartItems, t);
+    }, [preCheckoutData, t]);
 
-    // Calculate how much discount applies to each group
-    // Vendor-scoped vouchers only apply to groups matching the voucher's vendor
-    const getGroupDiscount = (group: GroupedItems): number => {
-        const voucher = preCheckoutData?.appliedVoucher;
-        if (!voucher || preCheckoutData.discountValue <= 0) return 0;
-        const ap: ApplicableProduct = voucher.applicableProduct;
+    // Find the applied voucher detail that matches a given group
+    const getGroupVoucherDetail = (group: GroupedItems): AppliedVoucherDetail | null => {
+        if (!preCheckoutData?.appliedVouchers?.length) return null;
 
-        // Platform voucher with ALL → shown globally in Payment Summary
-        if (ap === 'ALL' && !voucher.vendorId) return 0;
+        for (const detail of preCheckoutData.appliedVouchers) {
+            const voucher = detail.voucher;
+            if (detail.discountAmount <= 0) continue;
+            const ap: ApplicableProduct = voucher.applicableProduct;
 
-        // Vendor-scoped voucher: must match the group's vendor
-        if (voucher.vendorId) {
-            if (group.vendorId !== voucher.vendorId) return 0;
-            // Vendor matches and product type matches (or ALL for vendor)
-            if (ap === 'WORKSHOP' && group.groupType === 'workshop') return preCheckoutData.discountValue;
-            if (ap === 'ALL' && group.groupType === 'workshop') return preCheckoutData.discountValue;
-            return 0;
+            // Platform voucher with ALL → shown globally in Payment Summary
+            if (ap === 'ALL' && !voucher.vendorId) continue;
+
+            // Vendor-scoped voucher: must match the group's vendor
+            if (voucher.vendorId) {
+                if (group.vendorId !== voucher.vendorId) continue;
+                if ((ap === 'WORKSHOP' || ap === 'ALL') && group.groupType === 'workshop') return detail;
+                continue;
+            }
+
+            // Platform voucher scoped to a product type
+            if (ap === 'EVENT_TICKET' && group.groupType === 'event') return detail;
+            if (ap === 'WORKSHOP' && group.groupType === 'workshop') return detail;
         }
-
-        // Platform voucher scoped to a product type
-        if (ap === 'EVENT_TICKET' && group.groupType === 'event') return preCheckoutData.discountValue;
-        if (ap === 'WORKSHOP' && group.groupType === 'workshop') return preCheckoutData.discountValue;
-        return 0;
+        return null;
     };
 
 
@@ -103,7 +108,7 @@ export default function PreCheckoutScreen() {
         try {
             const payload = {
                 cartItemIds: selectedIds,
-                voucherIds: selectedVoucherId ? [selectedVoucherId] : []
+                voucherIds: selectedVoucherIds
             };
             const response = await cartService.preCheckout(payload);
 
@@ -131,7 +136,7 @@ export default function PreCheckoutScreen() {
         try {
             const payload = {
                 cartItemIds: selectedIds,
-                voucherIds: selectedVoucherId ? [selectedVoucherId] : []
+                voucherIds: selectedVoucherIds
             };
 
             const response = await cartService.createPaymentLink(payload);
@@ -173,7 +178,9 @@ export default function PreCheckoutScreen() {
             <ScrollView contentContainerStyle={styles.content}>
                 <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
                     <Text style={[styles.sectionTitle, { color: theme.foreground }]}>{t('cart.items')} ({preCheckoutData.cartItems.length})</Text>
-                    {groupedItems.map((group, groupIndex) => (
+                    {groupedItems.map((group, groupIndex) => {
+                        const voucherDetail = getGroupVoucherDetail(group);
+                        return (
                         <View key={groupIndex} style={groupIndex > 0 ? { marginTop: 16 } : undefined}>
                             {/* Group header */}
                             <View style={[styles.groupHeader, { backgroundColor: group.groupType === 'event' ? 'rgba(59, 130, 246, 0.08)' : group.groupType === 'workshop' ? 'rgba(168, 85, 247, 0.08)' : 'rgba(107, 114, 128, 0.08)' }]}>
@@ -197,21 +204,22 @@ export default function PreCheckoutScreen() {
                                 </View>
                             ))}
                             {/* Per-group voucher discount indicator */}
-                            {getGroupDiscount(group) > 0 && (
+                            {voucherDetail && (
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, paddingLeft: 8 }}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                                         <MaterialIcons name="local-offer" size={13} color="#22c55e" />
                                         <Text style={{ color: '#22c55e', fontSize: 12 }}>
-                                            {preCheckoutData!.appliedVoucher!.code}
+                                            {voucherDetail.voucher.code}
                                         </Text>
                                     </View>
                                     <Text style={{ color: '#22c55e', fontWeight: '600', fontSize: 13 }}>
-                                        -{(getGroupDiscount(group) ?? 0).toLocaleString()} VND
+                                        -{(voucherDetail.discountAmount ?? 0).toLocaleString()} VND
                                     </Text>
                                 </View>
                             )}
                         </View>
-                    ))}
+                        );
+                    })}
                 </View>
 
                 <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
