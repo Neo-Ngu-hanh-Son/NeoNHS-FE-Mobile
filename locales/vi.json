@@ -270,7 +270,7 @@
     "loading_details": "Đang tải thông tin địa điểm...",
     "error_details": "Không thể tải thông tin địa điểm. Vui lòng thử lại sau.",
     "no_audio": "Không có âm thanh lịch sử cho địa điểm này.",
-    "history_transcript": "Bản ghi âm tiếng lịch sử",
+    "history_transcript": "Âm thanh thuyết minh lịch sử",
     "by": "Bởi:"
   },
   "bookings": {

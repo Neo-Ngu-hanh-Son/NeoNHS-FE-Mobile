@@ -44,21 +44,25 @@ export default {
         "ACCESS_BACKGROUND_LOCATION"
       ],
       softwareKeyboardLayoutMode: "adjustResize",
-      "intentFilters": [
+      intentFilters: [
         {
-          "action": "VIEW",
-          "autoVerify": false,
-          "data": [
+          action: "VIEW",
+          autoVerify: true,
+          data: [
             {
-              "scheme": "https",
-              "host": "www.neonhs.id.vn",
-              "pathPrefix": "/"
+              scheme: "https",
+              host: "www.neonhs.id.vn",
+              pathPrefix: "/"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          category: ["BROWSABLE", "DEFAULT"]
         }
       ],
-
+      config: {
+        googleMaps: {
+          apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAP_API,
+        },
+      },
     }
   },
 
