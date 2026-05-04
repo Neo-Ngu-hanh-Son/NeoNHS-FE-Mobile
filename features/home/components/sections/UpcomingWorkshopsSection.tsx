@@ -79,7 +79,7 @@ export default function UpcomingWorkshopsSection({ workshops, loading, error }: 
           onSeeAllPress={handleSeeMoreWorkshops}
         />
         <View className="px-4">
-          <SectionStateMessage message="No workshops found." />
+          <SectionStateMessage message="Không có workshop sắp tới." />
         </View>
       </View>
     );

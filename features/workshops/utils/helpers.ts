@@ -5,18 +5,18 @@ export function formatPrice(price: number): string {
 }
 
 export function formatDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`;
+  if (minutes < 60) return `${minutes} phút`;
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  return m > 0 ? `${h} giờ ${m} phút` : `${h} giờ`;
 }
 
 export function formatDateTime(dateStr?: string | null): string {
-  if (!dateStr) return 'TBD';
+  if (!dateStr) return 'Đang cập nhật';
   const d = new Date(dateStr);
   return d.toLocaleDateString('vi-VN', {
     day: '2-digit',
-    month: 'long',
+    month: 'long', // Hiển thị kiểu "tháng 1", "tháng 12"
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
@@ -24,22 +24,22 @@ export function formatDateTime(dateStr?: string | null): string {
 }
 
 export function formatShortDate(dateStr?: string | null): string {
-  if (!dateStr) return 'TBD';
+  if (!dateStr) return 'Đang cập nhật';
   const d = new Date(dateStr);
   return d.toLocaleDateString('vi-VN', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
+    weekday: 'long', // Hiển thị "Thứ 2,
+    month: 'long', // Hiển thị "tháng 1", "tháng 12"
+    day: 'numeric', // Hiển thị "05"
   });
 }
 
 export function formatTime(dateStr?: string | null): string {
-  if (!dateStr) return 'TBD';
+  if (!dateStr) return 'Đang cập nhật';
   const d = new Date(dateStr);
   return d.toLocaleTimeString('vi-VN', {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: true,
+    hour12: false, // Ở Việt Nam thường dùng hệ 24h cho UI
   });
 }
 
