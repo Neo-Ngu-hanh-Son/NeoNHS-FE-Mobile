@@ -54,7 +54,7 @@ export default function DynamicPanorama({ pointId, isOpen, onBack, onOpen, retry
 
     // Delay for 1 second to ensure WebView is fully ready to receive messages, especially after reloads
     return setTimeout(() => {
-      logger.info(`[DynamicPanorama] Sending pointId ${pointId} to WebView`);
+      // logger.info(`[DynamicPanorama] Sending pointId ${pointId} to WebView`);
       currentWebView.postMessage(
         JSON.stringify({
           type: 'SET_PLACE_ID',
@@ -83,7 +83,7 @@ export default function DynamicPanorama({ pointId, isOpen, onBack, onOpen, retry
   const handleReloadWebView = useCallback(() => {
     setHasError(false);
     setIsWebViewReady(false);
-    logger.info('[DynamicPanorama] Reloading WebView by user action');
+    // logger.info('[DynamicPanorama] Reloading WebView by user action');
     webViewRef.current?.reload();
     // After reload, re-send the existing point id
   }, []);
@@ -140,9 +140,9 @@ export default function DynamicPanorama({ pointId, isOpen, onBack, onOpen, retry
           source={{ uri: FE_URL! }}
           style={styles.webview}
           startInLoadingState
-          onLoadStart={() => logger.debug('[DynamicPanorama] WebView loading started')}
+          // onLoadStart={() => logger.debug('[DynamicPanorama] WebView loading started')}
           onLoadEnd={() => {
-            logger.debug('[DynamicPanorama] WebView loading ended');
+            // logger.debug('[DynamicPanorama] WebView loading ended');
             setIsWebViewReady(true);
           }}
           onError={(error) => {
