@@ -12,7 +12,7 @@ type SearchBarProps = {
 };
 
 export default function SearchBar({
-  placeholder = "Search caves, pagodas, or history...",
+  placeholder = "Tìm kiếm địa điểm, workshop hay sự kiện...",
   value,
   onChangeText,
   onPress,

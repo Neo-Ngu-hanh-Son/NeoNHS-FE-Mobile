@@ -46,9 +46,6 @@ export function PointDetailStats({ point }: PointDetailStatsProps) {
   const diffConfig = DIFFICULTY_CONFIG[point.difficulty as PointDifficulty] || DIFFICULTY_CONFIG.moderate;
   const vibeConfig = VIBE_CONFIG[point.vibe as PointVibe] || VIBE_CONFIG.energetic;
 
-  console.log('Difficulty: ', point.difficulty);
-  console.log('Vibe: ', point.vibe);
-
   return (
     <Card className="rounded-3xl py-5">
       <CardContent className="flex-row items-center justify-between px-4">
