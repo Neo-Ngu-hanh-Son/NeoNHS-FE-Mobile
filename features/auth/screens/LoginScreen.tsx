@@ -71,8 +71,10 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       // Check if account is banned
       if (errorMessage.toLowerCase().includes('user banned')) {
         alert({
-          title: 'Người dùng đã bị cấm',
-          message: 'Vui lòng liên hệ với quản trị viên để biết thêm chi tiết',
+          title: t('auth.alert.account_banned_title', { defaultValue: 'Người dùng đã bị cấm' }),
+          message: t('auth.alert.account_banned_message', {
+            defaultValue: 'Vui lòng liên hệ với quản trị viên để biết thêm chi tiết',
+          }),
           cancelable: true,
           buttons: buttons
         });
