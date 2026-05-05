@@ -164,34 +164,29 @@ export function useMapNavigationGuidance({
     };
     const index = currentStepIndexRef.current;
     // Check multiple steps ahead to find the closest one and use it as measurement for off-route detection
-    const checkSteps = steps.slice(Math.max(0, index - 1), index + 2);
+    const checkSteps = steps.slice(Math.max(0, index - 3), Math.min(steps.length, index + 4));
     if (checkSteps.length === 0) return false;
 
     let minDistance = Infinity;
 
     for (const step of checkSteps) {
-      const distance = distanceUtils.calculatePointToLineDistance(
-        userLocationPoint,
-        {
-          latitude: step.startLocation.latLng.latitude,
-          longitude: step.startLocation.latLng.longitude,
-        },
-        {
-          latitude: step.endLocation.latLng.latitude,
-          longitude: step.endLocation.latLng.longitude,
-        }
-      );
+      // Decode the encoded linestring first
+      const lineString = decodeRoutePolyline(step.polyline.encodedPolyline);
+      if (!lineString || lineString.length === 0) continue;
+      // Swap to Long lat array
+      const lineStringTurf = lineString.map((point) => [point.longitude, point.latitude]);
+      const distance = distanceUtils.calculatePointToLineStringDistance(userLocationPoint, lineStringTurf);
 
       if (distance < minDistance) {
         minDistance = distance;
       }
     }
-    // logger.info(
-    //   'Off route status: ',
-    //   minDistance,
-    //   'Threshold: ',
-    //   MAP_CONSTANTS.NAVIGATION_DISTANCE_LIMIT_BEFORE_REFETCH_OFF_ROUTE_M
-    // );
+    logger.info(
+      'Off route status: ',
+      minDistance,
+      'Threshold: ',
+      MAP_CONSTANTS.NAVIGATION_DISTANCE_LIMIT_BEFORE_REFETCH_OFF_ROUTE_M
+    );
     return minDistance > MAP_CONSTANTS.NAVIGATION_DISTANCE_LIMIT_BEFORE_REFETCH_OFF_ROUTE_M;
   }, [userLocation, steps]);
 
@@ -213,6 +208,7 @@ export function useMapNavigationGuidance({
 
       // logger.info('off-route: routeFetchOrigin: ', routeFetchOrigin, ' newOrigin: ', newOrigin);
       if (!routeFetchOrigin) {
+        console.log('Refreshed new origin: ', newOrigin);
         setRouteFetchOrigin(newOrigin);
         return;
       }
@@ -220,6 +216,7 @@ export function useMapNavigationGuidance({
       const distFromLastFetch = distanceUtils.calculateDistance(newOrigin, routeFetchOrigin);
 
       if (distFromLastFetch > MAP_CONSTANTS.NAVIGATION_DISTANCE_LIMIT_BEFORE_REFETCH_OFF_ROUTE_M) {
+        console.log('Refreshed new origin (Offroute): ', newOrigin);
         setRouteFetchOrigin(newOrigin);
       }
     }
@@ -278,9 +275,6 @@ export function useMapNavigationGuidance({
   /**
    * This effect watches for changes in the user's location and updates the current navigation step accordingly.
    * Note: Steps will only advance instead of going backwards to prevent jerky UI
-   */
-  /**
-   * This effect watches for changes in the user's location and updates the current navigation step accordingly.
    */
   useEffect(() => {
     const handleNextSteps = async () => {
@@ -349,6 +343,14 @@ export function useMapNavigationGuidance({
         const nextInstruction = steps[candidateIndex].navigationInstruction?.instructions;
 
         if (nextInstruction) {
+          console.log(
+            'Speaking instructions: ' +
+              nextInstruction +
+              ', current user index: ' +
+              currentUserStepIndex +
+              ' candidate index: ' +
+              candidateIndex
+          );
           Speech.stop(); // Immediately stop the previous instruction
           await handleSpeakSteps(nextInstruction);
           // logger.debug('Speaking:', nextInstruction);

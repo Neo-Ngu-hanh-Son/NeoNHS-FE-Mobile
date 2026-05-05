@@ -25,6 +25,14 @@ const calculateDistance = (
   });
 };
 
+const calculatePointToLineStringDistance = (
+  point: { latitude: number; longitude: number },
+  lineString: any
+): number => {
+  const pt = turf.point([point.longitude, point.latitude]);
+  return turf.pointToLineDistance(pt, lineString, { units: 'meters' });
+};
+
 const calculatePointToLineDistance = (
   point: { latitude: number; longitude: number },
   lineStart: { latitude: number; longitude: number },
@@ -312,6 +320,15 @@ const isInsideThuySon = (location: { latitude: number; longitude: number }): boo
   return turf.booleanPointInPolygon(pt, polygon);
 };
 
+const pointToPolygonDistance = (
+  point: { latitude: number; longitude: number },
+  polygon: { polygon: number[][][] }
+): number => {
+  const pt = turf.point([point.longitude, point.latitude]);
+  const poly = turf.polygon(polygon.polygon);
+  return turf.pointToPolygonDistance(pt, poly, { units: 'meters' });
+};
+
 /**
  * List of distance-related utility functions that use the turf.js library
  */
@@ -326,4 +343,6 @@ export const distanceUtils = {
   createNavigationVirtualOverlay,
   getNavigationPath,
   isInsideThuySon,
+  pointToPolygonDistance,
+  calculatePointToLineStringDistance
 };
