@@ -149,7 +149,7 @@ export default function PointDetailScreen({ navigation, route }: Props) {
   const awaitingReviewsFirstPage = !isError && !!point && reviewsQuery.isPending;
 
   if (isLoading || awaitingReviewsFirstPage) {
-    return <FullScreenLoader message={t('point.loading_details', 'Đang tải thông tinđịa điểm...')} />;
+    return <FullScreenLoader message={t('point.loading_details', 'Đang tải thông tin địa điểm...')} />;
   }
 
   const handleReport = () => {
