@@ -25,7 +25,7 @@ export function useDirectionsNavigation({
   return useQuery({
     queryKey: queryKey,
     queryFn: async (): Promise<RouteResponse> => {
-      // logger.info('[useDirectionsNavigation] Getting directions with params: ', params);
+      logger.info('[useDirectionsNavigation] Getting directions with params: ', params);
       if (!params.origin || !params.destination) {
         throw new Error('Directions preview requires origin and destination.');
       }
