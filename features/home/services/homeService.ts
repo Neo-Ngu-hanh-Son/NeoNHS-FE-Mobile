@@ -44,7 +44,7 @@ export const homeService = {
       page: 0,
       size: 5,
       status: EventStatus.UPCOMING,
-      sortDir: 'desc',
+      sortDir: 'asc',
     });
   },
 };

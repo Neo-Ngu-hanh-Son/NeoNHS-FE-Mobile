@@ -259,6 +259,11 @@ export function useMapNavigationGuidance({
         return;
       }
 
+      if (isOffRoute) {
+        logger.info('[handleSpeakSteps] Off route, skipping speech');
+        return;
+      }
+
       let speechText = instructions.slice(0, Speech.maxSpeechInputLength);
       let firstInstruction = getFirstInstruction(speechText);
       const speechLanguage = SPEECH_LANGUAGE_MAP[language] || 'en-US';
@@ -269,7 +274,7 @@ export function useMapNavigationGuidance({
         pitch: 1.0,
       });
     },
-    [language]
+    [isOffRoute, language]
   );
 
   /**

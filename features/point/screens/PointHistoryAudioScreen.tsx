@@ -25,7 +25,7 @@ type Props = CompositeScreenProps<
 export default function PointHistoryAudioScreen({ route }: Props) {
   const { pointId } = route.params;
   const { t } = useTranslation();
-
+  const [innerScrolling, setInnerScrolling] = useState(false);
   // ─── Data fetching ───
   const {
     data: historyAudios = [],
@@ -73,7 +73,9 @@ export default function PointHistoryAudioScreen({ route }: Props) {
       showBackButton={true}
       onRefresh={() => refetch()}
       title={t('point.history_transcript', 'History audio transcript')}
-      contentContainerClassName="px-5 pb-10 pt-16">
+      contentContainerClassName="px-5 pb-10 pt-16"
+      refreshEnabled={!innerScrolling}
+    >
       {/* Header + audio selector */}
       <HistoryHeader
         historyAudios={historyAudios}
@@ -95,7 +97,15 @@ export default function PointHistoryAudioScreen({ route }: Props) {
             {t('point.by', 'By:')} {selectedAudio.metadata.artist}
           </Text>
         </View>
-        <ScrollView style={{ maxHeight: 200 }} showsVerticalScrollIndicator={true} nestedScrollEnabled={true}>
+        <ScrollView style={{ maxHeight: 200 }} showsVerticalScrollIndicator={true} nestedScrollEnabled={true}
+          onScroll={(e) => {
+            const y = e.nativeEvent.contentOffset.y;
+            setInnerScrolling((prev) => {
+              const next = y > 0;
+              return prev !== next ? next : prev;
+            });
+          }}
+        >
           <HistoryWordFlow words={selectedAudio?.words || []} activeIndex={activeIndex} />
         </ScrollView>
       </View>
