@@ -149,7 +149,7 @@ export default function PointDetailScreen({ navigation, route }: Props) {
   const awaitingReviewsFirstPage = !isError && !!point && reviewsQuery.isPending;
 
   if (isLoading || awaitingReviewsFirstPage) {
-    return <FullScreenLoader message={t('point.loading_details', 'Loading point details...')} />;
+    return <FullScreenLoader message={t('point.loading_details', 'Đang tải thông tinđịa điểm...')} />;
   }
 
   const handleReport = () => {
@@ -174,9 +174,15 @@ export default function PointDetailScreen({ navigation, route }: Props) {
     );
   }
 
+  const handleRefetchAll = async () => {
+    await refetch();
+    await reviewsQuery.refetch();
+    await refetchImages();
+  };
+
   return (
     <View className="flex-1 bg-background">
-      <RefreshableScrollView onRefresh={() => refetch()} contentContainerStyle={{ paddingBottom: 120 }} edges={[]}>
+      <RefreshableScrollView onRefresh={handleRefetchAll} contentContainerStyle={{ paddingBottom: 120 }} edges={[]}>
         {/* Hero image with nav buttons */}
         <PointDetailHero
           point={point}

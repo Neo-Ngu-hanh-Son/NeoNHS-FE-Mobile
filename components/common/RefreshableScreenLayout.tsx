@@ -38,6 +38,8 @@ type RefreshableScreenLayoutProps = {
   scrollViewClassName?: string;
   /** Perfectly centered title that does not count the back button */
   title?: string;
+  /** Enable refresh */
+  refreshEnabled?: boolean;
 };
 
 /**
@@ -75,6 +77,7 @@ export function RefreshableScreenLayout({
   showsVerticalScrollIndicator = false,
   scrollViewClassName = 'flex-1',
   title,
+  refreshEnabled = true,
 }: RefreshableScreenLayoutProps) {
   const navigation = useNavigation();
   const { isDarkColorScheme } = useTheme();
@@ -84,13 +87,15 @@ export function RefreshableScreenLayout({
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = useCallback(async () => {
+    if (refreshing) return;
+
     setRefreshing(true);
     try {
       await onRefresh();
     } finally {
       setRefreshing(false);
     }
-  }, [onRefresh]);
+  }, [onRefresh, refreshing]);
 
   const handleBack = () => {
     if (onBack) {
@@ -113,6 +118,7 @@ export function RefreshableScreenLayout({
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
+            enabled={refreshEnabled}
             tintColor={theme.primary}
             colors={[theme.primary]}
           />

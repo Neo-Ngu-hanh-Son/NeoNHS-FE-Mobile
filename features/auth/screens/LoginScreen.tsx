@@ -67,6 +67,18 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           onPress: () => navigation.navigate('VerifyEmail', { email: email.trim() }),
         });
       }
+
+      // Check if account is banned
+      if (errorMessage.toLowerCase().includes('user banned')) {
+        alert({
+          title: 'Người dùng đã bị cấm',
+          message: 'Vui lòng liên hệ với quản trị viên để biết thêm chi tiết',
+          cancelable: true,
+          buttons: buttons
+        });
+        return;
+      }
+
       // Check if account is not activated
       if (errorMessage.toLowerCase().includes('not activated') || errorMessage.toLowerCase().includes('not verified')) {
         alert({
